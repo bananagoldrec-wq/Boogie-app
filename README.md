@@ -6,11 +6,17 @@ cadastro, sem backend** — apenas arquivos estáticos prontos para o GitHub Pag
 
 ## ✨ Recursos
 
-- 🗺️ Mapa 2D interativo com **Leaflet.js** e marcadores por país
+- 🗺️ Mapa 2D interativo com **Leaflet.js** e marcadores em **26 países** de
+  todos os continentes (24 com faixas curadas + países marcados como sem
+  produção do gênero)
 - 🎨 Visual retrô anos 70/80 (laranja, dourado, marrom, bege, fontes *Lobster* +
   *Playfair Display*, estética de capa de vinil) com animações suaves
 - 📱 Layout responsivo para mobile
 - 🎵 Players embutidos públicos do **YouTube** e do **Spotify** (prévia sem login)
+- ▶️ **Prévia de 30s** inline em cada faixa (só uma toca por vez) + botão
+  *Ouvir completo*
+- 🎚️ **Playlists** com nome, salvas no `localStorage`: criar, renomear, deletar,
+  reordenar/remover faixas e **reproduzir em sequência** — tudo offline
 - 🔎 Enriquecimento ao vivo via **MusicBrainz** (rate limit de 1 req/seg) e
   **Discogs**, sempre com *fallback* para a base curada local
 
