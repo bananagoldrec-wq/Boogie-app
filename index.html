@@ -2,9 +2,24 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="Descoberta de música disco e boogie dos anos 70 e 80 via mapa mundial. Sem cadastro, sem chaves de API." />
   <title>Disco &amp; Boogie Globe</title>
+
+  <!-- PWA / atalho na tela inicial -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#4a2c17" />
+
+  <!-- iOS: roda em tela cheia (esconde a barra de navegação do Safari) -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Disco & Boogie" />
+
+  <!-- Ícones -->
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
 
   <!-- Leaflet CSS -->
   <link
