@@ -1,0 +1,275 @@
+:root {
+  --orange: #e8732c;
+  --orange-deep: #c2521b;
+  --gold: #e8b54a;
+  --gold-deep: #c9942b;
+  --brown: #4a2c17;
+  --brown-soft: #6b4326;
+  --beige: #f4e3c1;
+  --beige-deep: #e7cfa0;
+  --cream: #fbf3e0;
+  --ink: #2a1a0d;
+  --shadow: rgba(74, 44, 23, 0.35);
+  --panel-w: 380px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: "Playfair Display", Georgia, serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 20% 10%, rgba(232, 181, 74, 0.25), transparent 40%),
+    radial-gradient(circle at 80% 90%, rgba(232, 115, 44, 0.25), transparent 45%),
+    var(--beige);
+}
+
+/* ---------- Topbar ---------- */
+.topbar {
+  text-align: center;
+  padding: 14px 16px 10px;
+  background: linear-gradient(180deg, var(--brown) 0%, var(--brown-soft) 100%);
+  color: var(--cream);
+  box-shadow: 0 4px 14px var(--shadow);
+  position: relative;
+  z-index: 500;
+}
+.logo {
+  font-family: "Lobster", cursive;
+  margin: 0;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  letter-spacing: 1px;
+  color: var(--gold);
+  text-shadow: 2px 2px 0 var(--orange-deep), 4px 4px 0 rgba(0,0,0,0.25);
+}
+.tagline {
+  margin: 4px 0 0;
+  font-style: italic;
+  font-size: clamp(0.8rem, 2.5vw, 1rem);
+  color: var(--beige-deep);
+}
+
+/* ---------- Layout ---------- */
+.layout {
+  display: flex;
+  height: calc(100vh - 96px - 40px);
+  min-height: 420px;
+}
+#map {
+  flex: 1;
+  height: 100%;
+  background: #cde3ea;
+  z-index: 1;
+}
+
+/* Leaflet retro tint */
+.leaflet-tile { filter: sepia(0.45) saturate(1.1) hue-rotate(-10deg) brightness(1.02); }
+
+/* Country pins (Leaflet divIcon) */
+.country-pin-wrap { background: none; border: none; }
+.country-pin {
+  display: flex; align-items: center; gap: 5px;
+  transform: translate(-50%, -50%);
+  background: var(--brown);
+  color: var(--cream);
+  padding: 3px 8px 3px 5px;
+  border-radius: 16px;
+  border: 2px solid var(--gold);
+  box-shadow: 0 3px 8px var(--shadow);
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: "Playfair Display", serif;
+  font-size: 0.78rem; font-weight: 700;
+  transition: transform .18s ease, background .18s ease;
+  animation: pinPulse 2.6s ease-in-out infinite;
+}
+.country-pin:hover { background: var(--orange-deep); transform: translate(-50%, -50%) scale(1.12); }
+.pin-flag { font-size: 1rem; }
+@keyframes pinPulse {
+  0%, 100% { box-shadow: 0 3px 8px var(--shadow), 0 0 0 0 rgba(232,181,74,0.5); }
+  50% { box-shadow: 0 3px 8px var(--shadow), 0 0 0 7px rgba(232,181,74,0); }
+}
+
+/* ---------- Panel ---------- */
+.panel {
+  width: var(--panel-w);
+  max-width: 90vw;
+  height: 100%;
+  overflow-y: auto;
+  background: linear-gradient(180deg, var(--cream) 0%, var(--beige) 100%);
+  border-left: 6px double var(--gold-deep);
+  box-shadow: -6px 0 18px var(--shadow);
+  padding: 18px;
+  z-index: 400;
+}
+
+.panel-welcome { text-align: center; padding-top: 10px; animation: fadeIn .5s ease; }
+.panel-welcome h2 {
+  font-family: "Lobster", cursive;
+  color: var(--orange-deep);
+  font-size: 1.8rem;
+  margin: 16px 0 8px;
+}
+.panel-welcome p { line-height: 1.5; font-size: 0.95rem; }
+
+/* Spinning vinyl decoration */
+.vinyl {
+  width: 130px; height: 130px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(circle at center, #1b1b1b 0 2px, #2c2c2c 2px 4px);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 16px var(--shadow), inset 0 0 0 6px #111;
+  animation: spin 6s linear infinite;
+}
+.vinyl-label {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: radial-gradient(circle, var(--gold) 0 40%, var(--orange) 41% 100%);
+  box-shadow: inset 0 0 0 4px var(--brown);
+}
+
+/* ---------- Panel content ---------- */
+.panel-content { animation: slideIn .4s ease; }
+.panel-header {
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 3px solid var(--gold-deep);
+  padding-bottom: 8px; margin-bottom: 12px;
+}
+.panel-header h2 {
+  font-family: "Lobster", cursive;
+  color: var(--orange-deep);
+  margin: 0; font-size: 1.6rem; flex: 1;
+}
+.country-count {
+  background: var(--orange);
+  color: var(--cream);
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-family: "Playfair Display", serif;
+}
+.back-btn {
+  border: none; background: var(--gold-deep); color: var(--cream);
+  width: 30px; height: 30px; border-radius: 50%;
+  font-size: 1.4rem; line-height: 1; cursor: pointer;
+  box-shadow: 0 2px 6px var(--shadow); transition: transform .15s;
+}
+.back-btn:hover { transform: scale(1.1); background: var(--orange-deep); }
+
+/* ---------- Track list ---------- */
+.track-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.track {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--cream);
+  border: 2px solid var(--beige-deep);
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s;
+  animation: popIn .35s ease both;
+}
+.track:hover {
+  transform: translateY(-2px) rotate(-0.4deg);
+  box-shadow: 0 6px 16px var(--shadow);
+  border-color: var(--orange);
+}
+.track-cover {
+  width: 52px; height: 52px; flex-shrink: 0;
+  border-radius: 6px; object-fit: cover;
+  background: repeating-radial-gradient(circle at center, #222 0 2px, #333 2px 4px);
+  box-shadow: 0 2px 6px var(--shadow);
+}
+.track-info { flex: 1; min-width: 0; }
+.track-title {
+  font-weight: 700; font-size: 0.98rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.track-meta { font-size: 0.82rem; font-style: italic; color: var(--brown-soft); }
+.track-year {
+  font-family: "Lobster", cursive;
+  color: var(--gold-deep);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.track-badge {
+  font-size: 0.6rem; text-transform: uppercase; letter-spacing: .5px;
+  background: var(--brown-soft); color: var(--cream);
+  padding: 1px 5px; border-radius: 6px; margin-left: 6px; vertical-align: middle;
+}
+
+/* ---------- Loading ---------- */
+.loading {
+  display: flex; align-items: center; gap: 10px;
+  font-style: italic; color: var(--brown-soft);
+  padding: 10px 4px;
+}
+.spinner {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 3px solid var(--beige-deep);
+  border-top-color: var(--orange);
+  animation: spin 0.8s linear infinite;
+}
+.sources-note { font-size: 0.72rem; color: var(--brown-soft); font-style: italic; margin-top: 14px; }
+
+/* ---------- Modal ---------- */
+.modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; }
+.modal[hidden] { display: none; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(42, 26, 13, 0.7); animation: fadeIn .25s; }
+.modal-card {
+  position: relative; z-index: 1;
+  width: min(520px, 92vw); max-height: 90vh; overflow-y: auto;
+  background: linear-gradient(180deg, var(--cream), var(--beige));
+  border: 5px double var(--gold-deep);
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.5);
+  animation: popIn .3s ease;
+}
+.modal-close {
+  position: absolute; top: 8px; right: 12px;
+  border: none; background: transparent; cursor: pointer;
+  font-size: 1.8rem; color: var(--brown); line-height: 1;
+}
+.modal-card h3 { font-family: "Lobster", cursive; color: var(--orange-deep); margin: 0 6px 2px 0; font-size: 1.5rem; }
+.modal-sub { margin: 0 0 14px; font-style: italic; color: var(--brown-soft); }
+.player-body { display: flex; flex-direction: column; gap: 14px; }
+.player-body iframe { width: 100%; border: none; border-radius: 10px; box-shadow: 0 4px 12px var(--shadow); }
+.player-block h4 { margin: 0 0 6px; color: var(--brown); font-size: 0.95rem; }
+.fallback-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn-link {
+  display: inline-block; text-decoration: none;
+  background: var(--orange); color: var(--cream);
+  padding: 8px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;
+  box-shadow: 0 3px 8px var(--shadow); transition: transform .15s, background .15s;
+}
+.btn-link:hover { transform: translateY(-2px); background: var(--orange-deep); }
+.btn-link.spotify { background: #1db954; }
+.btn-link.spotify:hover { background: #169c46; }
+
+/* ---------- Footer ---------- */
+.footer {
+  height: 40px; display: flex; align-items: center; justify-content: center;
+  text-align: center; font-size: 0.72rem; color: var(--cream);
+  background: var(--brown); padding: 0 10px;
+}
+
+/* ---------- Animations ---------- */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 760px) {
+  .layout { flex-direction: column; height: auto; }
+  #map { height: 50vh; min-height: 300px; }
+  .panel {
+    width: 100%; max-width: 100%; height: auto;
+    border-left: none; border-top: 6px double var(--gold-deep);
+    box-shadow: 0 -6px 18px var(--shadow);
+  }
+}
