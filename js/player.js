@@ -15,6 +15,7 @@
   // ---- Estado da fila (reprodução de playlist) ----
   let queue = null;
   let queueIndex = 0;
+  let renderToken = 0; // invalida appends assíncronos ao trocar de faixa
 
   // ---- Estado da prévia inline (somente uma por vez) ----
   let activePreview = null; // elemento DOM da prévia aberta
@@ -66,33 +67,7 @@
     }
   }
 
-  function preview(track, anchorEl) {
-    // Toggle: se a prévia aberta é a deste anchor, fecha.
-    if (activePreview && activePreview.dataset.for === anchorKey(track)) {
-      closePreview();
-      return;
-    }
-    closePreview(); // pausa qualquer outra prévia
-
-    const box = document.createElement("div");
-    box.className = "preview-box";
-    box.dataset.for = anchorKey(track);
-
-    const sp = spotifyEmbedSrc(track);
-    if (sp) {
-      box.appendChild(makeIframe(sp, 80, "Prévia Spotify"));
-    } else {
-      const yt = ytEmbedSrc(track, true);
-      if (yt) {
-        box.appendChild(makeIframe(yt, 80, "Prévia YouTube"));
-      } else {
-        const msg = document.createElement("p");
-        msg.className = "preview-msg";
-        msg.textContent = "Sem embed direto — abra a busca:";
-        box.appendChild(msg);
-      }
-    }
-
+  function previewActions(track) {
     const actions = document.createElement("div");
     actions.className = "preview-actions";
     actions.appendChild(linkBtn(ytSearch(track), "YouTube", ""));
@@ -103,10 +78,73 @@
     full.textContent = "Ouvir completo ⤢";
     full.addEventListener("click", () => { closePreview(); open(track); });
     actions.appendChild(full);
-    box.appendChild(actions);
+    return actions;
+  }
 
+  async function preview(track, anchorEl) {
+    const key = anchorKey(track);
+    // Toggle: se a prévia aberta é a deste anchor, fecha.
+    if (activePreview && activePreview.dataset.for === key) {
+      closePreview();
+      return;
+    }
+    closePreview(); // pausa qualquer outra prévia
+
+    const box = document.createElement("div");
+    box.className = "preview-box";
+    box.dataset.for = key;
+    box.innerHTML =
+      '<div class="preview-loading"><span class="spinner-sm"></span> Carregando prévia de 30s…</div>';
     anchorEl.insertAdjacentElement("afterend", box);
     activePreview = box;
+
+    // 1) iTunes: áudio de 30s que toca direto no app (keyless, CORS).
+    let hit = null;
+    try { hit = await window.ITunes.find(track); } catch (e) { /* fallback abaixo */ }
+    if (activePreview !== box) return; // usuário trocou de prévia/país
+
+    box.innerHTML = "";
+
+    if (hit && hit.previewUrl) {
+      const head = document.createElement("div");
+      head.className = "preview-head";
+      if (hit.artwork) {
+        const img = document.createElement("img");
+        img.className = "preview-cover";
+        img.src = hit.artwork;
+        img.alt = "";
+        head.appendChild(img);
+      }
+      const meta = document.createElement("div");
+      meta.className = "preview-now";
+      meta.innerHTML =
+        `<strong>${track.title}</strong>` +
+        `<span>${track.artist} · prévia 30s (iTunes)</span>`;
+      head.appendChild(meta);
+      box.appendChild(head);
+
+      const audio = document.createElement("audio");
+      audio.className = "preview-audio";
+      audio.controls = true;
+      audio.autoplay = true;
+      audio.preload = "auto";
+      audio.src = hit.previewUrl;
+      box.appendChild(audio);
+      audio.play().catch(() => {}); // gesto do usuário já permite tocar
+    } else {
+      // 2) Fallback: embed do YouTube se houver ID curado.
+      const yt = ytEmbedSrc(track, true);
+      if (yt) {
+        box.appendChild(makeIframe(yt, 80, "Prévia YouTube"));
+      } else {
+        const msg = document.createElement("p");
+        msg.className = "preview-msg";
+        msg.textContent = "Prévia direta indisponível para esta faixa — ouça pela busca:";
+        box.appendChild(msg);
+      }
+    }
+
+    box.appendChild(previewActions(track));
   }
 
   function anchorKey(t) {
@@ -128,7 +166,27 @@
     return block;
   }
 
+  async function appendItunesBlock(track, myToken) {
+    let hit = null;
+    try { hit = await window.ITunes.find(track); } catch (e) { return; }
+    if (myToken !== renderToken || !hit || !hit.previewUrl) return;
+    const body = document.getElementById("player-body");
+    if (!body) return;
+    const block = document.createElement("div");
+    block.className = "player-block";
+    const h = document.createElement("h4");
+    h.textContent = "🎧 Prévia 30s (toca direto)";
+    const audio = document.createElement("audio");
+    audio.className = "preview-audio";
+    audio.controls = true;
+    audio.preload = "none";
+    audio.src = hit.previewUrl;
+    block.append(h, audio);
+    body.insertBefore(block, body.firstChild); // garantido tocável, no topo
+  }
+
   function renderTrack(track) {
+    const myToken = ++renderToken;
     document.getElementById("modal-title").textContent = track.title;
     const yr = track.year ? ` · ${track.year}` : "";
     document.getElementById("modal-sub").textContent = `${track.artist}${yr}`;
@@ -153,6 +211,9 @@
         [linkBtn(spSearch(track), sp ? "Abrir no Spotify" : "Buscar no Spotify", "spotify")]
       )
     );
+
+    // Bloco de áudio garantido (30s via iTunes), inserido no topo quando resolver.
+    appendItunesBlock(track, myToken);
   }
 
   function renderQueueBar() {
@@ -213,6 +274,7 @@
   }
 
   function close() {
+    renderToken++; // cancela qualquer append assíncrono pendente
     modal().hidden = true;
     document.getElementById("player-body").innerHTML = ""; // para a reprodução
     document.getElementById("player-queue").innerHTML = "";
