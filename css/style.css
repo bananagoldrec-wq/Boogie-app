@@ -433,16 +433,25 @@ html, body {
 
 /* ---------- Responsive ---------- */
 @media (max-width: 760px) {
-  /* Mapa ocupa a tela inteira (borda a borda) até escolher um país */
-  .layout {
-    flex-direction: column;
+  .layout { flex-direction: column; height: auto; min-height: 0; }
+  /* Mapa fixo cobrindo a tela inteira (borda a borda) até escolher um país.
+     Posição fixa garante cobertura total — nenhum fundo bege aparece. */
+  #map {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
     height: 100vh;
     height: 100dvh;
+    min-height: 0;
   }
-  #map { height: 100%; min-height: 0; }
-  /* Ao abrir um país, o mapa encolhe e o painel flui abaixo */
-  body.panel-open .layout { height: auto; }
-  body.panel-open #map { height: 45vh; min-height: 280px; }
+  /* Ao abrir um país, o mapa volta ao fluxo (45vh) e o painel flui abaixo */
+  body.panel-open #map {
+    position: relative;
+    inset: auto;
+    width: auto;
+    height: 45vh;
+    min-height: 280px;
+  }
   .panel {
     width: 100%; max-width: 100%; height: auto;
     border-left: none; border-top: 6px double var(--gold-deep);
