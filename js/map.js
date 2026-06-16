@@ -54,12 +54,13 @@
       worldCopyJump: true,
       scrollWheelZoom: true,
       zoomControl: false,
+      attributionControl: false, // tela inicial minimalista, sem texto embaixo
     });
     // Zoom no canto inferior esquerdo (longe do logo flutuante).
     L.control.zoom({ position: "bottomleft" }).addTo(map);
 
+    // Tiles do OpenStreetMap (crédito mantido no README).
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap",
       noWrap: false,
     }).addTo(map);
 
