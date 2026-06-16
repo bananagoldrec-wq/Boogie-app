@@ -8,7 +8,7 @@
 (function () {
   "use strict";
 
-  const MAX_RESULTS = 30;
+  const MAX_RESULTS = 500; // acervo curado completo por país (sem corte prático)
 
   function normalizeKey(s) {
     return String(s || "")
