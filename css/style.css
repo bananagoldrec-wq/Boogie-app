@@ -425,13 +425,6 @@ html, body {
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ---------- Footer ---------- */
-.footer {
-  min-height: 40px; display: flex; align-items: center; justify-content: center;
-  text-align: center; font-size: 0.72rem; color: var(--cream);
-  background: var(--brown); padding: 0 10px env(safe-area-inset-bottom, 0px);
-}
-
 /* ---------- Animations ---------- */
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
