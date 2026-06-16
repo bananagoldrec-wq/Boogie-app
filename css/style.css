@@ -28,18 +28,33 @@ html, body {
 }
 
 /* ---------- Topbar ---------- */
+/* ---------- Floating top controls (over the map) ---------- */
 .topbar {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  left: 10px;
+  z-index: 600;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 10px;
-  background: linear-gradient(180deg, var(--brown) 0%, var(--brown-soft) 100%);
-  color: var(--cream);
-  box-shadow: 0 4px 14px var(--shadow);
-  position: relative;
-  z-index: 500;
+  gap: 8px;
+  background: none;
+  box-shadow: none;
+  pointer-events: none; /* deixa arrastar o mapa por baixo */
 }
-.topbar-titles { flex: 1; text-align: center; }
+.topbar .logo, .topbar .nav-btn { pointer-events: auto; }
+.logo {
+  font-family: "Lobster", cursive;
+  margin: 0;
+  font-size: clamp(1.1rem, 3.5vw, 1.7rem);
+  color: var(--gold);
+  background: rgba(74, 44, 23, 0.88);
+  padding: 4px 14px;
+  border-radius: 18px;
+  border: 2px solid var(--gold-deep);
+  text-shadow: 1px 1px 0 var(--orange-deep);
+  box-shadow: 0 3px 10px var(--shadow);
+  white-space: nowrap;
+}
 .nav-btn {
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--gold-deep); color: var(--cream);
@@ -50,25 +65,12 @@ html, body {
 }
 .nav-btn:hover { transform: translateY(-2px); background: var(--orange-deep); }
 .nav-ico { font-size: 1.1rem; }
-.logo {
-  font-family: "Lobster", cursive;
-  margin: 0;
-  font-size: clamp(1.8rem, 5vw, 3rem);
-  letter-spacing: 1px;
-  color: var(--gold);
-  text-shadow: 2px 2px 0 var(--orange-deep), 4px 4px 0 rgba(0,0,0,0.25);
-}
-.tagline {
-  margin: 4px 0 0;
-  font-style: italic;
-  font-size: clamp(0.8rem, 2.5vw, 1rem);
-  color: var(--beige-deep);
-}
 
 /* ---------- Layout ---------- */
 .layout {
   display: flex;
-  height: calc(100vh - 96px - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  height: 100vh;
+  height: 100dvh;
   min-height: 420px;
 }
 #map {
@@ -441,7 +443,8 @@ html, body {
   .layout { flex-direction: column; height: auto; }
   /* Mapa ocupa a tela toda até escolher um país; encolhe quando o painel abre */
   #map {
-    height: calc(100vh - 96px - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    height: 100vh;
+    height: 100dvh;
     min-height: 320px;
   }
   body.panel-open #map { height: 45vh; min-height: 280px; }

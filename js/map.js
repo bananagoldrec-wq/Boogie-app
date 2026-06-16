@@ -53,7 +53,10 @@
       maxZoom: 6,
       worldCopyJump: true,
       scrollWheelZoom: true,
+      zoomControl: false,
     });
+    // Zoom no canto inferior esquerdo (longe do logo flutuante).
+    L.control.zoom({ position: "bottomleft" }).addTo(map);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap",
