@@ -216,6 +216,12 @@ html, body {
   background: var(--brown-soft); color: var(--cream);
   padding: 1px 5px; border-radius: 6px; margin-left: 6px; vertical-align: middle;
 }
+.track-label {
+  display: inline-block;
+  font-size: 0.62rem; font-style: normal; letter-spacing: .3px;
+  background: var(--gold-deep); color: var(--cream);
+  padding: 1px 6px; border-radius: 6px; margin-left: 4px; vertical-align: middle;
+}
 
 /* ---------- Loading ---------- */
 .loading {

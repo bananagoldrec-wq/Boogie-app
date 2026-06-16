@@ -8,7 +8,7 @@
 (function () {
   "use strict";
 
-  const MAX_RESULTS = 24;
+  const MAX_RESULTS = 30;
 
   function normalizeKey(s) {
     return String(s || "")

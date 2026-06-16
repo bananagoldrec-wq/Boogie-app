@@ -15,7 +15,18 @@
       { "title": "I'm Every Woman", "artist": "Chaka Khan", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
       { "title": "More Bounce to the Ounce", "artist": "Zapp", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
       { "title": "Square Biz", "artist": "Teena Marie", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
-      { "title": "And the Beat Goes On", "artist": "The Whispers", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" }
+      { "title": "And the Beat Goes On", "artist": "The Whispers", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Love Hangover", "artist": "Diana Ross", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Motown" },
+      { "title": "Don't Leave Me This Way", "artist": "Thelma Houston", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Tamla / Motown" },
+      { "title": "Got to Give It Up", "artist": "Marvin Gaye", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Tamla / Motown" },
+      { "title": "Brick House", "artist": "Commodores", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Motown" },
+      { "title": "Super Freak", "artist": "Rick James", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Gordy / Motown" },
+      { "title": "Let It Whip", "artist": "Dazz Band", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia", "label": "Motown" },
+      { "title": "I Like It", "artist": "DeBarge", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Gordy / Motown" },
+      { "title": "Blame It on the Boogie", "artist": "The Jacksons", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Epic" },
+      { "title": "Shake Your Body (Down to the Ground)", "artist": "The Jacksons", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Epic" },
+      { "title": "Rock with You", "artist": "Michael Jackson", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Epic" },
+      { "title": "Instant Replay", "artist": "Dan Hartman", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Blue Sky / Epic" }
     ]
   },
   "BR": {
@@ -102,7 +113,14 @@
       { "title": "Vamos a la playa", "artist": "Righeira", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
       { "title": "Dolce Vita", "artist": "Ryan Paris", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
       { "title": "Another Life", "artist": "Kano", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
-      { "title": "No tengo dinero", "artist": "Righeira", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" }
+      { "title": "No tengo dinero", "artist": "Righeira", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Okay Okay", "artist": "Pino D'Angiò", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Happy Children", "artist": "P. Lion", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia", "label": "Discomagic" },
+      { "title": "Hypnotic Tango", "artist": "My Mine", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Tarzan Boy", "artist": "Baltimora", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Future Brain", "artist": "Den Harrow", "year": 1985, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Baby Records" },
+      { "title": "Don't Cry Tonight", "artist": "Savage", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Problèmes d'amour", "artist": "Alexander Robotnick", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs" }
     ]
   },
   "ES": {

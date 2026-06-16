@@ -71,9 +71,10 @@
         track.origin && track.origin !== "seeds"
           ? `<span class="track-badge">${track.origin}</span>`
           : "";
+      const label = track.label ? ` <span class="track-label">${esc(track.label)}</span>` : "";
       info.innerHTML =
         `<div class="track-title">${esc(track.title)}${badge}</div>` +
-        `<div class="track-meta">${esc(track.artist)}</div>`;
+        `<div class="track-meta">${esc(track.artist)}${label}</div>`;
 
       const year = document.createElement("span");
       year.className = "track-year";

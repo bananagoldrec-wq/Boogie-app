@@ -189,7 +189,8 @@
     const myToken = ++renderToken;
     document.getElementById("modal-title").textContent = track.title;
     const yr = track.year ? ` · ${track.year}` : "";
-    document.getElementById("modal-sub").textContent = `${track.artist}${yr}`;
+    const lbl = track.label ? ` · ${track.label}` : "";
+    document.getElementById("modal-sub").textContent = `${track.artist}${yr}${lbl}`;
 
     const body = document.getElementById("player-body");
     body.innerHTML = "";
