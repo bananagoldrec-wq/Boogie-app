@@ -49,15 +49,17 @@
     };
 
     // Locais primeiro para terem prioridade de fonte/curadoria.
-    (localList || []).forEach((t) => add({ ...t, source: t.source || "seeds" }));
-    extraLists.forEach((list) => (list || []).forEach(add));
+    // `origin` controla o badge (curado vs. API); `source` (do JSON) é só
+    // documentação de onde a faixa foi pesquisada.
+    (localList || []).forEach((t) => add({ ...t, origin: "seeds" }));
+    extraLists.forEach((list) => (list || []).forEach((t) => add({ ...t, origin: t.source || "api" })));
 
     const merged = Array.from(seen.values());
 
     merged.sort((a, b) => {
       // curados primeiro, depois por ano crescente, depois alfabético
-      const as = a.source === "seeds" ? 0 : 1;
-      const bs = b.source === "seeds" ? 0 : 1;
+      const as = a.origin === "seeds" ? 0 : 1;
+      const bs = b.origin === "seeds" ? 0 : 1;
       if (as !== bs) return as - bs;
       const ay = a.year || 9999;
       const by = b.year || 9999;

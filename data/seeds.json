@@ -2,269 +2,373 @@
   "US": {
     "available": true,
     "tracks": [
-      { "title": "Le Freak", "artist": "Chic", "year": 1978, "spotify_embed": null, "youtube_id": "9DZw0nMc5BA" },
-      { "title": "I Feel Love", "artist": "Donna Summer", "year": 1977, "spotify_embed": null, "youtube_id": "Vfk-EJSdaBg" },
-      { "title": "We Are Family", "artist": "Sister Sledge", "year": 1979, "spotify_embed": null, "youtube_id": "uIugp6Afvb0" },
-      { "title": "September", "artist": "Earth, Wind & Fire", "year": 1978, "spotify_embed": null, "youtube_id": "Gs069dndIYk" },
-      { "title": "Disco Inferno", "artist": "The Trammps", "year": 1976, "spotify_embed": null, "youtube_id": "AcQVwoifreg" },
-      { "title": "Celebration", "artist": "Kool & The Gang", "year": 1980, "spotify_embed": null, "youtube_id": "3GwjfUFyY6M" },
-      { "title": "That's the Way (I Like It)", "artist": "KC and the Sunshine Band", "year": 1975, "spotify_embed": null, "youtube_id": "Djkj0Pj0CWY" },
-      { "title": "Good Times", "artist": "Chic", "year": 1979, "spotify_embed": null, "youtube_id": "VFcyEdjAtTU" }
+      { "title": "Le Freak", "artist": "Chic", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Got to Be Real", "artist": "Cheryl Lynn", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Ain't No Stoppin' Us Now", "artist": "McFadden & Whitehead", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Bounce, Rock, Skate, Roll", "artist": "Vaughan Mason & Crew", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Just a Touch of Love", "artist": "Slave", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Make Up Your Mind", "artist": "Aurra", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Intimate Connection", "artist": "Kleeer", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "I Wanna Be Your Lover", "artist": "Prince", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Forget Me Nots", "artist": "Patrice Rushen", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Don't Stop 'Til You Get Enough", "artist": "Michael Jackson", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "I'm Every Woman", "artist": "Chaka Khan", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "More Bounce to the Ounce", "artist": "Zapp", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Square Biz", "artist": "Teena Marie", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "And the Beat Goes On", "artist": "The Whispers", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" }
     ]
   },
   "BR": {
     "available": true,
     "tracks": [
-      { "title": "Sossego", "artist": "Tim Maia", "year": 1978, "spotify_embed": null, "youtube_id": "7Y9bd5lF9MQ" },
-      { "title": "Maria Fumaça", "artist": "Banda Black Rio", "year": 1977, "spotify_embed": null, "youtube_id": "Vg9wDjY2k0s" },
-      { "title": "Dancin' Days", "artist": "As Frenéticas", "year": 1978, "spotify_embed": null, "youtube_id": "rTlQGd1Gj9o" },
-      { "title": "A Lua e Eu", "artist": "Cassiano", "year": 1976, "spotify_embed": null, "youtube_id": "n7Yh5oA3w0s" },
-      { "title": "A Noite Vai Chegar", "artist": "Lady Zu", "year": 1978, "spotify_embed": null, "youtube_id": null },
-      { "title": "Mr. Funky Samba", "artist": "Gerson King Combo", "year": 1977, "spotify_embed": null, "youtube_id": null },
-      { "title": "Venha Matar Saudades", "artist": "Carlos Dafé", "year": 1977, "spotify_embed": null, "youtube_id": null },
-      { "title": "Tudo Que Você Podia Ser", "artist": "Lô Borges", "year": 1972, "spotify_embed": null, "youtube_id": null }
+      { "title": "Sossego", "artist": "Tim Maia", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Imunização Racional (Que Beleza)", "artist": "Tim Maia", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Maria Fumaça", "artist": "Banda Black Rio", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Onda", "artist": "Cassiano", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "A Noite Vai Chegar", "artist": "Lady Zu", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Pra Que Vou Recordar", "artist": "Carlos Dafé", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Na Rua, Na Chuva, Na Fazenda", "artist": "Hyldon", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Som, Sangue e Raça", "artist": "Dom Salvador e Abolição", "year": 1971, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Olhos Coloridos", "artist": "Sandra de Sá", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Alleluia", "artist": "Robson Jorge & Lincoln Olivetti", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Estrelar", "artist": "Marcos Valle", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Mandamentos Black", "artist": "Gérson King Combo", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "BR-3", "artist": "Tony Tornado", "year": 1970, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Coqueiro Verde", "artist": "Trio Mocotó", "year": 1971, "spotify_embed": null, "youtube_id": null, "source": "Discogs" }
     ]
   },
   "FR": {
     "available": true,
     "tracks": [
-      { "title": "Born to Be Alive", "artist": "Patrick Hernandez", "year": 1979, "spotify_embed": null, "youtube_id": "8rd5Mql_jbA" },
-      { "title": "Supernature", "artist": "Cerrone", "year": 1977, "spotify_embed": null, "youtube_id": "Vkht_l0GcRk" },
-      { "title": "D.I.S.C.O.", "artist": "Ottawan", "year": 1979, "spotify_embed": null, "youtube_id": "vUksyzdHc9o" },
-      { "title": "Spacer", "artist": "Sheila & B. Devotion", "year": 1979, "spotify_embed": null, "youtube_id": "ftBLuypqK9Y" },
-      { "title": "Magic Fly", "artist": "Space", "year": 1977, "spotify_embed": null, "youtube_id": "Dz3SfRGtFAo" },
-      { "title": "Cuba", "artist": "Gibson Brothers", "year": 1979, "spotify_embed": null, "youtube_id": "Cp3FnFb1cFA" },
-      { "title": "Love in C Minor", "artist": "Cerrone", "year": 1976, "spotify_embed": null, "youtube_id": null },
-      { "title": "Souvenirs", "artist": "Voyage", "year": 1978, "spotify_embed": null, "youtube_id": null }
+      { "title": "Supernature", "artist": "Cerrone", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Love in C Minor", "artist": "Cerrone", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "D.I.S.C.O.", "artist": "Ottawan", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Hands Up (Give Me Your Heart)", "artist": "Ottawan", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Magic Fly", "artist": "Space", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Souvenirs", "artist": "Voyage", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Spacer", "artist": "Sheila & B. Devotion", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Cuba", "artist": "Gibson Brothers", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Born to Be Alive", "artist": "Patrick Hernandez", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Chacun fait (c'qui lui plaît)", "artist": "Chagrin d'Amour", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Disco Queen", "artist": "Sylvie Vartan", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Anikana-O", "artist": "Kongas", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs" }
     ]
   },
   "GB": {
     "available": true,
     "tracks": [
-      { "title": "You Sexy Thing", "artist": "Hot Chocolate", "year": 1975, "spotify_embed": null, "youtube_id": "B4tBhszH4iA" },
-      { "title": "Boogie Nights", "artist": "Heatwave", "year": 1976, "spotify_embed": null, "youtube_id": "z3-DdHQbMA4" },
-      { "title": "Just an Illusion", "artist": "Imagination", "year": 1982, "spotify_embed": null, "youtube_id": "sWuZWAVQODk" },
-      { "title": "You to Me Are Everything", "artist": "The Real Thing", "year": 1976, "spotify_embed": null, "youtube_id": "Lh1erQYTbAg" },
-      { "title": "Pick Up the Pieces", "artist": "Average White Band", "year": 1974, "spotify_embed": null, "youtube_id": "OYZguEUUYZw" },
-      { "title": "Native New Yorker", "artist": "Odyssey", "year": 1977, "spotify_embed": null, "youtube_id": null },
-      { "title": "Intuition", "artist": "Linx", "year": 1981, "spotify_embed": null, "youtube_id": null },
-      { "title": "I'm So Happy", "artist": "Light of the World", "year": 1981, "spotify_embed": null, "youtube_id": null }
+      { "title": "You Sexy Thing", "artist": "Hot Chocolate", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Boogie Nights", "artist": "Heatwave", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Native New Yorker", "artist": "Odyssey", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Hi-Tension", "artist": "Hi-Tension", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia (Brit funk)" },
+      { "title": "London Town", "artist": "Light of the World", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Use It Up and Wear It Out", "artist": "Odyssey", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Searching", "artist": "Change", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Southern Freeez", "artist": "Freeez", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Intuition", "artist": "Linx", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Walking into Sunshine", "artist": "Central Line", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "(Somebody) Help Me Out", "artist": "Beggar & Co", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Just an Illusion", "artist": "Imagination", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "I.O.U.", "artist": "Freeez", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Hangin' on a String (Contemplating)", "artist": "Loose Ends", "year": 1985, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" }
     ]
   },
   "DE": {
     "available": true,
     "tracks": [
-      { "title": "Daddy Cool", "artist": "Boney M.", "year": 1976, "spotify_embed": null, "youtube_id": "ZMcfDObf6Mk" },
-      { "title": "Rasputin", "artist": "Boney M.", "year": 1978, "spotify_embed": null, "youtube_id": "ymvx34DUMM8" },
-      { "title": "Fly, Robin, Fly", "artist": "Silver Convention", "year": 1975, "spotify_embed": null, "youtube_id": "i_5ucr9-Kkg" },
-      { "title": "From Here to Eternity", "artist": "Giorgio Moroder", "year": 1977, "spotify_embed": null, "youtube_id": "1Fw9Qc-NEgo" },
-      { "title": "Automatic Lover", "artist": "Dee D. Jackson", "year": 1978, "spotify_embed": null, "youtube_id": "0pYbjBhg4lk" },
-      { "title": "Lovemachine", "artist": "Supermax", "year": 1977, "spotify_embed": null, "youtube_id": null },
-      { "title": "Get Up and Boogie", "artist": "Silver Convention", "year": 1976, "spotify_embed": null, "youtube_id": null },
-      { "title": "Frantic", "artist": "Munich Machine", "year": 1977, "spotify_embed": null, "youtube_id": null }
+      { "title": "Fly, Robin, Fly", "artist": "Silver Convention", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Daddy Cool", "artist": "Boney M.", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Rasputin", "artist": "Boney M.", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "From Here to Eternity", "artist": "Giorgio Moroder", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Get on the Funk Train", "artist": "Munich Machine", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Automatic Lover", "artist": "Dee D. Jackson", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Hello Mr. Monkey", "artist": "Arabesque", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "No G.D.M.", "artist": "Gina X Performance", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "AllMusic" },
+      { "title": "Get Up and Boogie", "artist": "Silver Convention", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Sunny", "artist": "Boney M.", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" }
     ]
   },
   "IT": {
     "available": true,
     "tracks": [
-      { "title": "One for You, One for Me", "artist": "La Bionda", "year": 1978, "spotify_embed": null, "youtube_id": "Tq9C6PqV_lQ" },
-      { "title": "I'm Ready", "artist": "Kano", "year": 1980, "spotify_embed": null, "youtube_id": "9rqL7uMjBmM" },
-      { "title": "Ma Quale Idea", "artist": "Pino D'Angiò", "year": 1980, "spotify_embed": null, "youtube_id": "kZf-7Vr5xTo" },
-      { "title": "Dirty Talk", "artist": "Klein & MBO", "year": 1982, "spotify_embed": null, "youtube_id": "0c4F2HQ0w5g" },
-      { "title": "I'm a Man", "artist": "Macho", "year": 1978, "spotify_embed": null, "youtube_id": null },
-      { "title": "San Salvador", "artist": "Azoto", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Hills of Katmandu", "artist": "Tantra", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Spacer Woman", "artist": "Charlie", "year": 1983, "spotify_embed": null, "youtube_id": null }
-    ]
-  },
-  "NG": {
-    "available": true,
-    "tracks": [
-      { "title": "Atomic Bomb", "artist": "William Onyeabor", "year": 1978, "spotify_embed": null, "youtube_id": "M2eW2NScjFU" },
-      { "title": "Fantastic Man", "artist": "William Onyeabor", "year": 1977, "spotify_embed": null, "youtube_id": "nGFNK90nDeM" },
-      { "title": "Enjoy Your Life", "artist": "Oby Onyioha", "year": 1981, "spotify_embed": null, "youtube_id": "WT4Cps4Hd1k" },
-      { "title": "I Want to Feel Your Love", "artist": "Oby Onyioha", "year": 1981, "spotify_embed": null, "youtube_id": null },
-      { "title": "Only You", "artist": "Steve Monite", "year": 1984, "spotify_embed": null, "youtube_id": null },
-      { "title": "Show Me Your Backside", "artist": "Kris Okotie", "year": 1981, "spotify_embed": null, "youtube_id": null },
-      { "title": "Excuse Me Baby", "artist": "Dizzy K Falola", "year": 1982, "spotify_embed": null, "youtube_id": null },
-      { "title": "Funky Situation", "artist": "Chris Mba", "year": 1982, "spotify_embed": null, "youtube_id": null },
-      { "title": "Friday Night", "artist": "Livy Ekemezie", "year": 1983, "spotify_embed": null, "youtube_id": null },
-      { "title": "Seun Rere", "artist": "Christy Essien-Igbokwe", "year": 1981, "spotify_embed": null, "youtube_id": null },
-      { "title": "Music Alone", "artist": "Martha Ulaeto", "year": 1983, "spotify_embed": null, "youtube_id": null },
-      { "title": "Get On Up", "artist": "Murphy Williams", "year": 1982, "spotify_embed": null, "youtube_id": null },
-      { "title": "Boys & Girls", "artist": "Joe Moks", "year": 1982, "spotify_embed": null, "youtube_id": null },
-      { "title": "Listen to the Music", "artist": "Bayo Damazio", "year": 1983, "spotify_embed": null, "youtube_id": null },
-      { "title": "Nigeria Go Survive", "artist": "Veno", "year": 1984, "spotify_embed": null, "youtube_id": null },
-      { "title": "Night Illusion", "artist": "Tee Mac", "year": 1980, "spotify_embed": null, "youtube_id": null },
-      { "title": "Fire in Soweto", "artist": "Sonny Okosun", "year": 1978, "spotify_embed": null, "youtube_id": null },
-      { "title": "Wake Up Your Mind", "artist": "Joni Haastrup", "year": 1978, "spotify_embed": null, "youtube_id": null }
-    ]
-  },
-  "JM": {
-    "available": true,
-    "tracks": [
-      { "title": "Now That We Found Love", "artist": "Third World", "year": 1978, "spotify_embed": null, "youtube_id": "kSBSeYxctYU" },
-      { "title": "Every Nigger Is a Star", "artist": "Boris Gardiner", "year": 1974, "spotify_embed": null, "youtube_id": "Hb3oF5p2eHM" },
-      { "title": "Electric Boogie", "artist": "Marcia Griffiths", "year": 1983, "spotify_embed": null, "youtube_id": "Pa2hVQiI3rE" },
-      { "title": "Hooked on a Feeling", "artist": "Inner Circle", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Disco Reggae", "artist": "The Tamlins", "year": 1980, "spotify_embed": null, "youtube_id": null },
-      { "title": "Fattie Bum Bum", "artist": "Carl Malcolm", "year": 1975, "spotify_embed": null, "youtube_id": null },
-      { "title": "Cool Runnings", "artist": "Byron Lee & The Dragonaires", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Disco Music", "artist": "Lloyd Charmers", "year": 1976, "spotify_embed": null, "youtube_id": null }
-    ]
-  },
-  "AR": {
-    "available": true,
-    "tracks": [
-      { "title": "Caramelos", "artist": "Donald", "year": 1978, "spotify_embed": null, "youtube_id": null },
-      { "title": "Tarzán", "artist": "Goma", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Vamos a la Cama", "artist": "Pomada", "year": 1980, "spotify_embed": null, "youtube_id": null },
-      { "title": "Rock and Roll y Fiebre", "artist": "Banana", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Puerto Pollensa", "artist": "Sandra Mihanovich", "year": 1982, "spotify_embed": null, "youtube_id": null },
-      { "title": "Disco Baby", "artist": "Bubu", "year": 1978, "spotify_embed": null, "youtube_id": null },
-      { "title": "Imágenes Paganas", "artist": "Virus", "year": 1985, "spotify_embed": null, "youtube_id": null },
-      { "title": "Tiempos Difíciles", "artist": "Zas", "year": 1982, "spotify_embed": null, "youtube_id": null }
-    ]
-  },
-  "JP": {
-    "available": true,
-    "tracks": [
-      { "title": "Bomber", "artist": "Tatsuro Yamashita", "year": 1978, "spotify_embed": null, "youtube_id": null },
-      { "title": "Sparkle", "artist": "Tatsuro Yamashita", "year": 1982, "spotify_embed": null, "youtube_id": null },
-      { "title": "Plastic Love", "artist": "Mariya Takeuchi", "year": 1984, "spotify_embed": null, "youtube_id": null },
-      { "title": "Last Summer Whisper", "artist": "Anri", "year": 1982, "spotify_embed": null, "youtube_id": null },
-      { "title": "Telephone Number", "artist": "Junko Ohashi", "year": 1984, "spotify_embed": null, "youtube_id": null },
-      { "title": "Stay With Me", "artist": "Miki Matsubara", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Rydeen", "artist": "Yellow Magic Orchestra", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Midnight Pretenders", "artist": "Tomoko Aran", "year": 1983, "spotify_embed": null, "youtube_id": null }
-    ]
-  },
-  "ZA": {
-    "available": true,
-    "tracks": [
-      { "title": "Weekend Special", "artist": "Brenda Fassie", "year": 1983, "spotify_embed": null, "youtube_id": null },
-      { "title": "Burnout", "artist": "Sipho Mabuse", "year": 1984, "spotify_embed": null, "youtube_id": null },
-      { "title": "I'm in Love with a DJ", "artist": "Yvonne Chaka Chaka", "year": 1986, "spotify_embed": null, "youtube_id": null },
-      { "title": "Party", "artist": "Harari", "year": 1981, "spotify_embed": null, "youtube_id": null },
-      { "title": "Raise Your Hand", "artist": "Steve Kekana", "year": 1980, "spotify_embed": null, "youtube_id": null },
-      { "title": "Peace Song", "artist": "Al Etto", "year": 1985, "spotify_embed": null, "youtube_id": null }
-    ]
-  },
-  "IN": {
-    "available": true,
-    "tracks": [
-      { "title": "I Am a Disco Dancer", "artist": "Vijay Benedict", "year": 1982, "spotify_embed": null, "youtube_id": null },
-      { "title": "Jimmy Jimmy Aaja", "artist": "Parvati Khan", "year": 1982, "spotify_embed": null, "youtube_id": null },
-      { "title": "Yaad Aa Raha Hai", "artist": "Bappi Lahiri", "year": 1982, "spotify_embed": null, "youtube_id": null },
-      { "title": "Aap Jaisa Koi", "artist": "Nazia Hassan", "year": 1980, "spotify_embed": null, "youtube_id": null },
-      { "title": "Hari Om Hari", "artist": "Usha Uthup", "year": 1980, "spotify_embed": null, "youtube_id": null }
-    ]
-  },
-  "CO": {
-    "available": true,
-    "tracks": [
-      { "title": "El Caterete", "artist": "Wganda Kenya", "year": 1977, "spotify_embed": null, "youtube_id": null },
-      { "title": "Tifit Hayed", "artist": "Wganda Kenya", "year": 1978, "spotify_embed": null, "youtube_id": null },
-      { "title": "El Preso", "artist": "Fruko y sus Tesos", "year": 1975, "spotify_embed": null, "youtube_id": null },
-      { "title": "Tania", "artist": "The Latin Brothers", "year": 1976, "spotify_embed": null, "youtube_id": null },
-      { "title": "Micaela", "artist": "Michi Sarmiento", "year": 1978, "spotify_embed": null, "youtube_id": null }
-    ]
-  },
-  "MX": {
-    "available": true,
-    "tracks": [
-      { "title": "Matamoros Querido", "artist": "Rigo Tovar", "year": 1976, "spotify_embed": null, "youtube_id": null },
-      { "title": "No Tengo Dinero", "artist": "Juan Gabriel", "year": 1971, "spotify_embed": null, "youtube_id": null },
-      { "title": "Bailando", "artist": "Flans", "year": 1985, "spotify_embed": null, "youtube_id": null },
-      { "title": "México", "artist": "Timbiriche", "year": 1984, "spotify_embed": null, "youtube_id": null }
+      { "title": "One for You, One for Me", "artist": "La Bionda", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "I'm Ready", "artist": "Kano", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Dirty Talk", "artist": "Klein + M.B.O.", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Ma quale idea", "artist": "Pino D'Angiò", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "San Salvador", "artist": "Azoto", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Hills of Katmandu", "artist": "Tantra", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "I'm a Man", "artist": "Macho", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "I Like Chopin", "artist": "Gazebo", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Vamos a la playa", "artist": "Righeira", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Dolce Vita", "artist": "Ryan Paris", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Another Life", "artist": "Kano", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "No tengo dinero", "artist": "Righeira", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" }
     ]
   },
   "ES": {
     "available": true,
     "tracks": [
-      { "title": "Yes Sir, I Can Boogie", "artist": "Baccara", "year": 1977, "spotify_embed": null, "youtube_id": null },
-      { "title": "Sorry, I'm a Lady", "artist": "Baccara", "year": 1977, "spotify_embed": null, "youtube_id": null },
-      { "title": "Fotonovela", "artist": "Iván", "year": 1984, "spotify_embed": null, "youtube_id": null },
-      { "title": "Me Estoy Volviendo Loca", "artist": "Azul y Negro", "year": 1982, "spotify_embed": null, "youtube_id": null }
+      { "title": "Yes Sir, I Can Boogie", "artist": "Baccara", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Sorry, I'm a Lady", "artist": "Baccara", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Fotonovela", "artist": "Iván", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "La Noche", "artist": "Azul y Negro", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "No tengo tiempo (Con los dedos de una mano)", "artist": "Azul y Negro", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Salta", "artist": "Tequila", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Concierto para adolescentes", "artist": "Pecos", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Me estoy volviendo loco", "artist": "Tequila", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" }
     ]
   },
-  "NL": {
+  "NG": {
     "available": true,
     "tracks": [
-      { "title": "Trojan Horse", "artist": "Luv'", "year": 1978, "spotify_embed": null, "youtube_id": null },
-      { "title": "You and Me", "artist": "Spargo", "year": 1980, "spotify_embed": null, "youtube_id": null },
-      { "title": "Stars on 45", "artist": "Stars on 45", "year": 1981, "spotify_embed": null, "youtube_id": null },
-      { "title": "Shine Up", "artist": "Doris D and the Pins", "year": 1981, "spotify_embed": null, "youtube_id": null }
+      { "title": "Atomic Bomb", "artist": "William Onyeabor", "year": 1978, "spotify_embed": null, "youtube_id": "M2eW2NScjFU", "source": "Discogs/Wikipedia" },
+      { "title": "Fantastic Man", "artist": "William Onyeabor", "year": 1977, "spotify_embed": null, "youtube_id": "nGFNK90nDeM", "source": "Discogs/Wikipedia" },
+      { "title": "Enjoy Your Life", "artist": "Oby Onyioha", "year": 1981, "spotify_embed": null, "youtube_id": "WT4Cps4Hd1k", "source": "Discogs" },
+      { "title": "I Want to Feel Your Love", "artist": "Oby Onyioha", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Brand New Wayo (Comb & Razor)" },
+      { "title": "Only You", "artist": "Steve Monite", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/Awesome Tapes" },
+      { "title": "Show Me Your Backside", "artist": "Kris Okotie", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Brand New Wayo (Comb & Razor)" },
+      { "title": "Excuse Me Baby", "artist": "Dizzy K Falola", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Brand New Wayo (Comb & Razor)" },
+      { "title": "Funky Situation", "artist": "Chris Mba", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Brand New Wayo (Comb & Razor)" },
+      { "title": "Friday Night", "artist": "Livy Ekemezie", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs (Odion Livingstone)" },
+      { "title": "Seun Rere", "artist": "Christy Essien-Igbokwe", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Music Alone", "artist": "Martha Ulaeto", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Brand New Wayo (Comb & Razor)" },
+      { "title": "Get On Up", "artist": "Murphy Williams", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Brand New Wayo (Comb & Razor)" },
+      { "title": "Boys & Girls", "artist": "Joe Moks", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Brand New Wayo (Comb & Razor)" },
+      { "title": "Listen to the Music", "artist": "Bayo Damazio", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Brand New Wayo (Comb & Razor)" },
+      { "title": "Nigeria Go Survive", "artist": "Veno", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Doing It In Lagos (Soundway)" },
+      { "title": "Night Illusion", "artist": "Tee Mac", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Fire in Soweto", "artist": "Sonny Okosun", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Wake Up Your Mind", "artist": "Joni Haastrup", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs" }
     ]
   },
-  "BE": {
+  "ZA": {
     "available": true,
     "tracks": [
-      { "title": "Moskow Diskow", "artist": "Telex", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Que Tal America", "artist": "Two Man Sound", "year": 1978, "spotify_embed": null, "youtube_id": null },
-      { "title": "Ça Plane pour Moi", "artist": "Plastic Bertrand", "year": 1977, "spotify_embed": null, "youtube_id": null },
-      { "title": "Capital Tropical", "artist": "Lou Deprijck", "year": 1980, "spotify_embed": null, "youtube_id": null }
-    ]
-  },
-  "SE": {
-    "available": true,
-    "tracks": [
-      { "title": "Voulez-Vous", "artist": "ABBA", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Gimme! Gimme! Gimme! (A Man After Midnight)", "artist": "ABBA", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Oh Susie", "artist": "Secret Service", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Movie Star", "artist": "Harpo", "year": 1975, "spotify_embed": null, "youtube_id": null }
-    ]
-  },
-  "CA": {
-    "available": true,
-    "tracks": [
-      { "title": "Dancer", "artist": "Gino Soccio", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Come to Me", "artist": "France Joli", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "Your Love", "artist": "Lime", "year": 1981, "spotify_embed": null, "youtube_id": null },
-      { "title": "Sugar Pie Guy", "artist": "THP Orchestra", "year": 1977, "spotify_embed": null, "youtube_id": null },
-      { "title": "Dancin' Fever", "artist": "Claudja Barry", "year": 1979, "spotify_embed": null, "youtube_id": null },
-      { "title": "From Me to You", "artist": "Patsy Gallant", "year": 1977, "spotify_embed": null, "youtube_id": null }
-    ]
-  },
-  "AU": {
-    "available": true,
-    "tracks": [
-      { "title": "Love Is in the Air", "artist": "John Paul Young", "year": 1977, "spotify_embed": null, "youtube_id": null },
-      { "title": "Howzat", "artist": "Sherbet", "year": 1976, "spotify_embed": null, "youtube_id": null },
-      { "title": "You", "artist": "Marcia Hines", "year": 1975, "spotify_embed": null, "youtube_id": null },
-      { "title": "Glad All Over", "artist": "Hush", "year": 1975, "spotify_embed": null, "youtube_id": null }
-    ]
-  },
-  "PH": {
-    "available": true,
-    "tracks": [
-      { "title": "Awitin Mo at Isasayaw Ko", "artist": "VST & Co.", "year": 1978, "spotify_embed": null, "youtube_id": null },
-      { "title": "Manila", "artist": "Hotdog", "year": 1976, "spotify_embed": null, "youtube_id": null },
-      { "title": "Sumayaw, Sumunod", "artist": "The Boyfriends", "year": 1978, "spotify_embed": null, "youtube_id": null },
-      { "title": "Disco Fever", "artist": "VST & Co.", "year": 1979, "spotify_embed": null, "youtube_id": null }
+      { "title": "Weekend Special", "artist": "Brenda & The Big Dudes", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Afro-Synth" },
+      { "title": "Burn Out", "artist": "Sipho Mabuse", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Afro-Synth" },
+      { "title": "I'm in Love with a DJ", "artist": "Yvonne Chaka Chaka", "year": 1985, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/OkayAfrica" },
+      { "title": "Party", "artist": "Harari", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Raising My Family", "artist": "Steve Kekana", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Peacock", "artist": "Splash", "year": 1986, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Whispers in the Deep (Phinda Mzala)", "artist": "Stimela", "year": 1986, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/Mail & Guardian" },
+      { "title": "Don't Go Lose It Baby", "artist": "Hugh Masekela", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Letta", "artist": "Letta Mbulu", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Kazet", "artist": "Mahlathini and the Mahotella Queens", "year": 1987, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" }
     ]
   },
   "GH": {
     "available": true,
     "tracks": [
-      { "title": "Simigwa", "artist": "Gyedu-Blay Ambolley", "year": 1975, "spotify_embed": null, "youtube_id": null },
-      { "title": "Love and Death", "artist": "Marijata", "year": 1976, "spotify_embed": null, "youtube_id": null },
-      { "title": "Kyenkyen Bi Adi M'awu", "artist": "K. Frimpong", "year": 1976, "spotify_embed": null, "youtube_id": null },
-      { "title": "Heaven", "artist": "Pat Thomas", "year": 1980, "spotify_embed": null, "youtube_id": null }
+      { "title": "Simigwa-Do", "artist": "Gyedu-Blay Ambolley", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Mother Africa", "artist": "Marijata", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Soundway (Ghana Soundz)" },
+      { "title": "Kyenkyen Bi Adi M'awu", "artist": "K. Frimpong & His Cubano Fiestas", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Soundway (Ghana Soundz)" },
+      { "title": "Make It Fast, Make It Slow", "artist": "Rob", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Soundway (Ghana Soundz)" },
+      { "title": "Heaven", "artist": "Ebo Taylor", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Soundway (Ghana Soundz)" },
+      { "title": "Akoo Te Brofo", "artist": "George Darko", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "I Walk Alone", "artist": "Marijata", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Discogs (Pat Thomas Introduces Marijata)" }
     ]
   },
   "SN": {
     "available": true,
     "tracks": [
-      { "title": "Utru Horas", "artist": "Orchestra Baobab", "year": 1978, "spotify_embed": null, "youtube_id": null },
-      { "title": "Xalis", "artist": "Étoile de Dakar", "year": 1979, "spotify_embed": null, "youtube_id": null }
+      { "title": "Utru Horas", "artist": "Orchestra Baobab", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Xalis", "artist": "Étoile de Dakar", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Immigrés / Bitim Rew", "artist": "Youssou N'Dour & Le Super Étoile de Dakar", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Ade", "artist": "Xalam", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Mam'", "artist": "Super Diamono de Dakar", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Discogs" }
+    ]
+  },
+  "JM": {
+    "available": true,
+    "tracks": [
+      { "title": "Now That We Found Love", "artist": "Third World", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Every Nigger Is a Star", "artist": "Boris Gardiner", "year": 1974, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/Soul Jazz" },
+      { "title": "Fattie Bum-Bum", "artist": "Carl Malcolm", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Electric Boogie", "artist": "Marcia Griffiths", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Everything Is Great", "artist": "Inner Circle", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Baltimore", "artist": "The Tamlins", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "O.K. Fred", "artist": "Errol Dunkley", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Dancing on the Floor (Hooked on Love)", "artist": "Third World", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "I Want to Wake Up with You", "artist": "Boris Gardiner", "year": 1986, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Try Jah Love", "artist": "Third World", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Discogs" }
     ]
   },
   "CU": {
     "available": true,
     "tracks": [
-      { "title": "Bacalao con Pan", "artist": "Irakere", "year": 1975, "spotify_embed": null, "youtube_id": null },
-      { "title": "La Habana Joven", "artist": "Los Van Van", "year": 1978, "spotify_embed": null, "youtube_id": null }
+      { "title": "Bacalao con Pan", "artist": "Irakere", "year": 1974, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Con Todos los Hierros", "artist": "Juan Pablo Torres", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "La Monumental", "artist": "Grupo Monumental", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Freestyle" },
+      { "title": "Sandunguera", "artist": "Los Van Van", "year": 1986, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/Discogs" },
+      { "title": "Songo", "artist": "Los Van Van", "year": 1988, "spotify_embed": null, "youtube_id": null, "source": "Discogs/AllMusic" },
+      { "title": "Los Reyes 73", "artist": "Los Reyes 73", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Discogs" }
+    ]
+  },
+  "CV": {
+    "available": true,
+    "tracks": [
+      { "title": "Mie Fogo", "artist": "Dionísio Maio", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Ostinato (Synthesize the Soul)" },
+      { "title": "Dia Ja Manche", "artist": "Dionísio Maio", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Analog Africa (Space Echo)" },
+      { "title": "Farmacia", "artist": "Abel Lima", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs (Problemas D'Bida)" },
+      { "title": "Cabo Verde Poema Tropical", "artist": "Quirino do Canto", "year": 1985, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Pinta Manta", "artist": "António Sanches", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Analog Africa (Space Echo) — ano aproximado" },
+      { "title": "Bo Ta Cool", "artist": "Jovino dos Santos", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Ostinato (Synthesize the Soul) — ano aproximado" },
+      { "title": "Djozinho Cabral", "artist": "José Casimiro", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Ostinato (Synthesize the Soul) — ano aproximado" },
+      { "title": "Canta Cu Alma Magoada", "artist": "Bana", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Ostinato (Synthesize the Soul) — ano aproximado" }
+    ]
+  },
+  "AR": {
+    "available": true,
+    "tracks": [
+      { "title": "Te quiero (aunque ya no eres mía)", "artist": "Pomada", "year": 1973, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Hoy chiquita que te vuelvo a ver", "artist": "Pomada", "year": 1973, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Amanece y tú no estás", "artist": "Pomada", "year": 1974, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia — ano aproximado" },
+      { "title": "Conociéndote", "artist": "Banana", "year": 1974, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "El extraño de pelo largo", "artist": "La Joven Guardia", "year": 1970, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/Discogs" },
+      { "title": "Puerto Pollensa", "artist": "Sandra Mihanovich", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Vos, yo, uno más uno", "artist": "Sandra Mihanovich", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "La Nación" },
+      { "title": "Va por vos, para vos", "artist": "Miguel Mateos / ZAS", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia (ZAS)" }
+    ]
+  },
+  "CO": {
+    "available": true,
+    "tracks": [
+      { "title": "El Preso", "artist": "Fruko y sus Tesos", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "A la memoria del muerto", "artist": "Fruko y sus Tesos", "year": 1972, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Vampisoul" },
+      { "title": "Tesura", "artist": "Fruko y sus Tesos", "year": 1970, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Shakalaode", "artist": "Wganda Kenya", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "El Abanico", "artist": "Wganda Kenya", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Afrosound of Colombia" },
+      { "title": "Tifit Hayed", "artist": "Wganda Kenya", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Las caleñas son como las flores", "artist": "The Latin Brothers", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Caliventura", "artist": "Afrosound", "year": 1973, "spotify_embed": null, "youtube_id": null, "source": "Vampisoul (Afrosound of Colombia) — ano aproximado" }
+    ]
+  },
+  "MX": {
+    "available": true,
+    "tracks": [
+      { "title": "Nasty Sex", "artist": "La Revolución de Emiliano Zapata", "year": 1971, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Lost in My World (Perdido en mi mundo)", "artist": "Dug Dug's", "year": 1972, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Smog", "artist": "Los Dug Dug's", "year": 1973, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Disco Rock II", "artist": "Grupo Latino", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "El diablo en el cuerpo", "artist": "Size", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/Reforma" },
+      { "title": "Film", "artist": "Casino Shanghai", "year": 1985, "spotify_embed": null, "youtube_id": null, "source": "Mirador México" },
+      { "title": "Insano", "artist": "Toncho Pilatos", "year": 1973, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" }
+    ]
+  },
+  "CN": {
+    "available": true,
+    "tracks": [
+      { "title": "Chinese Disco", "artist": "Frances Yip", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Arquivo de disco / bio (ano aproximado)" },
+      { "title": "赤的疑惑", "artist": "Anita Mui", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "心債", "artist": "Anita Mui", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Discogs (dance-pop gangtai)" }
+    ]
+  },
+  "JP": {
+    "available": true,
+    "tracks": [
+      { "title": "Ride on Time", "artist": "Tatsuro Yamashita", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Sparkle", "artist": "Tatsuro Yamashita", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Plastic Love", "artist": "Mariya Takeuchi", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Windy Summer", "artist": "Anri", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Remember Summer Days", "artist": "Anri", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Telephone Number", "artist": "Junko Ohashi", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Sea Breeze", "artist": "Toshiki Kadomatsu", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Sunshower", "artist": "Taeko Onuki", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Mayonaka no Door (Stay With Me)", "artist": "Miki Matsubara", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Midnight Pretenders", "artist": "Tomoko Aran", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Rydeen", "artist": "Yellow Magic Orchestra", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Awakening", "artist": "Hiroshi Sato", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Discogs" }
+    ]
+  },
+  "IN": {
+    "available": true,
+    "tracks": [
+      { "title": "Aap Jaisa Koi", "artist": "Nazia Hassan", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Jimmy Jimmy Jimmy Aaja", "artist": "Parvati Khan", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "I Am a Disco Dancer", "artist": "Vijay Benedict", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Hari Om Hari", "artist": "Usha Uthup", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Disco Station", "artist": "Asha Bhosle", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Dum Maro Dum", "artist": "Asha Bhosle", "year": 1971, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia (precursor)" },
+      { "title": "Jhoom Jhoom Jhoom Baba", "artist": "Salma Agha", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Auva Auva Koi Yahan Nache", "artist": "Bappi Lahiri", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" }
+    ]
+  },
+  "PH": {
+    "available": true,
+    "tracks": [
+      { "title": "Awitin Mo at Isasayaw Ko", "artist": "VST & Co.", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Annie Batungbakal", "artist": "Hotdog", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Pers Lab", "artist": "Hotdog", "year": 1974, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Sumayaw, Sumunod", "artist": "The Boyfriends", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Macho Gwapito", "artist": "Rico J. Puno", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "The Way We Were", "artist": "Rico J. Puno", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Ang Boyfriend Kong Baduy", "artist": "Cinderella", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Kumusta Mga Kaibigan", "artist": "Maria Cafra", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Rate Your Music" }
+    ]
+  },
+  "CA": {
+    "available": true,
+    "tracks": [
+      { "title": "Dancer", "artist": "Gino Soccio", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Come to Me", "artist": "France Joli", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Babe, We're Gonna Love Tonight", "artist": "Lime", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Can't Fake the Feeling", "artist": "Geraldine Hunt", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Hit'n Run Lover", "artist": "Carol Jiani", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "War Dance", "artist": "Kebekelektrik", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Two Hot for Love", "artist": "THP Orchestra", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "(Boogie Woogie) Dancin' Shoes", "artist": "Claudja Barry", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "From New York to L.A.", "artist": "Patsy Gallant", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Living on Video", "artist": "Trans-X", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Pop Pop Shoo Wah", "artist": "Erotic Drum Band", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Let's Dance", "artist": "Bombers", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" }
+    ]
+  },
+  "AU": {
+    "available": true,
+    "tracks": [
+      { "title": "Love Is in the Air", "artist": "John Paul Young", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Standing in the Rain", "artist": "John Paul Young", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Howzat", "artist": "Sherbet", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "You", "artist": "Marcia Hines", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Can't Stop Myself from Loving You", "artist": "William Shakespeare", "year": 1974, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Bony Moronie", "artist": "Hush", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "World of Make Believe", "artist": "Stylus", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Australian Music Database" },
+      { "title": "Heading in the Right Direction", "artist": "Renée Geyer", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" }
+    ]
+  },
+  "NL": {
+    "available": true,
+    "tracks": [
+      { "title": "You're the Greatest Lover", "artist": "Luv'", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "You and Me", "artist": "Spargo", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Stars on 45", "artist": "Stars on 45", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Shine Up", "artist": "Doris D and the Pins", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "I'm Specialized in You", "artist": "Time Bandits", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Rock 'n Roll Star", "artist": "Champagne", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "NPO Radio 2" },
+      { "title": "Dance On", "artist": "Doris D and the Pins", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Paloma Blanca", "artist": "George Baker Selection", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" }
+    ]
+  },
+  "BE": {
+    "available": true,
+    "tracks": [
+      { "title": "Moskow Diskow", "artist": "Telex", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Que Tal America", "artist": "Two Man Sound", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Ça plane pour moi", "artist": "Plastic Bertrand", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Kingston, Kingston", "artist": "Lou and the Hollywood Bananas", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Rock Around the Clock", "artist": "Telex", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "African Queen", "artist": "Allez Allez", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" }
+    ]
+  },
+  "SE": {
+    "available": true,
+    "tracks": [
+      { "title": "Voulez-Vous", "artist": "ABBA", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Gimme! Gimme! Gimme! (A Man After Midnight)", "artist": "ABBA", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Oh Susie", "artist": "Secret Service", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Moviestar", "artist": "Harpo", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Just nu!", "artist": "Tomas Ledin", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Hooked on a Feeling", "artist": "Blue Swede", "year": 1974, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/AllMusic" }
     ]
   },
   "MN": { "available": false },

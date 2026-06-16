@@ -67,8 +67,8 @@
       const info = document.createElement("div");
       info.className = "track-info";
       const badge =
-        track.source && track.source !== "seeds"
-          ? `<span class="track-badge">${track.source}</span>`
+        track.origin && track.origin !== "seeds"
+          ? `<span class="track-badge">${track.origin}</span>`
           : "";
       info.innerHTML =
         `<div class="track-title">${esc(track.title)}${badge}</div>` +

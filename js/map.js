@@ -39,6 +39,8 @@
     { code: "GH", name: "Gana",           flag: "🇬🇭", lat: 8,   lng: -1,  mb: "GH", dg: "Ghana" },
     { code: "SN", name: "Senegal",        flag: "🇸🇳", lat: 14,  lng: -14, mb: "SN", dg: "Senegal" },
     { code: "CU", name: "Cuba",           flag: "🇨🇺", lat: 22,  lng: -79, mb: "CU", dg: "Cuba" },
+    { code: "CV", name: "Cabo Verde",     flag: "🇨🇻", lat: 16,  lng: -24, mb: "CV", dg: "Cape Verde" },
+    { code: "CN", name: "China",          flag: "🇨🇳", lat: 35,  lng: 105, mb: "CN", dg: "China" },
     { code: "MN", name: "Mongólia",       flag: "🇲🇳", lat: 47,  lng: 104, mb: "MN", dg: "Mongolia" },
     { code: "GL", name: "Groenlândia",    flag: "🇬🇱", lat: 72,  lng: -40, mb: "GL", dg: "Greenland" },
   ];
