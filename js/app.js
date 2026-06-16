@@ -7,7 +7,7 @@
   "use strict";
 
   let SEEDS = {};
-  let currentToken = 0; // evita "race" entre cliques rápidos
+  let mapInstance = null;
   const els = {};
 
   // ---------- Dados ----------
@@ -23,22 +23,23 @@
   }
 
   // ---------- Painel de resultados ----------
-  function showWelcome() {
-    window.Player.closePreview();
-    els.welcome.hidden = false;
-    els.content.hidden = true;
+  // O mapa redimensiona quando o painel abre/fecha, então avisamos o Leaflet.
+  function invalidateMap() {
+    if (!mapInstance) return;
+    setTimeout(() => mapInstance.invalidateSize(), 60);
   }
 
-  function showCountryShell(country) {
+  function closePanel() {
     window.Player.closePreview();
-    els.welcome.hidden = true;
-    els.content.hidden = false;
-    els.title.textContent = `${country.flag} ${country.name}`;
-    els.count.textContent = "";
-    els.list.innerHTML = "";
-    els.sources.textContent = "";
-    els.unavailable.hidden = true;
-    els.loading.hidden = true;
+    els.panel.hidden = true;
+    document.body.classList.remove("panel-open");
+    invalidateMap();
+  }
+
+  function openPanel() {
+    els.panel.hidden = false;
+    document.body.classList.add("panel-open");
+    invalidateMap();
   }
 
   function tagCountry(tracks, country) {
@@ -107,9 +108,14 @@
     });
   }
 
-  async function onSelectCountry(country) {
-    const token = ++currentToken;
-    showCountryShell(country);
+  function onSelectCountry(country) {
+    window.Player.closePreview();
+    openPanel();
+
+    els.title.textContent = `${country.flag} ${country.name}`;
+    els.count.textContent = "";
+    els.list.innerHTML = "";
+    els.sources.textContent = "";
 
     const entry = SEEDS[country.code];
 
@@ -119,33 +125,16 @@
       els.count.textContent = "—";
       return;
     }
+    els.unavailable.hidden = true;
 
+    // Seleção curada e verificada (sem enriquecimento ao vivo, que trazia
+    // faixas de outros países pelo país-de-lançamento pouco confiável).
     const local = (entry && entry.tracks) || [];
-    els.loading.hidden = false;
-
-    // 1) Locais imediatamente.
-    renderTracks(tagCountry(window.DiscoAlgorithm.merge(local), country));
-    els.count.textContent = `${local.length} curadas`;
-
-    // 2) APIs externas em paralelo (best-effort).
-    const [mb, dg] = await Promise.all([
-      window.MusicBrainz.searchByCountry(country.mb).catch(() => []),
-      window.Discogs.searchByCountry(country.dg).catch(() => []),
-    ]);
-    if (token !== currentToken) return; // outro país foi clicado
-
-    // 3-5) Mescla, deduplica, ordena, limita a 12.
-    const merged = tagCountry(window.DiscoAlgorithm.merge(local, mb, dg), country);
+    const merged = tagCountry(window.DiscoAlgorithm.merge(local), country);
     renderTracks(merged);
-    els.loading.hidden = true;
     els.count.textContent = `${merged.length} faixas`;
-
-    const found = [];
-    if (mb.length) found.push(`MusicBrainz (+${mb.length})`);
-    if (dg.length) found.push(`Discogs (+${dg.length})`);
-    els.sources.textContent = found.length
-      ? `Enriquecido com ${found.join(" e ")}.`
-      : "APIs externas indisponíveis — exibindo seleção curada.";
+    els.sources.textContent =
+      "Seleção curada e verificada · ▶ Prévia toca 30s · ＋ adiciona à playlist.";
   }
 
   // ---------- Dialog genérico ----------
@@ -403,12 +392,10 @@
   }
 
   function cacheEls() {
-    els.welcome = document.getElementById("panel-welcome");
-    els.content = document.getElementById("panel-content");
+    els.panel = document.getElementById("panel");
     els.title = document.getElementById("country-title");
     els.count = document.getElementById("country-count");
     els.list = document.getElementById("track-list");
-    els.loading = document.getElementById("loading");
     els.sources = document.getElementById("sources-note");
     els.unavailable = document.getElementById("unavailable");
   }
@@ -417,7 +404,7 @@
     cacheEls();
     window.Player.init();
 
-    document.getElementById("back-btn").addEventListener("click", showWelcome);
+    document.getElementById("back-btn").addEventListener("click", closePanel);
     document.getElementById("open-playlists").addEventListener("click", openPlaylistsPanel);
     document.getElementById("new-playlist-btn").addEventListener("click", () => newPlaylistDialog(null));
 
@@ -429,7 +416,7 @@
     });
 
     await loadSeeds();
-    window.DiscoMap.init(onSelectCountry);
+    mapInstance = window.DiscoMap.init(onSelectCountry);
   }
 
   document.addEventListener("DOMContentLoaded", main);

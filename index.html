@@ -37,7 +37,7 @@
     rel="stylesheet"
   />
 
-  <link rel="stylesheet" href="css/style.css?v=5" />
+  <link rel="stylesheet" href="css/style.css?v=6" />
 </head>
 <body>
   <header class="topbar">
@@ -54,23 +54,11 @@
     <!-- Mapa -->
     <section id="map" aria-label="Mapa-múndi interativo"></section>
 
-    <!-- Painel lateral de resultados -->
-    <aside id="panel" class="panel" aria-live="polite">
-      <div id="panel-welcome" class="panel-welcome">
-        <div class="vinyl">
-          <div class="vinyl-label"></div>
-        </div>
-        <h2>Escolha um país</h2>
-        <p>
-          Clique em um país destacado no mapa para descobrir pérolas do
-          disco e do boogie de todos os continentes. Adicione faixas às suas
-          <strong>playlists</strong> e use a <strong>▶ Prévia</strong> de 30s.
-        </p>
-      </div>
-
-      <div id="panel-content" class="panel-content" hidden>
+    <!-- Painel lateral de resultados (só aparece ao escolher um país) -->
+    <aside id="panel" class="panel" aria-live="polite" hidden>
+      <div id="panel-content" class="panel-content">
         <div class="panel-header">
-          <button id="back-btn" class="back-btn" type="button" aria-label="Voltar">‹</button>
+          <button id="back-btn" class="back-btn" type="button" aria-label="Fechar">‹</button>
           <h2 id="country-title">País</h2>
           <span id="country-count" class="country-count"></span>
         </div>
@@ -78,11 +66,6 @@
         <div id="unavailable" class="unavailable" hidden>
           <div class="sad-vinyl">🪩</div>
           <p>Nenhuma produção de disco ou boogie encontrada neste país.</p>
-        </div>
-
-        <div id="loading" class="loading" hidden>
-          <div class="spinner"></div>
-          <span>Buscando faixas em MusicBrainz e Discogs…</span>
         </div>
 
         <ul id="track-list" class="track-list"></ul>
@@ -132,8 +115,8 @@
 
   <footer class="footer">
     <p>
-      Dados: JSON curado + MusicBrainz + Discogs · Players: YouTube &amp; Spotify ·
-      Sem chaves, sem login. Feito para o GitHub Pages.
+      Seleção curada (242 faixas, 26 países) · Prévia 30s via iTunes/Deezer ·
+      Players YouTube &amp; Spotify · Sem chaves, sem login.
     </p>
   </footer>
 
@@ -145,14 +128,14 @@
   ></script>
 
   <!-- App modules (ordem importa) -->
-  <script src="js/musicbrainz.js?v=5"></script>
-  <script src="js/discogs.js?v=5"></script>
-  <script src="js/itunes.js?v=5"></script>
-  <script src="js/deezer.js?v=5"></script>
-  <script src="js/algorithm.js?v=5"></script>
-  <script src="js/playlists.js?v=5"></script>
-  <script src="js/player.js?v=5"></script>
-  <script src="js/map.js?v=5"></script>
-  <script src="js/app.js?v=5"></script>
+  <script src="js/musicbrainz.js?v=6"></script>
+  <script src="js/discogs.js?v=6"></script>
+  <script src="js/itunes.js?v=6"></script>
+  <script src="js/deezer.js?v=6"></script>
+  <script src="js/algorithm.js?v=6"></script>
+  <script src="js/playlists.js?v=6"></script>
+  <script src="js/player.js?v=6"></script>
+  <script src="js/map.js?v=6"></script>
+  <script src="js/app.js?v=6"></script>
 </body>
 </html>

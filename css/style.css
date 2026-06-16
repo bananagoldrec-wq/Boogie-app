@@ -118,6 +118,7 @@ html, body {
   padding: 18px;
   z-index: 400;
 }
+.panel[hidden] { display: none; }
 
 .panel-welcome { text-align: center; padding-top: 10px; animation: fadeIn .5s ease; }
 .panel-welcome h2 {
@@ -438,7 +439,12 @@ html, body {
 /* ---------- Responsive ---------- */
 @media (max-width: 760px) {
   .layout { flex-direction: column; height: auto; }
-  #map { height: 50vh; min-height: 300px; }
+  /* Mapa ocupa a tela toda até escolher um país; encolhe quando o painel abre */
+  #map {
+    height: calc(100vh - 96px - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    min-height: 320px;
+  }
+  body.panel-open #map { height: 45vh; min-height: 280px; }
   .panel {
     width: 100%; max-width: 100%; height: auto;
     border-left: none; border-top: 6px double var(--gold-deep);
