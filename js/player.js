@@ -67,18 +67,17 @@
     }
   }
 
-  function previewActions(track) {
-    const actions = document.createElement("div");
-    actions.className = "preview-actions";
-    actions.appendChild(linkBtn(ytSearch(track), "YouTube", ""));
-    actions.appendChild(linkBtn(spSearch(track), "Spotify", "spotify"));
-    const full = document.createElement("button");
-    full.type = "button";
-    full.className = "btn-link full-btn";
-    full.textContent = "Ouvir completo ⤢";
-    full.addEventListener("click", () => { closePreview(); open(track); });
-    actions.appendChild(full);
-    return actions;
+  /**
+   * Resolve uma prévia de 30s tocável (áudio) tentando iTunes e depois Deezer.
+   * Ambos são keyless e entregam um arquivo de áudio direto (sem CORS p/ <audio>).
+   */
+  async function findPreview(track) {
+    let hit = null;
+    try { hit = await window.ITunes.find(track); } catch (e) { /* tenta Deezer */ }
+    if (hit && hit.previewUrl) return hit;
+    try { hit = await window.Deezer.find(track); } catch (e) { /* sem prévia */ }
+    if (hit && hit.previewUrl) return hit;
+    return null;
   }
 
   async function preview(track, anchorEl) {
@@ -98,9 +97,7 @@
     anchorEl.insertAdjacentElement("afterend", box);
     activePreview = box;
 
-    // 1) iTunes: áudio de 30s que toca direto no app (keyless, CORS).
-    let hit = null;
-    try { hit = await window.ITunes.find(track); } catch (e) { /* fallback abaixo */ }
+    const hit = await findPreview(track);
     if (activePreview !== box) return; // usuário trocou de prévia/país
 
     box.innerHTML = "";
@@ -118,8 +115,8 @@
       const meta = document.createElement("div");
       meta.className = "preview-now";
       meta.innerHTML =
-        `<strong>${track.title}</strong>` +
-        `<span>${track.artist} · prévia 30s (iTunes)</span>`;
+        `<strong>${esc(track.title)}</strong>` +
+        `<span>${esc(track.artist)} · prévia 30s (${hit.source || "áudio"})</span>`;
       head.appendChild(meta);
       box.appendChild(head);
 
@@ -132,19 +129,23 @@
       box.appendChild(audio);
       audio.play().catch(() => {}); // gesto do usuário já permite tocar
     } else {
-      // 2) Fallback: embed do YouTube se houver ID curado.
+      // Sem prévia em iTunes nem Deezer: tenta embed do YouTube curado.
       const yt = ytEmbedSrc(track, true);
       if (yt) {
         box.appendChild(makeIframe(yt, 80, "Prévia YouTube"));
       } else {
         const msg = document.createElement("p");
         msg.className = "preview-msg";
-        msg.textContent = "Prévia direta indisponível para esta faixa — ouça pela busca:";
+        msg.textContent = "Não encontramos uma prévia de áudio para esta faixa.";
         box.appendChild(msg);
       }
     }
+  }
 
-    box.appendChild(previewActions(track));
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
   }
 
   function anchorKey(t) {
@@ -166,16 +167,15 @@
     return block;
   }
 
-  async function appendItunesBlock(track, myToken) {
-    let hit = null;
-    try { hit = await window.ITunes.find(track); } catch (e) { return; }
+  async function appendPreviewBlock(track, myToken) {
+    const hit = await findPreview(track);
     if (myToken !== renderToken || !hit || !hit.previewUrl) return;
     const body = document.getElementById("player-body");
     if (!body) return;
     const block = document.createElement("div");
     block.className = "player-block";
     const h = document.createElement("h4");
-    h.textContent = "🎧 Prévia 30s (toca direto)";
+    h.textContent = `🎧 Prévia 30s (toca direto · ${hit.source || "áudio"})`;
     const audio = document.createElement("audio");
     audio.className = "preview-audio";
     audio.controls = true;
@@ -212,8 +212,8 @@
       )
     );
 
-    // Bloco de áudio garantido (30s via iTunes), inserido no topo quando resolver.
-    appendItunesBlock(track, myToken);
+    // Bloco de áudio garantido (30s via iTunes/Deezer), no topo quando resolver.
+    appendPreviewBlock(track, myToken);
   }
 
   function renderQueueBar() {
