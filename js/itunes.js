@@ -40,6 +40,45 @@
     }
   }
 
+  /**
+   * JSONP: a iTunes Search API nem sempre envia cabeçalhos de CORS, então
+   * carregamos via <script> usando o parâmetro `callback` (suportado pela API).
+   * Isso ignora o CORS por completo.
+   */
+  function fetchJSONP(url) {
+    return new Promise((resolve, reject) => {
+      const cb = "__itunes_cb_" + Math.random().toString(36).slice(2);
+      const script = document.createElement("script");
+      let done = false;
+      const cleanup = () => {
+        delete window[cb];
+        script.remove();
+        clearTimeout(timer);
+      };
+      const timer = setTimeout(() => {
+        if (!done) { done = true; cleanup(); reject(new Error("iTunes JSONP timeout")); }
+      }, TIMEOUT_MS);
+      window[cb] = (data) => {
+        if (done) return;
+        done = true; cleanup(); resolve(data);
+      };
+      script.onerror = () => {
+        if (!done) { done = true; cleanup(); reject(new Error("iTunes JSONP error")); }
+      };
+      script.src = url + (url.indexOf("?") === -1 ? "?" : "&") + "callback=" + cb;
+      document.head.appendChild(script);
+    });
+  }
+
+  async function request(url) {
+    // Tenta CORS primeiro; se falhar (típico no iTunes), usa JSONP.
+    try {
+      return await fetchJSON(url);
+    } catch (err) {
+      return await fetchJSONP(url);
+    }
+  }
+
   function pickBest(results, track) {
     if (!results || !results.length) return null;
     const wantTitle = norm(track.title);
@@ -71,7 +110,7 @@
 
     let result = null;
     try {
-      const data = await fetchJSON(url);
+      const data = await request(url);
       const best = pickBest(data && data.results, track);
       if (best && best.previewUrl) {
         result = {
