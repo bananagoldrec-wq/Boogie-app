@@ -275,6 +275,12 @@ html, body {
 .btn-link.spotify:hover { background: #169c46; }
 .btn-link.ghost { background: var(--brown-soft); }
 .btn-link.ghost:hover { background: var(--brown); }
+.btn-link.discogs { background: #333; }
+.btn-link.discogs:hover { background: #111; }
+.btn-link.ebay { background: #0064d2; }
+.btn-link.ebay:hover { background: #004fa3; }
+.btn-link.mercado { background: #ffe600; color: #2a1a0d; }
+.btn-link.mercado:hover { background: #f2d600; }
 
 /* ---------- Track actions + preview ---------- */
 .track { flex-direction: column; align-items: stretch; gap: 8px; }

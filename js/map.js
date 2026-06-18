@@ -41,6 +41,12 @@
     { code: "CU", name: "Cuba",           flag: "🇨🇺", lat: 22,  lng: -79, mb: "CU", dg: "Cuba" },
     { code: "CV", name: "Cabo Verde",     flag: "🇨🇻", lat: 16,  lng: -24, mb: "CV", dg: "Cape Verde" },
     { code: "CN", name: "China",          flag: "🇨🇳", lat: 35,  lng: 105, mb: "CN", dg: "China" },
+    { code: "KR", name: "Coreia do Sul",  flag: "🇰🇷", lat: 36,  lng: 128, mb: "KR", dg: "South Korea" },
+    { code: "ID", name: "Indonésia",      flag: "🇮🇩", lat: -2,  lng: 118, mb: "ID", dg: "Indonesia" },
+    { code: "TR", name: "Turquia",        flag: "🇹🇷", lat: 39,  lng: 35,  mb: "TR", dg: "Turkey" },
+    { code: "GR", name: "Grécia",         flag: "🇬🇷", lat: 39,  lng: 22,  mb: "GR", dg: "Greece" },
+    { code: "RU", name: "Rússia / URSS",  flag: "🇷🇺", lat: 60,  lng: 90,  mb: "RU", dg: "Russia" },
+    { code: "TT", name: "Trinidad e Tobago", flag: "🇹🇹", lat: 10.5, lng: -61, mb: "TT", dg: "Trinidad & Tobago" },
     { code: "MN", name: "Mongólia",       flag: "🇲🇳", lat: 47,  lng: 104, mb: "MN", dg: "Mongolia" },
     { code: "GL", name: "Groenlândia",    flag: "🇬🇱", lat: 72,  lng: -40, mb: "GL", dg: "Greenland" },
   ];

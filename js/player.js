@@ -27,6 +27,19 @@
   function spSearch(t) {
     return `https://open.spotify.com/search/${encodeURIComponent(t.artist + " " + t.title)}`;
   }
+  // Links de compra do vinil (busca por artista + título)
+  function buyLinks(t) {
+    const q = `${t.artist} ${t.title}`.trim();
+    const enc = encodeURIComponent(q);
+    const slug = q
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    return {
+      discogs: `https://www.discogs.com/sell/list?q=${enc}&format=Vinyl`,
+      ebay: `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(q + " vinyl")}`,
+      mercado: `https://lista.mercadolivre.com.br/${slug}-vinil`,
+    };
+  }
   function spotifyEmbedSrc(t) {
     if (!t.spotify_embed) return null;
     if (/^https?:\/\//i.test(t.spotify_embed)) return t.spotify_embed;
@@ -211,6 +224,16 @@
         sp ? makeIframe(sp, 152, `${track.title} (Spotify)`) : null,
         [linkBtn(spSearch(track), sp ? "Abrir no Spotify" : "Buscar no Spotify", "spotify")]
       )
+    );
+
+    // Comprar o disco (busca por artista + título nos marketplaces)
+    const buy = buyLinks(track);
+    body.appendChild(
+      buildBlock("💿 Comprar o disco", null, [
+        linkBtn(buy.discogs, "Discogs", "discogs"),
+        linkBtn(buy.ebay, "eBay", "ebay"),
+        linkBtn(buy.mercado, "Mercado Livre", "mercado"),
+      ])
     );
 
     // Bloco de áudio garantido (30s via iTunes/Deezer), no topo quando resolver.

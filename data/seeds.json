@@ -486,6 +486,78 @@
       { "title": "Hooked on a Feeling", "artist": "Blue Swede", "year": 1974, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/AllMusic" }
     ]
   },
+  "ID": {
+    "available": true,
+    "tracks": [
+      { "title": "Sakura", "artist": "Fariz RM", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia", "label": "Akurama Records" },
+      { "title": "Selangkah Ke Seberang", "artist": "Fariz RM", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Pramaqua" },
+      { "title": "Panggung Perak", "artist": "Fariz RM", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Akurama Records" },
+      { "title": "Guruh Gipsy", "artist": "Guruh Gipsy", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia", "label": "Pramaqua" },
+      { "title": "Sabda Alam", "artist": "Chrisye", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia", "label": "Musica Studio's" },
+      { "title": "Kapankah", "artist": "Diana Nasution", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Singkong & Keju", "artist": "Bill & Brod", "year": 1985, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Jazz Samba", "artist": "Margie Segers & Ireng Maulana", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs" }
+    ]
+  },
+  "KR": {
+    "available": true,
+    "tracks": [
+      { "title": "Danbalmeori (Short Hair)", "artist": "Cho Yong-pil", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/Rolling Stone", "label": "Jigu Records" },
+      { "title": "Bing Geul Bing Geul (Round and Round)", "artist": "Na Mi", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/WhoSampled", "label": "Jigu Records" },
+      { "title": "Tonight", "artist": "Kim Wan-sun", "year": 1986, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Jigu Records" },
+      { "title": "Ani Beolsseo (What, Already?)", "artist": "Sanullim", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Seoul Records" },
+      { "title": "Now", "artist": "Kim Jung-mi", "year": 1973, "spotify_embed": null, "youtube_id": null, "source": "Discogs (prod. Shin Joong-hyun)", "label": "Sungeum" },
+      { "title": "Meolgo Meon Gil (The Long Long Road)", "artist": "Han Dae-soo", "year": 1974, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/Korea.net" },
+      { "title": "Yes Sir, I Can Boogie", "artist": "Bunny Girls", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Dangerous Minds", "label": "Jigu Records" },
+      { "title": "Bom Yeoreum Gaeul Gyeoul (Spring Summer Fall Winter)", "artist": "Kim Hyun-sik", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Oasis Records" }
+    ]
+  },
+  "RU": {
+    "available": true,
+    "tracks": [
+      { "title": "Disco Alliance", "artist": "Zodiac", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia", "label": "Melodiya" },
+      { "title": "Million Alyh Roz (A Million Scarlet Roses)", "artist": "Alla Pugacheva", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Melodiya" },
+      { "title": "Trava u Doma (Grass by the Home)", "artist": "Zemlyane", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Melodiya" },
+      { "title": "Zvyozdy Nas Zhdut (The Stars Await Us)", "artist": "Mirage", "year": 1987, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Melodiya" },
+      { "title": "Belaya Noch (White Night)", "artist": "Forum", "year": 1987, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Melodiya" },
+      { "title": "Lyubov - Ogromnaya Strana", "artist": "Vesyolye Rebyata", "year": 1974, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Melodiya" },
+      { "title": "Klyon (Maple)", "artist": "Sinyaya Ptitsa", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Melodiya" },
+      { "title": "Snova Vmeste (Together Again)", "artist": "Mirage", "year": 1988, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Melodiya" }
+    ]
+  },
+  "TR": {
+    "available": true,
+    "tracks": [
+      { "title": "Yali Yali", "artist": "Neşe Karaböcek", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Türküola" },
+      { "title": "Sev Kardeşim", "artist": "Şenay", "year": 1971, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Diskotür" },
+      { "title": "Pet'r Oil", "artist": "Ajda Pekkan", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Ele Güne Karşı Yapayalnız", "artist": "MFÖ", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Selda", "artist": "Selda Bağcan", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Türküola" },
+      { "title": "2023", "artist": "Barış Manço", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Yavuz Plak" },
+      { "title": "Tutkusu", "artist": "Erkin Koray", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Kervan" },
+      { "title": "Türküz Türkü Çağırırız!", "artist": "Mazhar ve Fuat", "year": 1973, "spotify_embed": null, "youtube_id": null, "source": "Discogs" }
+    ]
+  },
+  "GR": {
+    "available": true,
+    "tracks": [
+      { "title": "L.O.V.E. Got a Hold of Me", "artist": "Demis Roussos", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Philips" },
+      { "title": "Na 'Hes Kardia", "artist": "Anna Vissi", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "CBS" },
+      { "title": "Sabotage", "artist": "Lena Platonos", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Lyra" },
+      { "title": "Robert Williams", "artist": "Robert Williams", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "PolyGram" }
+    ]
+  },
+  "TT": {
+    "available": true,
+    "tracks": [
+      { "title": "Endless Vibrations", "artist": "Lord Shorty", "year": 1975, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
+      { "title": "Bassman", "artist": "Mighty Shadow", "year": 1974, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "Straker's" },
+      { "title": "Sweet Sweet Dreams", "artist": "Mighty Shadow", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Analog Africa (reissue)" },
+      { "title": "Anatomy of Soca", "artist": "Maestro", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs/AllMusic", "label": "Kalinda / Charlie's" },
+      { "title": "Her Majesty", "artist": "Calypso Rose", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "RateYourMusic", "label": "Charlie's Records" },
+      { "title": "Soca Explosion", "artist": "Calypso Rose", "year": 1989, "spotify_embed": null, "youtube_id": null, "source": "RateYourMusic", "label": "Straker's" }
+    ]
+  },
   "MN": {
     "available": true,
     "tracks": [
