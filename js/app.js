@@ -103,7 +103,14 @@
       fullBtn.innerHTML = "♪ Completo";
       fullBtn.addEventListener("click", () => window.Player.open(track));
 
-      actions.append(previewBtn, plBtn, fullBtn);
+      const buyBtn = document.createElement("button");
+      buyBtn.type = "button";
+      buyBtn.className = "act-btn buy";
+      buyBtn.innerHTML = "💿 Comprar";
+      buyBtn.title = "Comprar o disco no Discogs";
+      buyBtn.addEventListener("click", () => window.open(discogsUrl(track), "_blank", "noopener"));
+
+      actions.append(previewBtn, plBtn, fullBtn, buyBtn);
       li.append(top, actions);
       els.list.appendChild(li);
     });
@@ -390,6 +397,11 @@
     return String(s).replace(/[&<>"']/g, (c) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
     }[c]));
+  }
+
+  function discogsUrl(track) {
+    const q = encodeURIComponent(`${track.artist} ${track.title}`);
+    return `https://www.discogs.com/sell/list?q=${q}&format=Vinyl`;
   }
 
   function cacheEls() {
