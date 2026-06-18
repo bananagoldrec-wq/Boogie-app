@@ -237,7 +237,17 @@
       { "title": "Whispers in the Deep (Phinda Mzala)", "artist": "Stimela", "year": 1986, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/Mail & Guardian" },
       { "title": "Don't Go Lose It Baby", "artist": "Hugh Masekela", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
       { "title": "Letta", "artist": "Letta Mbulu", "year": 1978, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
-      { "title": "Kazet", "artist": "Mahlathini and the Mahotella Queens", "year": 1987, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" }
+      { "title": "Kazet", "artist": "Mahlathini and the Mahotella Queens", "year": 1987, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Umqombothi", "artist": "Yvonne Chaka Chaka", "year": 1988, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia", "label": "Dephon" },
+      { "title": "We Miss You Manelow", "artist": "Chicco", "year": 1987, "spotify_embed": null, "youtube_id": null, "source": "Discogs/AllMusic", "label": "Dephon" },
+      { "title": "Gorilla Man", "artist": "Condry Ziqubu", "year": 1986, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Afro-Synth", "label": "RPM" },
+      { "title": "Jive Soweto", "artist": "Sipho Mabuse", "year": 1986, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Gallo" },
+      { "title": "Jabulani", "artist": "Hotline (feat. PJ Powers)", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia", "label": "MFM" },
+      { "title": "Too Late for Mama", "artist": "Brenda Fassie", "year": 1989, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "CCP" },
+      { "title": "I Wanna Be Myself", "artist": "Don Laka", "year": 1989, "spotify_embed": null, "youtube_id": null, "source": "Discogs (ano disputado 1984/1989)", "label": "Teal" },
+      { "title": "One of Those Nights", "artist": "Neville Nash", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "RPM" },
+      { "title": "Ngeke Ngikulobolele", "artist": "Pat Shange", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Sounds Disco" },
+      { "title": "Music Was Born in Africa", "artist": "Babsy Mlangeni", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Black Music" }
     ]
   },
   "GH": {
@@ -374,7 +384,16 @@
       { "title": "Disco Station", "artist": "Asha Bhosle", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
       { "title": "Dum Maro Dum", "artist": "Asha Bhosle", "year": 1971, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia (precursor)" },
       { "title": "Jhoom Jhoom Jhoom Baba", "artist": "Salma Agha", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
-      { "title": "Auva Auva Koi Yahan Nache", "artist": "Bappi Lahiri", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" }
+      { "title": "Auva Auva Koi Yahan Nache", "artist": "Bappi Lahiri", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia" },
+      { "title": "Yaad Aa Raha Hai", "artist": "Bappi Lahiri", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Disco Dancer (1982)", "label": "HMV" },
+      { "title": "Goron Ki Na Kalon Ki", "artist": "Suresh Wadkar & Usha Mangeshkar", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Disco Dancer (1982)", "label": "HMV" },
+      { "title": "Disco Deewane", "artist": "Nazia Hassan", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs (Biddu)", "label": "His Master's Voice" },
+      { "title": "Boom Boom", "artist": "Nazia & Zoheb Hassan", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Star (1982)", "label": "His Master's Voice" },
+      { "title": "Raat Baaki", "artist": "Asha Bhosle & Bappi Lahiri", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Namak Halaal (1982)", "label": "HMV" },
+      { "title": "Jawani Janeman", "artist": "Asha Bhosle", "year": 1982, "spotify_embed": null, "youtube_id": null, "source": "Namak Halaal (1982)", "label": "HMV" },
+      { "title": "Ramba Ho", "artist": "Usha Uthup & Bappi Lahiri", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Armaan (1981)", "label": "HMV" },
+      { "title": "Taki Taki", "artist": "Kishore Kumar & Asha Bhosle", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Himmatwala (1983)", "label": "HMV" },
+      { "title": "Saara Zamana", "artist": "Kishore Kumar", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Yaarana (1981)", "label": "HMV" }
     ]
   },
   "PH": {
@@ -404,7 +423,19 @@
       { "title": "From New York to L.A.", "artist": "Patsy Gallant", "year": 1976, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
       { "title": "Living on Video", "artist": "Trans-X", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia" },
       { "title": "Pop Pop Shoo Wah", "artist": "Erotic Drum Band", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
-      { "title": "Let's Dance", "artist": "Bombers", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" }
+      { "title": "Let's Dance", "artist": "Bombers", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "No Way", "artist": "Geraldine Hunt", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia", "label": "Prism / Uniwave" },
+      { "title": "(Everybody) Get Up and Boogie", "artist": "Freddie James", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia", "label": "Warner Bros." },
+      { "title": "Hold On I'm Comin'", "artist": "Karen Silver", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Skyline" },
+      { "title": "Dancin' the Night Away", "artist": "Voggue", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Atlantic" },
+      { "title": "Bang a Gong", "artist": "Witch Queen", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "RCA / Roadshow" },
+      { "title": "My Forbidden Lover", "artist": "Tapps", "year": 1983, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Power Records" },
+      { "title": "World Invaders", "artist": "Pluton & Humanoids", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "V.S. Records" },
+      { "title": "Disco Choo Choo", "artist": "Nightlife Unlimited", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs", "label": "Unidisc" },
+      { "title": "This Time", "artist": "Black Light Orchestra", "year": 1979, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia", "label": "RCA" },
+      { "title": "We Can Make It", "artist": "Purple Flash", "year": 1984, "spotify_embed": null, "youtube_id": null, "source": "Discogs" },
+      { "title": "Stop, I Don't Need No Sympathy", "artist": "Alma Faye Brooks", "year": 1977, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia", "label": "RCA" },
+      { "title": "Try It Out", "artist": "Gino Soccio", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia", "label": "RFC / Warner Bros." }
     ]
   },
   "AU": {
@@ -455,6 +486,16 @@
       { "title": "Hooked on a Feeling", "artist": "Blue Swede", "year": 1974, "spotify_embed": null, "youtube_id": null, "source": "Wikipedia/AllMusic" }
     ]
   },
-  "MN": { "available": false },
+  "MN": {
+    "available": true,
+    "tracks": [
+      { "title": "Jalam Khar", "artist": "The Bayan Mongol Variety Group", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Internet Archive (LP Melodiya, 1980)", "label": "Melodiya" },
+      { "title": "Or Zaluu Nas", "artist": "The Bayan Mongol Variety Group", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs (LP Melodiya, 1980)", "label": "Melodiya" },
+      { "title": "Amryg Ailtgaya", "artist": "The Bayan Mongol Variety Group", "year": 1980, "spotify_embed": null, "youtube_id": null, "source": "Discogs (LP Melodiya, 1980)", "label": "Melodiya" },
+      { "title": "Uchralyn Uyanga", "artist": "Soyol Erdene", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs/Wikipedia (LP Melodiya, 1981)", "label": "Melodiya" },
+      { "title": "Khungiin Duu", "artist": "Soyol Erdene", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs (LP Melodiya, 1981)", "label": "Melodiya" },
+      { "title": "Miniy Az Jargalyn Duu", "artist": "Soyol Erdene", "year": 1981, "spotify_embed": null, "youtube_id": null, "source": "Discogs (LP Melodiya, 1981)", "label": "Melodiya" }
+    ]
+  },
   "GL": { "available": false }
 }
