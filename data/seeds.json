@@ -4679,5 +4679,513 @@
         "label": "Sabanoh"
       }
     ]
+  },
+  "ML": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Mandjou",
+        "artist": "Les Ambassadeurs",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Afropop / Radio Africa",
+        "label": "Badmos"
+      },
+      {
+        "title": "Le Tioko-Tioko",
+        "artist": "Idrissa Soumaoro",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Mr Bongo / Mississippi (reissue)",
+        "label": "AMPSA"
+      },
+      {
+        "title": "Nama",
+        "artist": "National Badéma",
+        "year": 1983,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Syllart / Mali Kunkan"
+      },
+      {
+        "title": "La Grande Cantatrice Malienne Vol. 1",
+        "artist": "Nahawa Doumbia",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Awesome Tapes From Africa",
+        "label": "AS Records"
+      },
+      {
+        "title": "Rail Band",
+        "artist": "Rail Band",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Mississippi Records (reissue)",
+        "label": "Bärenreiter-Musicaphon"
+      },
+      {
+        "title": "Le Super Biton National de Ségou",
+        "artist": "Le Super Biton National de Ségou",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Kindred Spirits (reissue)",
+        "label": "Mali Kunkan"
+      },
+      {
+        "title": "L'Orchestre Kanaga de Mopti",
+        "artist": "L'Orchestre Kanaga de Mopti",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Kindred Spirits (reissue)",
+        "label": "Mali Kunkan"
+      },
+      {
+        "title": "Sorry Bamba du Mali",
+        "artist": "Sorry Bamba",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Thrill Jockey (reissue)",
+        "label": "Sonafric"
+      }
+    ]
+  },
+  "GN": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Regard sur le passé",
+        "artist": "Bembeya Jazz National",
+        "year": 1969,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia / Pan African Music",
+        "label": "Syliphone"
+      },
+      {
+        "title": "Objectif Perfection",
+        "artist": "Balla et ses Balladins",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Syliphone"
+      },
+      {
+        "title": "Savane Profonde (Zoumana)",
+        "artist": "Horoya Band National",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Syliphone"
+      },
+      {
+        "title": "Keletigui et ses Tambourinis",
+        "artist": "Keletigui et ses Tambourinis",
+        "year": 1972,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Sterns (Syliphone Years)",
+        "label": "Syliphone"
+      },
+      {
+        "title": "En Super Forme",
+        "artist": "Super Boiro Band",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Radio Martiko",
+        "label": "Syliphone"
+      },
+      {
+        "title": "Au Cœur de Paris",
+        "artist": "Les Amazones de Guinée",
+        "year": 1983,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Syliphone"
+      },
+      {
+        "title": "La Percée",
+        "artist": "Camayenne Sofa",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs / Global Groove",
+        "label": "Syliphone"
+      },
+      {
+        "title": "A Grands Pas",
+        "artist": "Camayenne Sofa",
+        "year": 1983,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Syliphone"
+      }
+    ]
+  },
+  "BF": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Air Volta",
+        "artist": "Orchestre Volta Jazz",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Numero Group (reissue)",
+        "label": "Sonafric"
+      },
+      {
+        "title": "Bar Konon Mousso",
+        "artist": "Amadou Balaké",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs / Mr Bongo",
+        "label": "Sacodis"
+      },
+      {
+        "title": "Coulibaly Tidiani",
+        "artist": "Coulibaly Tidiani",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Sonafric"
+      },
+      {
+        "title": "Touba",
+        "artist": "Mangué Kondé et le Super Mandé",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Mr Bongo (Sound of Burkina Faso)",
+        "label": "Sonafric"
+      }
+    ]
+  },
+  "TG": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Wait For Me",
+        "artist": "Roger Damawuzan",
+        "year": 1972,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa / Hot Casa",
+        "label": "single togolês"
+      },
+      {
+        "title": "I Tcho Tchass",
+        "artist": "Akofa Akoussah",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Hot Casa (Togo Soul 70)",
+        "label": "Hot Casa"
+      },
+      {
+        "title": "Dasi Ko",
+        "artist": "Bella Bellow",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Hot Casa (Togo Soul 70)",
+        "label": "Hot Casa"
+      },
+      {
+        "title": "N'Bo Eyadema Mobutu",
+        "artist": "Napo De Mi Amor",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Hot Casa (Togo Soul 70)",
+        "label": "Hot Casa"
+      },
+      {
+        "title": "Mi Kple Dogbekpo",
+        "artist": "Lokonon André et les Volcans",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (African Scream Contest)",
+        "label": "Analog Africa"
+      }
+    ]
+  },
+  "KE": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Lunch Time",
+        "artist": "Gabriel Omolo",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Imprensa queniana (Standard/Nation)",
+        "label": "single queniano"
+      },
+      {
+        "title": "You Can Do It",
+        "artist": "Slim Ali & The Hodi Boys",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "ARC"
+      },
+      {
+        "title": "Africa",
+        "artist": "Steele Beauttah",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs / 45cat",
+        "label": "Black Blood"
+      },
+      {
+        "title": "Air Fiesta",
+        "artist": "Matata",
+        "year": 1972,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs / Wikipedia",
+        "label": "President"
+      },
+      {
+        "title": "Nyako Konya",
+        "artist": "Les Mangelepa",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia",
+        "label": "single queniano"
+      },
+      {
+        "title": "Shauri Yako",
+        "artist": "Orchestra Super Mazembe",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia",
+        "label": "Virgin"
+      },
+      {
+        "title": "Disco Chakacha",
+        "artist": "Mombasa Roots",
+        "year": 1987,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs / Wikipedia",
+        "label": "Polygram"
+      },
+      {
+        "title": "Celina",
+        "artist": "Joseph Kamaru",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Bandcamp (Kamaru In The 70s)",
+        "label": "reissue"
+      }
+    ]
+  },
+  "TZ": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Ave Maria",
+        "artist": "Sunburst",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut (Ave Africa 1973-1976)",
+        "label": "Strut (reissue)"
+      },
+      {
+        "title": "Mwanameka",
+        "artist": "Marijani Rajabu",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Tanzania Times",
+        "label": "Dar International"
+      },
+      {
+        "title": "Sikinde",
+        "artist": "DDC Mlimani Park Orchestra",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Africassette / Wikipedia",
+        "label": "Tanzânia"
+      }
+    ]
+  },
+  "ZW": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Watch Out",
+        "artist": "Wells Fargo",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Now-Again (reissue)",
+        "label": "Afro Soul"
+      },
+      {
+        "title": "Ngoma Yarira",
+        "artist": "Hallelujah Chicken Run Band",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Take One)",
+        "label": "Gallo"
+      },
+      {
+        "title": "Chipo Chiroorwa",
+        "artist": "The Green Arrows",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (4-Track Recording Session)",
+        "label": "Teal"
+      },
+      {
+        "title": "The Towering Inferno",
+        "artist": "The Green Arrows",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Roots Rocking Zimbabwe)",
+        "label": "Teal"
+      },
+      {
+        "title": "Hokoyo!",
+        "artist": "Thomas Mapfumo & The Acid Band",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia / Britannica",
+        "label": "Teal / Gramma"
+      },
+      {
+        "title": "Gwindingwi Rine Shumba",
+        "artist": "Thomas Mapfumo & The Blacks Unlimited",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Chimurenga Music"
+      },
+      {
+        "title": "Ndipeiwo Zano",
+        "artist": "Oliver Mtukudzi & The Black Spirits",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Tuku Music / Pindula",
+        "label": "Kudzanayi"
+      },
+      {
+        "title": "Africa",
+        "artist": "Oliver Mtukudzi & The Black Spirits",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs / Pindula",
+        "label": "Kudzanayi"
+      },
+      {
+        "title": "B.P.",
+        "artist": "James Chimombe & The O.K. Success",
+        "year": 1986,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Original Music (Take Cover!)",
+        "label": "Gramma"
+      },
+      {
+        "title": "Take Cover",
+        "artist": "Jairos Jiri Sunrise Kwela Band",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Original Music (Take Cover!)",
+        "label": "Gramma"
+      }
+    ]
+  },
+  "MG": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Izahay Mpamita",
+        "artist": "Mahaleo",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut (Alefa Madagascar)",
+        "label": "Discomad"
+      },
+      {
+        "title": "Amboliako Fary",
+        "artist": "Charles Maurin Poty",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut (Alefa Madagascar)",
+        "label": "Discomad"
+      },
+      {
+        "title": "Andeha Hanarato",
+        "artist": "Los Matadores",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut (Alefa Madagascar)",
+        "label": "Discomad"
+      },
+      {
+        "title": "Moramora Zoky",
+        "artist": "Soymanga",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut (Alefa Madagascar)",
+        "label": "Discomad"
+      },
+      {
+        "title": "Andosy Mora",
+        "artist": "Jean Kely Et Basth",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut (Alefa Madagascar)",
+        "label": "Discomad"
+      },
+      {
+        "title": "Jazz Sega",
+        "artist": "Jeanot Rabeson Et Son Orchestre",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut (Alefa Madagascar)",
+        "label": "Discomad"
+      }
+    ]
   }
 }
