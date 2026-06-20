@@ -4018,5 +4018,666 @@
   },
   "GL": {
     "available": false
+  },
+  "CM": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Soul Makossa",
+        "artist": "Manu Dibango",
+        "year": 1972,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs/Wikipedia",
+        "label": "Fiesta"
+      },
+      {
+        "title": "Hot Koki",
+        "artist": "Tala André Marie",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Fiesta"
+      },
+      {
+        "title": "Funky Disco Music",
+        "artist": "Eko",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs/Africa Seven",
+        "label": "Disques Espérance"
+      },
+      {
+        "title": "M'ongele M'am",
+        "artist": "Eko Roosevelt Louis",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Pop Makossa)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "Nen Lambo",
+        "artist": "Bill Loko",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Pop Makossa)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "Sanaga Calypso",
+        "artist": "Pasteur Lappé",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Africa Seven",
+        "label": "Africa Seven"
+      },
+      {
+        "title": "Na Real Sekele Fo'Ya",
+        "artist": "Pasteur Lappé",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Africa Seven",
+        "label": "Africa Seven"
+      },
+      {
+        "title": "Ngon Engap",
+        "artist": "Olinga Gaston",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Pop Makossa)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "Mininga Meyong Mese",
+        "artist": "Nkodo Si-Tony",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Pop Makossa)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "Toguy",
+        "artist": "Toto Guillaume",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Disques Espérance"
+      }
+    ]
+  },
+  "CI": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Ziboté",
+        "artist": "Ernesto Djédjé",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs/Wikipedia",
+        "label": "Badmos"
+      },
+      {
+        "title": "Zadie Bobo",
+        "artist": "Ernesto Djédjé",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Hot Casa (Ivory Coast Soul)",
+        "label": "Hot Casa"
+      },
+      {
+        "title": "Yatchiminou",
+        "artist": "Jimmy Hyacinthe",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Hot Casa (Ivory Coast Soul)",
+        "label": "Hot Casa"
+      },
+      {
+        "title": "Kalabuley Woman",
+        "artist": "Pierre Antoine",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Hot Casa (Ivory Coast Soul)",
+        "label": "Hot Casa"
+      },
+      {
+        "title": "Unite",
+        "artist": "Moussa Doumbia",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Hot Casa (Ivory Coast Soul)",
+        "label": "Hot Casa"
+      },
+      {
+        "title": "Aïcha Koné",
+        "artist": "Aïcha Koné",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Sacodis"
+      },
+      {
+        "title": "Bozambo",
+        "artist": "Bozambo",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Sonafric"
+      },
+      {
+        "title": "Kacou Ananzé",
+        "artist": "Woya",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Sacodis"
+      }
+    ]
+  },
+  "BJ": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Feeling You Got",
+        "artist": "El Rego et ses Commandos",
+        "year": 1971,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Legends of Benin)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "Vimado Wingnan",
+        "artist": "El Rego et ses Commandos",
+        "year": 1971,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Legends of Benin)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "Dadje Von O Von Non",
+        "artist": "Gnonnas Pedro et Ses Dadjes",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Legends of Benin)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "La Musica en Verité",
+        "artist": "Gnonnas Pedro et Ses Dadjes",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Legends of Benin)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "Mi Homlan Dadalé",
+        "artist": "Orchestre Poly-Rythmo de Cotonou",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (The Vodoun Effect)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "Honton Soukpo Gnon",
+        "artist": "Antoine Dougbé",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Legends of Benin)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "Dou Dagbé Wé",
+        "artist": "Honoré Avolonto et l'Orchestre Black Santiago",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "Tin Lin Non",
+        "artist": "Honoré Avolonto et l'Orchestre Poly-Rythmo",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Legends of Benin)",
+        "label": "Analog Africa"
+      }
+    ]
+  },
+  "ET": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Yègellé Tezeta",
+        "artist": "Mulatu Astatke",
+        "year": 1969,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Éthiopiques 4 (Buda Musique)",
+        "label": "Amha Records"
+      },
+      {
+        "title": "Mulatu",
+        "artist": "Mulatu Astatke",
+        "year": 1972,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Mulatu of Ethiopia (Worthy)",
+        "label": "Worthy Records"
+      },
+      {
+        "title": "Tezeta",
+        "artist": "Hailu Mergia & The Walias Band",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Awesome Tapes From Africa",
+        "label": "Awesome Tapes From Africa"
+      },
+      {
+        "title": "Erè Mèla Mèla",
+        "artist": "Mahmoud Ahmed",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Éthiopiques 7",
+        "label": "Kaifa Records"
+      },
+      {
+        "title": "Telantena Zare",
+        "artist": "Alèmayèhu Eshèté",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Éthiopiques 9",
+        "label": "Amha Records"
+      },
+      {
+        "title": "Ené Nègn Bay Manèsh",
+        "artist": "Girma Bèyènè",
+        "year": 1969,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Éthiopiques 8",
+        "label": "Amha Records"
+      },
+      {
+        "title": "Aykedashem Lebe",
+        "artist": "Tlahoun Gèssèssè",
+        "year": 1972,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Éthiopiques 17",
+        "label": "Amha Records"
+      },
+      {
+        "title": "Shellèla Bèsaxophone",
+        "artist": "Getatchew Mekurya",
+        "year": 1972,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Éthiopiques 14",
+        "label": "Philips Ethiopia"
+      },
+      {
+        "title": "Hasabe (My Worries)",
+        "artist": "Ayalew Mesfin",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Now-Again Records",
+        "label": "Now-Again"
+      }
+    ]
+  },
+  "AO": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Mona Ki Ngi Xica",
+        "artist": "Bonga",
+        "year": 1972,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs (Angola 72)",
+        "label": "Morabeza Records"
+      },
+      {
+        "title": "Mutudi Ua Ufolo",
+        "artist": "David Zé",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs/Bandcamp",
+        "label": "CDA"
+      },
+      {
+        "title": "Independência",
+        "artist": "Teta Lando",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Companhia de Discos de Angola"
+      },
+      {
+        "title": "Angola Ano 1",
+        "artist": "Carlos Lamartine",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Companhia de Discos de Angola"
+      },
+      {
+        "title": "N'Zo Iami",
+        "artist": "Os Kiezos",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs (Rebita 1973)",
+        "label": "Fadiang"
+      },
+      {
+        "title": "Kalumba Kami",
+        "artist": "Artur Nunes",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Rebita"
+      },
+      {
+        "title": "Merengue Joaquina",
+        "artist": "Urbano de Castro",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Dusty Groove (Rebita 74)",
+        "label": "Iefe Discos"
+      },
+      {
+        "title": "Rebita",
+        "artist": "Jovens do Prenda",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs (Rebita 1973)",
+        "label": "Fadiang"
+      },
+      {
+        "title": "Eme Lelu",
+        "artist": "Quim Manuel O Espírito Santo",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Angola Soundtrack)",
+        "label": "Analog Africa"
+      }
+    ]
+  },
+  "CD": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Azda",
+        "artist": "Franco & Le TPOK Jazz",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia/Francophonic",
+        "label": "Éditions Populaires"
+      },
+      {
+        "title": "Mario",
+        "artist": "Franco & Le TPOK Jazz",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia",
+        "label": "Éditions Populaires"
+      },
+      {
+        "title": "Sorozo",
+        "artist": "Tabu Ley Rochereau",
+        "year": 1970,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia (Afrisa)",
+        "label": "Editions Isa"
+      },
+      {
+        "title": "Liwa Ya Somo",
+        "artist": "Zaïko Langa Langa",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Editions Veve"
+      },
+      {
+        "title": "L'Argent Appelle L'Argent",
+        "artist": "Pamelo Mounk'a",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs/Wikipedia",
+        "label": "Eddy'son"
+      },
+      {
+        "title": "Maria Tebbo",
+        "artist": "Sam Mangwana",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia/Stern's",
+        "label": "SAM"
+      },
+      {
+        "title": "Eswi Yo Wapi",
+        "artist": "M'bilia Bel",
+        "year": 1983,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia",
+        "label": "Genidia"
+      },
+      {
+        "title": "Nakomitunaka",
+        "artist": "Orchestre Vévé",
+        "year": 1972,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs (Verckys)",
+        "label": "Editions Veve"
+      }
+    ]
+  },
+  "ZM": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Introduction",
+        "artist": "WITCH",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs/Now-Again",
+        "label": "Zambia Music Parlour"
+      },
+      {
+        "title": "Lazy Bones!!",
+        "artist": "WITCH",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs/Now-Again",
+        "label": "Zambezi"
+      },
+      {
+        "title": "Lukombo Vibes",
+        "artist": "WITCH",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Zambezi"
+      },
+      {
+        "title": "Africa",
+        "artist": "Amanaz",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia/Now-Again",
+        "label": "Zambia Music Parlour"
+      },
+      {
+        "title": "45,000 Volts",
+        "artist": "Ngozi Family",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs/Now-Again",
+        "label": "Zambia Music Parlour"
+      },
+      {
+        "title": "Viva Ngozi",
+        "artist": "Ngozi Family",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Now-Again",
+        "label": "Zambia Music Parlour"
+      },
+      {
+        "title": "My Ancestors",
+        "artist": "Chrissy Zebby Tembo & Ngozi Family",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Now-Again",
+        "label": "Zambia Music Parlour"
+      },
+      {
+        "title": "Wings of Africa",
+        "artist": "Musi-O-Tunya",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Now-Again (Dark Sunrise)",
+        "label": "Now-Again"
+      },
+      {
+        "title": "Zambia",
+        "artist": "Rikki Ililonga",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Now-Again (Dark Sunrise)",
+        "label": "Now-Again"
+      },
+      {
+        "title": "Salty Dog",
+        "artist": "Salty Dog",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Now-Again",
+        "label": "Now-Again"
+      },
+      {
+        "title": "Black Power",
+        "artist": "The Peace",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia",
+        "label": "Zambia Music Parlour"
+      }
+    ]
+  },
+  "SL": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Heavy Heavy Heavy",
+        "artist": "Geraldo Pino & The Heartbeats",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs/Strut",
+        "label": "EMI"
+      },
+      {
+        "title": "Afro Soco Soul Live",
+        "artist": "Geraldo Pino & The Heartbeats",
+        "year": 1972,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Reissue (Oom Dooby Dochas)",
+        "label": "Oom Dooby Dochas"
+      },
+      {
+        "title": "Let Me Love You",
+        "artist": "Bunny Mack",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs/Wikipedia",
+        "label": "Rokel"
+      },
+      {
+        "title": "Discolypso",
+        "artist": "Bunny Mack",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia",
+        "label": "Rokel"
+      },
+      {
+        "title": "Money Palaver",
+        "artist": "Afro National",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Africa Seven",
+        "label": "Sonafric"
+      },
+      {
+        "title": "Salématu",
+        "artist": "Sabanoh 75",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Sabanoh"
+      }
+    ]
   }
 }
