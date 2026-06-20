@@ -1,25 +1,52 @@
 /**
  * auto-update.mjs
- * Robô diário (sem chave) que amplia data/seeds.json buscando lançamentos
- * disco/funk/soul/boogie por país na MusicBrainz API.
+ * Robô diário (sem chave) que amplia data/seeds.json com lançamentos
+ * disco/funk/soul/boogie por país na MusicBrainz — com RIGOR de curadoria.
  *
- * - Respeita o rate limit da MusicBrainz (1 req/seg) e envia User-Agent.
- * - Só adiciona faixas em países abaixo da meta (GOAL) e remove duplicatas.
- * - Não inventa nada: usa apenas releases reais retornados pela MusicBrainz,
- *   dentro de 1970–1989, com artista e ano definidos (ignora "Various Artists").
+ * Importante: o campo `country` de um release na MusicBrainz é o país da
+ * PRENSAGEM, não a origem do artista. Por isso, para cada faixa candidata,
+ * verificamos a ORIGEM DO ARTISTA (campo `country` do artista na MusicBrainz)
+ * e só adicionamos se ela bater com o país-alvo. Isso evita encher, por ex.,
+ * a França com disco americano que só foi lançado lá.
  *
- * Rodado pelo workflow .github/workflows/daily-update.yml
+ * - Respeita o rate limit (todas as chamadas espaçadas) e envia User-Agent.
+ * - Só mexe em países abaixo da meta (GOAL); remove duplicatas; ignora
+ *   "Various Artists" e artistas sem país confirmado.
+ *
+ * Rodado por .github/workflows/daily-update.yml
  */
 import { readFileSync, writeFileSync } from "node:fs";
 
 const SEEDS = "data/seeds.json";
-const BASE = "https://musicbrainz.org/ws/2/release";
+const WS = "https://musicbrainz.org/ws/2";
 const UA = "DiscoBoogieGlobe/1.0 ( https://github.com/bananagoldrec-wq/Boogie-app )";
-const GOAL = 70;                 // meta de faixas por país
-const MAX_NEW_PER_COUNTRY = 2;   // no máximo 2 novas por país por execução
-const MIN_INTERVAL = 1200;       // ms entre requisições (>1s, folga no rate limit)
+const GOAL = 70;
+const MAX_NEW_PER_COUNTRY = 2;
+const LOOKUP_CAP = 20;     // no máx. candidatos checados por país (limita tempo)
+const MIN_INTERVAL = 1100; // ms entre QUALQUER requisição (rate limit MB)
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// fila global: garante 1 req por vez, espaçadas por MIN_INTERVAL
+let lastReq = 0;
+let chain = Promise.resolve();
+function throttle(fn) {
+  chain = chain.then(async () => {
+    const wait = Math.max(0, MIN_INTERVAL - (Date.now() - lastReq));
+    if (wait > 0) await sleep(wait);
+    lastReq = Date.now();
+    return fn();
+  });
+  return chain;
+}
+
+async function getJSON(url) {
+  return throttle(async () => {
+    const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" } });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return res.json();
+  });
+}
 
 const norm = (s) =>
   String(s || "")
@@ -28,34 +55,49 @@ const norm = (s) =>
     .replace(/\(.*?\)|\[.*?\]/g, "")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
-
 const key = (t) => norm(t.artist) + "::" + norm(t.title);
 
-async function mbReleases(code) {
+const artistCountryCache = new Map();
+async function artistCountry(mbid) {
+  if (!mbid) return null;
+  if (artistCountryCache.has(mbid)) return artistCountryCache.get(mbid);
+  let country = null;
+  try {
+    const a = await getJSON(`${WS}/artist/${mbid}?fmt=json`);
+    country = a.country || (a.area && a.area["iso-3166-1-codes"] && a.area["iso-3166-1-codes"][0]) || null;
+  } catch (err) {
+    country = null;
+  }
+  artistCountryCache.set(mbid, country);
+  return country;
+}
+
+async function searchReleases(code) {
   const q =
     `tag:(disco OR funk OR boogie OR soul OR "jazz funk" OR "afro-funk" OR "city pop") ` +
     `AND country:${code} AND date:[1970 TO 1989]`;
-  const url = `${BASE}?query=${encodeURIComponent(q)}&fmt=json&limit=40`;
-  const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" } });
-  if (!res.ok) throw new Error("HTTP " + res.status);
-  const data = await res.json();
+  const data = await getJSON(`${WS}/release?query=${encodeURIComponent(q)}&fmt=json&limit=40`);
   return data.releases || [];
 }
 
-function normalizeRelease(rel) {
+function candidate(rel) {
   if (!rel || !rel.title) return null;
   const credit = rel["artist-credit"] && rel["artist-credit"][0];
   const artist = credit && (credit.name || (credit.artist && credit.artist.name));
+  const mbid = credit && credit.artist && credit.artist.id;
   const year = rel.date ? parseInt(String(rel.date).slice(0, 4), 10) : null;
-  if (!artist || !Number.isFinite(year) || year < 1970 || year > 1989) return null;
+  if (!artist || !mbid || !Number.isFinite(year) || year < 1970 || year > 1989) return null;
   if (/various/i.test(artist)) return null;
   return {
-    title: String(rel.title).trim(),
-    artist: String(artist).trim(),
-    year,
-    spotify_embed: null,
-    youtube_id: null,
-    source: "MusicBrainz (auto)",
+    mbid,
+    track: {
+      title: String(rel.title).trim(),
+      artist: String(artist).trim(),
+      year,
+      spotify_embed: null,
+      youtube_id: null,
+      source: "MusicBrainz (auto)",
+    },
   };
 }
 
@@ -70,35 +112,37 @@ async function main() {
 
     let releases = [];
     try {
-      releases = await mbReleases(code);
+      releases = await searchReleases(code);
     } catch (err) {
-      console.warn(`[${code}] MusicBrainz falhou: ${err.message}`);
-      await sleep(MIN_INTERVAL);
+      console.warn(`[${code}] busca falhou: ${err.message}`);
       continue;
     }
 
     const seen = new Set(entry.tracks.map(key));
     let countryAdded = 0;
+    let checked = 0;
     for (const rel of releases) {
-      if (countryAdded >= MAX_NEW_PER_COUNTRY) break;
-      const t = normalizeRelease(rel);
-      if (!t) continue;
-      const k = key(t);
+      if (countryAdded >= MAX_NEW_PER_COUNTRY || checked >= LOOKUP_CAP) break;
+      const cand = candidate(rel);
+      if (!cand) continue;
+      const k = key(cand.track);
       if (seen.has(k)) continue;
+      checked++;
+      const origin = await artistCountry(cand.mbid);
+      if (origin !== code) continue; // RIGOR: só artistas realmente do país
       seen.add(k);
-      entry.tracks.push(t);
+      entry.tracks.push(cand.track);
       countryAdded++;
       added++;
-      console.log(`+ [${code}] ${t.artist} - ${t.title} (${t.year})`);
+      console.log(`+ [${code}] ${cand.track.artist} - ${cand.track.title} (${cand.track.year})`);
     }
-    await sleep(MIN_INTERVAL);
   }
 
   if (added > 0) {
     writeFileSync(SEEDS, JSON.stringify(data, null, 2) + "\n");
-    console.log(`\nAdicionadas ${added} faixas novas.`);
+    console.log(`\nAdicionadas ${added} faixas novas (origem do artista confirmada).`);
   } else {
-    console.log("Nenhuma faixa nova hoje.");
+    console.log("Nenhuma faixa nova confirmada hoje.");
   }
 }
 
