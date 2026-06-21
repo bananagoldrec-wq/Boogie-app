@@ -40,7 +40,7 @@
     rel="stylesheet"
   />
 
-  <link rel="stylesheet" href="css/style.css?v=22" />
+  <link rel="stylesheet" href="css/style.css?v=23" />
 </head>
 <body>
   <header class="topbar">
@@ -123,15 +123,24 @@
     crossorigin=""
   ></script>
 
+  <!-- Service worker: mantém o app sempre atualizado quando online -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+      });
+    }
+  </script>
+
   <!-- App modules (ordem importa) -->
-  <script src="js/musicbrainz.js?v=22"></script>
-  <script src="js/discogs.js?v=22"></script>
-  <script src="js/itunes.js?v=22"></script>
-  <script src="js/deezer.js?v=22"></script>
-  <script src="js/algorithm.js?v=22"></script>
-  <script src="js/playlists.js?v=22"></script>
-  <script src="js/player.js?v=22"></script>
-  <script src="js/map.js?v=22"></script>
-  <script src="js/app.js?v=22"></script>
+  <script src="js/musicbrainz.js?v=23"></script>
+  <script src="js/discogs.js?v=23"></script>
+  <script src="js/itunes.js?v=23"></script>
+  <script src="js/deezer.js?v=23"></script>
+  <script src="js/algorithm.js?v=23"></script>
+  <script src="js/playlists.js?v=23"></script>
+  <script src="js/player.js?v=23"></script>
+  <script src="js/map.js?v=23"></script>
+  <script src="js/app.js?v=23"></script>
 </body>
 </html>
