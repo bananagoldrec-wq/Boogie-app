@@ -225,6 +225,13 @@ html, body {
   font-size: 1.1rem;
   flex-shrink: 0;
 }
+.track-hide {
+  flex-shrink: 0; border: none; background: transparent; cursor: pointer;
+  color: var(--brown-soft); font-size: 0.9rem; line-height: 1;
+  width: 22px; height: 22px; border-radius: 50%; opacity: 0.55;
+  transition: background .15s, color .15s, opacity .15s;
+}
+.track-hide:hover { background: #b03a2e; color: var(--cream); opacity: 1; }
 .track-badge {
   font-size: 0.6rem; text-transform: uppercase; letter-spacing: .5px;
   background: var(--brown-soft); color: var(--cream);

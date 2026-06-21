@@ -8,6 +8,7 @@
 
   let SEEDS = {};
   let mapInstance = null;
+  let currentTracks = []; // faixas do país atual (antes de filtrar ocultas)
   const els = {};
 
   // ---------- Dados ----------
@@ -80,7 +81,15 @@
       year.className = "track-year";
       year.textContent = track.year || "";
 
-      top.append(cover, info, year);
+      const hide = document.createElement("button");
+      hide.type = "button";
+      hide.className = "track-hide";
+      hide.innerHTML = "✕";
+      hide.title = "Não curti — ocultar do app";
+      hide.setAttribute("aria-label", "Ocultar faixa");
+      hide.addEventListener("click", (e) => { e.stopPropagation(); hideTrack(track); });
+
+      top.append(cover, info, year, hide);
 
       const actions = document.createElement("div");
       actions.className = "track-actions";
@@ -138,11 +147,24 @@
     // Seleção curada e verificada (sem enriquecimento ao vivo, que trazia
     // faixas de outros países pelo país-de-lançamento pouco confiável).
     const local = (entry && entry.tracks) || [];
-    const merged = tagCountry(window.DiscoAlgorithm.merge(local), country);
-    renderTracks(merged);
-    els.count.textContent = `${merged.length} faixas`;
+    currentTracks = tagCountry(window.DiscoAlgorithm.merge(local), country);
+    renderVisible();
     els.sources.textContent =
-      "Seleção curada e verificada · ▶ Prévia toca 30s · ＋ adiciona à playlist.";
+      "Seleção curada · ▶ Prévia · ＋ Playlist · ✕ oculta o que você não curte.";
+  }
+
+  // Renderiza o país atual escondendo as faixas marcadas como "não curti".
+  function renderVisible() {
+    const vis = currentTracks.filter((t) => !window.Hidden.has(t));
+    renderTracks(vis);
+    els.count.textContent = `${vis.length} faixas`;
+  }
+
+  function hideTrack(track) {
+    window.Hidden.add(track);
+    window.Player.closePreview();
+    renderVisible();
+    toast(`Oculta: ${track.title}`);
   }
 
   // ---------- Rádio (toca o acervo inteiro, aleatório) ----------
@@ -152,7 +174,7 @@
       const entry = SEEDS[code];
       if (!entry || entry.available === false || !Array.isArray(entry.tracks)) continue;
       const country = ((window.COUNTRIES || []).find((c) => c.code === code) || {}).name || code;
-      entry.tracks.forEach((t) => all.push({ ...t, country }));
+      entry.tracks.forEach((t) => { const x = { ...t, country }; if (!window.Hidden.has(x)) all.push(x); });
     }
     if (all.length) window.Player.radio(all);
   }
@@ -260,7 +282,6 @@
       p.className = "dialog-empty";
       p.textContent = "Nenhuma playlist ainda. Crie uma acima ou pelo botão ＋ Playlist nas faixas.";
       list.appendChild(p);
-      return;
     }
 
     lists.forEach((pl) => {
@@ -290,6 +311,86 @@
       row.append(open, play, del);
       list.appendChild(row);
     });
+
+    renderHiddenSummary(list);
+  }
+
+  // Resumo das faixas ocultas (com gestão/restauração).
+  function renderHiddenSummary(list) {
+    const hidden = window.Hidden.list();
+    const row = document.createElement("div");
+    row.className = "pl-row hidden-row";
+    const open = document.createElement("button");
+    open.type = "button"; open.className = "pl-open";
+    open.innerHTML = `<span class="pl-name">🚫 Faixas ocultas</span><small>${hidden.length} oculta(s)</small>`;
+    open.addEventListener("click", openHiddenDetail);
+    row.appendChild(open);
+    list.appendChild(row);
+  }
+
+  function openHiddenDetail() {
+    const list = document.getElementById("playlists-list");
+    const detail = document.getElementById("playlist-detail");
+    list.hidden = true;
+    detail.hidden = false;
+    detail.innerHTML = "";
+
+    const head = document.createElement("div");
+    head.className = "detail-head";
+    const back = document.createElement("button");
+    back.type = "button"; back.className = "back-btn"; back.textContent = "‹";
+    back.addEventListener("click", refreshPlaylistsPanel);
+    const h = document.createElement("h3");
+    h.textContent = "🚫 Faixas ocultas";
+    head.append(back, h);
+    detail.appendChild(head);
+
+    const hidden = window.Hidden.list();
+    if (!hidden.length) {
+      const p = document.createElement("p");
+      p.className = "dialog-empty";
+      p.textContent = "Nada oculto. Use o ✕ numa faixa para tirá-la do app.";
+      detail.appendChild(p);
+      return;
+    }
+
+    const tools = document.createElement("div");
+    tools.className = "detail-tools";
+    const clearAll = document.createElement("button");
+    clearAll.type = "button"; clearAll.className = "btn-link ghost"; clearAll.textContent = "Restaurar todas";
+    clearAll.addEventListener("click", () => {
+      if (confirm("Restaurar todas as faixas ocultas?")) {
+        window.Hidden.clear();
+        openHiddenDetail();
+        if (currentTracks.length) renderVisible();
+        toast("Faixas restauradas");
+      }
+    });
+    tools.appendChild(clearAll);
+    detail.appendChild(tools);
+
+    const ul = document.createElement("ul");
+    ul.className = "detail-tracks";
+    hidden.forEach((t) => {
+      const li = document.createElement("li");
+      li.className = "detail-track";
+      const info = document.createElement("div");
+      info.className = "detail-info";
+      info.innerHTML =
+        `<span class="dt-title">${esc(t.title)}</span>` +
+        `<span class="dt-meta">${esc(t.artist)}${t.country ? " · " + esc(t.country) : ""}</span>`;
+      const restore = document.createElement("button");
+      restore.type = "button"; restore.className = "mini-btn"; restore.textContent = "↩";
+      restore.title = "Restaurar";
+      restore.addEventListener("click", () => {
+        window.Hidden.remove(t);
+        openHiddenDetail();
+        if (currentTracks.length) renderVisible();
+      });
+      li.append(info, restore);
+      ul.appendChild(li);
+    });
+    detail.appendChild(ul);
   }
 
   function openPlaylistDetail(id) {
