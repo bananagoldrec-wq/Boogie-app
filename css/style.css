@@ -76,6 +76,9 @@ html, body {
 }
 .radio-now .preview-now strong { font-size: 1.05rem; }
 .radio-now .preview-audio { width: 100%; }
+#radio-stage { margin: 4px 0; }
+#yt-player, #yt-player iframe { width: 100%; border: none; border-radius: 10px; min-height: 230px; }
+#radio-fallback { margin-top: 4px; }
 
 /* ---------- Layout ---------- */
 .layout {

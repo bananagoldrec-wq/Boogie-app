@@ -285,6 +285,7 @@
   }
 
   function open(track) {
+    stopRadio();
     queue = null;
     renderQueueBar();
     renderTrack(track);
@@ -293,6 +294,7 @@
 
   function playQueue(tracks, startIndex) {
     if (!tracks || !tracks.length) return;
+    stopRadio();
     queue = tracks.slice();
     queueIndex = Math.min(Math.max(startIndex || 0, 0), queue.length - 1);
     renderQueueBar();
@@ -300,7 +302,32 @@
     showModal();
   }
 
-  // ---------- Rádio (aleatória, auto-avanço) ----------
+  // ---------- Rádio (aleatória, música completa via YouTube) ----------
+  let ytPlayer = null;
+  let radioMode = null; // "yt" | "audio"
+
+  function whenYTReady() {
+    return new Promise((resolve) => {
+      if (window.YT && window.YT.Player) return resolve(true);
+      let waited = 0;
+      const iv = setInterval(() => {
+        if (window.YT && window.YT.Player) { clearInterval(iv); resolve(true); }
+        else if ((waited += 150) > 9000) { clearInterval(iv); resolve(false); }
+      }, 150);
+    });
+  }
+
+  function destroyYT() {
+    try { if (ytPlayer && ytPlayer.destroy) ytPlayer.destroy(); } catch (e) { /* ignore */ }
+    ytPlayer = null;
+  }
+
+  function stopRadio() {
+    radio = null;
+    radioMode = null;
+    destroyYT();
+  }
+
   function startRadio(tracks) {
     if (!tracks || !tracks.length) return;
     const list = tracks.slice();
@@ -320,16 +347,7 @@
     radioPlay();
   }
 
-  async function radioPlay() {
-    if (!radio) return;
-    const myToken = ++renderToken;
-    const track = radio.list[radio.i];
-
-    document.getElementById("modal-title").textContent = "📻 Rádio Disco & Boogie";
-    document.getElementById("modal-sub").textContent =
-      `${radio.i + 1} / ${radio.list.length} · embaralhado`;
-
-    // Barra de controle (anterior / próxima)
+  function renderRadioBar() {
     const bar = document.getElementById("player-queue");
     bar.hidden = false;
     bar.innerHTML = "";
@@ -342,72 +360,120 @@
     next.type = "button"; next.className = "queue-btn"; next.textContent = "Próxima ›";
     next.addEventListener("click", () => radioStep(1));
     bar.append(prev, status, next);
+  }
 
+  function ensureRadioStage() {
     const body = document.getElementById("player-body");
-    body.innerHTML =
-      '<div class="preview-loading"><span class="spinner-sm"></span> Sintonizando…</div>';
-
-    const hit = await findPreview(track);
-    if (myToken !== renderToken) return;
+    if (document.getElementById("yt-player")) return;
     body.innerHTML = "";
-
     const card = document.createElement("div");
     card.className = "radio-now";
     const head = document.createElement("div");
-    head.className = "preview-head";
-    if (hit && hit.artwork) {
-      const img = document.createElement("img");
-      img.className = "radio-cover"; img.src = hit.artwork; img.alt = "";
-      head.appendChild(img);
-    }
-    const meta = document.createElement("div");
-    meta.className = "preview-now";
+    head.id = "radio-head"; head.className = "preview-head";
+    const stage = document.createElement("div");
+    stage.id = "radio-stage";
+    const yt = document.createElement("div"); yt.id = "yt-player";
+    const fb = document.createElement("div"); fb.id = "radio-fallback";
+    stage.append(yt, fb);
+    const act = document.createElement("div");
+    act.id = "radio-actions"; act.className = "preview-actions";
+    card.append(head, stage, act);
+    body.appendChild(card);
+  }
+
+  function setRadioHeadActions(track) {
+    const head = document.getElementById("radio-head");
     const yr = track.year ? ` · ${track.year}` : "";
-    const ct = track.country ? ` · ${track.country}` : "";
-    meta.innerHTML =
-      `<strong>${esc(track.title)}</strong>` +
+    head.innerHTML =
+      `<div class="preview-now"><strong>${esc(track.title)}</strong>` +
       `<span>${esc(track.artist)}${yr}</span>` +
-      `<span>${ct.replace(/^ · /, "")}</span>`;
-    head.appendChild(meta);
-    card.appendChild(head);
-
-    if (hit && hit.previewUrl) {
-      const audio = document.createElement("audio");
-      audio.className = "preview-audio";
-      audio.controls = true;
-      audio.autoplay = true;
-      audio.src = hit.previewUrl;
-      audio.addEventListener("ended", () => { if (myToken === renderToken) radioStep(1); });
-      card.appendChild(audio);
-      audio.play().catch(() => {});
-    } else {
-      // Sem prévia: segue o baile automaticamente após um instante.
-      const msg = document.createElement("p");
-      msg.className = "preview-msg";
-      msg.textContent = "Sem prévia para esta faixa — pulando…";
-      card.appendChild(msg);
-      setTimeout(() => { if (myToken === renderToken) radioStep(1); }, 2500);
-    }
-
-    const actions = document.createElement("div");
-    actions.className = "preview-actions";
+      (track.country ? `<span>${esc(track.country)}</span>` : "") + `</div>`;
+    const act = document.getElementById("radio-actions");
+    act.innerHTML = "";
     const full = document.createElement("button");
     full.type = "button"; full.className = "btn-link full-btn"; full.textContent = "♪ Ver faixa";
     full.addEventListener("click", () => open(track));
-    actions.appendChild(full);
-    actions.appendChild(linkBtn(buyLinks(track).discogs, "💿 Comprar", "discogs"));
-    card.appendChild(actions);
+    act.appendChild(full);
+    act.appendChild(linkBtn(buyLinks(track).discogs, "💿 Comprar", "discogs"));
+  }
 
-    body.appendChild(card);
+  async function radioPlay() {
+    if (!radio) return;
+    const myToken = ++renderToken;
+    const track = radio.list[radio.i];
+
+    document.getElementById("modal-title").textContent = "📻 Rádio Disco & Boogie";
+    document.getElementById("modal-sub").textContent =
+      `${radio.i + 1} / ${radio.list.length} · embaralhado`;
+    renderRadioBar();
+    ensureRadioStage();
+    setRadioHeadActions(track);
+
+    const fb = document.getElementById("radio-fallback");
+    fb.innerHTML = '<div class="preview-loading"><span class="spinner-sm"></span> Procurando a música completa…</div>';
+
+    // 1) Tenta tocar a MÚSICA COMPLETA via YouTube.
+    let vid = null;
+    try { vid = await window.YouTubeResolve.find(track); } catch (e) { vid = null; }
+    if (myToken !== renderToken) return;
+
+    const ytOk = vid ? await whenYTReady() : false;
+    if (myToken !== renderToken) return;
+
+    if (vid && ytOk && window.YT && window.YT.Player) {
+      radioMode = "yt";
+      fb.innerHTML = "";
+      document.getElementById("yt-player").style.display = "";
+      if (!ytPlayer) {
+        ytPlayer = new YT.Player("yt-player", {
+          width: "100%", height: "230", videoId: vid,
+          playerVars: { autoplay: 1, playsinline: 1, rel: 0 },
+          events: {
+            onStateChange: (e) => {
+              if (e.data === YT.PlayerState.ENDED && radioMode === "yt") radioStep(1);
+            },
+          },
+        });
+      } else {
+        ytPlayer.loadVideoById(vid);
+      }
+      return;
+    }
+
+    // 2) Fallback: prévia de 30s (iTunes/Deezer), seguindo sozinho.
+    radioMode = "audio";
+    if (ytPlayer) { try { ytPlayer.stopVideo(); } catch (e) { /* ignore */ } }
+    const ytDiv = document.getElementById("yt-player");
+    if (ytDiv) ytDiv.style.display = "none";
+    const hit = await findPreview(track);
+    if (myToken !== renderToken) return;
+    fb.innerHTML = "";
+    if (hit && hit.previewUrl) {
+      const audio = document.createElement("audio");
+      audio.className = "preview-audio";
+      audio.controls = true; audio.autoplay = true; audio.src = hit.previewUrl;
+      audio.addEventListener("ended", () => {
+        if (myToken === renderToken && radioMode === "audio") radioStep(1);
+      });
+      fb.appendChild(audio);
+      audio.play().catch(() => {});
+      const note = document.createElement("p");
+      note.className = "preview-msg";
+      note.textContent = "(prévia de 30s — música completa indisponível agora)";
+      fb.appendChild(note);
+    } else {
+      fb.innerHTML = '<p class="preview-msg">Sem áudio para esta faixa — pulando…</p>';
+      setTimeout(() => { if (myToken === renderToken) radioStep(1); }, 2500);
+    }
   }
 
   function close() {
     renderToken++; // cancela qualquer append assíncrono pendente
     modal().hidden = true;
+    stopRadio();
     document.getElementById("player-body").innerHTML = ""; // para a reprodução
     document.getElementById("player-queue").innerHTML = "";
     queue = null;
-    radio = null;
     document.body.style.overflow = "";
   }
 
