@@ -232,6 +232,14 @@ html, body {
   transition: background .15s, color .15s, opacity .15s;
 }
 .track-hide:hover { background: #b03a2e; color: var(--cream); opacity: 1; }
+.track-like {
+  flex-shrink: 0; border: none; background: transparent; cursor: pointer;
+  color: var(--brown-soft); font-size: 1.05rem; line-height: 1;
+  width: 24px; height: 24px; border-radius: 50%; opacity: 0.7;
+  transition: transform .15s, color .15s, opacity .15s;
+}
+.track-like:hover { color: #e23b5a; opacity: 1; transform: scale(1.15); }
+.track-like.on { color: #e23b5a; opacity: 1; }
 .track-badge {
   font-size: 0.6rem; text-transform: uppercase; letter-spacing: .5px;
   background: var(--brown-soft); color: var(--cream);

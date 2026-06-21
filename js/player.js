@@ -328,12 +328,14 @@
     destroyYT();
   }
 
-  function startRadio(tracks) {
+  function startRadio(tracks, preordered) {
     if (!tracks || !tracks.length) return;
     const list = tracks.slice();
-    for (let i = list.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [list[i], list[j]] = [list[j], list[i]];
+    if (!preordered) {
+      for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+      }
     }
     radio = { list, i: 0 };
     queue = null;

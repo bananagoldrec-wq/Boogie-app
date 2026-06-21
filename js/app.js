@@ -81,6 +81,20 @@
       year.className = "track-year";
       year.textContent = track.year || "";
 
+      const like = document.createElement("button");
+      like.type = "button";
+      like.className = "track-like" + (window.Liked.has(track) ? " on" : "");
+      like.innerHTML = window.Liked.has(track) ? "♥" : "♡";
+      like.title = "Curti";
+      like.setAttribute("aria-label", "Curtir faixa");
+      like.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const on = window.Liked.toggle(track);
+        like.classList.toggle("on", on);
+        like.innerHTML = on ? "♥" : "♡";
+        toast(on ? `Curtiu: ${track.title}` : "Removido das curtidas");
+      });
+
       const hide = document.createElement("button");
       hide.type = "button";
       hide.className = "track-hide";
@@ -89,7 +103,7 @@
       hide.setAttribute("aria-label", "Ocultar faixa");
       hide.addEventListener("click", (e) => { e.stopPropagation(); hideTrack(track); });
 
-      top.append(cover, info, year, hide);
+      top.append(cover, info, year, like, hide);
 
       const actions = document.createElement("div");
       actions.className = "track-actions";
@@ -176,7 +190,36 @@
       const country = ((window.COUNTRIES || []).find((c) => c.code === code) || {}).name || code;
       entry.tracks.forEach((t) => { const x = { ...t, country }; if (!window.Hidden.has(x)) all.push(x); });
     }
-    if (all.length) window.Player.radio(all);
+    if (all.length) window.Player.radio(weightedOrder(all), true);
+  }
+
+  // Ordena a rádio dando mais peso ao que você curtiu (artista/país/selo/década).
+  function weightedOrder(tracks) {
+    const norm = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+    const liked = window.Liked.list();
+    const t = { artist: {}, country: {}, label: {}, decade: {} };
+    const likedKeys = new Set();
+    liked.forEach((l) => {
+      likedKeys.add(norm(l.artist) + "::" + norm(l.title));
+      if (l.artist) t.artist[norm(l.artist)] = 1;
+      if (l.country) t.country[l.country] = 1;
+      if (l.label) t.label[l.label] = 1;
+      if (l.year) t.decade[Math.floor(l.year / 10) * 10] = 1;
+    });
+    const weight = (x) => {
+      let w = 1;
+      if (likedKeys.has(norm(x.artist) + "::" + norm(x.title))) w += 8;
+      if (x.artist && t.artist[norm(x.artist)]) w += 2.5;
+      if (x.country && t.country[x.country]) w += 1.5;
+      if (x.label && t.label[x.label]) w += 1.2;
+      if (x.year && t.decade[Math.floor(x.year / 10) * 10]) w += 0.8;
+      return w;
+    };
+    // Permutação aleatória ponderada (chave exponencial): peso maior tende a vir antes.
+    return tracks
+      .map((x) => ({ x, k: -Math.log(Math.random() || 1e-9) / weight(x) }))
+      .sort((a, b) => a.k - b.k)
+      .map((o) => o.x);
   }
 
   // ---------- Dialog genérico ----------

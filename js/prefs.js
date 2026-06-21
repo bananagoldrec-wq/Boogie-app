@@ -47,4 +47,25 @@
   function clear() { write([]); }
 
   window.Hidden = { list, has, add, remove, clear };
+
+  // ---- Curtidas ("curti") ----
+  const LKEY = "disco_boogie_liked";
+  function lread() {
+    try { const r = localStorage.getItem(LKEY); const a = r ? JSON.parse(r) : []; return Array.isArray(a) ? a : []; }
+    catch (e) { return []; }
+  }
+  function lwrite(a) { try { localStorage.setItem(LKEY, JSON.stringify(a)); } catch (e) { /* ignore */ } }
+  function lList() { return lread(); }
+  function lHas(t) { const k = key(t); return lread().some((x) => key(x) === k); }
+  function lAdd(t) {
+    const a = lread(); const k = key(t);
+    if (a.some((x) => key(x) === k)) return;
+    a.push({ artist: t.artist, title: t.title, country: t.country || null, year: t.year || null, label: t.label || null });
+    lwrite(a);
+  }
+  function lRemove(t) { const k = key(t); lwrite(lread().filter((x) => key(x) !== k)); }
+  function lToggle(t) { if (lHas(t)) { lRemove(t); return false; } lAdd(t); return true; }
+  function lClear() { lwrite([]); }
+
+  window.Liked = { list: lList, has: lHas, add: lAdd, remove: lRemove, toggle: lToggle, clear: lClear };
 })();
