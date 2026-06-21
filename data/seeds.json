@@ -1116,6 +1116,14 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "Dance Up A Storm",
+        "artist": "Crystal Grass",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (auto)"
       }
     ]
   },
@@ -1245,6 +1253,14 @@
       {
         "title": "Too Hot to Handle",
         "artist": "Heatwave",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "Now",
+        "artist": "Jimmy James & the Vagabonds",
         "year": 1976,
         "spotify_embed": null,
         "youtube_id": null,
@@ -1955,6 +1971,22 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "Higher Plane Breeze",
+        "artist": "Ofege",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "3rd World",
+        "artist": "Sonny Okosun",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (auto)"
       }
     ]
   },
@@ -2334,6 +2366,22 @@
         "title": "Harmony",
         "artist": "Marcia Griffiths",
         "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "Don’t Ever Leave",
+        "artist": "Marcia Griffiths",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "For Lovers Only",
+        "artist": "Vic",
+        "year": 1982,
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (auto)"
@@ -2812,6 +2860,22 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "TIMELY!!",
+        "artist": "杏里",
+        "year": 1983,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "Make me a Star",
+        "artist": "THE SQUARE",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (auto)"
       }
     ]
   },
@@ -3044,6 +3108,22 @@
         "title": "The Best Gift",
         "artist": "Martin Nievera",
         "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "Roots & Wings",
+        "artist": "Zsa Zsa Padilla",
+        "year": 1988,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "Moving Thoughts",
+        "artist": "Gary V.",
+        "year": 1987,
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (auto)"
@@ -4188,6 +4268,14 @@
         "youtube_id": null,
         "source": "Discogs",
         "label": "Sacodis"
+      },
+      {
+        "title": "In Abidjan",
+        "artist": "Mac Gregor",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (auto)"
       }
     ]
   },
@@ -4351,6 +4439,14 @@
         "youtube_id": null,
         "source": "Now-Again Records",
         "label": "Now-Again"
+      },
+      {
+        "title": "Tilahun Gessesse",
+        "artist": "Tilahun Gessesse",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (auto)"
       }
     ]
   },
