@@ -4480,15 +4480,6 @@
         "label": "Editions Veve"
       },
       {
-        "title": "L'Argent Appelle L'Argent",
-        "artist": "Pamelo Mounk'a",
-        "year": 1981,
-        "spotify_embed": null,
-        "youtube_id": null,
-        "source": "Discogs/Wikipedia",
-        "label": "Eddy'son"
-      },
-      {
         "title": "Maria Tebbo",
         "artist": "Sam Mangwana",
         "year": 1979,
@@ -5185,6 +5176,561 @@
         "youtube_id": null,
         "source": "Strut (Alefa Madagascar)",
         "label": "Discomad"
+      }
+    ]
+  },
+  "MA": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Sid Redad",
+        "artist": "Fadoul",
+        "year": 1970,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Habibi Funk 002",
+        "label": "Habibi Funk"
+      },
+      {
+        "title": "Sing Sing",
+        "artist": "Fadoul",
+        "year": 1970,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Habibi Funk 002",
+        "label": "Habibi Funk"
+      },
+      {
+        "title": "Al Hadaoui",
+        "artist": "Attarazat Addahabia & Faradjallah",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Habibi Funk 011",
+        "label": "Boussiphone"
+      },
+      {
+        "title": "Nuits de Printemps",
+        "artist": "Abdou El Omari",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Radio Martiko (reissue)",
+        "label": "Radio Martiko"
+      },
+      {
+        "title": "Mirza",
+        "artist": "Jalil Bennis et les Golden Hands",
+        "year": 1971,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Habibi Funk / Africa Rocks the Seventies",
+        "label": "Habibi Funk"
+      },
+      {
+        "title": "Essiniya",
+        "artist": "Nass El Ghiwane",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia / Afropop",
+        "label": "Polydor"
+      },
+      {
+        "title": "Chamaa",
+        "artist": "Jil Jilala",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia",
+        "label": "Atlassiphone"
+      },
+      {
+        "title": "Fi Jamique",
+        "artist": "Bob Fadoul",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Habibi Funk (ano aproximado)",
+        "label": "Habibi Funk"
+      }
+    ]
+  },
+  "EG": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Sah",
+        "artist": "Al Massrieen",
+        "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Habibi Funk 006",
+        "label": "Sout El Hob"
+      },
+      {
+        "title": "Longa 79",
+        "artist": "Al Massrieen",
+        "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Habibi Funk 006",
+        "label": "Habibi Funk"
+      },
+      {
+        "title": "Ramadan in Space Time",
+        "artist": "Salah Ragab & The Cairo Jazz Band",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut / Art Yard",
+        "label": "Strut"
+      },
+      {
+        "title": "Egypt Strut",
+        "artist": "Salah Ragab & The Cairo Jazz Band",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Art Yard / Strut",
+        "label": "Art Yard"
+      },
+      {
+        "title": "The Miracles of the Seven Dances",
+        "artist": "Hany Mehanna",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Radio Martiko (reissue)",
+        "label": "Sout El Hob"
+      },
+      {
+        "title": "Ayonha",
+        "artist": "Hamid El Shaeri",
+        "year": 1983,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia / Habibi Funk 018",
+        "label": "Habibi Funk"
+      },
+      {
+        "title": "Raqset El Fada",
+        "artist": "Omar Khorshid",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Voice of Lebanon"
+      },
+      {
+        "title": "Music de Carnaval",
+        "artist": "Magdy El Hussainy",
+        "year": 1972,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Habibi Funk 015",
+        "label": "Habibi Funk"
+      }
+    ]
+  },
+  "SD": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Jazz, Jazz, Jazz",
+        "artist": "The Scorpions & Saif Abu Bakr",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Habibi Funk 009",
+        "label": "Habibi Funk"
+      },
+      {
+        "title": "Argos Farfish",
+        "artist": "Sharhabil Ahmed",
+        "year": 1970,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Habibi Funk 013 (ano aproximado)",
+        "label": "Habibi Funk"
+      },
+      {
+        "title": "Zulum Aldunya",
+        "artist": "Sharhabil Ahmed",
+        "year": 1970,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Habibi Funk 013 (ano aproximado)",
+        "label": "Habibi Funk"
+      },
+      {
+        "title": "Zahra",
+        "artist": "Ibrahim Awad",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Habibi Funk (ano aproximado)"
+      }
+    ]
+  },
+  "SO": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Gorof",
+        "artist": "Dur-Dur Band",
+        "year": 1987,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Ostinato (Sweet As Broken Dates)",
+        "label": "Ostinato"
+      },
+      {
+        "title": "Haddii Hoobalkii Gabay",
+        "artist": "Hibo Nuura",
+        "year": 1986,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Ostinato (Sweet As Broken Dates)",
+        "label": "Ostinato"
+      },
+      {
+        "title": "Rag Waa Nacab Iyo Nasteexo",
+        "artist": "Aamina Camaari",
+        "year": 1986,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Ostinato (Sweet As Broken Dates)",
+        "label": "Ostinato"
+      },
+      {
+        "title": "Xuduud Ma Leh Xubigaan",
+        "artist": "Iftin Band",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Ostinato",
+        "label": "Ostinato"
+      },
+      {
+        "title": "Check Up Your Head",
+        "artist": "Mukhtaar Ramadan Iidi",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Mogadisco)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "Geesiyada Halgamayow",
+        "artist": "Bakaka Band",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Mogadisco)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "Waakaa Helaa",
+        "artist": "Faadumo Qaasim & Shareero Band",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Mogadisco)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "Hoobeya",
+        "artist": "Shimaali",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Mogadisco)",
+        "label": "Analog Africa"
+      }
+    ]
+  },
+  "GM": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Tasito",
+        "artist": "Guelewar Band of Banjul",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs / Teranga Beat",
+        "label": "Productions Jambaar"
+      },
+      {
+        "title": "Sama Yaye Demna N'Darr",
+        "artist": "Guelewar Band of Banjul",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs / Musiques d'Afrique",
+        "label": "Valerie"
+      },
+      {
+        "title": "Halleli N'Dakarou",
+        "artist": "Guelewar Band of Banjul",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Teranga Beat (reissue)",
+        "label": "Teranga Beat"
+      },
+      {
+        "title": "Saraba",
+        "artist": "Ifang Bondi",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Senegâmbia"
+      },
+      {
+        "title": "Mantra",
+        "artist": "Ifang Bondi",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs"
+      },
+      {
+        "title": "Touki Ba Banjul",
+        "artist": "Guelewar",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Soul Jazz / Kindred Spirits (reissue)",
+        "label": "Kindred Spirits"
+      }
+    ]
+  },
+  "CG": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Le Bûcheron",
+        "artist": "Franklin Boukaka",
+        "year": 1970,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia (arr. Manu Dibango)",
+        "label": "—"
+      },
+      {
+        "title": "L'Argent Appelle L'Argent",
+        "artist": "Pamelo Mounk'a",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia / adiac-congo",
+        "label": "Eddy'son"
+      },
+      {
+        "title": "Samantha",
+        "artist": "Pamelo Mounk'a",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Eddy'son"
+      },
+      {
+        "title": "Ngantsie Soul",
+        "artist": "Les Bantous de la Capitale",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Congo Funk!)",
+        "label": "Analog Africa"
+      },
+      {
+        "title": "M'Bata",
+        "artist": "Youlou Mabiala et l'Orchestre Kamikaze Loningisa",
+        "year": 1983,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs",
+        "label": "Publi-Congo"
+      },
+      {
+        "title": "Couper-Soucis",
+        "artist": "Youlou Mabiala et l'Orchestre Kamikaze Loningisa",
+        "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs / Global Groovers",
+        "label": "Publi-Congo"
+      }
+    ]
+  },
+  "GA": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Nandipo",
+        "artist": "Pierre Akendengué",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs / Wikipedia",
+        "label": "Saravah"
+      },
+      {
+        "title": "Afrika Obota",
+        "artist": "Pierre Akendengué",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs / Wikipedia",
+        "label": "Saravah"
+      },
+      {
+        "title": "Tu Tchika-Tchika A Gogo",
+        "artist": "Mackjoss et l'Orchestre Massako",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Analog Africa (Orchestre Massako)",
+        "label": "Mass Pro"
+      },
+      {
+        "title": "Immigration",
+        "artist": "Mackjoss",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs (ano aproximado)",
+        "label": "Mass Pro"
+      },
+      {
+        "title": "Abaga Mbouga",
+        "artist": "Groupe Kounabeli de Masuku & Patience Dabany",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Secousse (Merci Yaya Bongo)",
+        "label": "Secousse"
+      }
+    ]
+  },
+  "MZ": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Elisa Gomara Saia",
+        "artist": "Orchestra Marrabenta Star de Moçambique",
+        "year": 1989,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs (Independance)",
+        "label": "Piranha"
+      },
+      {
+        "title": "Nwahulwana",
+        "artist": "Wazimbo & Orchestra Marrabenta Star de Moçambique",
+        "year": 1989,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs / Piranha",
+        "label": "Piranha"
+      },
+      {
+        "title": "Sapateiro",
+        "artist": "Orchestra Marrabenta Star de Moçambique",
+        "year": 1989,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs (Independance)",
+        "label": "Piranha"
+      },
+      {
+        "title": "Loko ni kumbuka Jorgina",
+        "artist": "Fany Mpfumo",
+        "year": 1970,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Wikipedia (ano aproximado)",
+        "label": "His Master's Voice"
+      },
+      {
+        "title": "Xiguindlana",
+        "artist": "Dilon Djindji",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Club of Mozambique (ano aproximado)"
+      },
+      {
+        "title": "A vasati va lomu",
+        "artist": "Fany Mpfumo",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Last.fm (ano aproximado)",
+        "label": "His Master's Voice"
+      }
+    ]
+  },
+  "MU": {
+    "available": true,
+    "tracks": [
+      {
+        "title": "Soul Sock Séga",
+        "artist": "Ti L'Afrique",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut (Soul Sok Séga)",
+        "label": "Strut (reissue)"
+      },
+      {
+        "title": "Bhaï Aboo",
+        "artist": "Claudio Veeraragoo",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut (Soul Sok Séga)",
+        "label": "Strut (reissue)"
+      },
+      {
+        "title": "Pop Soul Séga",
+        "artist": "Cyril Labonne",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut (Soul Sok Séga)",
+        "label": "Strut (reissue)"
+      },
+      {
+        "title": "La Vie En Badinage",
+        "artist": "Marie Josée & Roger Clency",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut (Soul Sok Séga)",
+        "label": "Strut (reissue)"
+      },
+      {
+        "title": "Manuel Bitor",
+        "artist": "John Kenneth Nelson",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut (Soul Sok Séga)",
+        "label": "Strut (reissue)"
+      },
+      {
+        "title": "Sega Lenoir",
+        "artist": "Les Stardust",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Strut (Soul Sok Séga)",
+        "label": "Strut (reissue)"
       }
     ]
   }
