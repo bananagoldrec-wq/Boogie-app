@@ -145,6 +145,18 @@
       "Seleção curada e verificada · ▶ Prévia toca 30s · ＋ adiciona à playlist.";
   }
 
+  // ---------- Rádio (toca o acervo inteiro, aleatório) ----------
+  function startRadio() {
+    const all = [];
+    for (const code of Object.keys(SEEDS)) {
+      const entry = SEEDS[code];
+      if (!entry || entry.available === false || !Array.isArray(entry.tracks)) continue;
+      const country = ((window.COUNTRIES || []).find((c) => c.code === code) || {}).name || code;
+      entry.tracks.forEach((t) => all.push({ ...t, country }));
+    }
+    if (all.length) window.Player.radio(all);
+  }
+
   // ---------- Dialog genérico ----------
   function openDialog(title, buildBody) {
     const dlg = document.getElementById("dialog");
@@ -419,6 +431,7 @@
 
     document.getElementById("back-btn").addEventListener("click", closePanel);
     document.getElementById("open-playlists").addEventListener("click", openPlaylistsPanel);
+    document.getElementById("radio-btn").addEventListener("click", startRadio);
     document.getElementById("new-playlist-btn").addEventListener("click", () => newPlaylistDialog(null));
 
     document.getElementById("playlists-panel").addEventListener("click", (e) => {

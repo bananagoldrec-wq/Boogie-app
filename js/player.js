@@ -17,6 +17,9 @@
   let queueIndex = 0;
   let renderToken = 0; // invalida appends assíncronos ao trocar de faixa
 
+  // ---- Estado da Rádio (reprodução aleatória contínua) ----
+  let radio = null; // { list:[], i:0 }
+
   // ---- Estado da prévia inline (somente uma por vez) ----
   let activePreview = null; // elemento DOM da prévia aberta
 
@@ -297,12 +300,114 @@
     showModal();
   }
 
+  // ---------- Rádio (aleatória, auto-avanço) ----------
+  function startRadio(tracks) {
+    if (!tracks || !tracks.length) return;
+    const list = tracks.slice();
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+    radio = { list, i: 0 };
+    queue = null;
+    showModal();
+    radioPlay();
+  }
+
+  function radioStep(delta) {
+    if (!radio) return;
+    radio.i = (radio.i + delta + radio.list.length) % radio.list.length;
+    radioPlay();
+  }
+
+  async function radioPlay() {
+    if (!radio) return;
+    const myToken = ++renderToken;
+    const track = radio.list[radio.i];
+
+    document.getElementById("modal-title").textContent = "📻 Rádio Disco & Boogie";
+    document.getElementById("modal-sub").textContent =
+      `${radio.i + 1} / ${radio.list.length} · embaralhado`;
+
+    // Barra de controle (anterior / próxima)
+    const bar = document.getElementById("player-queue");
+    bar.hidden = false;
+    bar.innerHTML = "";
+    const prev = document.createElement("button");
+    prev.type = "button"; prev.className = "queue-btn"; prev.textContent = "‹ Anterior";
+    prev.addEventListener("click", () => radioStep(-1));
+    const status = document.createElement("span");
+    status.className = "queue-status"; status.textContent = "🔀 no ar";
+    const next = document.createElement("button");
+    next.type = "button"; next.className = "queue-btn"; next.textContent = "Próxima ›";
+    next.addEventListener("click", () => radioStep(1));
+    bar.append(prev, status, next);
+
+    const body = document.getElementById("player-body");
+    body.innerHTML =
+      '<div class="preview-loading"><span class="spinner-sm"></span> Sintonizando…</div>';
+
+    const hit = await findPreview(track);
+    if (myToken !== renderToken) return;
+    body.innerHTML = "";
+
+    const card = document.createElement("div");
+    card.className = "radio-now";
+    const head = document.createElement("div");
+    head.className = "preview-head";
+    if (hit && hit.artwork) {
+      const img = document.createElement("img");
+      img.className = "radio-cover"; img.src = hit.artwork; img.alt = "";
+      head.appendChild(img);
+    }
+    const meta = document.createElement("div");
+    meta.className = "preview-now";
+    const yr = track.year ? ` · ${track.year}` : "";
+    const ct = track.country ? ` · ${track.country}` : "";
+    meta.innerHTML =
+      `<strong>${esc(track.title)}</strong>` +
+      `<span>${esc(track.artist)}${yr}</span>` +
+      `<span>${ct.replace(/^ · /, "")}</span>`;
+    head.appendChild(meta);
+    card.appendChild(head);
+
+    if (hit && hit.previewUrl) {
+      const audio = document.createElement("audio");
+      audio.className = "preview-audio";
+      audio.controls = true;
+      audio.autoplay = true;
+      audio.src = hit.previewUrl;
+      audio.addEventListener("ended", () => { if (myToken === renderToken) radioStep(1); });
+      card.appendChild(audio);
+      audio.play().catch(() => {});
+    } else {
+      // Sem prévia: segue o baile automaticamente após um instante.
+      const msg = document.createElement("p");
+      msg.className = "preview-msg";
+      msg.textContent = "Sem prévia para esta faixa — pulando…";
+      card.appendChild(msg);
+      setTimeout(() => { if (myToken === renderToken) radioStep(1); }, 2500);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "preview-actions";
+    const full = document.createElement("button");
+    full.type = "button"; full.className = "btn-link full-btn"; full.textContent = "♪ Ver faixa";
+    full.addEventListener("click", () => open(track));
+    actions.appendChild(full);
+    actions.appendChild(linkBtn(buyLinks(track).discogs, "💿 Comprar", "discogs"));
+    card.appendChild(actions);
+
+    body.appendChild(card);
+  }
+
   function close() {
     renderToken++; // cancela qualquer append assíncrono pendente
     modal().hidden = true;
     document.getElementById("player-body").innerHTML = ""; // para a reprodução
     document.getElementById("player-queue").innerHTML = "";
     queue = null;
+    radio = null;
     document.body.style.overflow = "";
   }
 
@@ -316,5 +421,5 @@
     });
   }
 
-  window.Player = { init, open, preview, closePreview, playQueue };
+  window.Player = { init, open, preview, closePreview, playQueue, radio: startRadio };
 })();

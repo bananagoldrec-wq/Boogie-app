@@ -64,7 +64,18 @@ html, body {
   box-shadow: 0 3px 8px var(--shadow); transition: transform .15s, background .15s;
 }
 .nav-btn:hover { transform: translateY(-2px); background: var(--orange-deep); }
+.nav-btn.radio { background: var(--orange); border-color: var(--gold); }
+.nav-btn.radio:hover { background: var(--orange-deep); }
 .nav-ico { font-size: 1.1rem; }
+
+/* Rádio: cartão "no ar" */
+.radio-now { display: flex; flex-direction: column; gap: 12px; }
+.radio-cover {
+  width: 96px; height: 96px; border-radius: 10px; object-fit: cover;
+  box-shadow: 0 4px 12px var(--shadow);
+}
+.radio-now .preview-now strong { font-size: 1.05rem; }
+.radio-now .preview-audio { width: 100%; }
 
 /* ---------- Layout ---------- */
 .layout {
