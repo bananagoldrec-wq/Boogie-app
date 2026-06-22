@@ -84,21 +84,21 @@
       const like = document.createElement("button");
       like.type = "button";
       like.className = "track-like" + (window.Liked.has(track) ? " on" : "");
-      like.innerHTML = window.Liked.has(track) ? "♥" : "♡";
+      like.innerHTML = window.Liked.has(track) ? window.Icon.heartFilled : window.Icon.heart;
       like.title = "Curti";
       like.setAttribute("aria-label", "Curtir faixa");
       like.addEventListener("click", (e) => {
         e.stopPropagation();
         const on = window.Liked.toggle(track);
         like.classList.toggle("on", on);
-        like.innerHTML = on ? "♥" : "♡";
+        like.innerHTML = on ? window.Icon.heartFilled : window.Icon.heart;
         toast(on ? `Curtiu: ${track.title}` : "Removido das curtidas");
       });
 
       const hide = document.createElement("button");
       hide.type = "button";
       hide.className = "track-hide";
-      hide.innerHTML = "✕";
+      hide.innerHTML = window.Icon.x;
       hide.title = "Não curti — ocultar do app";
       hide.setAttribute("aria-label", "Ocultar faixa");
       hide.addEventListener("click", (e) => { e.stopPropagation(); hideTrack(track); });
@@ -111,25 +111,25 @@
       const previewBtn = document.createElement("button");
       previewBtn.type = "button";
       previewBtn.className = "act-btn preview";
-      previewBtn.innerHTML = "▶ Prévia";
+      previewBtn.innerHTML = window.Icon.play + " Prévia";
       previewBtn.addEventListener("click", () => window.Player.preview(track, li));
 
       const plBtn = document.createElement("button");
       plBtn.type = "button";
       plBtn.className = "act-btn add";
-      plBtn.innerHTML = "＋ Playlist";
+      plBtn.innerHTML = window.Icon.plus + " Playlist";
       plBtn.addEventListener("click", () => choosePlaylistDialog(track));
 
       const fullBtn = document.createElement("button");
       fullBtn.type = "button";
       fullBtn.className = "act-btn full";
-      fullBtn.innerHTML = "♪ Completo";
+      fullBtn.innerHTML = window.Icon.note + " Completo";
       fullBtn.addEventListener("click", () => window.Player.open(track));
 
       const buyBtn = document.createElement("button");
       buyBtn.type = "button";
       buyBtn.className = "act-btn buy";
-      buyBtn.innerHTML = "💿 Comprar";
+      buyBtn.innerHTML = window.Icon.disc + " Comprar";
       buyBtn.title = "Comprar o disco no Discogs";
       buyBtn.addEventListener("click", () => window.open(discogsUrl(track), "_blank", "noopener"));
 
@@ -164,7 +164,7 @@
     currentTracks = tagCountry(window.DiscoAlgorithm.merge(local), country);
     renderVisible();
     els.sources.textContent =
-      "Seleção curada · ▶ Prévia · ＋ Playlist · ✕ oculta o que você não curte.";
+      "Seleção curada e verificada. Toque numa faixa para ouvir, curtir ou ocultar.";
   }
 
   // Renderiza o país atual escondendo as faixas marcadas como "não curti".
@@ -267,7 +267,7 @@
       const newBtn = document.createElement("button");
       newBtn.type = "button";
       newBtn.className = "btn-link new-pl";
-      newBtn.textContent = "＋ Nova playlist";
+      newBtn.innerHTML = window.Icon.plus + " Nova playlist";
       newBtn.addEventListener("click", () => newPlaylistDialog(track));
       body.appendChild(newBtn);
     });
@@ -323,7 +323,7 @@
     if (!lists.length) {
       const p = document.createElement("p");
       p.className = "dialog-empty";
-      p.textContent = "Nenhuma playlist ainda. Crie uma acima ou pelo botão ＋ Playlist nas faixas.";
+      p.textContent = "Nenhuma playlist ainda. Crie uma acima ou pelo botão Playlist nas faixas.";
       list.appendChild(p);
     }
 
@@ -337,12 +337,12 @@
       open.addEventListener("click", () => openPlaylistDetail(pl.id));
 
       const play = document.createElement("button");
-      play.type = "button"; play.className = "icon-btn"; play.title = "Reproduzir"; play.textContent = "▶";
+      play.type = "button"; play.className = "icon-btn"; play.title = "Reproduzir"; play.innerHTML = window.Icon.play;
       play.disabled = !pl.tracks.length;
       play.addEventListener("click", () => window.Player.playQueue(pl.tracks, 0));
 
       const del = document.createElement("button");
-      del.type = "button"; del.className = "icon-btn danger"; del.title = "Deletar"; del.textContent = "🗑";
+      del.type = "button"; del.className = "icon-btn danger"; del.title = "Deletar"; del.innerHTML = window.Icon.trash;
       del.addEventListener("click", () => {
         if (confirm(`Deletar a playlist "${pl.name}"?`)) {
           window.Playlists.remove(pl.id);
@@ -365,7 +365,7 @@
     row.className = "pl-row hidden-row";
     const open = document.createElement("button");
     open.type = "button"; open.className = "pl-open";
-    open.innerHTML = `<span class="pl-name">🚫 Faixas ocultas</span><small>${hidden.length} oculta(s)</small>`;
+    open.innerHTML = `<span class="pl-name">${window.Icon.ban} Faixas ocultas</span><small>${hidden.length} oculta(s)</small>`;
     open.addEventListener("click", openHiddenDetail);
     row.appendChild(open);
     list.appendChild(row);
@@ -384,7 +384,7 @@
     back.type = "button"; back.className = "back-btn"; back.textContent = "‹";
     back.addEventListener("click", refreshPlaylistsPanel);
     const h = document.createElement("h3");
-    h.textContent = "🚫 Faixas ocultas";
+    h.innerHTML = window.Icon.ban + " Faixas ocultas";
     head.append(back, h);
     detail.appendChild(head);
 
@@ -392,7 +392,7 @@
     if (!hidden.length) {
       const p = document.createElement("p");
       p.className = "dialog-empty";
-      p.textContent = "Nada oculto. Use o ✕ numa faixa para tirá-la do app.";
+      p.textContent = "Nada oculto. Use o botão de ocultar numa faixa para tirá-la do app.";
       detail.appendChild(p);
       return;
     }
@@ -423,7 +423,7 @@
         `<span class="dt-title">${esc(t.title)}</span>` +
         `<span class="dt-meta">${esc(t.artist)}${t.country ? " · " + esc(t.country) : ""}</span>`;
       const restore = document.createElement("button");
-      restore.type = "button"; restore.className = "mini-btn"; restore.textContent = "↩";
+      restore.type = "button"; restore.className = "mini-btn"; restore.innerHTML = window.Icon.restore;
       restore.title = "Restaurar";
       restore.addEventListener("click", () => {
         window.Hidden.remove(t);
@@ -459,11 +459,11 @@
     const tools = document.createElement("div");
     tools.className = "detail-tools";
     const playAll = document.createElement("button");
-    playAll.type = "button"; playAll.className = "btn-link"; playAll.textContent = "▶ Reproduzir";
+    playAll.type = "button"; playAll.className = "btn-link"; playAll.innerHTML = window.Icon.play + " Reproduzir";
     playAll.disabled = !pl.tracks.length;
     playAll.addEventListener("click", () => window.Player.playQueue(pl.tracks, 0));
     const ren = document.createElement("button");
-    ren.type = "button"; ren.className = "btn-link ghost"; ren.textContent = "✎ Renomear";
+    ren.type = "button"; ren.className = "btn-link ghost"; ren.textContent = "Renomear";
     ren.addEventListener("click", () => renamePlaylistDialog(pl.id));
     tools.append(playAll, ren);
     detail.appendChild(tools);
@@ -471,7 +471,7 @@
     if (!pl.tracks.length) {
       const p = document.createElement("p");
       p.className = "dialog-empty";
-      p.textContent = "Playlist vazia. Adicione faixas pelo botão ＋ Playlist.";
+      p.textContent = "Playlist vazia. Adicione faixas pelo botão Playlist.";
       detail.appendChild(p);
       return;
     }
@@ -494,7 +494,7 @@
       ctrl.className = "dt-ctrl";
       const up = mini("↑", idx === 0, () => { window.Playlists.moveTrack(pl.id, idx, idx - 1); openPlaylistDetail(pl.id); });
       const down = mini("↓", idx === pl.tracks.length - 1, () => { window.Playlists.moveTrack(pl.id, idx, idx + 1); openPlaylistDetail(pl.id); });
-      const rm = mini("✕", false, () => { window.Playlists.removeTrack(pl.id, idx); openPlaylistDetail(pl.id); });
+      const rm = mini(window.Icon.x, false, () => { window.Playlists.removeTrack(pl.id, idx); openPlaylistDetail(pl.id); });
       rm.classList.add("danger");
       ctrl.append(up, down, rm);
 

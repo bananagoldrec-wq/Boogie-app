@@ -69,6 +69,13 @@ html, body {
 .nav-btn.radio { background: var(--orange); border-color: rgba(246, 242, 234, 0.3); }
 .nav-btn.radio:hover { background: var(--orange-deep); }
 .nav-ico { font-size: 1.05rem; }
+.nav-svg { width: 19px; height: 19px; display: block; }
+/* Ícones 2D (SVG monoline) */
+.ico { width: 1.05em; height: 1.05em; vertical-align: -0.18em; display: inline-block; }
+.act-btn .ico { width: 15px; height: 15px; vertical-align: -0.15em; margin-right: 1px; }
+.btn-link .ico { vertical-align: -0.18em; margin-right: 2px; }
+.icon-btn .ico { width: 16px; height: 16px; }
+.mini-btn .ico { width: 13px; height: 13px; vertical-align: -0.1em; }
 
 /* Rádio: cartão "no ar" */
 .radio-now { display: flex; flex-direction: column; gap: 12px; }
@@ -225,21 +232,18 @@ html, body {
   font-size: 0.8rem; opacity: 0.85;
   flex-shrink: 0;
 }
-.track-hide {
-  flex-shrink: 0; border: none; background: transparent; cursor: pointer;
-  color: var(--brown-soft); font-size: 0.9rem; line-height: 1;
-  width: 22px; height: 22px; border-radius: 50%; opacity: 0.55;
-  transition: background .15s, color .15s, opacity .15s;
+/* Botões gostei / não-gostei: quadrados (menos redondos) */
+.track-like, .track-hide {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--beige-deep); background: var(--cream);
+  border-radius: 6px; cursor: pointer; color: var(--brown-soft);
+  transition: background .15s, color .15s, border-color .15s;
 }
-.track-hide:hover { background: #b03a2e; color: var(--cream); opacity: 1; }
-.track-like {
-  flex-shrink: 0; border: none; background: transparent; cursor: pointer;
-  color: var(--brown-soft); font-size: 1.05rem; line-height: 1;
-  width: 24px; height: 24px; border-radius: 50%; opacity: 0.7;
-  transition: transform .15s, color .15s, opacity .15s;
-}
-.track-like:hover { color: #e23b5a; opacity: 1; transform: scale(1.15); }
-.track-like.on { color: #e23b5a; opacity: 1; }
+.track-like .ico, .track-hide .ico { width: 16px; height: 16px; vertical-align: 0; }
+.track-like:hover, .track-like.on { color: #c8324f; border-color: #c8324f; }
+.track-hide:hover { color: var(--cream); background: #a8453a; border-color: #a8453a; }
 .btn-link.like-btn { background: var(--brown-soft); }
 .btn-link.like-btn.on { background: #e23b5a; }
 .btn-link.like-btn.on:hover { background: #c92f4b; }
@@ -354,7 +358,7 @@ html, body {
 
 /* ---------- Unavailable ---------- */
 .unavailable { text-align: center; padding: 24px 10px; animation: fadeIn .4s ease; }
-.sad-vinyl { font-size: 3rem; filter: grayscale(0.6); opacity: 0.7; }
+.sad-vinyl { width: 52px; height: 52px; color: var(--brown-soft); opacity: 0.65; }
 .unavailable p { font-style: italic; color: var(--brown-soft); margin-top: 10px; }
 
 /* ---------- Queue bar ---------- */

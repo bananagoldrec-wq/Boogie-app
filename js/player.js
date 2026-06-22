@@ -191,7 +191,7 @@
     const block = document.createElement("div");
     block.className = "player-block";
     const h = document.createElement("h4");
-    h.textContent = `🎧 Prévia 30s (toca direto · ${hit.source || "áudio"})`;
+    h.textContent = `Prévia 30s (toca direto · ${hit.source || "áudio"})`;
     const audio = document.createElement("audio");
     audio.className = "preview-audio";
     audio.controls = true;
@@ -214,7 +214,7 @@
     const yt = ytEmbedSrc(track, false);
     body.appendChild(
       buildBlock(
-        "▶ YouTube",
+        "YouTube",
         yt ? makeIframe(yt, 220, `${track.title} (YouTube)`) : null,
         [linkBtn(ytSearch(track), yt ? "Buscar mais no YouTube" : "Buscar no YouTube", "")]
       )
@@ -223,7 +223,7 @@
     const sp = spotifyEmbedSrc(track);
     body.appendChild(
       buildBlock(
-        "♫ Spotify",
+        "Spotify",
         sp ? makeIframe(sp, 152, `${track.title} (Spotify)`) : null,
         [linkBtn(spSearch(track), sp ? "Abrir no Spotify" : "Buscar no Spotify", "spotify")]
       )
@@ -232,7 +232,7 @@
     // Comprar o disco (busca por artista + título nos marketplaces)
     const buy = buyLinks(track);
     body.appendChild(
-      buildBlock("💿 Comprar o disco", null, [
+      buildBlock("Comprar o disco", null, [
         linkBtn(buy.discogs, "Discogs", "discogs"),
         linkBtn(buy.ebay, "eBay", "ebay"),
         linkBtn(buy.mercado, "Mercado Livre", "mercado"),
@@ -357,7 +357,7 @@
     prev.type = "button"; prev.className = "queue-btn"; prev.textContent = "‹ Anterior";
     prev.addEventListener("click", () => radioStep(-1));
     const status = document.createElement("span");
-    status.className = "queue-status"; status.textContent = "🔀 no ar";
+    status.className = "queue-status"; status.textContent = "no ar";
     const next = document.createElement("button");
     next.type = "button"; next.className = "queue-btn"; next.textContent = "Próxima ›";
     next.addEventListener("click", () => radioStep(1));
@@ -397,24 +397,25 @@
     like.type = "button";
     const liked0 = window.Liked.has(track);
     like.className = "btn-link like-btn" + (liked0 ? " on" : "");
-    like.textContent = liked0 ? "♥ Curtido" : "♡ Curti";
+    like.innerHTML = (liked0 ? window.Icon.heartFilled : window.Icon.heart) + (liked0 ? " Curtido" : " Curti");
     like.addEventListener("click", () => {
       const on = window.Liked.toggle(track);
       like.classList.toggle("on", on);
-      like.textContent = on ? "♥ Curtido" : "♡ Curti";
+      like.innerHTML = (on ? window.Icon.heartFilled : window.Icon.heart) + (on ? " Curtido" : " Curti");
     });
 
     const hide = document.createElement("button");
     hide.type = "button"; hide.className = "btn-link ghost";
-    hide.textContent = "✕ Não curti";
+    hide.innerHTML = window.Icon.x + " Não curti";
     hide.title = "Ocultar do app e pular";
     hide.addEventListener("click", () => radioHide(track));
 
     const full = document.createElement("button");
-    full.type = "button"; full.className = "btn-link full-btn"; full.textContent = "♪ Ver faixa";
+    full.type = "button"; full.className = "btn-link full-btn";
+    full.innerHTML = window.Icon.note + " Ver faixa";
     full.addEventListener("click", () => open(track));
 
-    act.append(like, hide, full, linkBtn(buyLinks(track).discogs, "💿 Comprar", "discogs"));
+    act.append(like, hide, full, linkBtn(buyLinks(track).discogs, "Comprar", "discogs"));
   }
 
   // Oculta a faixa atual da rádio e segue pra próxima.
@@ -434,7 +435,7 @@
     const myToken = ++renderToken;
     const track = radio.list[radio.i];
 
-    document.getElementById("modal-title").textContent = "📻 Rádio Disco & Boogie";
+    document.getElementById("modal-title").textContent = "Rádio Disco & Boogie";
     document.getElementById("modal-sub").textContent =
       `${radio.i + 1} / ${radio.list.length} · embaralhado`;
     renderRadioBar();
