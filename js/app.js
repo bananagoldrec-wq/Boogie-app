@@ -307,6 +307,72 @@
     document.getElementById("playlists-panel").hidden = false;
     refreshPlaylistsPanel();
   }
+
+  // ---------- Painel "Minhas curtidas" ----------
+  function openLikedPanel() {
+    document.getElementById("playlists-panel").hidden = false;
+    renderLikedDetail();
+  }
+
+  function renderLikedDetail() {
+    const list = document.getElementById("playlists-list");
+    const detail = document.getElementById("playlist-detail");
+    list.hidden = true;
+    detail.hidden = false;
+    detail.innerHTML = "";
+
+    const head = document.createElement("div");
+    head.className = "detail-head";
+    const back = document.createElement("button");
+    back.type = "button"; back.className = "back-btn"; back.textContent = "‹";
+    back.addEventListener("click", refreshPlaylistsPanel);
+    const h = document.createElement("h3");
+    h.innerHTML = window.Icon.heartFilled + " Minhas curtidas";
+    head.append(back, h);
+    detail.appendChild(head);
+
+    const liked = window.Liked.list();
+    if (!liked.length) {
+      const p = document.createElement("p");
+      p.className = "dialog-empty";
+      p.textContent = "Você ainda não curtiu nada. Toque no coração de uma faixa.";
+      detail.appendChild(p);
+      return;
+    }
+
+    const tools = document.createElement("div");
+    tools.className = "detail-tools";
+    const playAll = document.createElement("button");
+    playAll.type = "button"; playAll.className = "btn-link";
+    playAll.innerHTML = window.Icon.play + " Reproduzir";
+    playAll.addEventListener("click", () => window.Player.playQueue(liked, 0));
+    const count = document.createElement("span");
+    count.className = "country-count"; count.textContent = `${liked.length} faixas`;
+    tools.append(playAll, count);
+    detail.appendChild(tools);
+
+    const ul = document.createElement("ul");
+    ul.className = "detail-tracks";
+    liked.forEach((t, idx) => {
+      const li = document.createElement("li");
+      li.className = "detail-track";
+      const info = document.createElement("button");
+      info.type = "button"; info.className = "detail-info";
+      info.innerHTML =
+        `<span class="dt-title">${esc(t.title)}</span>` +
+        `<span class="dt-meta">${esc(t.artist)}${t.year ? " · " + t.year : ""}${t.country ? " · " + esc(t.country) : ""}</span>`;
+      info.addEventListener("click", () => window.Player.playQueue(liked, idx));
+      const unlike = mini(window.Icon.x, false, () => {
+        window.Liked.remove(t);
+        renderLikedDetail();
+        if (currentTracks.length) renderVisible();
+      });
+      unlike.title = "Descurtir";
+      li.append(info, unlike);
+      ul.appendChild(li);
+    });
+    detail.appendChild(ul);
+  }
   function closePlaylistsPanel() {
     document.getElementById("playlists-panel").hidden = true;
     document.getElementById("playlist-detail").hidden = true;
@@ -506,7 +572,8 @@
 
   function mini(label, disabled, onClick) {
     const b = document.createElement("button");
-    b.type = "button"; b.className = "mini-btn"; b.textContent = label;
+    b.type = "button"; b.className = "mini-btn";
+    if (/^\s*</.test(label)) b.innerHTML = label; else b.textContent = label;
     b.disabled = !!disabled;
     if (!disabled) b.addEventListener("click", onClick);
     return b;
@@ -575,6 +642,7 @@
 
     document.getElementById("back-btn").addEventListener("click", closePanel);
     document.getElementById("open-playlists").addEventListener("click", openPlaylistsPanel);
+    document.getElementById("liked-btn").addEventListener("click", openLikedPanel);
     document.getElementById("radio-btn").addEventListener("click", startRadio);
     document.getElementById("new-playlist-btn").addEventListener("click", () => newPlaylistDialog(null));
 
