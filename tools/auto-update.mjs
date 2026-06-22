@@ -69,6 +69,34 @@ async function artistCountry(mbid) {
   return c;
 }
 
+// Só adiciona faixa que tenha prévia tocável (iTunes/Deezer) — não suja o app.
+const toks = (s) => new Set(norm(s).split(" ").filter((w) => w.length > 2));
+function overlap(a, b) { for (const x of a) if (b.has(x)) return true; return false; }
+function matchPrev(arr, track, gp, gt, ga) {
+  if (!Array.isArray(arr)) return false;
+  const wantT = norm(track.title), wantA = toks(track.artist);
+  for (const r of arr) {
+    if (!gp(r)) continue;
+    const rt = norm(gt(r));
+    const titleOk = rt === wantT || rt.includes(wantT) || wantT.includes(rt);
+    const artistOk = wantA.size === 0 || overlap(toks(ga(r) || ""), wantA);
+    if (titleOk && artistOk) return true;
+  }
+  return false;
+}
+async function hasPreview(track) {
+  const term = encodeURIComponent(`${track.artist} ${track.title}`);
+  try {
+    const d = await getJSON(`https://itunes.apple.com/search?term=${term}&entity=song&media=music&limit=10`);
+    if (matchPrev(d.results, track, (r) => r.previewUrl, (r) => r.trackName, (r) => r.artistName)) return true;
+  } catch (e) { /* tenta Deezer */ }
+  try {
+    const d = await getJSON(`https://api.deezer.com/search?q=${term}&limit=10`);
+    if (matchPrev(d.data, track, (r) => r.preview, (r) => r.title, (r) => r.artist && r.artist.name)) return true;
+  } catch (e) { /* sem prévia */ }
+  return false;
+}
+
 async function searchByLabel(label) {
   const q = `label:"${label}" AND date:[1970 TO 1989]`;
   const data = await getJSON(`${WS}/release?query=${encodeURIComponent(q)}&fmt=json&limit=25`);
@@ -126,6 +154,7 @@ async function main() {
       checked++;
       const origin = await artistCountry(cand.mbid);
       if (origin && origin !== code) return; // origem conhecida e diferente: pula
+      if (!(await hasPreview(cand.track))) return; // sem prévia tocável: não adiciona
       seen.add(k);
       entry.tracks.push(cand.track);
       countryAdded++; added++;

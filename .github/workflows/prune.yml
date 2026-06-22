@@ -1,0 +1,36 @@
+name: Faxina — remover faixas sem prévia
+
+# Roda semanalmente (domingo 04:00 UTC) e manualmente em Actions → Run workflow.
+on:
+  schedule:
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: catalogue-maintenance
+  cancel-in-progress: false
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Remover faixas sem prévia (iTunes/Deezer)
+        run: node tools/prune-no-preview.mjs
+      - name: Commitar se houve remoções
+        run: |
+          if [ -n "$(git status --porcelain data/seeds.json)" ]; then
+            git config user.name "disco-boogie-bot"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data/seeds.json
+            git commit -m "chore: faxina — remove faixas sem prévia tocável"
+            git push
+          else
+            echo "Nada a remover — todas as faixas têm prévia."
+          fi
