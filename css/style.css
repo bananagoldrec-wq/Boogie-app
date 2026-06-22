@@ -240,6 +240,9 @@ html, body {
 }
 .track-like:hover { color: #e23b5a; opacity: 1; transform: scale(1.15); }
 .track-like.on { color: #e23b5a; opacity: 1; }
+.btn-link.like-btn { background: var(--brown-soft); }
+.btn-link.like-btn.on { background: #e23b5a; }
+.btn-link.like-btn.on:hover { background: #c92f4b; }
 .track-badge {
   font-size: 0.6rem; text-transform: uppercase; letter-spacing: .5px;
   background: var(--brown-soft); color: var(--cream);

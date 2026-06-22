@@ -392,11 +392,41 @@
       (track.country ? `<span>${esc(track.country)}</span>` : "") + `</div>`;
     const act = document.getElementById("radio-actions");
     act.innerHTML = "";
+
+    const like = document.createElement("button");
+    like.type = "button";
+    const liked0 = window.Liked.has(track);
+    like.className = "btn-link like-btn" + (liked0 ? " on" : "");
+    like.textContent = liked0 ? "♥ Curtido" : "♡ Curti";
+    like.addEventListener("click", () => {
+      const on = window.Liked.toggle(track);
+      like.classList.toggle("on", on);
+      like.textContent = on ? "♥ Curtido" : "♡ Curti";
+    });
+
+    const hide = document.createElement("button");
+    hide.type = "button"; hide.className = "btn-link ghost";
+    hide.textContent = "✕ Não curti";
+    hide.title = "Ocultar do app e pular";
+    hide.addEventListener("click", () => radioHide(track));
+
     const full = document.createElement("button");
     full.type = "button"; full.className = "btn-link full-btn"; full.textContent = "♪ Ver faixa";
     full.addEventListener("click", () => open(track));
-    act.appendChild(full);
-    act.appendChild(linkBtn(buyLinks(track).discogs, "💿 Comprar", "discogs"));
+
+    act.append(like, hide, full, linkBtn(buyLinks(track).discogs, "💿 Comprar", "discogs"));
+  }
+
+  // Oculta a faixa atual da rádio e segue pra próxima.
+  function radioHide(track) {
+    window.Hidden.add(track);
+    if (!radio) return;
+    const n = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+    const k = n(track.artist) + "::" + n(track.title);
+    radio.list = radio.list.filter((t) => n(t.artist) + "::" + n(t.title) !== k);
+    if (!radio.list.length) { close(); return; }
+    if (radio.i >= radio.list.length) radio.i = 0;
+    radioPlay(); // toca a que assumiu a posição atual (a próxima)
   }
 
   async function radioPlay() {
