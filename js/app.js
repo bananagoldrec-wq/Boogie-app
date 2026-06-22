@@ -586,7 +586,30 @@
     });
 
     await loadSeeds();
+    seedPresetLikes();
     mapInstance = window.DiscoMap.init(onSelectCountry);
+  }
+
+  // Marca como ❤️ (uma vez por aparelho) as faixas da playlist "Beno disco".
+  function seedPresetLikes() {
+    if (!window.PRESET_LIKES) return;
+    try { if (localStorage.getItem("disco_boogie_seeded_beno")) return; } catch (e) { return; }
+    const norm = (s) => String(s || "").toLowerCase().normalize("NFD")
+      .replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+    const idx = {};
+    for (const code of Object.keys(SEEDS)) {
+      const e = SEEDS[code];
+      if (!e || !Array.isArray(e.tracks)) continue;
+      const cn = ((window.COUNTRIES || []).find((c) => c.code === code) || {}).name || code;
+      e.tracks.forEach((t) => { idx[norm(t.artist) + "::" + norm(t.title)] = { ...t, country: cn }; });
+    }
+    let n = 0;
+    window.PRESET_LIKES.forEach(([a, ti]) => {
+      const tr = idx[norm(a) + "::" + norm(ti)];
+      if (tr && !window.Hidden.has(tr)) { window.Liked.add(tr); n++; }
+    });
+    try { localStorage.setItem("disco_boogie_seeded_beno", "1"); } catch (e) { /* ignore */ }
+    console.log(`[preset] ${n} faixas da playlist marcadas como curtidas.`);
   }
 
   document.addEventListener("DOMContentLoaded", main);
