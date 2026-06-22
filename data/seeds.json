@@ -4301,6 +4301,62 @@
         "youtube_id": null,
         "source": "Discogs",
         "label": "PolyGram"
+      },
+      {
+        "title": "Lost in the Night",
+        "artist": "Costas Charitodiplomenos",
+        "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs"
+      },
+      {
+        "title": "Itchika",
+        "artist": "Costas Charitodiplomenos",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs (ano aproximado)"
+      },
+      {
+        "title": "What You Gonna Do",
+        "artist": "141 G",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Into the Light (Charitodiplomenos)"
+      },
+      {
+        "title": "Talk About Love",
+        "artist": "Marianna Efstratiou",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs (prod. Charitodiplomenos)"
+      },
+      {
+        "title": "Sax",
+        "artist": "Mihalis Rakintzis",
+        "year": 1986,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Discogs/Wikipedia"
+      },
+      {
+        "title": "Arrest",
+        "artist": "Mihalis Rakintzis",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Into the Light (ano aproximado)"
+      },
+      {
+        "title": "No Name",
+        "artist": "George Theodorakis",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "Into the Light (ano aproximado)"
       }
     ]
   },
