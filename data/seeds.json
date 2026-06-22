@@ -1394,6 +1394,33 @@
         "youtube_id": null,
         "source": "Playlist Beno disco",
         "label": "GM / Carrere"
+      },
+      {
+        "title": "Trop belle pour rester seule",
+        "artist": "Ringo",
+        "year": 1972,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Carrère)",
+        "label": "Carrère"
+      },
+      {
+        "title": "Tentation",
+        "artist": "Ringo",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Carrère)",
+        "label": "Carrère"
+      },
+      {
+        "title": "Les Gondoles à Venise",
+        "artist": "Sheila",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Carrère)",
+        "label": "Carrère"
       }
     ]
   },
@@ -1543,6 +1570,33 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "Playlist Beno disco",
+        "label": "R&B Records"
+      },
+      {
+        "title": "Body Talk",
+        "artist": "Imagination",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: R&B Records)",
+        "label": "R&B Records"
+      },
+      {
+        "title": "Music and Lights",
+        "artist": "Imagination",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: R&B Records)",
+        "label": "R&B Records"
+      },
+      {
+        "title": "In the Heat of the Night",
+        "artist": "Imagination",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: R&B Records)",
         "label": "R&B Records"
       }
     ]
@@ -1921,6 +1975,33 @@
         "youtube_id": null,
         "source": "Playlist Beno disco",
         "label": "Hot Stuff"
+      },
+      {
+        "title": "Butterfly",
+        "artist": "Op. 8",
+        "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Discomagic Records)",
+        "label": "Discomagic Records"
+      },
+      {
+        "title": "Aliens",
+        "artist": "Radiorama",
+        "year": 1986,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Discomagic Records)",
+        "label": "Discomagic Records"
+      },
+      {
+        "title": "I Wanna Fly Away",
+        "artist": "Blue Russell",
+        "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Discomagic Records)",
+        "label": "Discomagic Records"
       }
     ]
   },
@@ -2275,6 +2356,15 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "Colourful Environment",
+        "artist": "Gboyega Adelaja",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: EMI)",
+        "label": "EMI"
       }
     ]
   },
@@ -2450,6 +2540,33 @@
         "youtube_id": null,
         "source": "Discogs",
         "label": "Black Music"
+      },
+      {
+        "title": "Paradise Road",
+        "artist": "Joy",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: RPM)",
+        "label": "RPM"
+      },
+      {
+        "title": "Living for the City",
+        "artist": "Disco Rock Machine",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: RPM)",
+        "label": "RPM"
+      },
+      {
+        "title": "You & I",
+        "artist": "Gene Rockwell",
+        "year": 1983,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: RPM)",
+        "label": "RPM"
       }
     ]
   },
@@ -3659,6 +3776,24 @@
         "youtube_id": null,
         "source": "Playlist Beno disco",
         "label": "Quality"
+      },
+      {
+        "title": "Runaway (With My Love)",
+        "artist": "Tapps",
+        "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Power Records)",
+        "label": "Power Records"
+      },
+      {
+        "title": "The American Dream",
+        "artist": "The Big Smoke",
+        "year": 1986,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Power Records)",
+        "label": "Power Records"
       }
     ]
   },
@@ -3813,6 +3948,15 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "Love Machine",
+        "artist": "The Love Machine",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Philips)",
+        "label": "Philips"
       }
     ]
   },
@@ -4025,6 +4169,33 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "Discogs"
+      },
+      {
+        "title": "Hotel San Vicente",
+        "artist": "Transs",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Akurama Records)",
+        "label": "Akurama Records"
+      },
+      {
+        "title": "Bunga Cinta",
+        "artist": "Hemi Pesulima",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Akurama Records)",
+        "label": "Akurama Records"
+      },
+      {
+        "title": "Jurang Pemisah",
+        "artist": "Yockie",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Pramaqua)",
+        "label": "Pramaqua"
       }
     ]
   },
@@ -4101,6 +4272,33 @@
         "youtube_id": null,
         "source": "Wikipedia",
         "label": "Oasis Records"
+      },
+      {
+        "title": "사랑할꺼야",
+        "artist": "이상은",
+        "year": 1989,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Jigu Records)",
+        "label": "Jigu Records"
+      },
+      {
+        "title": "이선희 Vol.2",
+        "artist": "이선희",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Jigu Records)",
+        "label": "Jigu Records"
+      },
+      {
+        "title": "Album Vol. 1",
+        "artist": "검은나비",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Jigu Records)",
+        "label": "Jigu Records"
       }
     ]
   },
@@ -4260,6 +4458,33 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "Eskimeyen Dost",
+        "artist": "Zeki Müren",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Türküola)",
+        "label": "Türküola"
+      },
+      {
+        "title": "Bezgin",
+        "artist": "İlhan İrem",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Türküola)",
+        "label": "Türküola"
+      },
+      {
+        "title": "Yalanmış",
+        "artist": "Asu Maralman",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Türküola)",
+        "label": "Türküola"
       }
     ]
   },
