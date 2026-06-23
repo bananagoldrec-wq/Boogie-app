@@ -1421,6 +1421,33 @@
         "youtube_id": null,
         "source": "MusicBrainz (selo: Carrère)",
         "label": "Carrère"
+      },
+      {
+        "title": "Aujourd'hui Plus Qu'Hier",
+        "artist": "Sophie Favier",
+        "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Carrère)",
+        "label": "Carrère"
+      },
+      {
+        "title": "Elle, je ne veux qu'elle",
+        "artist": "Ringo",
+        "year": 1971,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Carrère)",
+        "label": "Carrère"
+      },
+      {
+        "title": "Une heure, une nuit",
+        "artist": "Ringo",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Carrère)",
+        "label": "Carrère"
       }
     ]
   },
@@ -2002,6 +2029,33 @@
         "youtube_id": null,
         "source": "MusicBrainz (selo: Discomagic Records)",
         "label": "Discomagic Records"
+      },
+      {
+        "title": "Tuareg",
+        "artist": "Kel-Air & Band Band",
+        "year": 1986,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Discomagic Records)",
+        "label": "Discomagic Records"
+      },
+      {
+        "title": "Arizona",
+        "artist": "Riccardo Cioni",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Discomagic Records)",
+        "label": "Discomagic Records"
+      },
+      {
+        "title": "Buenas Noches",
+        "artist": "Camomilla",
+        "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Discomagic Records)",
+        "label": "Discomagic Records"
       }
     ]
   },
@@ -2563,6 +2617,33 @@
         "title": "You & I",
         "artist": "Gene Rockwell",
         "year": 1983,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: RPM)",
+        "label": "RPM"
+      },
+      {
+        "title": "Heads Or Tails",
+        "artist": "Hot R.S.",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: RPM)",
+        "label": "RPM"
+      },
+      {
+        "title": "Listen",
+        "artist": "Apartheid Not",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: R.P.M.)",
+        "label": "R.P.M."
+      },
+      {
+        "title": "Abazali",
+        "artist": "Papi Nokwe",
+        "year": 1984,
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (selo: RPM)",
@@ -4299,6 +4380,33 @@
         "youtube_id": null,
         "source": "MusicBrainz (selo: Jigu Records)",
         "label": "Jigu Records"
+      },
+      {
+        "title": "김광석 1",
+        "artist": "김광석",
+        "year": 1989,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Seoul Records)",
+        "label": "Seoul Records"
+      },
+      {
+        "title": "1집",
+        "artist": "Kim Kwang Seok",
+        "year": 1989,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Seoul Records)",
+        "label": "Seoul Records"
+      },
+      {
+        "title": "The Best Of Born Again",
+        "artist": "부활",
+        "year": 1989,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Seoul Records)",
+        "label": "Seoul Records"
       }
     ]
   },
@@ -4485,6 +4593,33 @@
         "youtube_id": null,
         "source": "MusicBrainz (selo: Türküola)",
         "label": "Türküola"
+      },
+      {
+        "title": "Bir Ayrılık, Bir Yoksulluk, Bir Ölüm / Bozuk Bozuk",
+        "artist": "Asu Maralman",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Türküola)",
+        "label": "Türküola"
+      },
+      {
+        "title": "Pencere",
+        "artist": "İlhan İrem",
+        "year": 1983,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Türküola)",
+        "label": "Türküola"
+      },
+      {
+        "title": "Köprü",
+        "artist": "İlhan İrem",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Türküola)",
+        "label": "Türküola"
       }
     ]
   },
@@ -4582,6 +4717,15 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "Into the Light (ano aproximado)"
+      },
+      {
+        "title": "Επιτυχίες",
+        "artist": "Γλυκερία",
+        "year": 1987,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Lyra)",
+        "label": "Lyra"
       }
     ]
   },
@@ -4639,6 +4783,24 @@
         "youtube_id": null,
         "source": "RateYourMusic",
         "label": "Straker's"
+      },
+      {
+        "title": "Ah Coming Too",
+        "artist": "Merchant",
+        "year": 1987,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Straker’s Records)",
+        "label": "Straker’s Records"
+      },
+      {
+        "title": "Ah, Ha",
+        "artist": "Lord Nelson",
+        "year": 1977,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Charlie’s Records)",
+        "label": "Charlie’s Records"
       }
     ]
   },
@@ -4796,6 +4958,33 @@
         "youtube_id": null,
         "source": "Discogs",
         "label": "Disques Espérance"
+      },
+      {
+        "title": "Savannah Georgia",
+        "artist": "Francis Bebey",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Fiesta)",
+        "label": "Fiesta"
+      },
+      {
+        "title": "Super Kumba",
+        "artist": "Manu Dibango",
+        "year": 1974,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Fiesta)",
+        "label": "Fiesta"
+      },
+      {
+        "title": "Le Prix de la liberté (Bande originale du film)",
+        "artist": "Manu Dibango",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Fiesta)",
+        "label": "Fiesta"
       }
     ]
   },
@@ -4881,6 +5070,24 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "La rumba que tumba",
+        "artist": "Cabrerita y sus Hijos",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Sacodis)",
+        "label": "Sacodis"
+      },
+      {
+        "title": "I'll Cry / Break Down One More",
+        "artist": "Essama Bikoula",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Sonafric)",
+        "label": "Sonafric"
       }
     ]
   },
@@ -5052,6 +5259,33 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "Yewoine Haregitu",
+        "artist": "Alemayehu Eshete",
+        "year": 1971,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Amha Records)",
+        "label": "Amha Records"
+      },
+      {
+        "title": "Mela Mela",
+        "artist": "Seifu Yohanes",
+        "year": 1971,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Amha Records)",
+        "label": "Amha Records"
+      },
+      {
+        "title": "Mulatu of Ethiopia",
+        "artist": "Mulatu Astatqé",
+        "year": 1972,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Worthy Records)",
+        "label": "Worthy Records"
       }
     ]
   },
@@ -5138,6 +5372,15 @@
         "youtube_id": null,
         "source": "Analog Africa (Angola Soundtrack)",
         "label": "Analog Africa"
+      },
+      {
+        "title": "Angola 76",
+        "artist": "Bonga",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Morabeza Records)",
+        "label": "Morabeza Records"
       }
     ]
   },
@@ -5206,6 +5449,33 @@
         "youtube_id": null,
         "source": "Discogs (Verckys)",
         "label": "Editions Veve"
+      },
+      {
+        "title": "Vie Ya Mosolo / Meta La Vérité",
+        "artist": "Zaïko Langa Langa",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Editions Veve)",
+        "label": "Editions Veve"
+      },
+      {
+        "title": "Sango Mabala Commission",
+        "artist": "Victoria Eleison",
+        "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Editions Veve International)",
+        "label": "Editions Veve International"
+      },
+      {
+        "title": "Surmenage",
+        "artist": "Emeneya",
+        "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Editions Veve International)",
+        "label": "Editions Veve International"
       }
     ]
   },
@@ -5310,6 +5580,33 @@
         "youtube_id": null,
         "source": "Wikipedia",
         "label": "Zambia Music Parlour"
+      },
+      {
+        "title": "Millie",
+        "artist": "Blackfoot",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Zambia Music Parlour)",
+        "label": "Zambia Music Parlour"
+      },
+      {
+        "title": "I'm a Free Man",
+        "artist": "5 Revolutions",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Zambia Music Parlour)",
+        "label": "Zambia Music Parlour"
+      },
+      {
+        "title": "Day Of Judgement",
+        "artist": "Ngozi Family",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Zambia Music Parlour)",
+        "label": "Zambia Music Parlour"
       }
     ]
   },
@@ -5369,6 +5666,24 @@
         "youtube_id": null,
         "source": "Discogs",
         "label": "Sabanoh"
+      },
+      {
+        "title": "I'll Cry / Break Down One More",
+        "artist": "Essama Bikoula",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Sonafric)",
+        "label": "Sonafric"
+      },
+      {
+        "title": "La Mauvaise Politique",
+        "artist": "Etoile De Namaco",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Sonafric)",
+        "label": "Sonafric"
       }
     ]
   },
@@ -5446,6 +5761,33 @@
         "youtube_id": null,
         "source": "Thrill Jockey (reissue)",
         "label": "Sonafric"
+      },
+      {
+        "title": "Seydou Bathily",
+        "artist": "Ambassadeur International",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Badmos)",
+        "label": "Badmos"
+      },
+      {
+        "title": "Mandjou",
+        "artist": "Salif Keita",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Badmos)",
+        "label": "Badmos"
+      },
+      {
+        "title": "Orchestre Rail-Band de Bamako",
+        "artist": "Orchestre Rail-Band de Bamako",
+        "year": 1970,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Bärenreiter-Musicaphon)",
+        "label": "Bärenreiter-Musicaphon"
       }
     ]
   },
@@ -5523,6 +5865,33 @@
         "youtube_id": null,
         "source": "Discogs",
         "label": "Syliphone"
+      },
+      {
+        "title": "Le Peuple",
+        "artist": "Ouza",
+        "year": 1983,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Editions Syliphone Conakry)",
+        "label": "Editions Syliphone Conakry"
+      },
+      {
+        "title": "Gön Bia Bia",
+        "artist": "Le Nimba Jazz de N'zérékoré",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Editions Syliphone Conakry)",
+        "label": "Editions Syliphone Conakry"
+      },
+      {
+        "title": "Venez voir !!..",
+        "artist": "22 Band",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Editions Syliphone Conakry)",
+        "label": "Editions Syliphone Conakry"
       }
     ]
   },
@@ -5564,6 +5933,33 @@
         "youtube_id": null,
         "source": "Mr Bongo (Sound of Burkina Faso)",
         "label": "Sonafric"
+      },
+      {
+        "title": "I'll Cry / Break Down One More",
+        "artist": "Essama Bikoula",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Sonafric)",
+        "label": "Sonafric"
+      },
+      {
+        "title": "La Mauvaise Politique",
+        "artist": "Etoile De Namaco",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Sonafric)",
+        "label": "Sonafric"
+      },
+      {
+        "title": "La rumba que tumba",
+        "artist": "Cabrerita y sus Hijos",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Sacodis)",
+        "label": "Sacodis"
       }
     ]
   },
@@ -5818,6 +6214,15 @@
         "youtube_id": null,
         "source": "Original Music (Take Cover!)",
         "label": "Gramma"
+      },
+      {
+        "title": "Rita / Chitima Cherusununguko",
+        "artist": "Thomas Mapfumo & The Blacks Unlimited",
+        "year": 1981,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Afro Soul)",
+        "label": "Afro Soul"
       }
     ]
   },
@@ -6031,6 +6436,24 @@
         "youtube_id": null,
         "source": "Habibi Funk 015",
         "label": "Habibi Funk"
+      },
+      {
+        "title": "عجائب الرقصات السبعة",
+        "artist": "هاني مهنى",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Sout El Hob)",
+        "label": "Sout El Hob"
+      },
+      {
+        "title": "Orkos",
+        "artist": "مها",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Sout El Hob)",
+        "label": "Sout El Hob"
       }
     ]
   },
@@ -6265,6 +6688,33 @@
         "youtube_id": null,
         "source": "Discogs / Global Groovers",
         "label": "Publi-Congo"
+      },
+      {
+        "title": "Seventy Warriors / Some Party",
+        "artist": "Plackband",
+        "year": 1980,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Plack - Label)",
+        "label": "Plack - Label"
+      },
+      {
+        "title": "Storm In A Teacup",
+        "artist": "Bob Robert",
+        "year": 1986,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: RA - RE Productions)",
+        "label": "RA - RE Productions"
+      },
+      {
+        "title": "Take You",
+        "artist": "Barbara Sand",
+        "year": 1986,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: RA - RE Productions)",
+        "label": "RA - RE Productions"
       }
     ]
   },
@@ -6315,6 +6765,15 @@
         "youtube_id": null,
         "source": "Secousse (Merci Yaya Bongo)",
         "label": "Secousse"
+      },
+      {
+        "title": "Baroque Jazz Trio",
+        "artist": "Baroque Jazz Trio",
+        "year": 1970,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Saravah)",
+        "label": "Saravah"
       }
     ]
   },
