@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Minha Rotina" />
+  <title>Minha Rotina</title>
+  <link rel="stylesheet" href="css/tracker.css" />
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-row">
+      <h1 class="app-title">Minha Rotina</h1>
+      <nav class="week-nav">
+        <button id="btn-prev" class="nav-arrow" aria-label="Semana anterior">&#8249;</button>
+        <span id="week-label">Esta semana</span>
+        <button id="btn-next" class="nav-arrow" aria-label="Próxima semana">&#8250;</button>
+      </nav>
+    </div>
+
+    <button id="smoke-banner" class="smoke-banner" type="button" aria-label="Contador sem cigarro">
+      <span class="smoke-icon">🚭</span>
+      <div class="smoke-text">
+        <strong id="smoke-value">Definir meta</strong>
+        <span id="smoke-lbl">toque para configurar</span>
+      </div>
+      <span class="smoke-caret">›</span>
+    </button>
+  </header>
+
+  <div id="grid-wrapper" class="grid-wrapper">
+    <div id="week-grid" class="week-grid" role="grid" aria-label="Grade semanal de atividades"></div>
+  </div>
+
+  <!-- Activity sheet -->
+  <div id="modal" class="overlay" hidden aria-modal="true" role="dialog">
+    <div class="sheet">
+      <div class="sheet-header">
+        <span id="modal-label" class="sheet-title"></span>
+        <button id="btn-close-modal" class="close-btn" aria-label="Fechar">×</button>
+      </div>
+      <input id="act-input" class="text-input" type="text"
+             placeholder="Ex: Academia, Meditação, Almoço…" maxlength="50"
+             autocomplete="off" autocorrect="off" />
+      <div id="cat-grid" class="cat-grid" role="group" aria-label="Categorias"></div>
+      <div class="sheet-footer">
+        <button id="btn-save"   class="btn primary">Salvar</button>
+        <button id="btn-delete" class="btn danger" hidden>Remover</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Smoking sheet -->
+  <div id="smoke-modal" class="overlay" hidden aria-modal="true" role="dialog">
+    <div class="sheet">
+      <div class="sheet-header">
+        <span class="sheet-title">🚭 Parar de Fumar</span>
+      </div>
+      <p class="sheet-desc">Quando você parou (ou vai parar)?</p>
+      <input id="quit-input" class="text-input" type="datetime-local" />
+      <div class="sheet-footer">
+        <button id="btn-save-quit"   class="btn primary">Salvar</button>
+        <button id="btn-cancel-quit" class="btn secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/tracker.js"></script>
+</body>
+</html>
