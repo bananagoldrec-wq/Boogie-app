@@ -5,68 +5,139 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Minha Rotina" />
+  <meta name="apple-mobile-web-app-title" content="Rotina" />
   <title>Minha Rotina</title>
   <link rel="stylesheet" href="css/tracker.css" />
 </head>
 <body>
 
-  <header class="app-header">
-    <div class="header-row">
-      <h1 class="app-title">Minha Rotina</h1>
-      <nav class="week-nav">
-        <button id="btn-prev" class="nav-arrow" aria-label="Semana anterior">&#8249;</button>
-        <span id="week-label">Esta semana</span>
-        <button id="btn-next" class="nav-arrow" aria-label="Próxima semana">&#8250;</button>
-      </nav>
-    </div>
-
-    <button id="smoke-banner" class="smoke-banner" type="button" aria-label="Contador sem cigarro">
-      <span class="smoke-icon">🚭</span>
-      <div class="smoke-text">
-        <strong id="smoke-value">Definir meta</strong>
-        <span id="smoke-lbl">toque para configurar</span>
-      </div>
-      <span class="smoke-caret">›</span>
+  <!-- ── Gamification strip ───────────────────────────────────────────── -->
+  <header class="game-header">
+    <button class="streak-pill" id="btn-open-ach" aria-label="Conquistas">
+      <span id="flame-icon">🔥</span><span id="streak-num">0</span>
     </button>
+    <div class="xp-block">
+      <div class="xp-meta">
+        <span id="level-badge">Nv 1</span>
+        <span id="level-title">Iniciante</span>
+        <span id="xp-label">0 / 200 XP</span>
+      </div>
+      <div class="xp-track"><div id="xp-bar" class="xp-bar"></div></div>
+    </div>
   </header>
 
-  <div id="grid-wrapper" class="grid-wrapper">
-    <div id="week-grid" class="week-grid" role="grid" aria-label="Grade semanal de atividades"></div>
+  <!-- ── Smoking strip ────────────────────────────────────────────────── -->
+  <button id="smoke-strip" class="smoke-strip" aria-label="Ver progresso sem cigarro">
+    <span class="ss-icon">🚭</span>
+    <span id="ss-time" class="ss-time">Configure aqui</span>
+    <span id="ss-money" class="ss-money"></span>
+    <span class="ss-caret">›</span>
+  </button>
+
+  <!-- ── Week nav + today progress ────────────────────────────────────── -->
+  <div class="week-bar">
+    <button id="btn-prev" class="nav-arrow">&#8249;</button>
+    <div class="week-center">
+      <span id="week-label">Esta semana</span>
+      <div class="today-bar">
+        <div class="today-track"><div id="today-fill" class="today-fill"></div></div>
+        <span id="today-count" class="today-count">0 de 0 feitas</span>
+      </div>
+    </div>
+    <button id="btn-next" class="nav-arrow">&#8250;</button>
   </div>
 
-  <!-- Activity sheet -->
-  <div id="modal" class="overlay" hidden aria-modal="true" role="dialog">
-    <div class="sheet">
+  <!-- ── Calendar grid ────────────────────────────────────────────────── -->
+  <div id="grid-wrapper" class="grid-wrapper">
+    <div id="week-grid" class="week-grid" role="grid"></div>
+  </div>
+
+  <!-- ═══════════════ OVERLAYS ══════════════════════════════════════════ -->
+
+  <!-- Add / edit activity -->
+  <div id="act-overlay" class="overlay" hidden>
+    <div class="sheet" role="dialog" aria-modal="true">
       <div class="sheet-header">
-        <span id="modal-label" class="sheet-title"></span>
-        <button id="btn-close-modal" class="close-btn" aria-label="Fechar">×</button>
+        <span id="act-label" class="sheet-title"></span>
+        <button id="btn-close-act" class="close-btn">×</button>
       </div>
       <input id="act-input" class="text-input" type="text"
-             placeholder="Ex: Academia, Meditação, Almoço…" maxlength="50"
+             placeholder="Academia, Meditação, Almoço…" maxlength="50"
              autocomplete="off" autocorrect="off" />
       <div id="cat-grid" class="cat-grid" role="group" aria-label="Categorias"></div>
       <div class="sheet-footer">
-        <button id="btn-save"   class="btn primary">Salvar</button>
-        <button id="btn-delete" class="btn danger" hidden>Remover</button>
+        <button id="btn-save-act" class="btn primary">Salvar</button>
+        <button id="btn-del-act"  class="btn danger"  hidden>Remover</button>
       </div>
     </div>
   </div>
 
-  <!-- Smoking sheet -->
-  <div id="smoke-modal" class="overlay" hidden aria-modal="true" role="dialog">
-    <div class="sheet">
+  <!-- Smoking detail -->
+  <div id="smoke-overlay" class="overlay" hidden>
+    <div class="sheet tall-sheet" role="dialog" aria-modal="true">
       <div class="sheet-header">
-        <span class="sheet-title">🚭 Parar de Fumar</span>
+        <span class="sheet-title">🚭 Sem Cigarro</span>
+        <button id="btn-close-smoke" class="close-btn">×</button>
       </div>
-      <p class="sheet-desc">Quando você parou (ou vai parar)?</p>
-      <input id="quit-input" class="text-input" type="datetime-local" />
-      <div class="sheet-footer">
-        <button id="btn-save-quit"   class="btn primary">Salvar</button>
-        <button id="btn-cancel-quit" class="btn secondary">Cancelar</button>
+      <div id="smoke-big-counter" class="smoke-big-counter"></div>
+      <div id="smoke-stats-row" class="smoke-stats-row"></div>
+      <div id="smoke-timeline" class="smoke-timeline"></div>
+      <button id="btn-smoke-setup" class="btn secondary" style="margin-top:16px">Alterar data / configurações</button>
+    </div>
+  </div>
+
+  <!-- Smoking setup -->
+  <div id="setup-overlay" class="overlay" hidden>
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="sheet-header">
+        <span class="sheet-title">⚙️ Configurar</span>
+        <button id="btn-close-setup" class="close-btn">×</button>
+      </div>
+      <label class="field-label">Quando você parou (ou vai parar)?</label>
+      <input id="quit-input"    class="text-input" type="datetime-local" />
+      <label class="field-label">Cigarros por dia (antes)</label>
+      <input id="cig-per-day"   class="text-input" type="number" min="1" max="100" placeholder="10" />
+      <label class="field-label">Preço do maço (R$)</label>
+      <input id="pack-price"    class="text-input" type="number" min="1" step="0.5" placeholder="14" />
+      <div class="sheet-footer" style="margin-top:20px">
+        <button id="btn-save-setup" class="btn primary">Salvar</button>
       </div>
     </div>
   </div>
+
+  <!-- Achievements screen -->
+  <div id="ach-overlay" class="overlay ach-full" hidden>
+    <div class="ach-screen" role="dialog" aria-modal="true">
+      <div class="ach-screen-header">
+        <span>🏆 Conquistas</span>
+        <button id="btn-close-ach" class="close-btn">×</button>
+      </div>
+      <div id="ach-grid" class="ach-grid"></div>
+    </div>
+  </div>
+
+  <!-- Level-up modal -->
+  <div id="levelup-modal" class="levelup-modal" hidden>
+    <div class="levelup-card">
+      <div class="levelup-burst">✨</div>
+      <p class="levelup-sub">SUBIU DE NÍVEL!</p>
+      <p id="levelup-num"   class="levelup-num"></p>
+      <p id="levelup-title" class="levelup-title-text"></p>
+      <button id="btn-close-levelup" class="btn primary" style="width:100%;margin-top:24px">Continuar 🚀</button>
+    </div>
+  </div>
+
+  <!-- Achievement toast -->
+  <div id="ach-toast" class="ach-toast" hidden>
+    <span id="ach-toast-icon"  class="at-icon"></span>
+    <div class="at-body">
+      <strong id="ach-toast-name"></strong>
+      <span   id="ach-toast-xp"></span>
+    </div>
+  </div>
+
+  <!-- Confetti canvas -->
+  <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
   <script src="js/tracker.js"></script>
 </body>
