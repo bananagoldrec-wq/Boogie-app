@@ -2227,6 +2227,33 @@
         "youtube_id": null,
         "source": "MusicBrainz (selo: Discomagic Records)",
         "label": "Discomagic Records"
+      },
+      {
+        "title": "Distant Planet",
+        "artist": "The Voyagers",
+        "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Discomagic Records)",
+        "label": "Discomagic Records"
+      },
+      {
+        "title": "La serenissima",
+        "artist": "Rondò Veneziano",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Baby Records)",
+        "label": "Baby Records"
+      },
+      {
+        "title": "Mamma Maria",
+        "artist": "Ricchi e Poveri",
+        "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Baby Records)",
+        "label": "Baby Records"
       }
     ]
   },
@@ -2923,6 +2950,15 @@
         "title": "Use Me",
         "artist": "Om Alec Khaoli",
         "year": 1984,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Gallo)",
+        "label": "Gallo"
+      },
+      {
+        "title": "Witchdoctor",
+        "artist": "Patricia Majalisa",
+        "year": 1987,
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (selo: Gallo)",
@@ -5038,6 +5074,24 @@
       {
         "title": "Ağlarsa Anam Ağlar / Kara Yazı",
         "artist": "3 Hürel",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Diskotür)",
+        "label": "Diskotür"
+      },
+      {
+        "title": "Canım Kurban / Anadolu Dansı",
+        "artist": "3 Hürel",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Diskotür)",
+        "label": "Diskotür"
+      },
+      {
+        "title": "Kalenin Bayır Düzü / Köylü Kızı",
+        "artist": "Alpay",
         "year": 1973,
         "spotify_embed": null,
         "youtube_id": null,
