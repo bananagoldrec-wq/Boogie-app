@@ -42,12 +42,14 @@ body {
   padding-bottom: var(--safe-bottom);
 }
 
-.game-header {
+/* ── Compact top bar ───────────────────────────────────── */
+
+.top-bar {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 6px;
+  padding: 6px 10px;
   background: linear-gradient(135deg, #1e0a3c 0%, #0a1628 100%);
   border-bottom: 1px solid var(--border);
 }
@@ -55,12 +57,12 @@ body {
 .streak-pill {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   background: rgba(245, 158, 11, 0.15);
   border: 1px solid rgba(245, 158, 11, 0.3);
-  border-radius: 20px;
-  padding: 6px 12px;
-  font-size: 15px;
+  border-radius: 16px;
+  padding: 4px 9px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--gold);
   cursor: pointer;
@@ -69,102 +71,15 @@ body {
 }
 .streak-pill:active { background: rgba(245, 158, 11, 0.3); }
 
-#streak-num { font-size: 16px; }
-
-.xp-block { flex: 1; }
-
-.xp-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 5px;
-}
-
-#level-badge {
-  background: var(--accent);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 10px;
-}
-
-#level-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-#xp-label {
-  font-size: 11px;
-  color: var(--text2);
-  margin-left: auto;
-}
-
-.xp-track {
-  height: 6px;
-  background: var(--border);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.xp-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
-  border-radius: 3px;
-  width: 0%;
-  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.smoke-strip {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 14px;
-  background: rgba(16, 185, 129, 0.08);
-  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
-  border: none;
-  width: 100%;
-  cursor: pointer;
-  text-align: left;
-  color: var(--text);
-}
-
-.ss-icon { font-size: 18px; }
-
-.ss-time {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--success);
-}
-
-.ss-money {
-  font-size: 12px;
-  color: var(--text2);
-  flex: 1;
-  text-align: right;
-}
-
-.ss-caret { font-size: 16px; color: var(--text3); }
-
-.week-bar {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-}
+#streak-num { font-size: 13px; }
 
 .nav-arrow {
-  width: 32px; height: 32px;
+  width: 28px; height: 28px;
   border-radius: 50%;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
-  font-size: 20px;
+  font-size: 18px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
@@ -177,11 +92,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 #week-label {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text);
 }
@@ -189,14 +104,14 @@ body {
 .today-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
-  max-width: 220px;
+  max-width: 200px;
 }
 
 .today-track {
   flex: 1;
-  height: 4px;
+  height: 3px;
   background: var(--border);
   border-radius: 2px;
   overflow: hidden;
@@ -211,10 +126,86 @@ body {
 }
 
 .today-count {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text2);
   white-space: nowrap;
 }
+
+.smoke-mini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 10px;
+  padding: 4px 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  color: var(--text);
+}
+.smoke-mini:active { background: rgba(16, 185, 129, 0.25); }
+
+.ss-time {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--success);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+/* ── XP slim bar ─────────────────────────────────────────────── */
+
+.xp-slim {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #0a1628;
+  border-bottom: 1px solid var(--border);
+}
+
+#level-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.level-title-slim {
+  font-size: 10px;
+  color: var(--text2);
+  flex-shrink: 0;
+}
+
+.xp-slim .xp-track {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.xp-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#xp-label {
+  font-size: 9px;
+  color: var(--text2);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ── Grid wrapper ──────────────────────────────────────────────────── */
 
 .grid-wrapper {
   flex: 1;
@@ -223,11 +214,15 @@ body {
   overscroll-behavior: contain;
 }
 
+/* ── The CSS grid ──────────────────────────────────────────────────── */
+
 .week-grid {
   display: grid;
   grid-template-columns: var(--col-time) repeat(7, var(--col-day));
   min-width: max-content;
 }
+
+/* ── Corner + sticky time ──────────────────────────────────────────── */
 
 .g-corner {
   position: sticky; top: 0; left: 0;
@@ -253,6 +248,8 @@ body {
   border-right: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
+
+/* ── Day headers ────────────────────────────────────────────────────── */
 
 .g-day {
   position: sticky; top: 0;
@@ -293,6 +290,8 @@ body {
   font-weight: 700;
 }
 
+/* ── Activity cells ──────────────────────────────────────────────────── */
+
 .g-cell {
   height: var(--row-h);
   border-bottom: 1px solid var(--border);
@@ -308,6 +307,7 @@ body {
 .g-cell.is-today-col     { background: var(--today-tint); }
 .g-cell.is-today-col:active { background: rgba(124,58,237,0.18); }
 
+/* Activity chip */
 .chip {
   height: 100%;
   border-radius: 7px;
@@ -319,7 +319,9 @@ body {
   position: relative;
 }
 
-.chip.is-done { opacity: 0.55; }
+.chip.is-done {
+  opacity: 0.55;
+}
 
 .chip-check {
   font-size: 11px;
@@ -362,6 +364,7 @@ body {
 
 .g-cell:hover .chip-edit { opacity: 1; }
 
+/* Current time line */
 .time-line {
   position: absolute;
   left: 0; right: 0;
@@ -379,6 +382,8 @@ body {
   border-radius: 50%;
 }
 
+/* ── XP floating popup ─────────────────────────────────────────────── */
+
 .xp-float {
   position: fixed;
   font-size: 14px;
@@ -393,6 +398,8 @@ body {
   0%   { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-40px); }
 }
+
+/* ── Overlay / Sheet ─────────────────────────────────────────────── */
 
 .overlay {
   position: fixed; inset: 0;
@@ -471,6 +478,7 @@ body {
 }
 .text-input:focus { border-color: var(--accent); }
 
+/* Category grid */
 .cat-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -498,6 +506,7 @@ body {
   flex-shrink: 0;
 }
 
+/* Buttons */
 .sheet-footer { display: flex; gap: 10px; }
 
 .btn {
@@ -515,6 +524,8 @@ body {
 .btn.primary   { background: var(--accent); color: #fff; }
 .btn.secondary { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); }
 .btn.danger    { flex: 0 1 auto; padding: 15px 20px; background: rgba(239,68,68,0.12); color: var(--danger); }
+
+/* ── Smoking overlay ─────────────────────────────────────────────────── */
 
 .smoke-big-counter {
   text-align: center;
@@ -584,6 +595,8 @@ body {
 .tl-text   { font-size: 13px; color: var(--text); display: block; margin-top: 1px; }
 .tl-check  { font-size: 16px; color: var(--success); }
 .tl-lock   { font-size: 14px; color: var(--text3); }
+
+/* ── Achievements overlay ────────────────────────────────────────────────── */
 
 .ach-full { align-items: stretch; }
 
@@ -663,6 +676,8 @@ body {
   color: var(--gold);
 }
 
+/* ── Level-up modal ────────────────────────────────────────────────────── */
+
 .levelup-modal {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.85);
@@ -696,6 +711,8 @@ body {
 .levelup-num   { font-size: 56px; font-weight: 800; color: var(--accent); line-height: 1; margin: 8px 0; }
 .levelup-title-text { font-size: 22px; font-weight: 700; color: var(--gold); }
 
+/* ── Achievement toast ────────────────────────────────────────────────── */
+
 .ach-toast {
   position: fixed;
   bottom: calc(20px + var(--safe-bottom));
@@ -725,6 +742,8 @@ body {
 
 .at-body strong { font-size: 14px; color: var(--text); }
 .at-body span   { font-size: 12px; color: var(--gold); font-weight: 600; }
+
+/* ── Confetti canvas ────────────────────────────────────────────────────── */
 
 .confetti-canvas {
   position: fixed; inset: 0;
