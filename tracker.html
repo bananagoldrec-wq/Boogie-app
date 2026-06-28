@@ -11,31 +11,11 @@
 </head>
 <body>
 
-  <!-- ── Gamification strip ───────────────────────────────────────────── -->
-  <header class="game-header">
+  <!-- ── Compact top bar ─────────────────────────────────────────────── -->
+  <header class="top-bar">
     <button class="streak-pill" id="btn-open-ach" aria-label="Conquistas">
       <span id="flame-icon">🔥</span><span id="streak-num">0</span>
     </button>
-    <div class="xp-block">
-      <div class="xp-meta">
-        <span id="level-badge">Nv 1</span>
-        <span id="level-title">Iniciante</span>
-        <span id="xp-label">0 / 200 XP</span>
-      </div>
-      <div class="xp-track"><div id="xp-bar" class="xp-bar"></div></div>
-    </div>
-  </header>
-
-  <!-- ── Smoking strip ────────────────────────────────────────────────── -->
-  <button id="smoke-strip" class="smoke-strip" aria-label="Ver progresso sem cigarro">
-    <span class="ss-icon">🚭</span>
-    <span id="ss-time" class="ss-time">Configure aqui</span>
-    <span id="ss-money" class="ss-money"></span>
-    <span class="ss-caret">›</span>
-  </button>
-
-  <!-- ── Week nav + today progress ────────────────────────────────────── -->
-  <div class="week-bar">
     <button id="btn-prev" class="nav-arrow">&#8249;</button>
     <div class="week-center">
       <span id="week-label">Esta semana</span>
@@ -45,6 +25,18 @@
       </div>
     </div>
     <button id="btn-next" class="nav-arrow">&#8250;</button>
+    <button id="smoke-strip" class="smoke-mini" aria-label="Ver progresso sem cigarro">
+      <span id="ss-time" class="ss-time">🚭</span>
+      <span id="ss-money" class="ss-money" hidden></span>
+    </button>
+  </header>
+
+  <!-- ── XP slim bar ──────────────────────────────────────────────────── -->
+  <div class="xp-slim">
+    <span id="level-badge">Nv 1</span>
+    <span id="level-title" class="level-title-slim">Iniciante</span>
+    <div class="xp-track"><div id="xp-bar" class="xp-bar"></div></div>
+    <span id="xp-label">0 / 200 XP</span>
   </div>
 
   <!-- ── Calendar grid ────────────────────────────────────────────────── -->

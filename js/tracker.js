@@ -435,16 +435,16 @@ function refreshSmokingStrip() {
   if (!S.smoking?.quitDate) return;
 
   const diffMs   = Date.now() - new Date(S.smoking.quitDate).getTime();
-  if (diffMs < 0) { q('#ss-time').textContent = 'Em breve… 💪'; return; }
+  if (diffMs < 0) { q('#ss-time').textContent = '🚭 Em breve'; return; }
 
   const mins  = Math.floor(diffMs / 60000);
   const days  = Math.floor(mins / 1440);
   const hours = Math.floor((mins % 1440) / 60);
   const m     = mins % 60;
 
-  q('#ss-time').textContent = days > 0  ? `${days}d ${hours}h sem cigarro`
-                            : hours > 0 ? `${hours}h ${m}m sem cigarro`
-                            :             `${m}m sem cigarro`;
+  q('#ss-time').textContent = days > 0  ? `🚭 ${days}d ${hours}h`
+                            : hours > 0 ? `🚭 ${hours}h ${m}m`
+                            :             `🚭 ${m}m`;
 
   if (S.smoking.cigarettesPerDay && S.smoking.packPrice) {
     const cigsPerPack  = 20;
@@ -707,7 +707,7 @@ function init() {
 
   // Smoking strip click when not configured → open setup
   if (!S.smoking?.quitDate) {
-    q('#ss-time').textContent  = 'Configure sua meta';
+    q('#ss-time').textContent  = '🚭 Config';
     q('#ss-money').textContent = '';
   }
 
