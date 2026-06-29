@@ -43,19 +43,30 @@ const ACHIEVEMENTS = [
 ];
 
 const SMOKE_MILESTONES = [
-  { mins:20,      marker:'20m',  label:'20 minutos', text:'Pressão e pulso voltam ao normal'  },
-  { mins:480,     marker:'8h',   label:'8 horas',    text:'CO no sangue cai à metade'         },
-  { mins:1440,    marker:'24h',  label:'24 horas',   text:'Pulmões começam a limpar o muco'   },
-  { mins:2880,    marker:'48h',  label:'48 horas',   text:'Paladar e olfato retornam'         },
-  { mins:4320,    marker:'72h',  label:'72 horas',   text:'Respiração fica muito mais fácil'  },
-  { mins:20160,   marker:'2sem', label:'2 semanas',  text:'Circulação melhora visivelmente'   },
-  { mins:43200,   marker:'1m',   label:'1 mês',      text:'Pulmões se regeneram, menos tosse' },
-  { mins:129600,  marker:'3m',   label:'3 meses',    text:'Função pulmonar melhora até 30%'   },
-  { mins:388800,  marker:'9m',   label:'9 meses',    text:'Energia significativamente maior'  },
-  { mins:525600,  marker:'1a',   label:'1 ano',      text:'Risco cardíaco cai à metade'       },
-  { mins:2628000, marker:'5a',   label:'5 anos',     text:'Risco de AVC como não fumante'     },
-  { mins:5256000, marker:'10a',  label:'10 anos',    text:'Risco de câncer de pulmão cai 50%' },
-  { mins:7884000, marker:'15a',  label:'15 anos',    text:'Coração igual ao de não fumante'   },
+  { mins:20,      marker:'20m',  label:'20 minutos', text:'Pressão arterial e pulso normalizam — vasos começam a relaxar'        },
+  { mins:120,     marker:'2h',   label:'2 horas',    text:'Circulação periférica melhora: mãos e pés ficam mais quentes'         },
+  { mins:240,     marker:'4h',   label:'4 horas',    text:'Pele começa a receber mais oxigênio — aparência mais saudável'        },
+  { mins:480,     marker:'8h',   label:'8 horas',    text:'Monóxido de carbono no sangue cai à metade; oxigenação sobe'          },
+  { mins:720,     marker:'12h',  label:'12 horas',   text:'CO praticamente eliminado — sangue volta a transportar O₂ plenamente' },
+  { mins:1440,    marker:'24h',  label:'24 horas',   text:'Risco de infarto cardíaco já começa a cair'                           },
+  { mins:2880,    marker:'48h',  label:'48 horas',   text:'Terminações nervosas se regeneram — paladar e olfato retornam'        },
+  { mins:4320,    marker:'72h',  label:'72 horas',   text:'Brônquios relaxam: respirar fica nitidamente mais fácil'              },
+  { mins:7200,    marker:'5d',   label:'5 dias',     text:'Muco acumulado nos pulmões começa a ser eliminado ativamente'         },
+  { mins:10080,   marker:'7d',   label:'1 semana',   text:'Energia aumenta — sono mais profundo e reparador'                    },
+  { mins:14400,   marker:'10d',  label:'10 dias',    text:'Pele produz mais colágeno — rugas finas começam a suavizar'           },
+  { mins:20160,   marker:'2sem', label:'2 semanas',  text:'Circulação melhora 20–30%; caminhar fica mais leve'                  },
+  { mins:30240,   marker:'3sem', label:'3 semanas',  text:'Gengivas mais saudáveis e hálito significativamente melhor'           },
+  { mins:43200,   marker:'1m',   label:'1 mês',      text:'Tosse e falta de ar reduzem — pulmões se regeneram visivelmente'     },
+  { mins:64800,   marker:'45d',  label:'45 dias',    text:'Cabelo e unhas mais fortes; pele com tom mais uniforme'               },
+  { mins:90720,   marker:'2m',   label:'2 meses',    text:'Cílios pulmonares se recuperam — infecções respiratórias diminuem'   },
+  { mins:129600,  marker:'3m',   label:'3 meses',    text:'Função pulmonar melhora até 30%; fôlego de volta'                    },
+  { mins:259200,  marker:'6m',   label:'6 meses',    text:'Crises de tosse quase desaparecem; sinusite melhora'                 },
+  { mins:388800,  marker:'9m',   label:'9 meses',    text:'Pulmões limpam muco com eficiência normal — energia muito maior'     },
+  { mins:525600,  marker:'1a',   label:'1 ano',      text:'Risco de doença cardíaca coronariana cai pela metade'                },
+  { mins:1051200, marker:'2a',   label:'2 anos',     text:'Risco de infarto próximo ao de quem nunca fumou'                     },
+  { mins:2628000, marker:'5a',   label:'5 anos',     text:'Risco de AVC igual ao de não fumante; pele visivelmente rejuvenescida'},
+  { mins:5256000, marker:'10a',  label:'10 anos',    text:'Risco de câncer de pulmão cai 50%; câncer de boca e laringe também'  },
+  { mins:7884000, marker:'15a',  label:'15 anos',    text:'Risco cardíaco igual ao de quem nunca fumou — vitória total'         },
 ];
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -215,6 +226,7 @@ function toggleDone(di, h, originEl) {
     checkAchievement('first', true);
     checkAchievement('acts50', S.totalDone >= 50);
 
+    // check if all today's activities are done
     const allDone = checkAllTodayDone();
     if (allDone) {
       addXP(75, originEl);
@@ -277,8 +289,10 @@ function buildGrid() {
   const isThisWeek  = weekStart.getTime() === todayMonday.getTime();
   const todayDI     = now.getDay() === 0 ? 6 : now.getDay() - 1;
 
+  // Corner
   grid.appendChild(mk('div', 'g-corner'));
 
+  // Day headers
   DAYS.forEach((name, i) => {
     const date    = new Date(weekStart);
     date.setDate(date.getDate() + i);
@@ -292,6 +306,7 @@ function buildGrid() {
     grid.appendChild(hdr);
   });
 
+  // Hour rows
   for (let h = START_H; h <= END_H; h++) {
     const lbl = mk('div', 'g-time');
     lbl.textContent = `${String(h).padStart(2,'0')}h`;
@@ -323,10 +338,10 @@ function buildGrid() {
 
 function renderChip(cell, act) {
   const cat   = CATS.find(c => c.id === act.category);
-  const color = cat ? cat.color : '#B8B4AE';
+  const color = cat ? cat.color : '#8E8E93';
 
   const chip  = mk('div', `chip${act.done ? ' is-done' : ''}`);
-  chip.style.background  = hexA(color, 0.2);
+  chip.style.background  = hexA(color, 0.14);
   chip.style.borderLeft  = `3px solid ${color}`;
 
   const chk  = mk('span', 'chip-check'); chk.textContent = '✓';
@@ -419,7 +434,7 @@ function refreshCatUI() {
     const cat    = CATS.find(c => c.id === btn.dataset.id);
     btn.classList.toggle('active', active);
     btn.style.borderColor = active && cat ? cat.color : '';
-    btn.style.background  = active && cat ? hexA(cat.color, 0.2) : '';
+    btn.style.background  = active && cat ? hexA(cat.color, 0.15) : '';
   });
 }
 
@@ -447,6 +462,7 @@ function refreshSmokingStrip() {
     q('#ss-money').textContent = `R$ ${moneySaved.toFixed(0)} poupados`;
   }
 
+  // Achievements
   checkAchievement('smoke1d', mins >= 1440);
   checkAchievement('smoke1w', mins >= 10080);
   checkAchievement('smoke1m', mins >= 43200);
@@ -490,6 +506,7 @@ function renderSmokingDetail() {
     <div class="stat-card"><span class="stat-value">R$ ${money}</span><span class="stat-label">economizados</span></div>
   `;
 
+  // Timeline
   const container = q('#smoke-timeline');
   container.innerHTML = '<h3 style="font-size:10px;color:var(--text3);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.8px">Recuperação do corpo</h3>';
 
@@ -619,7 +636,7 @@ function scrollToCurrent() {
   const h = new Date().getHours();
   if (h < START_H || h > END_H) return;
   const wrapper = q('#grid-wrapper');
-  const ROW_H   = 60;
+  const ROW_H   = 64;
   wrapper.scrollTop = Math.max(0, (h - START_H) * ROW_H - wrapper.clientHeight / 3);
 }
 
@@ -644,9 +661,11 @@ function init() {
   refreshSmokingStrip();
   setInterval(refreshSmokingStrip, 30000);
 
+  // Week nav
   q('#btn-prev').addEventListener('click', () => shiftWeek(-1));
   q('#btn-next').addEventListener('click', () => shiftWeek(1));
 
+  // Activity modal
   q('#act-overlay').addEventListener('click', e => { if (e.target.id === 'act-overlay') closeActModal(); });
   q('#btn-close-act').addEventListener('click', closeActModal);
   q('#btn-save-act').addEventListener('click', saveAct);
@@ -658,6 +677,7 @@ function init() {
   });
   q('#act-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveAct(); });
 
+  // Smoking strip → detail
   q('#smoke-strip').addEventListener('click', () => {
     renderSmokingDetail();
     q('#smoke-overlay').hidden = false;
@@ -669,6 +689,7 @@ function init() {
     openSetup();
   });
 
+  // Setup modal
   q('#btn-close-setup').addEventListener('click', () => { q('#setup-overlay').hidden = true; });
   q('#setup-overlay').addEventListener('click', e => { if (e.target.id === 'setup-overlay') q('#setup-overlay').hidden = true; });
   q('#btn-save-setup').addEventListener('click', () => {
@@ -683,14 +704,17 @@ function init() {
     q('#setup-overlay').hidden = true;
   });
 
+  // Achievements
   q('#btn-open-ach').addEventListener('click', () => {
     renderAchievements();
     q('#ach-overlay').hidden = false;
   });
   q('#btn-close-ach').addEventListener('click', () => { q('#ach-overlay').hidden = true; });
 
+  // Level up
   q('#btn-close-levelup').addEventListener('click', () => { q('#levelup-modal').hidden = true; });
 
+  // Smoking strip click when not configured → open setup
   if (!S.smoking?.quitDate) {
     q('#ss-time').textContent  = 'Configurar';
     q('#ss-money').textContent = '';
@@ -709,8 +733,11 @@ function openSetup() {
   q('#setup-overlay').hidden = false;
 }
 
+// Setup shortcut when not configured
 document.addEventListener('DOMContentLoaded', () => {
   init();
+  // Intercept smoke-strip click to open setup if not configured
+  const orig = q('#smoke-strip').onclick;
   if (!S.smoking?.quitDate) {
     q('#smoke-strip').addEventListener('click', () => {
       openSetup();
