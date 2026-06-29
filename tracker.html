@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Rotina" />
   <title>Minha Rotina</title>
   <link rel="stylesheet" href="css/tracker.css" />
@@ -14,7 +14,8 @@
   <!-- ── Compact top bar ─────────────────────────────────────────────── -->
   <header class="top-bar">
     <button class="streak-pill" id="btn-open-ach" aria-label="Conquistas">
-      <span id="flame-icon">🔥</span><span id="streak-num">0</span>
+      <span id="streak-num">0</span>
+      <span class="streak-label">dias</span>
     </button>
     <button id="btn-prev" class="nav-arrow">&#8249;</button>
     <div class="week-center">
@@ -26,7 +27,7 @@
     </div>
     <button id="btn-next" class="nav-arrow">&#8250;</button>
     <button id="smoke-strip" class="smoke-mini" aria-label="Ver progresso sem cigarro">
-      <span id="ss-time" class="ss-time">🚭</span>
+      <span id="ss-time" class="ss-time">SF</span>
       <span id="ss-money" class="ss-money" hidden></span>
     </button>
   </header>
@@ -68,7 +69,7 @@
   <div id="smoke-overlay" class="overlay" hidden>
     <div class="sheet tall-sheet" role="dialog" aria-modal="true">
       <div class="sheet-header">
-        <span class="sheet-title">🚭 Sem Cigarro</span>
+        <span class="sheet-title">Sem Cigarro</span>
         <button id="btn-close-smoke" class="close-btn">×</button>
       </div>
       <div id="smoke-big-counter" class="smoke-big-counter"></div>
@@ -82,7 +83,7 @@
   <div id="setup-overlay" class="overlay" hidden>
     <div class="sheet" role="dialog" aria-modal="true">
       <div class="sheet-header">
-        <span class="sheet-title">⚙️ Configurar</span>
+        <span class="sheet-title">Configurar</span>
         <button id="btn-close-setup" class="close-btn">×</button>
       </div>
       <label class="field-label">Quando você parou (ou vai parar)?</label>
@@ -101,7 +102,7 @@
   <div id="ach-overlay" class="overlay ach-full" hidden>
     <div class="ach-screen" role="dialog" aria-modal="true">
       <div class="ach-screen-header">
-        <span>🏆 Conquistas</span>
+        <span>Conquistas</span>
         <button id="btn-close-ach" class="close-btn">×</button>
       </div>
       <div id="ach-grid" class="ach-grid"></div>
@@ -111,11 +112,11 @@
   <!-- Level-up modal -->
   <div id="levelup-modal" class="levelup-modal" hidden>
     <div class="levelup-card">
-      <div class="levelup-burst">✨</div>
-      <p class="levelup-sub">SUBIU DE NÍVEL!</p>
+      <div class="levelup-burst">+</div>
+      <p class="levelup-sub">Subiu de nível</p>
       <p id="levelup-num"   class="levelup-num"></p>
       <p id="levelup-title" class="levelup-title-text"></p>
-      <button id="btn-close-levelup" class="btn primary" style="width:100%;margin-top:24px">Continuar 🚀</button>
+      <button id="btn-close-levelup" class="btn primary" style="width:100%;margin-top:24px">Continuar</button>
     </div>
   </div>
 
