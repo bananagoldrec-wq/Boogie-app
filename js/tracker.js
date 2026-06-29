@@ -389,8 +389,8 @@ function closeActModal() {
 function saveAct() {
   if (!editCell) return;
   const text = q('#act-input').value.trim();
-  const existing = getAct(editCell.di, editCell.hour);
-  setAct(editCell.di, editCell.hour, text ? {
+  const existing = getAct(editCell.di, editCell.h);
+  setAct(editCell.di, editCell.h, text ? {
     text,
     category: selCat || 'other',
     done: existing ? existing.done : false,
@@ -662,7 +662,7 @@ function init() {
   q('#btn-save-act').addEventListener('click', saveAct);
   q('#btn-del-act').addEventListener('click', () => {
     if (!editCell) return;
-    setAct(editCell.di, editCell.hour, null);
+    setAct(editCell.di, editCell.h, null);
     closeActModal();
     buildGrid();
   });
