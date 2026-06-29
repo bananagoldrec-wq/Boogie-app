@@ -10,14 +10,14 @@ const START_H  = 5;
 const END_H    = 23;
 
 const CATS = [
-  { id:'exercise', label:'💪 Exercício',   color:'#10B981' },
-  { id:'food',     label:'🍎 Alimentação', color:'#F59E0B' },
-  { id:'work',     label:'💼 Trabalho',    color:'#3B82F6' },
-  { id:'study',    label:'📚 Estudo',      color:'#8B5CF6' },
-  { id:'sleep',    label:'😴 Sono',        color:'#6366F1' },
-  { id:'family',   label:'❤️ Família',     color:'#EC4899' },
-  { id:'goal',     label:'🎯 Meta',        color:'#14B8A6' },
-  { id:'other',    label:'✏️ Outro',       color:'#F97316' },
+  { id:'exercise', label:'Exercício',   color:'#A8C4A2' },
+  { id:'food',     label:'Alimentação', color:'#F2C89B' },
+  { id:'work',     label:'Trabalho',    color:'#A8B8D4' },
+  { id:'study',    label:'Estudo',      color:'#C4A8D4' },
+  { id:'sleep',    label:'Sono',        color:'#A8B8C4' },
+  { id:'family',   label:'Família',     color:'#F2A8B8' },
+  { id:'goal',     label:'Meta',        color:'#A8D4C4' },
+  { id:'other',    label:'Outro',       color:'#D4C4A8' },
 ];
 
 const LEVEL_NAMES = [
@@ -26,36 +26,36 @@ const LEVEL_NAMES = [
 ];
 
 const ACHIEVEMENTS = [
-  { id:'first',      icon:'👣', name:'Primeiro Passo',    desc:'Conclua sua primeira atividade',             xp:50  },
-  { id:'day_done',   icon:'⭐', name:'Dia Vencedor',      desc:'Conclua todas as atividades do dia',         xp:100 },
-  { id:'streak3',    icon:'🔥', name:'Em Chamas',         desc:'Mantenha streak de 3 dias',                  xp:150 },
-  { id:'streak7',    icon:'💥', name:'Semana de Fogo',    desc:'Mantenha streak de 7 dias',                  xp:300 },
-  { id:'streak30',   icon:'🌟', name:'Mês Perfeito',      desc:'Mantenha streak de 30 dias',                 xp:1000},
-  { id:'acts50',     icon:'🎖️', name:'Meio Século',       desc:'Conclua 50 atividades no total',             xp:500 },
-  { id:'smoke1d',    icon:'🌬️', name:'24h Limpo',         desc:'1 dia sem cigarro',                          xp:100 },
-  { id:'smoke1w',    icon:'💨', name:'Semana Livre',      desc:'7 dias sem cigarro',                         xp:300 },
-  { id:'smoke1m',    icon:'🫁', name:'Pulmões Renovados', desc:'30 dias sem cigarro',                        xp:700 },
-  { id:'smoke3m',    icon:'🏅', name:'3 Meses de Vitória',desc:'90 dias sem cigarro',                        xp:1500},
-  { id:'smoke1y',    icon:'🏆', name:'1 Ano de Liberdade',desc:'365 dias sem cigarro',                       xp:5000},
-  { id:'lv5',        icon:'⚡', name:'Nível 5',           desc:'Alcance o nível 5',                          xp:200 },
-  { id:'lv10',       icon:'🎯', name:'Nível 10',          desc:'Alcance o nível 10',                         xp:500 },
-  { id:'lv20',       icon:'👑', name:'Nível 20',          desc:'Alcance o nível 20',                         xp:1000},
+  { id:'first',      icon:'1°',   name:'Primeiro Passo',    desc:'Conclua sua primeira atividade',             xp:50  },
+  { id:'day_done',   icon:'dia',  name:'Dia Vencedor',      desc:'Conclua todas as atividades do dia',         xp:100 },
+  { id:'streak3',    icon:'×3',   name:'Em Chamas',         desc:'Mantenha streak de 3 dias',                  xp:150 },
+  { id:'streak7',    icon:'×7',   name:'Semana de Fogo',    desc:'Mantenha streak de 7 dias',                  xp:300 },
+  { id:'streak30',   icon:'×30',  name:'Mês Perfeito',      desc:'Mantenha streak de 30 dias',                 xp:1000},
+  { id:'acts50',     icon:'50',   name:'Meio Século',       desc:'Conclua 50 atividades no total',             xp:500 },
+  { id:'smoke1d',    icon:'1d',   name:'24h Limpo',         desc:'1 dia sem cigarro',                          xp:100 },
+  { id:'smoke1w',    icon:'7d',   name:'Semana Livre',      desc:'7 dias sem cigarro',                         xp:300 },
+  { id:'smoke1m',    icon:'30d',  name:'Pulmões Renovados', desc:'30 dias sem cigarro',                        xp:700 },
+  { id:'smoke3m',    icon:'90d',  name:'3 Meses de Vitória',desc:'90 dias sem cigarro',                        xp:1500},
+  { id:'smoke1y',    icon:'1a',   name:'1 Ano de Liberdade',desc:'365 dias sem cigarro',                       xp:5000},
+  { id:'lv5',        icon:'Nv 5', name:'Nível 5',           desc:'Alcance o nível 5',                          xp:200 },
+  { id:'lv10',       icon:'Nv10', name:'Nível 10',          desc:'Alcance o nível 10',                         xp:500 },
+  { id:'lv20',       icon:'Nv20', name:'Nível 20',          desc:'Alcance o nível 20',                         xp:1000},
 ];
 
 const SMOKE_MILESTONES = [
-  { mins:20,      icon:'❤️',  label:'20 minutos', text:'Pressão e pulso voltam ao normal'         },
-  { mins:480,     icon:'🩸',  label:'8 horas',    text:'CO no sangue cai à metade'                },
-  { mins:1440,    icon:'🫁',  label:'24 horas',   text:'Pulmões começam a limpar o muco'          },
-  { mins:2880,    icon:'👃',  label:'48 horas',   text:'Paladar e olfato retornam'                },
-  { mins:4320,    icon:'💨',  label:'72 horas',   text:'Respiração fica muito mais fácil'         },
-  { mins:20160,   icon:'🏃',  label:'2 semanas',  text:'Circulação melhora visivelmente'          },
-  { mins:43200,   icon:'🌱',  label:'1 mês',      text:'Pulmões se regeneram, menos tosse'        },
-  { mins:129600,  icon:'💪',  label:'3 meses',    text:'Função pulmonar melhora até 30%'          },
-  { mins:388800,  icon:'⚡',  label:'9 meses',    text:'Energia significativamente maior'         },
-  { mins:525600,  icon:'💝',  label:'1 ano',      text:'Risco cardíaco cai à metade'              },
-  { mins:2628000, icon:'🧠',  label:'5 anos',     text:'Risco de AVC como não fumante'            },
-  { mins:5256000, icon:'🏅',  label:'10 anos',    text:'Risco de câncer de pulmão cai 50%'       },
-  { mins:7884000, icon:'🏆',  label:'15 anos',    text:'Coração igual ao de não fumante'          },
+  { mins:20,      marker:'20m',  label:'20 minutos', text:'Pressão e pulso voltam ao normal'  },
+  { mins:480,     marker:'8h',   label:'8 horas',    text:'CO no sangue cai à metade'         },
+  { mins:1440,    marker:'24h',  label:'24 horas',   text:'Pulmões começam a limpar o muco'   },
+  { mins:2880,    marker:'48h',  label:'48 horas',   text:'Paladar e olfato retornam'         },
+  { mins:4320,    marker:'72h',  label:'72 horas',   text:'Respiração fica muito mais fácil'  },
+  { mins:20160,   marker:'2sem', label:'2 semanas',  text:'Circulação melhora visivelmente'   },
+  { mins:43200,   marker:'1m',   label:'1 mês',      text:'Pulmões se regeneram, menos tosse' },
+  { mins:129600,  marker:'3m',   label:'3 meses',    text:'Função pulmonar melhora até 30%'   },
+  { mins:388800,  marker:'9m',   label:'9 meses',    text:'Energia significativamente maior'  },
+  { mins:525600,  marker:'1a',   label:'1 ano',      text:'Risco cardíaco cai à metade'       },
+  { mins:2628000, marker:'5a',   label:'5 anos',     text:'Risco de AVC como não fumante'     },
+  { mins:5256000, marker:'10a',  label:'10 anos',    text:'Risco de câncer de pulmão cai 50%' },
+  { mins:7884000, marker:'15a',  label:'15 anos',    text:'Coração igual ao de não fumante'   },
 ];
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -170,8 +170,6 @@ function touchStreak() {
 }
 
 function refreshStreak() {
-  const flame = S.streak >= 7 ? '⚡🔥' : S.streak >= 3 ? '🔥' : S.streak > 0 ? '🔥' : '💤';
-  q('#flame-icon').textContent = flame;
   q('#streak-num').textContent = S.streak;
 }
 
@@ -435,22 +433,22 @@ function refreshSmokingStrip() {
   if (!S.smoking?.quitDate) return;
 
   const diffMs   = Date.now() - new Date(S.smoking.quitDate).getTime();
-  if (diffMs < 0) { q('#ss-time').textContent = '🚭 Em breve'; return; }
+  if (diffMs < 0) { q('#ss-time').textContent = 'Em breve'; return; }
 
   const mins  = Math.floor(diffMs / 60000);
   const days  = Math.floor(mins / 1440);
   const hours = Math.floor((mins % 1440) / 60);
   const m     = mins % 60;
 
-  q('#ss-time').textContent = days > 0  ? `🚭 ${days}d ${hours}h`
-                            : hours > 0 ? `🚭 ${hours}h ${m}m`
-                            :             `🚭 ${m}m`;
+  q('#ss-time').textContent = days > 0  ? `${days}d ${hours}h`
+                            : hours > 0 ? `${hours}h ${m}m`
+                            :             `${m}m`;
 
   if (S.smoking.cigarettesPerDay && S.smoking.packPrice) {
     const cigsPerPack  = 20;
     const cigsSaved    = (mins / 1440) * S.smoking.cigarettesPerDay;
     const moneySaved   = (cigsSaved / cigsPerPack) * S.smoking.packPrice;
-    q('#ss-money').textContent = `💰 R$ ${moneySaved.toFixed(0)} economizados`;
+    q('#ss-money').textContent = `R$ ${moneySaved.toFixed(0)} poupados`;
   }
 
   // Achievements
@@ -464,7 +462,7 @@ function refreshSmokingStrip() {
 function renderSmokingDetail() {
   if (!S.smoking?.quitDate) {
     q('#smoke-big-counter').innerHTML = `
-      <span class="bc-value" style="font-size:32px">🚭</span>
+      <span class="bc-value" style="font-size:24px;color:var(--text3)">—</span>
       <span class="bc-label">Configure sua data de parar de fumar</span>
     `;
     q('#smoke-stats-row').innerHTML = '';
@@ -493,13 +491,13 @@ function renderSmokingDetail() {
   const money = ((cigs / 20) * price).toFixed(2);
 
   q('#smoke-stats-row').innerHTML = `
-    <div class="stat-card"><span class="stat-value">🚬 ${cigs}</span><span class="stat-label">cigarros não fumados</span></div>
+    <div class="stat-card"><span class="stat-value">${cigs}</span><span class="stat-label">cigarros não fumados</span></div>
     <div class="stat-card"><span class="stat-value">R$ ${money}</span><span class="stat-label">economizados</span></div>
   `;
 
   // Timeline
   const container = q('#smoke-timeline');
-  container.innerHTML = '<h3 style="font-size:13px;color:var(--text2);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Recuperação do corpo</h3>';
+  container.innerHTML = '<h3 style="font-size:10px;color:var(--text3);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.8px">Recuperação do corpo</h3>';
 
   let nextShown = false;
   SMOKE_MILESTONES.forEach(m => {
@@ -509,12 +507,12 @@ function renderSmokingDetail() {
 
     const row  = mk('div', `tl-row${done ? ' done' : isNext ? ' next' : ''}`);
     row.innerHTML = `
-      <span class="tl-icon">${m.icon}</span>
+      <div class="tl-marker">${m.marker}</div>
       <div class="tl-body">
         <span class="tl-time">${m.label}</span>
         <span class="tl-text">${m.text}</span>
       </div>
-      <span class="${done ? 'tl-check' : 'tl-lock'}">${done ? '✓' : isNext ? '⏳' : '🔒'}</span>
+      <span class="${done ? 'tl-check' : 'tl-lock'}">${done ? '✓' : isNext ? '...' : ''}</span>
     `;
     container.appendChild(row);
   });
@@ -556,7 +554,7 @@ function launchConfetti() {
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  const COLORS = ['#7C3AED','#F59E0B','#10B981','#3B82F6','#EC4899','#F97316'];
+  const COLORS = ['#8B7CC8','#C8A96B','#6BC8A4','#7B9EC8','#F2A8B8','#F2C89B'];
   const particles = Array.from({ length: 80 }, () => ({
     x: Math.random() * canvas.width,
     y: -10,
@@ -707,7 +705,7 @@ function init() {
 
   // Smoking strip click when not configured → open setup
   if (!S.smoking?.quitDate) {
-    q('#ss-time').textContent  = '🚭 Config';
+    q('#ss-time').textContent  = 'Configurar';
     q('#ss-money').textContent = '';
   }
 
