@@ -42,7 +42,7 @@ body {
   padding-bottom: var(--safe-bottom);
 }
 
-/* ── Compact top bar ───────────────────────────────────── */
+/* ── Compact top bar ─────────────────────────────────────────── */
 
 .top-bar {
   flex-shrink: 0;
@@ -205,7 +205,7 @@ body {
   white-space: nowrap;
 }
 
-/* ── Grid wrapper ──────────────────────────────────────────────────── */
+/* ── Grid wrapper ────────────────────────────────────────────── */
 
 .grid-wrapper {
   flex: 1;
@@ -214,7 +214,7 @@ body {
   overscroll-behavior: contain;
 }
 
-/* ── The CSS grid ──────────────────────────────────────────────────── */
+/* ── The CSS grid ────────────────────────────────────────────── */
 
 .week-grid {
   display: grid;
@@ -222,7 +222,7 @@ body {
   min-width: max-content;
 }
 
-/* ── Corner + sticky time ──────────────────────────────────────────── */
+/* ── Corner + sticky time ────────────────────────────────────── */
 
 .g-corner {
   position: sticky; top: 0; left: 0;
@@ -249,7 +249,7 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
-/* ── Day headers ────────────────────────────────────────────────────── */
+/* ── Day headers ─────────────────────────────────────────────── */
 
 .g-day {
   position: sticky; top: 0;
@@ -290,7 +290,7 @@ body {
   font-weight: 700;
 }
 
-/* ── Activity cells ──────────────────────────────────────────────────── */
+/* ── Activity cells ──────────────────────────────────────────── */
 
 .g-cell {
   height: var(--row-h);
@@ -382,7 +382,7 @@ body {
   border-radius: 50%;
 }
 
-/* ── XP floating popup ─────────────────────────────────────────────── */
+/* ── XP floating popup ───────────────────────────────────────── */
 
 .xp-float {
   position: fixed;
@@ -399,7 +399,7 @@ body {
   100% { opacity: 0; transform: translateY(-40px); }
 }
 
-/* ── Overlay / Sheet ─────────────────────────────────────────────── */
+/* ── Overlay / Sheet ─────────────────────────────────────────── */
 
 .overlay {
   position: fixed; inset: 0;
@@ -525,7 +525,7 @@ body {
 .btn.secondary { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); }
 .btn.danger    { flex: 0 1 auto; padding: 15px 20px; background: rgba(239,68,68,0.12); color: var(--danger); }
 
-/* ── Smoking overlay ─────────────────────────────────────────────────── */
+/* ── Smoking overlay ─────────────────────────────────────────── */
 
 .smoke-big-counter {
   text-align: center;
@@ -596,7 +596,7 @@ body {
 .tl-check  { font-size: 16px; color: var(--success); }
 .tl-lock   { font-size: 14px; color: var(--text3); }
 
-/* ── Achievements overlay ────────────────────────────────────────────────── */
+/* ── Achievements overlay ────────────────────────────────────── */
 
 .ach-full { align-items: stretch; }
 
@@ -676,7 +676,7 @@ body {
   color: var(--gold);
 }
 
-/* ── Level-up modal ────────────────────────────────────────────────────── */
+/* ── Level-up modal ──────────────────────────────────────────── */
 
 .levelup-modal {
   position: fixed; inset: 0;
@@ -711,7 +711,7 @@ body {
 .levelup-num   { font-size: 56px; font-weight: 800; color: var(--accent); line-height: 1; margin: 8px 0; }
 .levelup-title-text { font-size: 22px; font-weight: 700; color: var(--gold); }
 
-/* ── Achievement toast ────────────────────────────────────────────────── */
+/* ── Achievement toast ───────────────────────────────────────── */
 
 .ach-toast {
   position: fixed;
@@ -743,7 +743,7 @@ body {
 .at-body strong { font-size: 14px; color: var(--text); }
 .at-body span   { font-size: 12px; color: var(--gold); font-weight: 600; }
 
-/* ── Confetti canvas ────────────────────────────────────────────────────── */
+/* ── Confetti canvas ─────────────────────────────────────────── */
 
 .confetti-canvas {
   position: fixed; inset: 0;

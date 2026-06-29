@@ -1,6 +1,6 @@
 'use strict';
 
-// ── Constants ────────────────────────────────────────────────────────────────────────
+// ── Constants ────────────────────────────────────────────────────────────────
 
 const SK = 'rotina-v2';
 
@@ -34,8 +34,8 @@ const ACHIEVEMENTS = [
   { id:'acts50',     icon:'🎖️', name:'Meio Século',       desc:'Conclua 50 atividades no total',             xp:500 },
   { id:'smoke1d',    icon:'🌬️', name:'24h Limpo',         desc:'1 dia sem cigarro',                          xp:100 },
   { id:'smoke1w',    icon:'💨', name:'Semana Livre',      desc:'7 dias sem cigarro',                         xp:300 },
-  { id:'smoke1m',    icon:'�ac　', name:'Pulmões Renovados', desc:'30 dias sem cigarro',                        xp:700 },
-  { id:'smoke3m',    icon:'🎅', name:'3 Meses de Vitória',desc:'90 dias sem cigarro',                        xp:1500},
+  { id:'smoke1m',    icon:'🫁', name:'Pulmões Renovados', desc:'30 dias sem cigarro',                        xp:700 },
+  { id:'smoke3m',    icon:'🏅', name:'3 Meses de Vitória',desc:'90 dias sem cigarro',                        xp:1500},
   { id:'smoke1y',    icon:'🏆', name:'1 Ano de Liberdade',desc:'365 dias sem cigarro',                       xp:5000},
   { id:'lv5',        icon:'⚡', name:'Nível 5',           desc:'Alcance o nível 5',                          xp:200 },
   { id:'lv10',       icon:'🎯', name:'Nível 10',          desc:'Alcance o nível 10',                         xp:500 },
@@ -45,7 +45,7 @@ const ACHIEVEMENTS = [
 const SMOKE_MILESTONES = [
   { mins:20,      icon:'❤️',  label:'20 minutos', text:'Pressão e pulso voltam ao normal'         },
   { mins:480,     icon:'🩸',  label:'8 horas',    text:'CO no sangue cai à metade'                },
-  { mins:1440,    icon:'�ac　',  label:'24 horas',   text:'Pulmões começam a limpar o muco'          },
+  { mins:1440,    icon:'🫁',  label:'24 horas',   text:'Pulmões começam a limpar o muco'          },
   { mins:2880,    icon:'👃',  label:'48 horas',   text:'Paladar e olfato retornam'                },
   { mins:4320,    icon:'💨',  label:'72 horas',   text:'Respiração fica muito mais fácil'         },
   { mins:20160,   icon:'🏃',  label:'2 semanas',  text:'Circulação melhora visivelmente'          },
@@ -54,11 +54,11 @@ const SMOKE_MILESTONES = [
   { mins:388800,  icon:'⚡',  label:'9 meses',    text:'Energia significativamente maior'         },
   { mins:525600,  icon:'💝',  label:'1 ano',      text:'Risco cardíaco cai à metade'              },
   { mins:2628000, icon:'🧠',  label:'5 anos',     text:'Risco de AVC como não fumante'            },
-  { mins:5256000, icon:'🎅',  label:'10 anos',    text:'Risco de câncer de pulmão cai 50%'       },
+  { mins:5256000, icon:'🏅',  label:'10 anos',    text:'Risco de câncer de pulmão cai 50%'       },
   { mins:7884000, icon:'🏆',  label:'15 anos',    text:'Coração igual ao de não fumante'          },
 ];
 
-// ── State ────────────────────────────────────────────────────────────────────────
+// ── State ────────────────────────────────────────────────────────────────────
 
 let S = loadState();
 let weekStart = getMonday(new Date());
@@ -88,7 +88,7 @@ function save() {
   localStorage.setItem(SK, JSON.stringify(S));
 }
 
-// ── Date helpers ──────────────────────────────────────────────────────────────────
+// ── Date helpers ──────────────────────────────────────────────────────────────
 
 function getMonday(d) {
   const r = new Date(d);
@@ -101,7 +101,7 @@ function getMonday(d) {
 function wk()  { return weekStart.toISOString().slice(0,10); }
 function aKey(di,h) { return `${wk()}-${DAY_KEYS[di]}-${h}`; }
 
-// ── Activity CRUD ─────────────────────────────────────────────────────────────────
+// ── Activity CRUD ─────────────────────────────────────────────────────────────
 
 function getAct(di,h) { return S.activities[aKey(di,h)] || null; }
 
@@ -112,7 +112,7 @@ function setAct(di,h,act) {
   save();
 }
 
-// ── XP & Level engine ─────────────────────────────────────────────────────────────
+// ── XP & Level engine ─────────────────────────────────────────────────────────
 
 function xpForLevel(lv) { return 150 + lv * 100; }
 
@@ -148,7 +148,7 @@ function refreshXPBar() {
   q('#xp-bar').style.width       = `${(cur / need) * 100}%`;
 }
 
-// ── Streak ────────────────────────────────────────────────────────────────────────────
+// ── Streak ────────────────────────────────────────────────────────────────────
 
 function touchStreak() {
   const today = new Date().toDateString();
@@ -175,7 +175,7 @@ function refreshStreak() {
   q('#streak-num').textContent = S.streak;
 }
 
-// ── Achievements ───────────────────────────────────────────────────────────────────────
+// ── Achievements ──────────────────────────────────────────────────────────────
 
 function checkAchievement(id, condition) {
   if (!condition || S.achievements[id]) return;
@@ -200,7 +200,7 @@ function showAchToast(def) {
   t._timer = setTimeout(() => { t.hidden = true; }, 3000);
 }
 
-// ── Mark done / undo ───────────────────────────────────────────────────────────────
+// ── Mark done / undo ──────────────────────────────────────────────────────────
 
 function toggleDone(di, h, originEl) {
   const act = getAct(di, h);
@@ -246,7 +246,7 @@ function checkAllTodayDone() {
   return true;
 }
 
-// ── Today progress bar ──────────────────────────────────────────────────────────────
+// ── Today progress bar ────────────────────────────────────────────────────────
 
 function updateTodayProgress() {
   const now         = new Date();
@@ -269,7 +269,7 @@ function updateTodayProgress() {
   q('#today-count').textContent = total ? `${done} de ${total} feitas` : 'Nenhuma planejada';
 }
 
-// ── Grid ───────────────────────────────────────────────────────────────────────────────
+// ── Grid ──────────────────────────────────────────────────────────────────────
 
 function buildGrid() {
   const grid = q('#week-grid');
@@ -359,7 +359,7 @@ function placeTimeLine(di, now) {
   cell.appendChild(line);
 }
 
-// ── Activity modal ─────────────────────────────────────────────────────────────────
+// ── Activity modal ────────────────────────────────────────────────────────────
 
 function openActModal(di, h, editMode = false) {
   editCell = { di, h };
@@ -389,8 +389,8 @@ function closeActModal() {
 function saveAct() {
   if (!editCell) return;
   const text = q('#act-input').value.trim();
-  const existing = getAct(editCell.di, editCell.hour);
-  setAct(editCell.di, editCell.hour, text ? {
+  const existing = getAct(editCell.di, editCell.h);
+  setAct(editCell.di, editCell.h, text ? {
     text,
     category: selCat || 'other',
     done: existing ? existing.done : false,
@@ -399,7 +399,7 @@ function saveAct() {
   buildGrid();
 }
 
-// ── Categories ──────────────────────────────────────────────────────────────────────
+// ── Categories ────────────────────────────────────────────────────────────────
 
 function buildCatGrid() {
   const grid = q('#cat-grid');
@@ -429,7 +429,7 @@ function refreshCatUI() {
   });
 }
 
-// ── Smoking tracker ───────────────────────────────────────────────────────────────────
+// ── Smoking tracker ───────────────────────────────────────────────────────────
 
 function refreshSmokingStrip() {
   if (!S.smoking?.quitDate) return;
@@ -493,7 +493,7 @@ function renderSmokingDetail() {
   const money = ((cigs / 20) * price).toFixed(2);
 
   q('#smoke-stats-row').innerHTML = `
-    <div class="stat-card"><span class="stat-value">😬 ${cigs}</span><span class="stat-label">cigarros não fumados</span></div>
+    <div class="stat-card"><span class="stat-value">🚬 ${cigs}</span><span class="stat-label">cigarros não fumados</span></div>
     <div class="stat-card"><span class="stat-value">R$ ${money}</span><span class="stat-label">economizados</span></div>
   `;
 
@@ -520,7 +520,7 @@ function renderSmokingDetail() {
   });
 }
 
-// ── Achievements screen ───────────────────────────────────────────────────────────────
+// ── Achievements screen ───────────────────────────────────────────────────────
 
 function renderAchievements() {
   const grid = q('#ach-grid');
@@ -538,7 +538,7 @@ function renderAchievements() {
   });
 }
 
-// ── Level-up modal ──────────────────────────────────────────────────────────────────
+// ── Level-up modal ────────────────────────────────────────────────────────────
 
 function showLevelUp(lv) {
   const title = LEVEL_NAMES[Math.min(lv, LEVEL_NAMES.length - 1)] || 'Lenda';
@@ -548,7 +548,7 @@ function showLevelUp(lv) {
   launchConfetti();
 }
 
-// ── Confetti ──────────────────────────────────────────────────────────────────────────
+// ── Confetti ──────────────────────────────────────────────────────────────────
 
 function launchConfetti() {
   const canvas = q('#confetti-canvas');
@@ -590,7 +590,7 @@ function launchConfetti() {
   draw();
 }
 
-// ── Floating XP text ────────────────────────────────────────────────────────────────
+// ── Floating XP text ──────────────────────────────────────────────────────────
 
 function floatXP(text, el) {
   const rect  = el.getBoundingClientRect();
@@ -603,7 +603,7 @@ function floatXP(text, el) {
   span.addEventListener('animationend', () => span.remove());
 }
 
-// ── Week navigation ─────────────────────────────────────────────────────────────────
+// ── Week navigation ───────────────────────────────────────────────────────────
 
 function shiftWeek(delta) {
   weekStart = new Date(weekStart);
@@ -621,7 +621,7 @@ function updateWeekLabel() {
   lbl.textContent = `${fmt(weekStart)}–${fmt(end)}`;
 }
 
-// ── Scroll to current time ────────────────────────────────────────────────────────────
+// ── Scroll to current time ────────────────────────────────────────────────────
 
 function scrollToCurrent() {
   const h = new Date().getHours();
@@ -631,7 +631,7 @@ function scrollToCurrent() {
   wrapper.scrollTop = Math.max(0, (h - START_H) * ROW_H - wrapper.clientHeight / 3);
 }
 
-// ── DOM helpers ─────────────────────────────────────────────────────────────────────
+// ── DOM helpers ───────────────────────────────────────────────────────────────
 
 const q    = s => document.querySelector(s);
 const qAll = s => document.querySelectorAll(s);
@@ -641,7 +641,7 @@ function hexA(hex, a) {
   return `rgba(${r},${g},${b},${a})`;
 }
 
-// ── Init ───────────────────────────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────────────
 
 function init() {
   buildCatGrid();
@@ -662,7 +662,7 @@ function init() {
   q('#btn-save-act').addEventListener('click', saveAct);
   q('#btn-del-act').addEventListener('click', () => {
     if (!editCell) return;
-    setAct(editCell.di, editCell.hour, null);
+    setAct(editCell.di, editCell.h, null);
     closeActModal();
     buildGrid();
   });
