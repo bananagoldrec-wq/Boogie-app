@@ -2308,6 +2308,33 @@
         "youtube_id": null,
         "source": "MusicBrainz (selo: Baby Records)",
         "label": "Baby Records"
+      },
+      {
+        "title": "Bandido",
+        "artist": "La Bionda",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Baby Records)",
+        "label": "Baby Records"
+      },
+      {
+        "title": "Odissea veneziana",
+        "artist": "Rondò Veneziano",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Baby Records)",
+        "label": "Baby Records"
+      },
+      {
+        "title": "Misteriosa Venezia",
+        "artist": "Rondò Veneziano",
+        "year": 1987,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Baby Records)",
+        "label": "Baby Records"
       }
     ]
   },
@@ -5178,6 +5205,33 @@
         "youtube_id": null,
         "source": "MusicBrainz (selo: Diskotür)",
         "label": "Diskotür"
+      },
+      {
+        "title": "Son Verdim Kalbimin İşine / Elveda",
+        "artist": "Seyyâl Taner",
+        "year": 1975,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Yavuz Plak)",
+        "label": "Yavuz Plak"
+      },
+      {
+        "title": "Yanıyorum / Gözlerim Yolda",
+        "artist": "Ömür Göksel",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Yavuz Plak)",
+        "label": "Yavuz Plak"
+      },
+      {
+        "title": "Senden Bana Yâr Olanda / Unuttum",
+        "artist": "Ömür Göksel",
+        "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Yavuz Plak)",
+        "label": "Yavuz Plak"
       }
     ]
   },
