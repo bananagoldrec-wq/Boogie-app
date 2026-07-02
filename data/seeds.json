@@ -2335,6 +2335,33 @@
         "youtube_id": null,
         "source": "MusicBrainz (selo: Baby Records)",
         "label": "Baby Records"
+      },
+      {
+        "title": "Boys (Summertime Love)",
+        "artist": "Sabrina",
+        "year": 1987,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Baby Records)",
+        "label": "Baby Records"
+      },
+      {
+        "title": "Magical Body",
+        "artist": "Los Angeles T.F.",
+        "year": 1983,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Il Discotto Productions)",
+        "label": "Il Discotto Productions"
+      },
+      {
+        "title": "I Can Hear Your Voice",
+        "artist": "Hot Cold",
+        "year": 1986,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Il Discotto Productions)",
+        "label": "Il Discotto Productions"
       }
     ]
   },
@@ -3039,6 +3066,15 @@
       {
         "title": "Witchdoctor",
         "artist": "Patricia Majalisa",
+        "year": 1987,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Gallo)",
+        "label": "Gallo"
+      },
+      {
+        "title": "Mbongeni Ngema's Sarafina!",
+        "artist": "Mbongeni Ngema",
         "year": 1987,
         "spotify_embed": null,
         "youtube_id": null,
@@ -5228,6 +5264,15 @@
         "title": "Senden Bana Yâr Olanda / Unuttum",
         "artist": "Ömür Göksel",
         "year": 1973,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Yavuz Plak)",
+        "label": "Yavuz Plak"
+      },
+      {
+        "title": "Ben Bilirim Ben Bilirim / 2023",
+        "artist": "Barış Manço",
+        "year": 1975,
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (selo: Yavuz Plak)",
