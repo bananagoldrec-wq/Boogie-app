@@ -42,7 +42,7 @@ body {
   padding-bottom: var(--safe-bottom);
 }
 
-/* ── Compact top bar ─────────────────────────────────────────── */
+/* ── Compact top bar ──────────────────────────────────────────── */
 
 .top-bar {
   flex-shrink: 0;
@@ -155,7 +155,7 @@ body {
   line-height: 1.2;
 }
 
-/* ── XP slim bar ─────────────────────────────────────────────── */
+/* ── XP slim bar ──────────────────────────────────────────── */
 
 .xp-slim {
   flex-shrink: 0;
@@ -206,7 +206,7 @@ body {
   white-space: nowrap;
 }
 
-/* ── Grid wrapper ────────────────────────────────────────────── */
+/* ── Grid wrapper ──────────────────────────────────────────── */
 
 .grid-wrapper {
   flex: 1;
@@ -216,7 +216,7 @@ body {
   background: var(--bg);
 }
 
-/* ── The CSS grid ────────────────────────────────────────────── */
+/* ── The CSS grid ──────────────────────────────────────────── */
 
 .week-grid {
   display: grid;
@@ -224,7 +224,7 @@ body {
   min-width: max-content;
 }
 
-/* ── Corner + sticky time ────────────────────────────────────── */
+/* ── Corner + sticky time ──────────────────────────────────────────── */
 
 .g-corner {
   position: sticky; top: 0; left: 0;
@@ -251,7 +251,7 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
-/* ── Day headers ─────────────────────────────────────────────── */
+/* ── Day headers ──────────────────────────────────────────── */
 
 .g-day {
   position: sticky; top: 0;
@@ -383,7 +383,7 @@ body {
   opacity: 0.5;
 }
 
-/* ── XP floating popup ───────────────────────────────────────── */
+/* ── XP floating popup ──────────────────────────────────────────── */
 
 .xp-float {
   position: fixed;
@@ -400,7 +400,7 @@ body {
   100% { opacity: 0; transform: translateY(-36px); }
 }
 
-/* ── Overlay / Sheet ─────────────────────────────────────────── */
+/* ── Overlay / Sheet ──────────────────────────────────────────── */
 
 .overlay {
   position: fixed; inset: 0;
@@ -526,7 +526,7 @@ body {
 .btn.secondary { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); }
 .btn.danger    { flex: 0 1 auto; padding: 14px 18px; background: rgba(200,123,123,0.1); color: var(--danger); }
 
-/* ── Smoking overlay ─────────────────────────────────────────── */
+/* ── Smoking overlay ──────────────────────────────────────────── */
 
 .smoke-big-counter {
   text-align: center;
@@ -593,6 +593,10 @@ body {
 .tl-row.done { background: rgba(107,200,164,0.08); }
 .tl-row.next { border: 1px solid rgba(139,124,200,0.3); background: rgba(139,124,200,0.04); }
 
+/* Type-aware next row colors */
+.tl-row.next.tl-warning { border-color: rgba(200,169,107,0.45); background: rgba(200,169,107,0.07); }
+.tl-row.next.tl-boost   { border-color: rgba(107,200,164,0.45); background: rgba(107,200,164,0.07); }
+
 .tl-marker {
   width: 32px;
   flex-shrink: 0;
@@ -602,16 +606,56 @@ body {
   text-align: center;
   line-height: 1.2;
 }
-.tl-row.done .tl-marker { color: var(--success); }
-.tl-row.next .tl-marker { color: var(--accent); }
+.tl-row.done .tl-marker              { color: var(--success); }
+.tl-row.next .tl-marker              { color: var(--accent); }
+.tl-row.next.tl-warning .tl-marker  { color: var(--gold); }
+.tl-row.next.tl-boost .tl-marker    { color: var(--success); }
 
 .tl-body   { flex: 1; }
 .tl-time   { font-size: 11px; font-weight: 600; color: var(--text2); display: block; }
 .tl-text   { font-size: 12px; color: var(--text3); display: block; margin-top: 1px; }
+.tl-row.next.tl-warning .tl-time  { color: var(--gold); }
+.tl-row.next.tl-boost .tl-time    { color: var(--success); }
 .tl-check  { font-size: 12px; color: var(--success); font-weight: 700; }
 .tl-lock   { font-size: 11px; color: var(--border); }
 
-/* ── Achievements overlay ────────────────────────────────────── */
+/* ── Next milestone card ──────────────────────────────────────────── */
+
+.smoke-next-card {
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border-left: 3px solid var(--accent);
+  background: rgba(139,124,200,0.07);
+}
+.smoke-next-card.snc-warning {
+  border-left-color: var(--gold);
+  background: rgba(200,169,107,0.09);
+}
+.smoke-next-card.snc-boost {
+  border-left-color: var(--success);
+  background: rgba(107,200,164,0.09);
+}
+
+.snc-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+.snc-warning .snc-label { color: var(--gold); }
+.snc-boost .snc-label   { color: var(--success); }
+
+.snc-text {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text2);
+}
+
+/* ── Achievements overlay ──────────────────────────────────────────── */
 
 .ach-full { align-items: stretch; }
 
@@ -740,7 +784,7 @@ body {
 .levelup-num   { font-size: 52px; font-weight: 800; color: var(--accent); line-height: 1; margin: 8px 0; letter-spacing: -2px; }
 .levelup-title-text { font-size: 18px; font-weight: 600; color: var(--text); }
 
-/* ── Achievement toast ───────────────────────────────────────── */
+/* ── Achievement toast ──────────────────────────────────────────── */
 
 .ach-toast {
   position: fixed;
@@ -781,7 +825,7 @@ body {
 .at-body strong { font-size: 13px; color: var(--text); }
 .at-body span   { font-size: 11px; color: var(--accent); font-weight: 600; }
 
-/* ── Confetti canvas ─────────────────────────────────────────── */
+/* ── Confetti canvas ──────────────────────────────────────────── */
 
 .confetti-canvas {
   position: fixed; inset: 0;

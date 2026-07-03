@@ -32,7 +32,11 @@ const ACHIEVEMENTS = [
   { id:'streak7',    icon:'×7',   name:'Semana de Fogo',    desc:'Mantenha streak de 7 dias',                  xp:300 },
   { id:'streak30',   icon:'×30',  name:'Mês Perfeito',      desc:'Mantenha streak de 30 dias',                 xp:1000},
   { id:'acts50',     icon:'50',   name:'Meio Século',       desc:'Conclua 50 atividades no total',             xp:500 },
+  { id:'smoke6h',    icon:'6h',   name:'6h no Controle',    desc:'6 horas sem cigarro',                        xp:30  },
+  { id:'smoke12h',   icon:'12h',  name:'Meio Dia Limpo',    desc:'12 horas sem cigarro',                       xp:50  },
   { id:'smoke1d',    icon:'1d',   name:'24h Limpo',         desc:'1 dia sem cigarro',                          xp:100 },
+  { id:'smoke3d',    icon:'3d',   name:'72h de Garra',      desc:'3 dias sem cigarro',                         xp:150 },
+  { id:'smoke5d',    icon:'5d',   name:'5 Dias de Força',   desc:'5 dias sem cigarro',                         xp:200 },
   { id:'smoke1w',    icon:'7d',   name:'Semana Livre',      desc:'7 dias sem cigarro',                         xp:300 },
   { id:'smoke1m',    icon:'30d',  name:'Pulmões Renovados', desc:'30 dias sem cigarro',                        xp:700 },
   { id:'smoke3m',    icon:'90d',  name:'3 Meses de Vitória',desc:'90 dias sem cigarro',                        xp:1500},
@@ -43,30 +47,32 @@ const ACHIEVEMENTS = [
 ];
 
 const SMOKE_MILESTONES = [
-  { mins:20,      marker:'20m',  label:'20 minutos', text:'Pressão arterial e pulso normalizam — vasos começam a relaxar'        },
-  { mins:120,     marker:'2h',   label:'2 horas',    text:'Circulação periférica melhora: mãos e pés ficam mais quentes'         },
-  { mins:240,     marker:'4h',   label:'4 horas',    text:'Pele começa a receber mais oxigênio — aparência mais saudável'        },
-  { mins:480,     marker:'8h',   label:'8 horas',    text:'Monóxido de carbono no sangue cai à metade; oxigenação sobe'          },
-  { mins:720,     marker:'12h',  label:'12 horas',   text:'CO praticamente eliminado — sangue volta a transportar O₂ plenamente' },
-  { mins:1440,    marker:'24h',  label:'24 horas',   text:'Risco de infarto cardíaco já começa a cair'                           },
-  { mins:2880,    marker:'48h',  label:'48 horas',   text:'Terminações nervosas se regeneram — paladar e olfato retornam'        },
-  { mins:4320,    marker:'72h',  label:'72 horas',   text:'Brônquios relaxam: respirar fica nitidamente mais fácil'              },
-  { mins:7200,    marker:'5d',   label:'5 dias',     text:'Muco acumulado nos pulmões começa a ser eliminado ativamente'         },
-  { mins:10080,   marker:'7d',   label:'1 semana',   text:'Energia aumenta — sono mais profundo e reparador'                    },
-  { mins:14400,   marker:'10d',  label:'10 dias',    text:'Pele produz mais colágeno — rugas finas começam a suavizar'           },
-  { mins:20160,   marker:'2sem', label:'2 semanas',  text:'Circulação melhora 20–30%; caminhar fica mais leve'                  },
-  { mins:30240,   marker:'3sem', label:'3 semanas',  text:'Gengivas mais saudáveis e hálito significativamente melhor'           },
-  { mins:43200,   marker:'1m',   label:'1 mês',      text:'Tosse e falta de ar reduzem — pulmões se regeneram visivelmente'     },
-  { mins:64800,   marker:'45d',  label:'45 dias',    text:'Cabelo e unhas mais fortes; pele com tom mais uniforme'               },
-  { mins:90720,   marker:'2m',   label:'2 meses',    text:'Cílios pulmonares se recuperam — infecções respiratórias diminuem'   },
-  { mins:129600,  marker:'3m',   label:'3 meses',    text:'Função pulmonar melhora até 30%; fôlego de volta'                    },
-  { mins:259200,  marker:'6m',   label:'6 meses',    text:'Crises de tosse quase desaparecem; sinusite melhora'                 },
-  { mins:388800,  marker:'9m',   label:'9 meses',    text:'Pulmões limpam muco com eficiência normal — energia muito maior'     },
-  { mins:525600,  marker:'1a',   label:'1 ano',      text:'Risco de doença cardíaca coronariana cai pela metade'                },
-  { mins:1051200, marker:'2a',   label:'2 anos',     text:'Risco de infarto próximo ao de quem nunca fumou'                     },
-  { mins:2628000, marker:'5a',   label:'5 anos',     text:'Risco de AVC igual ao de não fumante; pele visivelmente rejuvenescida'},
-  { mins:5256000, marker:'10a',  label:'10 anos',    text:'Risco de câncer de pulmão cai 50%; câncer de boca e laringe também'  },
-  { mins:7884000, marker:'15a',  label:'15 anos',    text:'Risco cardíaco igual ao de quem nunca fumou — vitória total'         },
+  { mins:20,      marker:'20m',  label:'20 minutos', type:'info',    text:'Pressão arterial e pulso normalizam — vasos começam a relaxar'                           },
+  { mins:60,      marker:'1h',   label:'1 hora',     type:'warning', text:'A fissura vai crescer nas próximas horas. Cada desejo dura só 3–5 min — respire fundo.' },
+  { mins:120,     marker:'2h',   label:'2 horas',    type:'info',    text:'Circulação periférica melhora: mãos e pés ficam mais quentes'                            },
+  { mins:240,     marker:'4h',   label:'4 horas',    type:'warning', text:'Pico de irritabilidade e ansiedade. Seu cérebro pede nicotina — mas você é mais forte.'  },
+  { mins:480,     marker:'8h',   label:'8 horas',    type:'warning', text:'A abstiência física está no auge agora. Água, movimento, distração — é isso que funciona.'},
+  { mins:720,     marker:'12h',  label:'12 horas',   type:'boost',   text:'Meio dia! O pico de abstiência começa a ceder. CO praticamente eliminado do sangue.'    },
+  { mins:1440,    marker:'24h',  label:'24 horas',   type:'boost',   text:'1 dia! Nicotina zerada no sangue. Risco de infarto já começou a cair — você fez isso.'   },
+  { mins:2160,    marker:'36h',  label:'36 horas',   type:'warning', text:'Entre 36h e 72h vem o auge da abstiência psicológica. Seja forte — o pico está próximo do fim.'},
+  { mins:2880,    marker:'48h',  label:'48 horas',   type:'info',    text:'Paladar e olfato retornam. As fissuras já são mais curtas e chegam com menos frequência.' },
+  { mins:4320,    marker:'72h',  label:'72 horas',   type:'boost',   text:'3 dias! Pico físico superado. A partir daqui cada dia fica mais fácil — o corpo agradece.'},
+  { mins:7200,    marker:'5d',   label:'5 dias',     type:'warning', text:'Dias 3–7 são os mais duros psicologicamente. Quando a fissura chegar, espere 5 minutos.' },
+  { mins:10080,   marker:'7d',   label:'1 semana',   type:'boost',   text:'1 semana! A abstiência começa a diminuir agora. A cada semana que passa fica mais leve.' },
+  { mins:14400,   marker:'10d',  label:'10 dias',    type:'info',    text:'Pele produz mais colágeno — rugas finas começam a suavizar'                              },
+  { mins:20160,   marker:'2sem', label:'2 semanas',  type:'boost',   text:'2 semanas! Circulação 20–30% melhor. As fissuras agora são mais psicológicas que físicas.'},
+  { mins:30240,   marker:'3sem', label:'3 semanas',  type:'warning', text:'Semanas 2–4: fissuras situacionais (café, estresse). Identifique seus gatilhos e desvie.' },
+  { mins:43200,   marker:'1m',   label:'1 mês',      type:'boost',   text:'1 mês! Tosse reduz, pulmões regeneram. Dependência física praticamente zerada.'          },
+  { mins:64800,   marker:'45d',  label:'45 dias',    type:'info',    text:'Cabelo e unhas mais fortes; pele com tom mais uniforme'                                  },
+  { mins:90720,   marker:'2m',   label:'2 meses',    type:'boost',   text:'2 meses! Cílios pulmonares recuperados. As fissuras agora são raras e breves.'           },
+  { mins:129600,  marker:'3m',   label:'3 meses',    type:'boost',   text:'3 meses! Função pulmonar +30%. A maioria não sente mais abstiência nesta fase.'         },
+  { mins:259200,  marker:'6m',   label:'6 meses',    type:'info',    text:'Crises de tosse quase desaparecem; sinusite melhora'                                    },
+  { mins:388800,  marker:'9m',   label:'9 meses',    type:'boost',   text:'9 meses! Pulmões em eficiência total. Energia muito maior — você venceu o hábito.'        },
+  { mins:525600,  marker:'1a',   label:'1 ano',      type:'boost',   text:'1 ano! Risco cardíaco caiu pela metade. Você mudou sua história.'                       },
+  { mins:1051200, marker:'2a',   label:'2 anos',     type:'info',    text:'Risco de infarto próximo ao de quem nunca fumou'                                        },
+  { mins:2628000, marker:'5a',   label:'5 anos',     type:'boost',   text:'5 anos! Risco de AVC igual ao de não fumante. Pele visivelmente rejuvenescida.'          },
+  { mins:5256000, marker:'10a',  label:'10 anos',    type:'info',    text:'Risco de câncer de pulmão cai 50%; câncer de boca e laringe também'                     },
+  { mins:7884000, marker:'15a',  label:'15 anos',    type:'boost',   text:'15 anos! Risco cardíaco igual ao de quem nunca fumou — vitória total.'                  },
 ];
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -463,11 +469,15 @@ function refreshSmokingStrip() {
   }
 
   // Achievements
-  checkAchievement('smoke1d', mins >= 1440);
-  checkAchievement('smoke1w', mins >= 10080);
-  checkAchievement('smoke1m', mins >= 43200);
-  checkAchievement('smoke3m', mins >= 129600);
-  checkAchievement('smoke1y', mins >= 525600);
+  checkAchievement('smoke6h',  mins >= 360);
+  checkAchievement('smoke12h', mins >= 720);
+  checkAchievement('smoke1d',  mins >= 1440);
+  checkAchievement('smoke3d',  mins >= 4320);
+  checkAchievement('smoke5d',  mins >= 7200);
+  checkAchievement('smoke1w',  mins >= 10080);
+  checkAchievement('smoke1m',  mins >= 43200);
+  checkAchievement('smoke3m',  mins >= 129600);
+  checkAchievement('smoke1y',  mins >= 525600);
 }
 
 function renderSmokingDetail() {
@@ -477,6 +487,7 @@ function renderSmokingDetail() {
       <span class="bc-label">Configure sua data de parar de fumar</span>
     `;
     q('#smoke-stats-row').innerHTML = '';
+    q('#smoke-next').innerHTML      = '';
     q('#smoke-timeline').innerHTML  = '';
     return;
   }
@@ -506,17 +517,33 @@ function renderSmokingDetail() {
     <div class="stat-card"><span class="stat-value">R$ ${money}</span><span class="stat-label">economizados</span></div>
   `;
 
+  // Next milestone card
+  const nextM   = SMOKE_MILESTONES.find(m => mins < m.mins);
+  const nextDiv = q('#smoke-next');
+  nextDiv.innerHTML = '';
+  if (nextM) {
+    const tc   = nextM.type === 'warning' ? 'snc-warning' : nextM.type === 'boost' ? 'snc-boost' : 'snc-info';
+    const tlbl = nextM.type === 'warning' ? 'Atenção' : nextM.type === 'boost' ? 'Próxima conquista' : 'Próximo marco';
+    nextDiv.innerHTML = `
+      <div class="smoke-next-card ${tc}">
+        <div class="snc-label">${tlbl} · ${nextM.label}</div>
+        <div class="snc-text">${nextM.text}</div>
+      </div>
+    `;
+  }
+
   // Timeline
   const container = q('#smoke-timeline');
   container.innerHTML = '<h3 style="font-size:10px;color:var(--text3);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.8px">Recuperação do corpo</h3>';
 
   let nextShown = false;
   SMOKE_MILESTONES.forEach(m => {
-    const done   = mins >= m.mins;
-    const isNext = !done && !nextShown;
+    const done      = mins >= m.mins;
+    const isNext    = !done && !nextShown;
     if (isNext) nextShown = true;
 
-    const row  = mk('div', `tl-row${done ? ' done' : isNext ? ' next' : ''}`);
+    const typeClass = m.type ? ` tl-${m.type}` : '';
+    const row       = mk('div', `tl-row${done ? ' done' : isNext ? ' next' : ''}${typeClass}`);
     row.innerHTML = `
       <div class="tl-marker">${m.marker}</div>
       <div class="tl-body">
