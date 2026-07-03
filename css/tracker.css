@@ -593,6 +593,10 @@ body {
 .tl-row.done { background: rgba(107,200,164,0.08); }
 .tl-row.next { border: 1px solid rgba(139,124,200,0.3); background: rgba(139,124,200,0.04); }
 
+/* Type-aware next row colors */
+.tl-row.next.tl-warning { border-color: rgba(200,169,107,0.45); background: rgba(200,169,107,0.07); }
+.tl-row.next.tl-boost   { border-color: rgba(107,200,164,0.45); background: rgba(107,200,164,0.07); }
+
 .tl-marker {
   width: 32px;
   flex-shrink: 0;
@@ -602,14 +606,54 @@ body {
   text-align: center;
   line-height: 1.2;
 }
-.tl-row.done .tl-marker { color: var(--success); }
-.tl-row.next .tl-marker { color: var(--accent); }
+.tl-row.done .tl-marker              { color: var(--success); }
+.tl-row.next .tl-marker              { color: var(--accent); }
+.tl-row.next.tl-warning .tl-marker  { color: var(--gold); }
+.tl-row.next.tl-boost .tl-marker    { color: var(--success); }
 
 .tl-body   { flex: 1; }
 .tl-time   { font-size: 11px; font-weight: 600; color: var(--text2); display: block; }
 .tl-text   { font-size: 12px; color: var(--text3); display: block; margin-top: 1px; }
+.tl-row.next.tl-warning .tl-time  { color: var(--gold); }
+.tl-row.next.tl-boost .tl-time    { color: var(--success); }
 .tl-check  { font-size: 12px; color: var(--success); font-weight: 700; }
 .tl-lock   { font-size: 11px; color: var(--border); }
+
+/* ── Next milestone card ─────────────────────────────────────── */
+
+.smoke-next-card {
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border-left: 3px solid var(--accent);
+  background: rgba(139,124,200,0.07);
+}
+.smoke-next-card.snc-warning {
+  border-left-color: var(--gold);
+  background: rgba(200,169,107,0.09);
+}
+.smoke-next-card.snc-boost {
+  border-left-color: var(--success);
+  background: rgba(107,200,164,0.09);
+}
+
+.snc-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+.snc-warning .snc-label { color: var(--gold); }
+.snc-boost .snc-label   { color: var(--success); }
+
+.snc-text {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text2);
+}
 
 /* ── Achievements overlay ────────────────────────────────────── */
 
