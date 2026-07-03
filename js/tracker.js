@@ -75,6 +75,13 @@ const SMOKE_MILESTONES = [
   { mins:7884000, marker:'15a',  label:'15 anos',    type:'boost',   text:'15 anos! Risco cardíaco igual ao de quem nunca fumou — vitória total.'                  },
 ];
 
+const TAPER_PHASES = [
+  { limit:2, altDay:false, days:14, label:'2 por dia',       range:'Sem 1–2' },
+  { limit:1, altDay:false, days:14, label:'1 por dia',       range:'Sem 3–4' },
+  { limit:1, altDay:true,  days:14, label:'1 a cada 2 dias', range:'Sem 5–6' },
+  { limit:0, altDay:false, days:0,  label:'Livre!',          range:'Depois'  },
+];
+
 // ── State ────────────────────────────────────────────────────────────────────
 
 let S = loadState();
@@ -103,6 +110,61 @@ function defaultState() {
 
 function save() {
   localStorage.setItem(SK, JSON.stringify(S));
+}
+
+// ── Taper helpers ─────────────────────────────────────────────────────────────
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function getTaperPhase() {
+  const start = new Date(S.smoking.taperStart);
+  start.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const daysSince = Math.floor((today - start) / 86400000);
+  let offset = 0;
+  for (let i = 0; i < TAPER_PHASES.length - 1; i++) {
+    if (daysSince < offset + TAPER_PHASES[i].days) {
+      return { ...TAPER_PHASES[i], phaseIdx: i, dayInPhase: daysSince - offset, totalDay: daysSince };
+    }
+    offset += TAPER_PHASES[i].days;
+  }
+  const last = TAPER_PHASES.length - 1;
+  return { ...TAPER_PHASES[last], phaseIdx: last, dayInPhase: 0, totalDay: daysSince };
+}
+
+function getTodayLimit() {
+  const info = getTaperPhase();
+  if (info.phaseIdx >= TAPER_PHASES.length - 1) return 0;
+  if (info.altDay) return info.totalDay % 2 === 0 ? 1 : 0;
+  return info.limit;
+}
+
+function getTodayCount() {
+  return (S.smoking.taperLog || {})[todayKey()] || 0;
+}
+
+function logCigarette() {
+  const key = todayKey();
+  if (!S.smoking.taperLog) S.smoking.taperLog = {};
+  S.smoking.taperLog[key] = (S.smoking.taperLog[key] || 0) + 1;
+  save();
+  renderSmokingDetail();
+  refreshSmokingStrip();
+}
+
+function removeCigarette() {
+  const key = todayKey();
+  if (!S.smoking.taperLog) return;
+  const cur = S.smoking.taperLog[key] || 0;
+  if (cur <= 0) return;
+  S.smoking.taperLog[key] = cur - 1;
+  if (S.smoking.taperLog[key] === 0) delete S.smoking.taperLog[key];
+  save();
+  renderSmokingDetail();
+  refreshSmokingStrip();
 }
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
@@ -447,7 +509,20 @@ function refreshCatUI() {
 // ── Smoking tracker ───────────────────────────────────────────────────────────
 
 function refreshSmokingStrip() {
-  if (!S.smoking?.quitDate) return;
+  if (!S.smoking) return;
+
+  if (S.smoking.mode === 'taper') {
+    if (!S.smoking.taperStart) return;
+    const info  = getTaperPhase();
+    const limit = getTodayLimit();
+    const count = getTodayCount();
+    const done  = info.phaseIdx >= TAPER_PHASES.length - 1;
+    q('#ss-time').textContent = done ? 'Livre!' : `${count}/${limit}`;
+    q('#ss-money').hidden = true;
+    return;
+  }
+
+  if (!S.smoking.quitDate) return;
 
   const diffMs   = Date.now() - new Date(S.smoking.quitDate).getTime();
   if (diffMs < 0) { q('#ss-time').textContent = 'Em breve'; return; }
@@ -481,6 +556,8 @@ function refreshSmokingStrip() {
 }
 
 function renderSmokingDetail() {
+  if (S.smoking?.mode === 'taper') { renderTaperDetail(); return; }
+  q('#smoke-sheet-title').textContent = 'Sem Cigarro';
   if (!S.smoking?.quitDate) {
     q('#smoke-big-counter').innerHTML = `
       <span class="bc-value" style="font-size:24px;color:var(--text3)">—</span>
@@ -553,6 +630,129 @@ function renderSmokingDetail() {
     `;
     container.appendChild(row);
   });
+}
+
+function renderTaperDetail() {
+  q('#smoke-sheet-title').textContent = 'Desmame';
+
+  if (!S.smoking?.taperStart) {
+    q('#smoke-big-counter').innerHTML = `
+      <span class="bc-value" style="font-size:24px;color:var(--text3)">—</span>
+      <span class="bc-label">Configure o desmame</span>`;
+    q('#smoke-stats-row').innerHTML = '';
+    q('#smoke-next').innerHTML = '';
+    q('#smoke-timeline').innerHTML = '';
+    return;
+  }
+
+  const info  = getTaperPhase();
+  const limit = getTodayLimit();
+  const count = getTodayCount();
+  const done  = info.phaseIdx >= TAPER_PHASES.length - 1;
+
+  // Big counter
+  if (done) {
+    q('#smoke-big-counter').innerHTML = `
+      <span class="bc-value" style="color:var(--success)">Livre!</span>
+      <span class="bc-label">Desmame concluído</span>`;
+  } else {
+    const sub = limit === 0
+      ? 'dia de descanso — não fume hoje'
+      : count >= limit ? 'limite de hoje atingido'
+      : `restam ${limit - count} hoje`;
+    q('#smoke-big-counter').innerHTML = `
+      <div class="taper-counter">
+        <span class="tc-smoked" style="color:${count > 0 ? 'var(--gold)' : 'var(--text3)'}">${count}</span>
+        <span class="tc-sep">/</span>
+        <span class="tc-limit">${limit}</span>
+      </div>
+      <span class="bc-label">${sub}</span>`;
+  }
+
+  // Stats
+  const daysLeft = done ? 0 : info.days - info.dayInPhase;
+  q('#smoke-stats-row').innerHTML = done ? '' : `
+    <div class="stat-card"><span class="stat-value">Fase ${info.phaseIdx + 1}</span><span class="stat-label">${info.label}</span></div>
+    <div class="stat-card"><span class="stat-value">${daysLeft}</span><span class="stat-label">dias na fase</span></div>`;
+
+  // Log button / rest-day card
+  const nextDiv = q('#smoke-next');
+  nextDiv.innerHTML = '';
+  if (!done) {
+    if (limit === 0) {
+      nextDiv.innerHTML = `
+        <div class="smoke-next-card snc-boost">
+          <div class="snc-label">Dia de descanso</div>
+          <div class="snc-text">Hoje é dia de não fumar. Cada pausa é uma vitória real.</div>
+        </div>`;
+    } else {
+      const canSmoke = count < limit;
+      nextDiv.innerHTML = `
+        <div class="taper-log-row">
+          <button id="btn-log-cig" class="btn ${canSmoke ? 'primary' : 'danger'}">${canSmoke ? `Registrar (${count + 1} de ${limit})` : 'Limite de hoje atingido'}</button>
+          ${count > 0 ? `<button id="btn-remove-cig" class="btn secondary" style="flex:0 0 auto;padding:14px 20px">-1</button>` : ''}
+        </div>`;
+      if (canSmoke) q('#btn-log-cig').addEventListener('click', logCigarette);
+      if (count > 0) q('#btn-remove-cig').addEventListener('click', removeCigarette);
+    }
+  }
+
+  // Phase plan
+  const container = q('#smoke-timeline');
+  container.innerHTML = '<h3 class="tl-section-title">Plano de desmame</h3>';
+  TAPER_PHASES.forEach((ph, i) => {
+    const isDone   = i < info.phaseIdx;
+    const isActive = i === info.phaseIdx;
+    const row = mk('div', `tl-row${isDone ? ' done' : isActive ? ' next tl-boost' : ''}`);
+    row.innerHTML = `
+      <div class="tl-marker">${ph.range}</div>
+      <div class="tl-body">
+        <span class="tl-time">${ph.label}${isActive && ph.days > 0 ? ` · ${daysLeft} dias restantes` : ''}</span>
+        ${isDone ? '<span class="tl-text">Concluído</span>' : ''}
+      </div>
+      <span class="${isDone ? 'tl-check' : isActive ? 'tl-lock' : 'tl-lock'}">${isDone ? '✓' : isActive ? '...' : ''}</span>`;
+    container.appendChild(row);
+  });
+
+  // 7-day history bars
+  const taperLog  = S.smoking.taperLog || {};
+  const maxBefore = S.smoking.cigarettesPerDay || 5;
+  const DAY_ABB   = ['D','S','T','Q','Q','S','S'];
+  const startDate = new Date(S.smoking.taperStart); startDate.setHours(0,0,0,0);
+
+  const histEl = mk('div');
+  histEl.innerHTML = '<h3 class="tl-section-title" style="margin-top:14px">Últimos 7 dias</h3>';
+  const barsEl = mk('div', 'taper-bars');
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const c = taperLog[k] || 0;
+
+    const dSince  = Math.floor((d - startDate) / 86400000);
+    let   dayLim  = 0;
+    let   off2    = 0;
+    for (let pi = 0; pi < TAPER_PHASES.length - 1; pi++) {
+      if (dSince < off2 + TAPER_PHASES[pi].days) {
+        const ph = TAPER_PHASES[pi];
+        dayLim = ph.altDay ? (dSince % 2 === 0 ? 1 : 0) : ph.limit;
+        break;
+      }
+      off2 += TAPER_PHASES[pi].days;
+    }
+
+    const hPx       = Math.round(Math.min(44, Math.max(c > 0 ? 3 : 0, (c / maxBefore) * 44)));
+    const barColor  = c === 0 ? 'var(--border)' : c <= dayLim ? 'var(--success)' : 'var(--danger)';
+    const col = mk('div', 'tb-col');
+    col.innerHTML = `
+      <div class="tb-bar-wrap"><div class="tb-bar" style="height:${hPx}px;background:${barColor}"></div></div>
+      <div class="tb-count">${c > 0 ? c : ''}</div>
+      <div class="tb-day${i === 0 ? ' tb-today' : ''}">${DAY_ABB[d.getDay()]}</div>`;
+    barsEl.appendChild(col);
+  }
+
+  histEl.appendChild(barsEl);
+  container.appendChild(histEl);
 }
 
 // ── Achievements screen ───────────────────────────────────────────────────────
@@ -719,15 +919,34 @@ function init() {
   q('#btn-close-setup').addEventListener('click', () => { q('#setup-overlay').hidden = true; });
   q('#setup-overlay').addEventListener('click', e => { if (e.target.id === 'setup-overlay') q('#setup-overlay').hidden = true; });
   q('#btn-save-setup').addEventListener('click', () => {
-    const val   = q('#quit-input').value;
+    const mode  = q('#mode-toggle .mode-btn.active')?.dataset.mode || 'quit';
     const cpd   = parseFloat(q('#cig-per-day').value) || 0;
     const price = parseFloat(q('#pack-price').value)  || 0;
-    if (val) {
-      S.smoking = { quitDate: new Date(val).toISOString(), cigarettesPerDay: cpd, packPrice: price };
-      save();
-      refreshSmokingStrip();
+    if (mode === 'taper') {
+      const ts = q('#taper-start-input').value;
+      if (ts) {
+        S.smoking = { mode:'taper', taperStart: new Date(ts).toISOString(), cigarettesPerDay: cpd, packPrice: price, taperLog: S.smoking?.taperLog || {} };
+        save(); refreshSmokingStrip();
+      }
+    } else {
+      const val = q('#quit-input').value;
+      if (val) {
+        S.smoking = { mode:'quit', quitDate: new Date(val).toISOString(), cigarettesPerDay: cpd, packPrice: price };
+        save(); refreshSmokingStrip();
+      }
     }
     q('#setup-overlay').hidden = true;
+  });
+
+  // Mode toggle buttons
+  qAll('#mode-toggle .mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      qAll('#mode-toggle .mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const isTaper = btn.dataset.mode === 'taper';
+      q('#setup-quit-section').hidden  = isTaper;
+      q('#setup-taper-section').hidden = !isTaper;
+    });
   });
 
   // Achievements
@@ -740,8 +959,7 @@ function init() {
   // Level up
   q('#btn-close-levelup').addEventListener('click', () => { q('#levelup-modal').hidden = true; });
 
-  // Smoking strip click when not configured → open setup
-  if (!S.smoking?.quitDate) {
+  if (!S.smoking) {
     q('#ss-time').textContent  = 'Configurar';
     q('#ss-money').textContent = '';
   }
@@ -750,11 +968,23 @@ function init() {
 }
 
 function openSetup() {
+  const mode = S.smoking?.mode || 'quit';
+  qAll('#mode-toggle .mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  q('#setup-quit-section').hidden  = mode === 'taper';
+  q('#setup-taper-section').hidden = mode !== 'taper';
+
   if (S.smoking) {
-    const d = new Date(S.smoking.quitDate);
-    q('#quit-input').value  = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+    if (mode === 'taper' && S.smoking.taperStart) {
+      const ts = new Date(S.smoking.taperStart);
+      q('#taper-start-input').value = `${ts.getFullYear()}-${String(ts.getMonth()+1).padStart(2,'0')}-${String(ts.getDate()).padStart(2,'0')}`;
+    } else if (S.smoking.quitDate) {
+      const d = new Date(S.smoking.quitDate);
+      q('#quit-input').value = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+    }
     q('#cig-per-day').value = S.smoking.cigarettesPerDay || '';
     q('#pack-price').value  = S.smoking.packPrice || '';
+  } else {
+    q('#taper-start-input').value = todayKey();
   }
   q('#setup-overlay').hidden = false;
 }
@@ -764,7 +994,7 @@ document.addEventListener('DOMContentLoaded', () => {
   init();
   // Intercept smoke-strip click to open setup if not configured
   const orig = q('#smoke-strip').onclick;
-  if (!S.smoking?.quitDate) {
+  if (!S.smoking) {
     q('#smoke-strip').addEventListener('click', () => {
       openSetup();
     }, { once: true });

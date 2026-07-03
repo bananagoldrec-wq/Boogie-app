@@ -69,7 +69,7 @@
   <div id="smoke-overlay" class="overlay" hidden>
     <div class="sheet tall-sheet" role="dialog" aria-modal="true">
       <div class="sheet-header">
-        <span class="sheet-title">Sem Cigarro</span>
+        <span class="sheet-title" id="smoke-sheet-title">Sem Cigarro</span>
         <button id="btn-close-smoke" class="close-btn">×</button>
       </div>
       <div id="smoke-big-counter" class="smoke-big-counter"></div>
@@ -87,12 +87,29 @@
         <span class="sheet-title">Configurar</span>
         <button id="btn-close-setup" class="close-btn">×</button>
       </div>
-      <label class="field-label">Quando você parou (ou vai parar)?</label>
-      <input id="quit-input"    class="text-input" type="datetime-local" />
-      <label class="field-label">Cigarros por dia (antes)</label>
-      <input id="cig-per-day"   class="text-input" type="number" min="1" max="100" placeholder="10" />
+      <label class="field-label">Modo</label>
+      <div class="mode-toggle" id="mode-toggle">
+        <button class="mode-btn active" data-mode="quit">Parar de vez</button>
+        <button class="mode-btn" data-mode="taper">Desmame gradual</button>
+      </div>
+      <div id="setup-quit-section">
+        <label class="field-label">Quando você parou (ou vai parar)?</label>
+        <input id="quit-input" class="text-input" type="datetime-local" />
+      </div>
+      <div id="setup-taper-section" hidden>
+        <label class="field-label">Início do desmame</label>
+        <input id="taper-start-input" class="text-input" type="date" />
+        <div class="taper-plan-preview">
+          <div class="tpp-row"><span>Semanas 1–2</span><span>2 por dia</span></div>
+          <div class="tpp-row"><span>Semanas 3–4</span><span>1 por dia</span></div>
+          <div class="tpp-row"><span>Semanas 5–6</span><span>1 a cada 2 dias</span></div>
+          <div class="tpp-row"><span>Depois</span><span>Livre!</span></div>
+        </div>
+      </div>
+      <label class="field-label">Quantidade por dia (antes)</label>
+      <input id="cig-per-day" class="text-input" type="number" min="1" max="100" placeholder="10" />
       <label class="field-label">Preço do maço (R$)</label>
-      <input id="pack-price"    class="text-input" type="number" min="1" step="0.5" placeholder="14" />
+      <input id="pack-price"  class="text-input" type="number" min="1" step="0.5" placeholder="14" />
       <div class="sheet-footer" style="margin-top:20px">
         <button id="btn-save-setup" class="btn primary">Salvar</button>
       </div>
