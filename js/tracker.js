@@ -938,17 +938,6 @@ function init() {
     q('#setup-overlay').hidden = true;
   });
 
-  // Mode toggle buttons
-  qAll('#mode-toggle .mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      qAll('#mode-toggle .mode-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const isTaper = btn.dataset.mode === 'taper';
-      q('#setup-quit-section').hidden  = isTaper;
-      q('#setup-taper-section').hidden = !isTaper;
-    });
-  });
-
   // Achievements
   q('#btn-open-ach').addEventListener('click', () => {
     renderAchievements();
@@ -967,11 +956,15 @@ function init() {
   requestAnimationFrame(() => setTimeout(scrollToCurrent, 60));
 }
 
-function openSetup() {
-  const mode = S.smoking?.mode || 'quit';
+function setSetupMode(mode) {
   qAll('#mode-toggle .mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
   q('#setup-quit-section').hidden  = mode === 'taper';
   q('#setup-taper-section').hidden = mode !== 'taper';
+}
+
+function openSetup() {
+  const mode = S.smoking?.mode || 'quit';
+  setSetupMode(mode);
 
   if (S.smoking) {
     if (mode === 'taper' && S.smoking.taperStart) {
