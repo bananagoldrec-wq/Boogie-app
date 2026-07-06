@@ -89,8 +89,8 @@
       </div>
       <label class="field-label">Modo</label>
       <div class="mode-toggle" id="mode-toggle">
-        <button class="mode-btn active" data-mode="quit">Parar de vez</button>
-        <button class="mode-btn" data-mode="taper">Desmame gradual</button>
+        <button class="mode-btn active" type="button" data-mode="quit" onclick="setSetupMode('quit')">Parar de vez</button>
+        <button class="mode-btn" type="button" data-mode="taper" onclick="setSetupMode('taper')">Desmame gradual</button>
       </div>
       <div id="setup-quit-section">
         <label class="field-label">Quando você parou (ou vai parar)?</label>
