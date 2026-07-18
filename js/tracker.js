@@ -155,6 +155,24 @@ function logCigarette() {
   refreshSmokingStrip();
 }
 
+function countSmokeFree() {
+  if (!S.smoking?.taperStart) return 0;
+  const start = new Date(S.smoking.taperStart);
+  start.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const log = S.smoking.taperLog || {};
+  let count = 0;
+  for (let d = new Date(start); d < today; d.setDate(d.getDate() + 1)) {
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (!log[k]) count++;
+  }
+  return count;
+}
+
+function fmtBRL(n) {
+  return `R$ ${n.toLocaleString('pt-BR')}`;
+}
+
 function removeCigarette() {
   const key = todayKey();
   if (!S.smoking.taperLog) return;
@@ -588,9 +606,15 @@ function renderSmokingDetail() {
   const cigs  = Math.floor((mins / 1440) * cpd);
   const money = ((cigs / 20) * price).toFixed(2);
 
+  const savings = days * 150;
   q('#smoke-stats-row').innerHTML = `
+    <div class="savings-card">
+      <div class="sv-label">Saldo poupado</div>
+      <div class="sv-value">${fmtBRL(savings)}</div>
+      <div class="sv-sub">${days} ${days === 1 ? 'dia' : 'dias'} sem fumar · R$ 150/dia</div>
+    </div>
     <div class="stat-card"><span class="stat-value">${cigs}</span><span class="stat-label">cigarros não fumados</span></div>
-    <div class="stat-card"><span class="stat-value">R$ ${money}</span><span class="stat-label">economizados</span></div>
+    <div class="stat-card"><span class="stat-value">R$ ${money}</span><span class="stat-label">do maço</span></div>
   `;
 
   // Next milestone card
@@ -670,10 +694,17 @@ function renderTaperDetail() {
   }
 
   // Stats
-  const daysLeft = done ? 0 : info.days - info.dayInPhase;
-  q('#smoke-stats-row').innerHTML = done ? '' : `
-    <div class="stat-card"><span class="stat-value">Fase ${info.phaseIdx + 1}</span><span class="stat-label">${info.label}</span></div>
-    <div class="stat-card"><span class="stat-value">${daysLeft}</span><span class="stat-label">dias na fase</span></div>`;
+  const daysLeft  = done ? 0 : info.days - info.dayInPhase;
+  const smokeFree = countSmokeFree();
+  const savings   = smokeFree * 150;
+  q('#smoke-stats-row').innerHTML = `
+    <div class="savings-card">
+      <div class="sv-label">Saldo poupado</div>
+      <div class="sv-value">${fmtBRL(savings)}</div>
+      <div class="sv-sub">${smokeFree} ${smokeFree === 1 ? 'dia' : 'dias'} sem fumar · R$ 150/dia</div>
+    </div>
+    ${!done ? `<div class="stat-card"><span class="stat-value">Fase ${info.phaseIdx + 1}</span><span class="stat-label">${info.label}</span></div>
+    <div class="stat-card"><span class="stat-value">${daysLeft}</span><span class="stat-label">dias na fase</span></div>` : ''}`;
 
   // Log button / rest-day card
   const nextDiv = q('#smoke-next');
