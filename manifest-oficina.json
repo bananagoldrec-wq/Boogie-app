@@ -1,0 +1,17 @@
+{
+  "name": "Oficina de Áudio — Pré-amp, EQ e Compressor",
+  "short_name": "Oficina Áudio",
+  "description": "Guia passo a passo para montar um pré-amplificador, equalizador e compressor: esquemas, lista de materiais e checklist de montagem.",
+  "lang": "pt-BR",
+  "start_url": "./oficina.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1b1815",
+  "theme_color": "#1b1815",
+  "icons": [
+    { "src": "icons/icon-oficina-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-oficina-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-oficina-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
