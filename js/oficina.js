@@ -146,6 +146,146 @@ const PROJECTS = {
   },
 };
 
+const FUNDAMENTOS = {
+  id: "fundamentos",
+  title: "Fundamentos de Eletrônica",
+  modules: [
+    {
+      id: "tensao-corrente",
+      num: "1",
+      title: "Tensão, corrente e resistência",
+      summary: "A Lei de Ohm — a base de tudo o que vem depois.",
+      content: [
+        "Eletricidade é o movimento de elétrons por um material condutor, como um fio de cobre.",
+        "<b>Tensão (V, em volts)</b> é a \"pressão\" elétrica — a diferença de potencial entre dois pontos que empurra os elétrons.",
+        "<b>Corrente (I, em ampères)</b> é a quantidade de elétrons que passa por um ponto do circuito a cada segundo.",
+        "<b>Resistência (R, em ohms Ω)</b> é o quanto um material dificulta essa passagem.",
+        "A <b>Lei de Ohm</b> liga as três: <code>V = I × R</code>. Sabendo duas, você calcula a terceira.",
+        "Analogia útil: numa mangueira de água, tensão é a pressão da água, corrente é o quanto de água passa, e resistência é o quão estreita é a mangueira.",
+      ],
+      exercises: [
+        { type: "mcq", q: "Numa mangueira de água, a tensão elétrica é parecida com o quê?", options: ["A quantidade de água que passa", "A pressão da água", "O quão estreita é a mangueira", "A cor da mangueira"], correct: 1, explain: "Tensão é a \"pressão\" que empurra os elétrons — assim como a pressão empurra a água na mangueira." },
+        { type: "calc", q: "Um resistor de 1kΩ (1000Ω) está ligado a uma pilha de 9V. Qual a corrente, em miliampères (mA)?", answer: 9, tolerance: 0.5, unit: "mA", explain: "I = V/R = 9V ÷ 1000Ω = 0,009A = 9mA." },
+        { type: "mcq", q: "Se você aumenta a resistência de um circuito mantendo a mesma tensão, o que acontece com a corrente?", options: ["Aumenta", "Diminui", "Não muda", "Depende da cor do fio"], correct: 1, explain: "Como I = V/R, se V é fixo e R aumenta, I diminui." },
+      ],
+    },
+    {
+      id: "ca-cc",
+      num: "2",
+      title: "Corrente contínua × alternada",
+      summary: "Por que o áudio é AC \"em cima\" de uma alimentação DC.",
+      content: [
+        "<b>DC (corrente contínua)</b> flui sempre na mesma direção, com tensão constante — é o que uma pilha ou bateria fornece.",
+        "<b>AC (corrente alternada)</b> muda de direção periodicamente — é o que sai da tomada, e também é a forma de um sinal de áudio.",
+        "Um sinal de áudio (voz, música, guitarra) é uma onda AC: sobe e desce muitas vezes por segundo — de 20 a 20.000 vezes, o que chamamos de frequência, em Hz.",
+        "Nos três projetos deste app, a alimentação é DC (pilha de 9V), mas o sinal de áudio que passa por dentro é AC. É por isso que usamos capacitores entre estágios: eles deixam passar só a parte AC (o áudio) e bloqueiam a parte DC.",
+      ],
+      exercises: [
+        { type: "mcq", q: "O sinal de áudio que sai de uma guitarra é...", options: ["DC constante", "AC, oscilando muitas vezes por segundo", "Só existe quando toca uma nota grave", "Sempre positivo"], correct: 1, explain: "Áudio é uma onda AC — é essa oscilação que o alto-falante converte em som." },
+        { type: "mcq", q: "Por que os circuitos deste app usam capacitores entre um estágio e outro?", options: ["Para aumentar o volume", "Para bloquear a parte DC e deixar passar só o áudio (AC)", "Para guardar energia para quando a bateria acabar", "Para dar cor ao som"], correct: 1, explain: "Capacitor de acoplamento: passa o AC (áudio), bloqueia o DC de polarização de um estágio vazar pro outro." },
+      ],
+    },
+    {
+      id: "resistores",
+      num: "3",
+      title: "Resistores e código de cores",
+      summary: "O componente mais comum de todos os três projetos.",
+      content: [
+        "Resistor limita a corrente elétrica — quanto maior o valor em ohms (Ω), mais ele \"segura\" a corrente.",
+        "O valor vem escrito no corpo como faixas coloridas (código de cores), porque o componente é pequeno demais pra escrever números.",
+        "As primeiras faixas indicam os dígitos, a próxima é o multiplicador, e a última é a tolerância — o quanto o valor real pode variar do nominal.",
+        "Você não precisa decorar o código agora. No dia a dia, quase todo mundo usa um multímetro (ou um app no celular) pra conferir o valor real antes de soldar.",
+      ],
+      exercises: [
+        { type: "mcq", q: "Para que serve o código de cores num resistor?", options: ["Decoração", "Indicar o valor em ohms do resistor", "Indicar a marca do fabricante", "Indicar a temperatura máxima"], correct: 1, explain: "As faixas coloridas codificam o valor em ohms e a tolerância." },
+        { type: "mcq", q: "Qual é a forma mais prática de conferir o valor real de um resistor antes de soldar?", options: ["Provar com a língua", "Multímetro no modo resistência (Ω)", "Balança de cozinha", "Olhando o tamanho do componente"], correct: 1, explain: "O multímetro no modo Ω mede o valor real — muito mais confiável do que decorar cores." },
+      ],
+    },
+    {
+      id: "capacitores",
+      num: "4",
+      title: "Capacitores",
+      summary: "Bloqueiam DC, deixam passar AC — a peça-chave do acoplamento entre estágios.",
+      content: [
+        "Capacitor guarda carga elétrica temporariamente entre duas placas condutoras separadas por um isolante.",
+        "Comportamento-chave: um capacitor bloqueia corrente contínua (DC) em regime permanente, mas deixa passar corrente alternada (AC).",
+        "É por isso que ele aparece tanto nos três projetos: um capacitor de acoplamento entre estágios deixa o áudio (AC) passar, mas impede que a tensão DC de polarização de um estágio \"vaze\" pro próximo.",
+        "Valor medido em Farads — na prática usamos frações bem menores: microfarads (µF), nanofarads (nF) e picofarads (pF).",
+        "Capacitores eletrolíticos têm polaridade (um lado + e um − marcado no corpo) — ligar ao contrário pode danificar o componente. Os de poliéster/cerâmica geralmente não têm polaridade.",
+      ],
+      exercises: [
+        { type: "mcq", q: "O que um capacitor faz com um sinal de corrente contínua (DC), depois do momento inicial de carregar?", options: ["Deixa passar livremente", "Bloqueia", "Inverte a polaridade", "Transforma em som"], correct: 1, explain: "Em regime permanente, o capacitor bloqueia o DC — só deixa passar a parte que varia (AC)." },
+        { type: "mcq", q: "Por que isso é útil entre dois estágios de um circuito de áudio?", options: ["Deixa passar o áudio (AC) e bloqueia o DC de polarização de vazar pro próximo estágio", "Aumenta o volume do sinal", "Protege contra curto-circuito", "Substitui o resistor"], correct: 0, explain: "É exatamente o papel de C2 e C4 no pré-amplificador, por exemplo." },
+        { type: "mcq", q: "O que pode acontecer se você ligar um capacitor eletrolítico com a polaridade invertida?", options: ["Nada, funciona igual", "Pode danificar o componente", "Fica mais barato", "Aumenta a vida útil"], correct: 1, explain: "Eletrolíticos têm um lado + e um − — ao contrário, o componente pode aquecer, estufar ou falhar." },
+      ],
+    },
+    {
+      id: "diodos-transistores",
+      num: "5",
+      title: "Diodos, LEDs e transistores",
+      summary: "Os componentes que dão \"direção\" e ganho ao circuito.",
+      content: [
+        "<b>Diodo</b>: deixa a corrente passar só numa direção. Usamos isso pra proteger contra bateria ligada ao contrário (D1, presente nos três projetos) e pra \"retificar\" sinal — transformar AC em algo parecido com DC, que é a base do envelope follower do compressor.",
+        "<b>LED</b>: um tipo de diodo que emite luz quando a corrente passa na direção certa.",
+        "<b>Transistor</b>: um componente que pode agir como amplificador ou como interruptor controlado eletricamente. No pré-amplificador deste app usamos um JFET como buffer — ele \"copia\" o sinal de entrada na saída, mas com impedância mais baixa, sem perder informação do sinal.",
+      ],
+      exercises: [
+        { type: "mcq", q: "O que um diodo faz?", options: ["Amplifica o sinal", "Deixa a corrente passar só numa direção", "Guarda carga elétrica", "Gira um motor"], correct: 1, explain: "Essa é a propriedade fundamental do diodo — condução em um único sentido." },
+        { type: "mcq", q: "Qual é o papel do JFET (Q1) no pré-amplificador deste app?", options: ["Aumentar o volume", "Funcionar como buffer: repetir o sinal com impedância mais baixa", "Filtrar o grave", "Acender um LED"], correct: 1, explain: "O buffer não amplifica — ele adapta a impedância, evitando perda de agudos do instrumento." },
+      ],
+    },
+    {
+      id: "opamps",
+      num: "6",
+      title: "Amplificadores operacionais",
+      summary: "O componente central dos três projetos.",
+      content: [
+        "Um amplificador operacional (op-amp) é um CI que amplifica a diferença de tensão entre duas entradas: a não-inversora (+) e a inversora (−).",
+        "Sozinho, ele amplifica demais (ganho quase infinito) — por isso sempre ligamos um resistor (ou potenciômetro) da saída de volta pra entrada inversora. Isso se chama <b>realimentação negativa</b>, e é o que permite controlar o ganho de forma previsível.",
+        "É o coração dos três projetos: o estágio de ganho do pré-amplificador, os estágios do equalizador e os buffers do compressor são todos construídos em torno de um op-amp (TL072/TL071).",
+        "Fórmula que você vai usar direto: numa configuração não-inversora simples, <code>Ganho = 1 + Rf/Rg</code>, onde Rf é o resistor (ou pot) de realimentação e Rg é o resistor ligado à entrada inversora e ao terra.",
+      ],
+      exercises: [
+        { type: "mcq", q: "Por que ligamos um resistor (ou pot) da saída do op-amp de volta pra entrada inversora?", options: ["Para desligar o circuito", "Para controlar o ganho de forma previsível (realimentação negativa)", "Para aumentar o ruído", "É só estética"], correct: 1, explain: "Sem essa realimentação, o ganho \"livre\" do op-amp é alto demais e imprevisível para uso normal." },
+        { type: "calc", q: "No estágio de ganho do pré-amp, Rg = 10kΩ e o potenciômetro Rf está em 40kΩ. Qual o ganho? (Ganho = 1 + Rf/Rg)", answer: 5, tolerance: 0.2, unit: "x", explain: "Ganho = 1 + 40k/10k = 1 + 4 = 5x." },
+      ],
+    },
+    {
+      id: "ferramentas",
+      num: "7",
+      title: "Multímetro e solda",
+      summary: "As duas habilidades manuais que você vai usar o tempo todo.",
+      content: [
+        "<b>Multímetro</b>: mede tensão (modo V, geralmente DCV pros nossos circuitos), resistência (modo Ω) e continuidade (modo com símbolo de \"beep\", útil pra achar curtos ou fios rompidos).",
+        "Para medir tensão, as pontas tocam dois pontos do circuito ligado, em paralelo — sem cortar nada. Para medir resistência, o componente precisa estar fora do circuito (ou pelo menos sem energia).",
+        "<b>Solda</b>: uma liga metálica que derrete com o calor do ferro e, ao esfriar, cria uma conexão elétrica sólida. Técnica básica: aqueça a junção (fio + trilha) por 1–2 segundos, encoste a solda na junção — não na ponta do ferro — deixe derreter e espalhar, retire a solda e depois o ferro.",
+        "Uma solda boa é brilhante e em formato de cone. Uma solda fosca ou arredondada como bolinha costuma indicar \"solda fria\" — uma conexão ruim que pode falhar depois.",
+        "Vale a pena praticar as duas coisas em componentes velhos antes de montar o pré-amplificador de verdade.",
+      ],
+      exercises: [
+        { type: "mcq", q: "Para medir a tensão num ponto do circuito ligado, como você usa o multímetro?", options: ["Corta o fio e liga o multímetro no meio", "Encosta as pontas em paralelo, sem cortar nada", "Só funciona com o circuito desligado", "Não dá pra medir tensão com multímetro"], correct: 1, explain: "Medição de tensão é sempre em paralelo, com o circuito ligado." },
+        { type: "mcq", q: "Como é uma solda bem feita?", options: ["Fosca e arredondada como uma bolinha", "Brilhante e em formato de cone, cobrindo bem a junção", "Não importa a aparência, só o cheiro", "Deve ficar pingando"], correct: 1, explain: "Brilho e formato de cone indicam boa fusão e boa conexão elétrica." },
+      ],
+    },
+    {
+      id: "esquemas",
+      num: "8",
+      title: "Como ler um esquema elétrico",
+      summary: "A ponte entre o desenho e a peça na sua mão.",
+      content: [
+        "Um esquema não é um desenho físico — é um mapa de conexões. Componentes com o mesmo símbolo de terra (GND) em pontos diferentes do desenho estão, eletricamente, todos ligados entre si.",
+        "Convenção comum: o sinal flui da esquerda para a direita — entrada à esquerda, saída à direita. A alimentação positiva geralmente fica desenhada em cima, o terra embaixo.",
+        "Cada componente tem um símbolo padrão (resistor em zigue-zague, capacitor em duas placas paralelas, op-amp em triângulo, etc.) e uma referência (R1, C2, Q1...) que aparece tanto no esquema quanto na lista de materiais — é assim que você conecta o desenho às peças na mão.",
+        "Na aba \"Esquema\" de cada projeto deste app já tem essa legenda e uma explicação numerada de cada trecho do circuito.",
+      ],
+      exercises: [
+        { type: "mcq", q: "Num esquema elétrico, dois pontos com o mesmo símbolo de terra (GND) desenhados em lugares diferentes da página...", options: ["São só uma coincidência visual", "Estão eletricamente ligados entre si, mesmo longe um do outro no desenho", "Nunca devem ser ligados", "Representam polaridades opostas"], correct: 1, explain: "Todo símbolo de GND representa o mesmo nó elétrico, não importa onde apareça no desenho." },
+        { type: "mcq", q: "Qual é a convenção mais comum para a direção do sinal num esquema?", options: ["De baixo para cima", "Da direita para a esquerda", "Da esquerda para a direita", "Não tem convenção"], correct: 2, explain: "Entrada à esquerda, saída à direita — como usamos em todos os esquemas deste app." },
+      ],
+    },
+  ],
+};
+
 const ORDER = ["preamp", "eq", "comp"];
 
 // --------------------------------------------------------------- estado ---
@@ -185,6 +325,35 @@ function progressOf(id) {
   return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
 }
 
+function ensureFundamentosState() {
+  if (!state.fundamentos) state.fundamentos = {};
+  FUNDAMENTOS.modules.forEach((m) => {
+    if (!Array.isArray(state.fundamentos[m.id]) || state.fundamentos[m.id].length !== m.exercises.length) {
+      state.fundamentos[m.id] = new Array(m.exercises.length).fill(false);
+    }
+  });
+  return state.fundamentos;
+}
+
+function fundamentosModuleProgress(moduleId) {
+  const s = ensureFundamentosState();
+  const arr = s[moduleId] || [];
+  const done = arr.filter(Boolean).length;
+  const total = arr.length;
+  return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+}
+
+function fundamentosProgress() {
+  const s = ensureFundamentosState();
+  let done = 0, total = 0;
+  FUNDAMENTOS.modules.forEach((m) => {
+    const arr = s[m.id] || [];
+    done += arr.filter(Boolean).length;
+    total += arr.length;
+  });
+  return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+}
+
 function overallProgress() {
   let done = 0, total = 0;
   ORDER.forEach((id) => {
@@ -192,6 +361,9 @@ function overallProgress() {
     done += p.done;
     total += p.total;
   });
+  const f = fundamentosProgress();
+  done += f.done;
+  total += f.total;
   return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
 }
 
@@ -202,6 +374,13 @@ let route = { view: "home", project: null, tab: "esquema" };
 function parseHash() {
   const h = location.hash.replace(/^#\/?/, "");
   if (!h) return { view: "home", project: null, tab: "esquema" };
+  if (h === "fundamentos" || h.startsWith("fundamentos/")) {
+    const modId = h.split("/")[1] || null;
+    if (modId && FUNDAMENTOS.modules.some((m) => m.id === modId)) {
+      return { view: "fundamentos-module", module: modId };
+    }
+    return { view: "fundamentos-home" };
+  }
   const parts = h.split("/");
   const project = parts[0];
   const tab = parts[1] || "esquema";
@@ -437,6 +616,20 @@ function installBanner() {
 
 function renderHome() {
   const overall = overallProgress();
+  const fProg = fundamentosProgress();
+
+  const fundCard = `<a class="card card-fund" href="#/fundamentos">
+      <div class="card-top">
+        <p class="card-title">00 — Fundamentos de Eletrônica</p>
+        <span class="tag d0">Prepare-se primeiro</span>
+      </div>
+      <p class="card-desc">Tensão, corrente, resistores, capacitores, transistores, op-amps, multímetro e como ler um esquema — com exercícios, antes de colocar a mão na protoboard.</p>
+      <div class="card-foot">
+        ${progressBar(fProg.pct)}
+        <span class="card-pct">${fProg.pct}%</span>
+      </div>
+    </a>`;
+
   const cards = ORDER.map((id) => {
     const p = PROJECTS[id];
     const prog = progressOf(id);
@@ -457,7 +650,7 @@ function renderHome() {
     <div class="topbar"><h1>Oficina de Áudio</h1></div>
     <div class="home-header">
       <p class="eyebrow">Guia de montagem — offline</p>
-      <p class="home-dek">Pré-amplificador, equalizador e compressor: esquema, lista de materiais e checklist de montagem para cada um.</p>
+      <p class="home-dek">Aprenda o básico, depois monte um pré-amplificador, equalizador e compressor: esquema, lista de materiais e checklist de montagem para cada um.</p>
     </div>
     ${installBanner()}
     <div class="overall">
@@ -467,7 +660,99 @@ function renderHome() {
       </div>
       ${progressBar(overall.pct)}
     </div>
+    <div class="section-label">Aprenda</div>
+    <div class="cards">${fundCard}</div>
+    <div class="section-label">Monte</div>
     <div class="cards">${cards}</div>
+    <div class="bottom-space"></div>
+  `;
+}
+
+// ---------------------------------------------------- fundamentos: views ---
+
+function renderFundamentosHome() {
+  const overall = fundamentosProgress();
+  const cards = FUNDAMENTOS.modules.map((m) => {
+    const prog = fundamentosModuleProgress(m.id);
+    return `<a class="card" href="#/fundamentos/${m.id}">
+      <div class="card-top">
+        <p class="card-title">${m.num} — ${m.title}</p>
+      </div>
+      <p class="card-desc">${m.summary}</p>
+      <div class="card-foot">
+        ${progressBar(prog.pct)}
+        <span class="card-pct">${prog.done}/${prog.total}</span>
+      </div>
+    </a>`;
+  }).join("");
+
+  return `
+    <div class="topbar">
+      <button class="back-btn" data-go-home aria-label="Voltar">&larr;</button>
+      <h1>Fundamentos de Eletrônica</h1>
+    </div>
+    <div class="project-hero">
+      <p class="card-pct" style="text-align:left;">${overall.done}/${overall.total} exercícios corretos — ${overall.pct}%</p>
+      ${progressBar(overall.pct)}
+      <p class="muted" style="margin-top:12px;">8 aulas curtas com exercícios. Não precisa decorar nada — a ideia é reconhecer o vocabulário antes de montar o pré-amplificador. Pode fazer em qualquer ordem.</p>
+    </div>
+    <div class="cards" style="padding-top:4px;">${cards}</div>
+    <div class="bottom-space"></div>
+  `;
+}
+
+function exerciseHTML(moduleId, ex, idx, doneState) {
+  const done = !!doneState[idx];
+  if (ex.type === "mcq") {
+    const options = ex.options.map((opt, oi) =>
+      `<button class="mcq-opt" data-ex="${idx}" data-opt="${oi}" data-module="${moduleId}">${opt}</button>`
+    ).join("");
+    return `<div class="exercise ${done ? "solved" : ""}" data-exercise="${idx}">
+      <p class="ex-q"><span class="ex-badge">${done ? "✓" : idx + 1}</span>${ex.q}</p>
+      <div class="mcq-options">${options}</div>
+      <div class="ex-feedback" hidden></div>
+    </div>`;
+  }
+  // calc
+  return `<div class="exercise calc ${done ? "solved" : ""}" data-exercise="${idx}">
+    <p class="ex-q"><span class="ex-badge">${done ? "✓" : idx + 1}</span>${ex.q}</p>
+    <div class="calc-row">
+      <input type="number" inputmode="decimal" class="calc-input" data-ex="${idx}" data-module="${moduleId}" placeholder="0" />
+      <span class="calc-unit">${ex.unit}</span>
+      <button class="calc-check" data-ex="${idx}" data-module="${moduleId}">Conferir</button>
+    </div>
+    <div class="ex-feedback" hidden></div>
+  </div>`;
+}
+
+function renderFundamentosModule(moduleId) {
+  const m = FUNDAMENTOS.modules.find((mm) => mm.id === moduleId);
+  const s = ensureFundamentosState()[moduleId];
+  const prog = fundamentosModuleProgress(moduleId);
+
+  const idx = FUNDAMENTOS.modules.indexOf(m);
+  const prevM = FUNDAMENTOS.modules[idx - 1];
+  const nextM = FUNDAMENTOS.modules[idx + 1];
+  let nav = `<div style="display:flex;gap:10px;padding:18px 18px 4px;">`;
+  nav += prevM ? `<a href="#/fundamentos/${prevM.id}" style="flex:1;text-align:center;padding:12px;border:1px solid var(--rule);border-radius:8px;font-size:13px;color:var(--ink-soft);">&larr; ${prevM.title}</a>` : `<a href="#/fundamentos" style="flex:1;text-align:center;padding:12px;border:1px solid var(--rule);border-radius:8px;font-size:13px;color:var(--ink-soft);">&larr; Todas as aulas</a>`;
+  nav += nextM ? `<a href="#/fundamentos/${nextM.id}" style="flex:1;text-align:center;padding:12px;border:1px solid var(--rule);border-radius:8px;font-size:13px;color:var(--teal);">${nextM.title} &rarr;</a>` : `<a href="#/" style="flex:1;text-align:center;padding:12px;border:1px solid var(--rule);border-radius:8px;font-size:13px;color:var(--copper);">Ir para os projetos &rarr;</a>`;
+  nav += `</div>`;
+
+  return `
+    <div class="topbar">
+      <button class="back-btn" data-go="fundamentos" aria-label="Voltar">&larr;</button>
+      <h1>${m.title}</h1>
+    </div>
+    <div class="project-hero">
+      <p class="card-pct" style="text-align:left;">${prog.done}/${prog.total} exercícios corretos — ${prog.pct}%</p>
+      ${progressBar(prog.pct)}
+    </div>
+    <div class="panel">
+      ${m.content.map((p) => `<p>${p}</p>`).join("")}
+      <h2 style="margin-top:26px;">Exercícios</h2>
+      ${m.exercises.map((ex, i) => exerciseHTML(moduleId, ex, i, s)).join("")}
+    </div>
+    ${nav}
     <div class="bottom-space"></div>
   `;
 }
@@ -567,14 +852,33 @@ function renderProject(id, tab) {
 
 function render() {
   const app = document.getElementById("app");
-  if (route.view === "home") {
-    app.innerHTML = renderHome();
-  } else {
+  if (route.view === "fundamentos-home") {
+    app.innerHTML = renderFundamentosHome();
+  } else if (route.view === "fundamentos-module") {
+    app.innerHTML = renderFundamentosModule(route.module);
+  } else if (route.view === "project") {
     app.innerHTML = renderProject(route.project, route.tab);
+  } else {
+    app.innerHTML = renderHome();
   }
 }
 
 // --------------------------------------------------------------- eventos ---
+
+function markExerciseSolved(moduleId, exIdx) {
+  const s = ensureFundamentosState();
+  if (!s[moduleId][exIdx]) {
+    s[moduleId][exIdx] = true;
+    saveState();
+  }
+}
+
+function showFeedback(exerciseEl, correct, explain) {
+  const fb = exerciseEl.querySelector(".ex-feedback");
+  fb.hidden = false;
+  fb.className = "ex-feedback " + (correct ? "correct" : "wrong");
+  fb.innerHTML = (correct ? "Certo. " : "Não é bem isso. ") + explain;
+}
 
 document.addEventListener("click", (e) => {
   const dismiss = e.target.closest("[data-dismiss-banner]");
@@ -587,6 +891,12 @@ document.addEventListener("click", (e) => {
   const goHome = e.target.closest("[data-go-home]");
   if (goHome) {
     location.hash = "#/";
+    return;
+  }
+
+  const goTo = e.target.closest("[data-go]");
+  if (goTo) {
+    location.hash = `#/${goTo.dataset.go}`;
     return;
   }
 
@@ -605,6 +915,54 @@ document.addEventListener("click", (e) => {
     s[kind][idx] = !s[kind][idx];
     saveState();
     render();
+    return;
+  }
+
+  const mcqOpt = e.target.closest(".mcq-opt");
+  if (mcqOpt) {
+    const moduleId = mcqOpt.dataset.module;
+    const exIdx = parseInt(mcqOpt.dataset.ex, 10);
+    const optIdx = parseInt(mcqOpt.dataset.opt, 10);
+    const m = FUNDAMENTOS.modules.find((mm) => mm.id === moduleId);
+    const ex = m.exercises[exIdx];
+    const exerciseEl = mcqOpt.closest(".exercise");
+    const correct = optIdx === ex.correct;
+
+    exerciseEl.querySelectorAll(".mcq-opt").forEach((btn) => {
+      btn.disabled = true;
+      const bi = parseInt(btn.dataset.opt, 10);
+      if (bi === ex.correct) btn.classList.add("correct");
+      else if (bi === optIdx) btn.classList.add("wrong");
+    });
+    showFeedback(exerciseEl, correct, ex.explain);
+    if (correct) {
+      markExerciseSolved(moduleId, exIdx);
+      exerciseEl.classList.add("solved");
+      exerciseEl.querySelector(".ex-badge").textContent = "✓";
+    }
+    return;
+  }
+
+  const calcCheck = e.target.closest(".calc-check");
+  if (calcCheck) {
+    const moduleId = calcCheck.dataset.module;
+    const exIdx = parseInt(calcCheck.dataset.ex, 10);
+    const m = FUNDAMENTOS.modules.find((mm) => mm.id === moduleId);
+    const ex = m.exercises[exIdx];
+    const exerciseEl = calcCheck.closest(".exercise");
+    const input = exerciseEl.querySelector(".calc-input");
+    const val = parseFloat((input.value || "").replace(",", "."));
+    const correct = !isNaN(val) && Math.abs(val - ex.answer) <= ex.tolerance;
+
+    showFeedback(exerciseEl, correct, ex.explain);
+    if (correct) {
+      markExerciseSolved(moduleId, exIdx);
+      exerciseEl.classList.add("solved");
+      exerciseEl.querySelector(".ex-badge").textContent = "✓";
+      input.disabled = true;
+      calcCheck.disabled = true;
+    }
+    return;
   }
 });
 
