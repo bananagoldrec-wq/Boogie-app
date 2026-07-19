@@ -162,11 +162,14 @@ const FUNDAMENTOS = {
         "<b>Resistência (R, em ohms Ω)</b> é o quanto um material dificulta essa passagem.",
         "A <b>Lei de Ohm</b> liga as três: <code>V = I × R</code>. Sabendo duas, você calcula a terceira.",
         "Analogia útil: numa mangueira de água, tensão é a pressão da água, corrente é o quanto de água passa, e resistência é o quão estreita é a mangueira.",
+        "Pensando no que você vai montar: a bateria de 9V é a fonte de tensão de tudo — a \"pressão\" que empurra elétrons por todo o pré-amplificador, do JFET Q1 até o TL072. Cada resistor no caminho (R1, R2, R5...) segura um pouco dessa corrente, moldando como a tensão se distribui pelo circuito. Sem resistores, a corrente subiria descontrolada e queimaria os componentes — eles são o \"controle de velocidade\" do circuito.",
       ],
+      applied: "No pré-amplificador: a bateria de <b>9V</b> alimenta tudo. <b>R1 (1MΩ)</b> e <b>R2 (10kΩ)</b> são os primeiros resistores que você vai soldar — cada um limitando corrente num ponto diferente do buffer JFET. Toda vez que o guia de montagem pedir pra medir uma tensão com o multímetro, é a Lei de Ohm acontecendo dentro do circuito.",
       exercises: [
         { type: "mcq", q: "Numa mangueira de água, a tensão elétrica é parecida com o quê?", options: ["A quantidade de água que passa", "A pressão da água", "O quão estreita é a mangueira", "A cor da mangueira"], correct: 1, explain: "Tensão é a \"pressão\" que empurra os elétrons — assim como a pressão empurra a água na mangueira." },
         { type: "calc", q: "Um resistor de 1kΩ (1000Ω) está ligado a uma pilha de 9V. Qual a corrente, em miliampères (mA)?", answer: 9, tolerance: 0.5, unit: "mA", explain: "I = V/R = 9V ÷ 1000Ω = 0,009A = 9mA." },
         { type: "mcq", q: "Se você aumenta a resistência de um circuito mantendo a mesma tensão, o que acontece com a corrente?", options: ["Aumenta", "Diminui", "Não muda", "Depende da cor do fio"], correct: 1, explain: "Como I = V/R, se V é fixo e R aumenta, I diminui." },
+        { type: "calc", q: "No pré-amplificador, R2 = 10kΩ e por ele passa uma corrente de repouso de cerca de 0,3mA (0,0003A). Qual a tensão aproximada sobre R2, em volts?", answer: 3, tolerance: 0.5, unit: "V", explain: "V = I × R = 0,0003A × 10.000Ω = 3V — é bem próximo do valor que você vai medir de verdade com o multímetro nesse ponto." },
       ],
     },
     {
@@ -179,10 +182,13 @@ const FUNDAMENTOS = {
         "<b>AC (corrente alternada)</b> muda de direção periodicamente — é o que sai da tomada, e também é a forma de um sinal de áudio.",
         "Um sinal de áudio (voz, música, guitarra) é uma onda AC: sobe e desce muitas vezes por segundo — de 20 a 20.000 vezes, o que chamamos de frequência, em Hz.",
         "Nos três projetos deste app, a alimentação é DC (pilha de 9V), mas o sinal de áudio que passa por dentro é AC. É por isso que usamos capacitores entre estágios: eles deixam passar só a parte AC (o áudio) e bloqueiam a parte DC.",
+        "Pensando no que você vai montar: o sinal que sai da sua guitarra, entra no pré-amplificador e sai pro amplificador está sempre subindo e descendo, seguindo a vibração da corda — isso é AC do início ao fim do trajeto. Só a bateria de 9V é DC, constante. Cada capacitor de acoplamento no circuito (C1, C2, C4) funciona como um \"pedágio\": deixa passar a parte que está variando (seu sinal de áudio) e barra a parte constante (a tensão de repouso de cada estágio).",
       ],
+      applied: "No pré-amplificador: <b>C1 (100nF)</b> é o primeiro pedágio, logo na entrada — bloqueia qualquer DC vindo do instrumento. <b>C2</b> e <b>C4 (1–10µF)</b> repetem o mesmo papel entre o buffer e o estágio de ganho, e na saída pro próximo equipamento.",
       exercises: [
         { type: "mcq", q: "O sinal de áudio que sai de uma guitarra é...", options: ["DC constante", "AC, oscilando muitas vezes por segundo", "Só existe quando toca uma nota grave", "Sempre positivo"], correct: 1, explain: "Áudio é uma onda AC — é essa oscilação que o alto-falante converte em som." },
         { type: "mcq", q: "Por que os circuitos deste app usam capacitores entre um estágio e outro?", options: ["Para aumentar o volume", "Para bloquear a parte DC e deixar passar só o áudio (AC)", "Para guardar energia para quando a bateria acabar", "Para dar cor ao som"], correct: 1, explain: "Capacitor de acoplamento: passa o AC (áudio), bloqueia o DC de polarização de um estágio vazar pro outro." },
+        { type: "mcq", q: "No pré-amplificador, C1 fica entre o plugue de entrada e o gate do JFET Q1. Qual é a função dele?", options: ["Amplificar o sinal", "Bloquear qualquer DC vindo do instrumento e deixar passar só o áudio", "Aumentar a impedância de entrada", "Acender um LED indicador"], correct: 1, explain: "É o mesmo papel de todo capacitor de acoplamento: passa AC, bloqueia DC — só que este é especificamente o da entrada." },
       ],
     },
     {
@@ -195,10 +201,13 @@ const FUNDAMENTOS = {
         "O valor vem escrito no corpo como faixas coloridas (código de cores), porque o componente é pequeno demais pra escrever números.",
         "As primeiras faixas indicam os dígitos, a próxima é o multiplicador, e a última é a tolerância — o quanto o valor real pode variar do nominal.",
         "Você não precisa decorar o código agora. No dia a dia, quase todo mundo usa um multímetro (ou um app no celular) pra conferir o valor real antes de soldar.",
+        "Pensando no que você vai montar: o pré-amplificador sozinho já usa cinco valores diferentes de resistor (1MΩ, dois de 10kΩ com papéis distintos, e um par de 100kΩ). Na hora de separar as peças, é muito fácil confundir um resistor de 10k com um de 100k só de olho — a diferença entre as faixas é sutil. É exatamente aí que o multímetro entra: encoste as duas pontas nas pernas do resistor, no modo Ω, e o valor aparece na tela sem chance de erro.",
       ],
+      applied: "No pré-amplificador você vai separar: <b>R1 (1MΩ)</b>, <b>R2 (10kΩ)</b>, <b>R5 (10kΩ)</b> e o par <b>R3/R4 (100kΩ cada)</b> — quatro valores diferentes, cinco resistores ao todo. Vale separar e etiquetar cada grupo antes de começar a soldar.",
       exercises: [
         { type: "mcq", q: "Para que serve o código de cores num resistor?", options: ["Decoração", "Indicar o valor em ohms do resistor", "Indicar a marca do fabricante", "Indicar a temperatura máxima"], correct: 1, explain: "As faixas coloridas codificam o valor em ohms e a tolerância." },
         { type: "mcq", q: "Qual é a forma mais prática de conferir o valor real de um resistor antes de soldar?", options: ["Provar com a língua", "Multímetro no modo resistência (Ω)", "Balança de cozinha", "Olhando o tamanho do componente"], correct: 1, explain: "O multímetro no modo Ω mede o valor real — muito mais confiável do que decorar cores." },
+        { type: "mcq", q: "O pré-amplificador usa R2=10kΩ e R3/R4=100kΩ. Se você trocar os dois por engano na hora de montar, o mais provável é...", options: ["Nada muda, resistor é resistor", "O ponto de polarização do circuito fica errado e ele para de funcionar direito", "O som fica mais grave só por causa disso", "A bateria dura mais"], correct: 1, explain: "Cada resistor tem um valor pensado pro papel exato que ele cumpre — trocar valores muda a polarização e o comportamento do estágio." },
       ],
     },
     {
@@ -212,11 +221,14 @@ const FUNDAMENTOS = {
         "É por isso que ele aparece tanto nos três projetos: um capacitor de acoplamento entre estágios deixa o áudio (AC) passar, mas impede que a tensão DC de polarização de um estágio \"vaze\" pro próximo.",
         "Valor medido em Farads — na prática usamos frações bem menores: microfarads (µF), nanofarads (nF) e picofarads (pF).",
         "Capacitores eletrolíticos têm polaridade (um lado + e um − marcado no corpo) — ligar ao contrário pode danificar o componente. Os de poliéster/cerâmica geralmente não têm polaridade.",
+        "Pensando no que você vai montar: o pré-amplificador usa os dois tipos lado a lado. C1 e C5 são de poliéster (pode soldar em qualquer sentido). Já C2, C3 e C4 são eletrolíticos — têm uma faixa marcada no corpo indicando o lado negativo, e no esquema do app o sinal \"+\" mostra pra que lado o positivo deve apontar. É o mesmo cuidado que você vai ter com pilha: encaixar do jeito certo.",
       ],
+      applied: "No pré-amplificador: <b>C1 (100nF)</b> e <b>C5 (100nF)</b> são de poliéster, sem polaridade. <b>C2, C4 (1–10µF)</b> e <b>C3 (10µF)</b> são eletrolíticos — confira a marcação antes de soldar.",
       exercises: [
         { type: "mcq", q: "O que um capacitor faz com um sinal de corrente contínua (DC), depois do momento inicial de carregar?", options: ["Deixa passar livremente", "Bloqueia", "Inverte a polaridade", "Transforma em som"], correct: 1, explain: "Em regime permanente, o capacitor bloqueia o DC — só deixa passar a parte que varia (AC)." },
         { type: "mcq", q: "Por que isso é útil entre dois estágios de um circuito de áudio?", options: ["Deixa passar o áudio (AC) e bloqueia o DC de polarização de vazar pro próximo estágio", "Aumenta o volume do sinal", "Protege contra curto-circuito", "Substitui o resistor"], correct: 0, explain: "É exatamente o papel de C2 e C4 no pré-amplificador, por exemplo." },
         { type: "mcq", q: "O que pode acontecer se você ligar um capacitor eletrolítico com a polaridade invertida?", options: ["Nada, funciona igual", "Pode danificar o componente", "Fica mais barato", "Aumenta a vida útil"], correct: 1, explain: "Eletrolíticos têm um lado + e um − — ao contrário, o componente pode aquecer, estufar ou falhar." },
+        { type: "mcq", q: "No pré-amplificador, C1 e C2 têm a mesma função (acoplamento), mas só C2 tem polaridade marcada. Por quê?", options: ["C1 é de poliéster (sem polaridade) e C2 é eletrolítico (com polaridade) — são tecnologias diferentes de capacitor", "C1 é falso", "Só C2 realmente funciona", "Não há diferença nenhuma"], correct: 0, explain: "Poliéster e eletrolítico são duas famílias diferentes de capacitor — o app usa a mais adequada pra cada faixa de valor." },
       ],
     },
     {
@@ -228,10 +240,13 @@ const FUNDAMENTOS = {
         "<b>Diodo</b>: deixa a corrente passar só numa direção. Usamos isso pra proteger contra bateria ligada ao contrário (D1, presente nos três projetos) e pra \"retificar\" sinal — transformar AC em algo parecido com DC, que é a base do envelope follower do compressor.",
         "<b>LED</b>: um tipo de diodo que emite luz quando a corrente passa na direção certa.",
         "<b>Transistor</b>: um componente que pode agir como amplificador ou como interruptor controlado eletricamente. No pré-amplificador deste app usamos um JFET como buffer — ele \"copia\" o sinal de entrada na saída, mas com impedância mais baixa, sem perder informação do sinal.",
+        "Pensando no que você vai montar: o diodo D1 fica logo na entrada de energia do pré-amplificador, EQ e compressor — é o \"seguro\" contra ligar a bateria ao contrário. Mais adiante, no compressor, dois diodos 1N4148 vão formar o retificador do envelope follower, transformando o sinal de áudio (AC) numa tensão que acompanha o volume — a mesma ideia de \"deixar passar só numa direção\", aplicada de um jeito mais sofisticado.",
       ],
+      applied: "No pré-amplificador: <b>D1 (1N4001)</b> protege contra bateria invertida; <b>Q1 (2N5457)</b> é o transistor JFET do buffer de entrada. No compressor (projeto 3) você vai reencontrar diodos — dois <b>1N4148</b> no envelope follower.",
       exercises: [
         { type: "mcq", q: "O que um diodo faz?", options: ["Amplifica o sinal", "Deixa a corrente passar só numa direção", "Guarda carga elétrica", "Gira um motor"], correct: 1, explain: "Essa é a propriedade fundamental do diodo — condução em um único sentido." },
         { type: "mcq", q: "Qual é o papel do JFET (Q1) no pré-amplificador deste app?", options: ["Aumentar o volume", "Funcionar como buffer: repetir o sinal com impedância mais baixa", "Filtrar o grave", "Acender um LED"], correct: 1, explain: "O buffer não amplifica — ele adapta a impedância, evitando perda de agudos do instrumento." },
+        { type: "mcq", q: "No pré-amplificador, D1 fica em série com o fio positivo da bateria. O que ele evita?", options: ["Que o som fique baixo", "Danos ao circuito se a bateria for ligada com a polaridade trocada", "Ruído de rádio", "Que o potenciômetro quebre"], correct: 1, explain: "Se a bateria for ligada ao contrário, D1 bloqueia a corrente na direção errada e protege o resto do circuito." },
       ],
     },
     {
@@ -244,10 +259,13 @@ const FUNDAMENTOS = {
         "Sozinho, ele amplifica demais (ganho quase infinito) — por isso sempre ligamos um resistor (ou potenciômetro) da saída de volta pra entrada inversora. Isso se chama <b>realimentação negativa</b>, e é o que permite controlar o ganho de forma previsível.",
         "É o coração dos três projetos: o estágio de ganho do pré-amplificador, os estágios do equalizador e os buffers do compressor são todos construídos em torno de um op-amp (TL072/TL071).",
         "Fórmula que você vai usar direto: numa configuração não-inversora simples, <code>Ganho = 1 + Rf/Rg</code>, onde Rf é o resistor (ou pot) de realimentação e Rg é o resistor ligado à entrada inversora e ao terra.",
+        "Pensando no que você vai montar: o mesmo CI TL072 aparece nos três projetos deste app — no pré-amplificador como estágio de ganho, no equalizador como estágio de grave/agudo e como buffers de entrada/saída, e no compressor de novo como buffers. É o componente mais reaproveitado dos três — depois de entender como ele funciona uma vez, você reconhece o mesmo raciocínio nos outros dois projetos.",
       ],
+      applied: "O <b>TL072</b> aparece no pré-amplificador (estágio de ganho), no equalizador (grave/agudo e buffers) e no compressor (buffers de entrada/saída). O <b>TL071</b> (a versão de um só canal) aparece no estágio de médio do equalizador.",
       exercises: [
         { type: "mcq", q: "Por que ligamos um resistor (ou pot) da saída do op-amp de volta pra entrada inversora?", options: ["Para desligar o circuito", "Para controlar o ganho de forma previsível (realimentação negativa)", "Para aumentar o ruído", "É só estética"], correct: 1, explain: "Sem essa realimentação, o ganho \"livre\" do op-amp é alto demais e imprevisível para uso normal." },
         { type: "calc", q: "No estágio de ganho do pré-amp, Rg = 10kΩ e o potenciômetro Rf está em 40kΩ. Qual o ganho? (Ganho = 1 + Rf/Rg)", answer: 5, tolerance: 0.2, unit: "x", explain: "Ganho = 1 + 40k/10k = 1 + 4 = 5x." },
+        { type: "mcq", q: "O mesmo CI TL072 aparece nos três projetos deste app. Isso significa que...", options: ["Você aprende a usar um componente uma vez e reaproveita esse conhecimento nos três projetos", "Cada projeto usa uma versão eletricamente diferente por dentro", "É só uma coincidência de nome", "Ele só serve pro pré-amplificador"], correct: 0, explain: "É um dos motivos de começar pelo pré-amplificador: o TL072 que você aprender aqui é o mesmo dos outros dois." },
       ],
     },
     {
@@ -261,10 +279,13 @@ const FUNDAMENTOS = {
         "<b>Solda</b>: uma liga metálica que derrete com o calor do ferro e, ao esfriar, cria uma conexão elétrica sólida. Técnica básica: aqueça a junção (fio + trilha) por 1–2 segundos, encoste a solda na junção — não na ponta do ferro — deixe derreter e espalhar, retire a solda e depois o ferro.",
         "Uma solda boa é brilhante e em formato de cone. Uma solda fosca ou arredondada como bolinha costuma indicar \"solda fria\" — uma conexão ruim que pode falhar depois.",
         "Vale a pena praticar as duas coisas em componentes velhos antes de montar o pré-amplificador de verdade.",
+        "Pensando no que você vai montar: o guia de montagem do pré-amplificador pede duas medições específicas com o multímetro — uma na fonte do JFET (esperando 1/3 a 1/2 da alimentação) e outra na saída do TL072 (esperando ~4,5V, a metade da bateria). Essas não são medições genéricas de \"praticar eletrônica\" — são exatamente os dois pontos de checagem que confirmam se o seu circuito está funcionando antes de você seguir pro próximo passo.",
       ],
+      applied: "No pré-amplificador, os dois checkpoints do guia de montagem: tensão na fonte do JFET (Q1) entre 1/3 e 1/2 de 9V, e tensão na saída do TL072 perto de 4,5V sem sinal. Se alguma dessas medidas fugir muito do esperado, é sinal de parar e revisar antes de continuar.",
       exercises: [
         { type: "mcq", q: "Para medir a tensão num ponto do circuito ligado, como você usa o multímetro?", options: ["Corta o fio e liga o multímetro no meio", "Encosta as pontas em paralelo, sem cortar nada", "Só funciona com o circuito desligado", "Não dá pra medir tensão com multímetro"], correct: 1, explain: "Medição de tensão é sempre em paralelo, com o circuito ligado." },
         { type: "mcq", q: "Como é uma solda bem feita?", options: ["Fosca e arredondada como uma bolinha", "Brilhante e em formato de cone, cobrindo bem a junção", "Não importa a aparência, só o cheiro", "Deve ficar pingando"], correct: 1, explain: "Brilho e formato de cone indicam boa fusão e boa conexão elétrica." },
+        { type: "mcq", q: "No passo 2 da montagem do pré-amplificador, você mede a tensão na fonte do JFET esperando achar um valor entre 1/3 e 1/2 da alimentação. Com bateria de 9V, isso é aproximadamente...", options: ["1 a 2V", "3 a 4,5V", "7 a 8V", "Exatamente 9V"], correct: 1, explain: "1/3 de 9V ≈ 3V e 1/2 de 9V = 4,5V — essa é a faixa esperada." },
       ],
     },
     {
@@ -277,10 +298,13 @@ const FUNDAMENTOS = {
         "Convenção comum: o sinal flui da esquerda para a direita — entrada à esquerda, saída à direita. A alimentação positiva geralmente fica desenhada em cima, o terra embaixo.",
         "Cada componente tem um símbolo padrão (resistor em zigue-zague, capacitor em duas placas paralelas, op-amp em triângulo, etc.) e uma referência (R1, C2, Q1...) que aparece tanto no esquema quanto na lista de materiais — é assim que você conecta o desenho às peças na mão.",
         "Na aba \"Esquema\" de cada projeto deste app já tem essa legenda e uma explicação numerada de cada trecho do circuito.",
+        "Pensando no que você vai montar: o esquema do pré-amplificador (aba \"Esquema\" do projeto 1) tem 11 pontos numerados, do ① ao ⑪, que seguem o sinal da entrada até a saída. Depois de terminar esta aula, volte lá — você vai reconhecer cada símbolo: o zigue-zague dos resistores, as placas paralelas dos capacitores, o envelope tracejado do JFET, o triângulo do op-amp.",
       ],
+      applied: "No esquema do pré-amplificador (projeto 1, aba Esquema): resistores em zigue-zague (R1, R2, R5, R3, R4), capacitores em placas paralelas (C1, C5) ou com o sinal + (C2, C3, C4), o JFET Q1 dentro de um círculo tracejado, e o TL072 desenhado como um triângulo.",
       exercises: [
         { type: "mcq", q: "Num esquema elétrico, dois pontos com o mesmo símbolo de terra (GND) desenhados em lugares diferentes da página...", options: ["São só uma coincidência visual", "Estão eletricamente ligados entre si, mesmo longe um do outro no desenho", "Nunca devem ser ligados", "Representam polaridades opostas"], correct: 1, explain: "Todo símbolo de GND representa o mesmo nó elétrico, não importa onde apareça no desenho." },
         { type: "mcq", q: "Qual é a convenção mais comum para a direção do sinal num esquema?", options: ["De baixo para cima", "Da direita para a esquerda", "Da esquerda para a direita", "Não tem convenção"], correct: 2, explain: "Entrada à esquerda, saída à direita — como usamos em todos os esquemas deste app." },
+        { type: "mcq", q: "No esquema do pré-amplificador deste app, o círculo tracejado ao redor do Q1 representa o quê?", options: ["O invólucro do transistor JFET", "Uma bateria", "Um botão", "A caixa do pedal"], correct: 0, explain: "É a convenção usada no app pra destacar visualmente onde começa e termina o símbolo do transistor." },
       ],
     },
   ],
@@ -749,6 +773,7 @@ function renderFundamentosModule(moduleId) {
     </div>
     <div class="panel">
       ${m.content.map((p) => `<p>${p}</p>`).join("")}
+      ${m.applied ? `<div class="callout"><span class="callout-label">No que você vai montar</span><p>${m.applied}</p></div>` : ""}
       <h2 style="margin-top:26px;">Exercícios</h2>
       ${m.exercises.map((ex, i) => exerciseHTML(moduleId, ex, i, s)).join("")}
     </div>
