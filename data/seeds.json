@@ -6760,6 +6760,24 @@
         "youtube_id": null,
         "source": "MusicBrainz (selo: Sonafric)",
         "label": "Sonafric"
+      },
+      {
+        "title": "Les Ambassadeurs Du Motel",
+        "artist": "Ambassadeurs Du Motel",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Sonafric)",
+        "label": "Sonafric"
+      },
+      {
+        "title": "Les Ambassadeurs Du Motel",
+        "artist": "Les Ambassadeurs",
+        "year": 1976,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Sonafric)",
+        "label": "Sonafric"
       }
     ]
   },
