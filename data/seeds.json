@@ -1215,6 +1215,24 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "Black Coco / Chegue, Chegue, Chegue (Mais Perto)",
+        "artist": "Painel De Controle",
+        "year": 1978,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: RCA Victor)",
+        "label": "RCA Victor"
+      },
+      {
+        "title": "Chama A Turma Toda",
+        "artist": "Painel De Controle",
+        "year": 1979,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: RCA Victor)",
+        "label": "RCA Victor"
       }
     ]
   },
