@@ -183,6 +183,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .day-cell {
+  position: relative;
   background: var(--card);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -233,9 +234,20 @@ input:focus, select:focus, textarea:focus {
 }
 
 .tag.tag-radio { background: var(--cyan-dim); }
-.tag.status-confirmado { border-color: #7fdc9a; color: #7fdc9a; }
-.tag.status-pendente { border-color: #e8c766; color: #e8c766; }
-.tag.status-cancelado { border-color: var(--danger); color: var(--danger); text-decoration: line-through; }
+
+.status-dot {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--card);
+}
+
+.status-dot.status-confirmado { background: #7fdc9a; }
+.status-dot.status-pendente { background: #e8c766; }
+.status-dot.status-cancelado { background: var(--danger); }
 
 /* ── Legend ─────────────────────────────────────────────── */
 
