@@ -129,28 +129,38 @@
     cell.className = "day-cell" + (isTodayKey(key) ? " is-today" : "");
     cell.setAttribute("aria-label", `${day} — abrir escala do dia`);
 
-    const num = document.createElement("div");
+    const meta = document.createElement("div");
+    meta.className = "day-meta";
+    const num = document.createElement("span");
     num.className = "day-num";
     num.textContent = day;
-    cell.appendChild(num);
+    const wd = document.createElement("span");
+    wd.className = "day-weekday";
+    wd.textContent = weekdayNameFromKey(key).slice(0, 3);
+    meta.appendChild(num);
+    meta.appendChild(wd);
+    cell.appendChild(meta);
 
     if (entry && entry.artista) {
+      const content = document.createElement("div");
+      content.className = "day-content";
+
       const artist = document.createElement("div");
       artist.className = "day-artist";
       artist.textContent = entry.artista;
-      cell.appendChild(artist);
-
-      const tags = document.createElement("div");
-      tags.className = "day-tags";
+      content.appendChild(artist);
 
       if (entry.tipo === "RADIO") {
+        const tags = document.createElement("div");
+        tags.className = "day-tags";
         const t = document.createElement("span");
         t.className = "tag tag-radio";
         t.textContent = "Rádio";
         tags.appendChild(t);
+        content.appendChild(tags);
       }
 
-      cell.appendChild(tags);
+      cell.appendChild(content);
     }
 
     if (entry && entry.status) {
@@ -387,6 +397,156 @@
   backdrop.addEventListener("click", () => {
     closeDayPanel();
     closeTemplatesPanel();
+  });
+
+  /* ── compartilhar agenda como imagem (identidade frisson) ── */
+  function monthBookings() {
+    const total = daysInMonth(view.year, view.month);
+    const rows = [];
+    for (let day = 1; day <= total; day++) {
+      const key = dateKey(view.year, view.month, day);
+      const e = data[key];
+      if (e && e.artista) rows.push({ key, day, e });
+    }
+    return rows;
+  }
+
+  function buildShareCanvas(rows) {
+    const W = 960;
+    const padX = 56;
+    const headerH = 132;
+    const rowH = 68;
+    const footerH = 52;
+    const H = headerH + rows.length * rowH + footerH;
+    const scale = 2;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = W * scale;
+    canvas.height = H * scale;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(scale, scale);
+
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, "#180f0d");
+    bg.addColorStop(1, "#0c0807");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    const badgeR = 27;
+    const badgeCX = padX + badgeR;
+    const badgeCY = 58;
+    ctx.beginPath();
+    ctx.arc(badgeCX, badgeCY, badgeR, 0, Math.PI * 2);
+    ctx.fillStyle = "#a7e3ea";
+    ctx.fill();
+    ctx.fillStyle = "#0c0908";
+    ctx.font = "700 13px ui-rounded, 'SF Pro Rounded', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("frisson", badgeCX, badgeCY + 1);
+
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#f4ece6";
+    ctx.font = "700 25px ui-rounded, 'SF Pro Rounded', system-ui, sans-serif";
+    ctx.fillText("agenda", badgeCX + badgeR + 18, badgeCY - 9);
+    ctx.fillStyle = "#c9b6ae";
+    ctx.font = "400 14px -apple-system, system-ui, sans-serif";
+    ctx.fillText("bar & discos — Botafogo", badgeCX + badgeR + 18, badgeCY + 14);
+
+    const monthTitle = `${MONTH_NAMES[view.month - 1]} ${view.year}`;
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#a7e3ea";
+    ctx.font = "600 21px ui-rounded, 'SF Pro Rounded', system-ui, sans-serif";
+    ctx.fillText(monthTitle.charAt(0).toUpperCase() + monthTitle.slice(1), W - padX, badgeCY + 5);
+    ctx.textAlign = "left";
+
+    ctx.strokeStyle = "rgba(167,227,234,0.18)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padX, headerH - 18);
+    ctx.lineTo(W - padX, headerH - 18);
+    ctx.stroke();
+
+    let y = headerH;
+    rows.forEach(({ key, e }) => {
+      const cy = y + rowH / 2;
+
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#a7e3ea";
+      ctx.font = "700 19px ui-rounded, 'SF Pro Rounded', system-ui, sans-serif";
+      ctx.fillText(formatBrDate(key).slice(0, 5), padX, cy - 9);
+      ctx.fillStyle = "#8a746c";
+      ctx.font = "600 10px -apple-system, system-ui, sans-serif";
+      ctx.fillText(weekdayNameFromKey(key).slice(0, 3).toUpperCase(), padX, cy + 10);
+
+      const hasSub = e.estilo || e.tipo === "RADIO";
+      ctx.fillStyle = "#f4ece6";
+      ctx.font = "700 19px ui-rounded, 'SF Pro Rounded', system-ui, sans-serif";
+      ctx.fillText(e.artista, padX + 80, hasSub ? cy - 9 : cy);
+
+      if (hasSub) {
+        const sub = [e.tipo === "RADIO" ? "Rádio" : "DJ", e.estilo].filter(Boolean).join(" · ");
+        ctx.fillStyle = "#c9b6ae";
+        ctx.font = "400 13px -apple-system, system-ui, sans-serif";
+        ctx.fillText(sub, padX + 80, cy + 12);
+      }
+
+      const dotColor = e.status === "confirmado" ? "#7fdc9a" : e.status === "cancelado" ? "#e2685a" : "#e8c766";
+      ctx.beginPath();
+      ctx.arc(W - padX - 6, cy, 6, 0, Math.PI * 2);
+      ctx.fillStyle = dotColor;
+      ctx.fill();
+
+      if (y + rowH < headerH + rows.length * rowH) {
+        ctx.strokeStyle = "rgba(167,227,234,0.08)";
+        ctx.beginPath();
+        ctx.moveTo(padX, y + rowH);
+        ctx.lineTo(W - padX, y + rowH);
+        ctx.stroke();
+      }
+      y += rowH;
+    });
+
+    ctx.fillStyle = "#8a746c";
+    ctx.font = "italic 13px -apple-system, system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("gerado pela agenda frisson", W / 2, H - footerH / 2);
+
+    return canvas;
+  }
+
+  document.getElementById("share-agenda").addEventListener("click", () => {
+    const rows = monthBookings();
+    if (!rows.length) {
+      showToast("Nenhuma escala cadastrada nesse mês ainda.");
+      return;
+    }
+    const canvas = buildShareCanvas(rows);
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const fileName = `frisson-agenda-${view.year}-${pad2(view.month)}.png`;
+      const monthTitle = `${MONTH_NAMES[view.month - 1]} ${view.year}`;
+
+      if (navigator.share && navigator.canShare) {
+        const file = new File([blob], fileName, { type: "image/png" });
+        if (navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: `Agenda Frisson — ${monthTitle}` });
+            return;
+          } catch (err) {
+            if (err && err.name === "AbortError") return;
+          }
+        }
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Imagem da agenda salva.");
+    }, "image/png");
   });
 
   /* ── csv export ────────────────────────────────────────── */
