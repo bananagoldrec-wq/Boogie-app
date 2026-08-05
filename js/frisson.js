@@ -150,14 +150,14 @@
         tags.appendChild(t);
       }
 
-      if (entry.status) {
-        const s = document.createElement("span");
-        s.className = `tag status-${entry.status}`;
-        s.textContent = entry.status.charAt(0).toUpperCase() + entry.status.slice(1);
-        tags.appendChild(s);
-      }
-
       cell.appendChild(tags);
+    }
+
+    if (entry && entry.status) {
+      const dot = document.createElement("span");
+      dot.className = `status-dot status-${entry.status}`;
+      dot.title = entry.status.charAt(0).toUpperCase() + entry.status.slice(1);
+      cell.appendChild(dot);
     }
 
     cell.addEventListener("click", () => openDayPanel(key));
@@ -165,17 +165,38 @@
   }
 
   /* ── month navigation ──────────────────────────────────── */
-  document.getElementById("prev-month").addEventListener("click", () => {
+  function goToPrevMonth() {
     view.month--;
     if (view.month < 1) { view.month = 12; view.year--; }
     renderCalendar();
-  });
+  }
 
-  document.getElementById("next-month").addEventListener("click", () => {
+  function goToNextMonth() {
     view.month++;
     if (view.month > 12) { view.month = 1; view.year++; }
     renderCalendar();
-  });
+  }
+
+  document.getElementById("prev-month").addEventListener("click", goToPrevMonth);
+  document.getElementById("next-month").addEventListener("click", goToNextMonth);
+
+  /* ── swipe to change month (mobile) ─────────────────────── */
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  calGrid.addEventListener("touchstart", (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  calGrid.addEventListener("touchend", (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0) goToNextMonth();
+      else goToPrevMonth();
+    }
+  }, { passive: true });
 
   /* ── day panel ─────────────────────────────────────────── */
   const backdrop = document.getElementById("backdrop");
