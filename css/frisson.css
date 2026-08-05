@@ -154,6 +154,8 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
   justify-content: center;
   color: var(--cyan);
+  text-decoration: none;
+  flex-shrink: 0;
 }
 
 .icon-btn-round:hover { background: var(--cyan-dim); }
