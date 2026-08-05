@@ -81,7 +81,7 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 16px 20px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 20px 12px;
   border-bottom: 1px solid rgba(167, 227, 234, 0.1);
   position: sticky;
   top: 0;
@@ -412,8 +412,8 @@ input:focus, select:focus, textarea:focus {
 
 /* ── Responsive ─────────────────────────────────────────── */
 
-@media (max-width: 640px) {
-  .topbar { padding: 8px 12px; gap: 6px; row-gap: 6px; flex-wrap: nowrap; }
+@media (max-width: 760px) {
+  .topbar { padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px; gap: 6px; row-gap: 6px; flex-wrap: nowrap; }
   .brand-block { display: none; }
   .logo-badge { width: 30px; height: 30px; font-size: 0.56rem; }
   .icon-btn-round { width: 30px; height: 30px; }
