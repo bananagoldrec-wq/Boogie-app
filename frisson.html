@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon-frisson.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-frisson-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-frisson-512.png" />
-  <link rel="stylesheet" href="css/frisson.css?v=3" />
+  <link rel="stylesheet" href="css/frisson.css?v=4" />
 </head>
 <body>
 
@@ -149,7 +149,7 @@
     </div>
     <div class="panel-body">
       <div class="tpl-vars">
-        Use: <b>{artista}</b> <b>{data}</b> <b>{diaSemana}</b> <b>{evento}</b> <b>{estilo}</b> <b>{tipo}</b> <b>{bar}</b>
+        Use: <b>{artista}</b> <b>{data}</b> <b>{diaSemana}</b> <b>{evento}</b> <b>{estilo}</b> <b>{tipo}</b> <b>{bar}</b> <b>{riderLink}</b>
       </div>
 
       <div class="field tpl-field">
@@ -168,6 +168,10 @@
         <label>Agradecimento</label>
         <textarea id="tpl-agradecimento" rows="4"></textarea>
       </div>
+      <div class="field tpl-field">
+        <label>Rider técnico</label>
+        <textarea id="tpl-rider-tecnico" rows="4"></textarea>
+      </div>
 
       <div class="panel-actions">
         <button id="save-templates" class="btn btn-primary" type="button">Salvar</button>
@@ -178,6 +182,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/frisson.js?v=3"></script>
+  <script src="js/frisson.js?v=4"></script>
 </body>
 </html>

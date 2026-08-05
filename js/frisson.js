@@ -8,11 +8,14 @@
   const WEEKDAY_NAMES = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
   const MONTH_NAMES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 
+  const RIDER_URL = "https://bananagoldrec-wq.github.io/Boogie-app/frisson-informacoes-tecnicas.pdf";
+
   const DEFAULT_TEMPLATES = {
     convite: "Oi {artista}! Aqui é do Frisson 🎶 Queria te chamar pra tocar no dia {data} ({diaSemana}), set de {estilo}. Topa?",
     confirmacao: "Fechado, {artista}! Confirmando sua data no Frisson: {data} ({diaSemana}), set {tipo} ({estilo}). Chega uns 30 min antes. Qualquer coisa me chama por aqui 🙌",
     lembrete: "Oi {artista}, passando pra lembrar do seu set aqui no Frisson dia {data} ({diaSemana})! Nos vemos lá 🎧",
     agradecimento: "Foi ótimo ter você no Frisson dia {data}, {artista}! Obrigado pelo set 🙏 Já quero marcar a próxima.",
+    riderTecnico: "Oi {artista}! Segue nosso guia rápido com as informações técnicas do Frisson (equipamento, linha musical, horários e mais): {riderLink}",
   };
 
   const TEMPLATE_LABELS = {
@@ -20,6 +23,7 @@
     confirmacao: "Confirmação",
     lembrete: "Lembrete",
     agradecimento: "Agradecimento",
+    riderTecnico: "Rider técnico",
   };
 
   /* ── seed: dados reais já lançados na planilha (ago/set 2026) ── */
@@ -322,7 +326,8 @@
       .replaceAll("{evento}", entry.evento || "")
       .replaceAll("{estilo}", entry.estilo || "")
       .replaceAll("{tipo}", entry.tipo === "RADIO" ? "de rádio" : "de DJ")
-      .replaceAll("{bar}", "Frisson");
+      .replaceAll("{bar}", "Frisson")
+      .replaceAll("{riderLink}", RIDER_URL);
   }
 
   function updateWaPreview() {
@@ -362,6 +367,7 @@
     confirmacao: document.getElementById("tpl-confirmacao"),
     lembrete: document.getElementById("tpl-lembrete"),
     agradecimento: document.getElementById("tpl-agradecimento"),
+    riderTecnico: document.getElementById("tpl-rider-tecnico"),
   };
 
   function openTemplatesPanel() {
