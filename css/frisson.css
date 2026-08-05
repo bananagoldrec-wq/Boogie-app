@@ -413,11 +413,16 @@ input:focus, select:focus, textarea:focus {
 /* ── Responsive ─────────────────────────────────────────── */
 
 @media (max-width: 640px) {
-  .topbar { padding: 12px 14px; gap: 10px; }
-  .brand-sub { display: none; }
-  .cal-wrap { padding: 0 10px; margin-top: 16px; }
+  .topbar { padding: 8px 12px; gap: 6px; row-gap: 6px; flex-wrap: nowrap; }
+  .brand-block { display: none; }
+  .logo-badge { width: 30px; height: 30px; font-size: 0.56rem; }
+  .icon-btn-round { width: 30px; height: 30px; }
+  .icon-btn-round svg { width: 14px; height: 14px; }
+  .month-nav { padding: 3px 6px; gap: 6px; }
+  .month-nav button { width: 22px; height: 22px; font-size: 0.95rem; }
+  .cal-wrap { padding: 0 10px; margin-top: 10px; }
   .side-panel { width: 100vw; }
-  #month-label { min-width: 100px; font-size: 0.84rem; }
+  #month-label { min-width: 92px; font-size: 0.8rem; }
 
   /* nomes ficavam espremidos em 7 colunas — vira lista de dias, um por linha */
   .cal-weekdays { display: none; }
