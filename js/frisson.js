@@ -1,11 +1,5 @@
 /* frisson · agenda de djs — lógica do app (sincronizada via Firebase) */
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-import {
-  getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch,
-} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-
 (() => {
   "use strict";
 
@@ -18,11 +12,12 @@ import {
     appId: "1:28732138318:web:67e28575aa1040770f741f",
   };
 
-  const fbApp = initializeApp(firebaseConfig);
-  const auth = getAuth(fbApp);
-  const db = getFirestore(fbApp);
-  const bookingsCol = collection(db, "bookings");
-  const templatesDocRef = doc(db, "settings", "templates");
+  // Carregado sob demanda (import dinâmico) pra nunca travar o resto do
+  // app se o CDN do Firebase estiver bloqueado/indisponível na rede do
+  // usuário — o calendário sempre desenha, mesmo sem essas variáveis.
+  let auth, db, bookingsCol, templatesDocRef;
+  let doc, setDoc, deleteDoc, onSnapshot, writeBatch;
+  let signInAnonymously, onAuthStateChanged;
 
   const WEEKDAY_NAMES = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
   const MONTH_NAMES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
@@ -161,19 +156,47 @@ import {
     showToast("Sem conexão com a nuvem — mostrando agenda salva.");
   }
 
-  signInAnonymously(auth).catch((err) => {
-    console.error(err);
-    useOfflineFallback();
-  });
+  async function connectFirebase() {
+    try {
+      const [appMod, authMod, fsMod] = await Promise.all([
+        import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js"),
+        import("https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js"),
+        import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"),
+      ]);
 
-  setTimeout(useOfflineFallback, 6000);
+      signInAnonymously = authMod.signInAnonymously;
+      onAuthStateChanged = authMod.onAuthStateChanged;
+      doc = fsMod.doc;
+      setDoc = fsMod.setDoc;
+      deleteDoc = fsMod.deleteDoc;
+      onSnapshot = fsMod.onSnapshot;
+      writeBatch = fsMod.writeBatch;
 
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      connected = true;
-      startSync();
+      const fbApp = appMod.initializeApp(firebaseConfig);
+      auth = authMod.getAuth(fbApp);
+      db = fsMod.getFirestore(fbApp);
+      bookingsCol = fsMod.collection(db, "bookings");
+      templatesDocRef = doc(db, "settings", "templates");
+
+      signInAnonymously(auth).catch((err) => {
+        console.error(err);
+        useOfflineFallback();
+      });
+
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          connected = true;
+          startSync();
+        }
+      });
+    } catch (err) {
+      console.error("Firebase indisponível:", err);
+      useOfflineFallback();
     }
-  });
+  }
+
+  connectFirebase();
+  setTimeout(useOfflineFallback, 6000);
 
   /* ── date helpers ──────────────────────────────────────── */
   function pad2(n) { return String(n).padStart(2, "0"); }
@@ -364,6 +387,10 @@ import {
       showToast("Digite o nome do artista antes de salvar.");
       return;
     }
+    if (!bookingsCol) {
+      showToast("Sem conexão com a nuvem. Tenta de novo em instantes.");
+      return;
+    }
     try {
       await setDoc(doc(bookingsCol, activeDateKey), entry);
       showToast("Escala salva.");
@@ -375,6 +402,10 @@ import {
 
   document.getElementById("delete-day").addEventListener("click", async () => {
     if (!activeDateKey) return;
+    if (!bookingsCol) {
+      showToast("Sem conexão com a nuvem. Tenta de novo em instantes.");
+      return;
+    }
     try {
       await deleteDoc(doc(bookingsCol, activeDateKey));
       closeDayPanel();
@@ -482,6 +513,10 @@ import {
 
   document.getElementById("save-templates").addEventListener("click", async () => {
     Object.keys(tplFields).forEach((k) => (templates[k] = tplFields[k].value));
+    if (!templatesDocRef) {
+      showToast("Sem conexão com a nuvem. Tenta de novo em instantes.");
+      return;
+    }
     try {
       await setDoc(templatesDocRef, templates);
       showToast("Mensagens padrão salvas.");
@@ -493,10 +528,12 @@ import {
 
   document.getElementById("reset-templates").addEventListener("click", async () => {
     templates = { ...DEFAULT_TEMPLATES };
-    try {
-      await setDoc(templatesDocRef, templates);
-    } catch (err) {
-      console.error(err);
+    if (templatesDocRef) {
+      try {
+        await setDoc(templatesDocRef, templates);
+      } catch (err) {
+        console.error(err);
+      }
     }
     Object.keys(tplFields).forEach((k) => (tplFields[k].value = templates[k]));
     showToast("Mensagens restauradas ao padrão.");
