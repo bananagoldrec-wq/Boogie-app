@@ -82,6 +82,7 @@ import {
 
   /* ── sync (Firestore) ──────────────────────────────────── */
   let firstBookingsSnapshot = true;
+  const LEGACY_STORAGE_KEY = "frisson_agenda_data_v1";
 
   function startSync() {
     onSnapshot(bookingsCol, (snap) => {
@@ -91,7 +92,9 @@ import {
       renderCalendar();
       if (firstBookingsSnapshot) {
         firstBookingsSnapshot = false;
-        if (snap.empty) seedInitialData();
+        importLegacyLocalData(next).then((hadLegacy) => {
+          if (snap.empty && !hadLegacy) seedInitialData();
+        });
       }
     }, (err) => {
       console.error(err);
@@ -111,6 +114,40 @@ import {
     } catch (err) {
       console.error(err);
     }
+  }
+
+  /* Recupera escalas salvas neste aparelho de antes da sincronização em
+     nuvem (localStorage), sem sobrescrever nada que já esteja na nuvem. */
+  async function importLegacyLocalData(existing) {
+    let legacy;
+    try {
+      const raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (!raw) return false;
+      legacy = JSON.parse(raw);
+    } catch (err) {
+      return false;
+    }
+    if (!legacy || typeof legacy !== "object") return false;
+
+    const entries = Object.entries(legacy);
+    if (!entries.length) {
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+      return false;
+    }
+
+    const missing = entries.filter(([key]) => !existing[key]);
+    if (missing.length) {
+      const batch = writeBatch(db);
+      missing.forEach(([key, entry]) => batch.set(doc(bookingsCol, key), entry));
+      try {
+        await batch.commit();
+        showToast(`${missing.length} dia(s) da agenda antiga importado(s).`);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+    return true;
   }
 
   signInAnonymously(auth).catch((err) => {
