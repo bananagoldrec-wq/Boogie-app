@@ -48,13 +48,13 @@ import {
   /* ── seed: dados reais já lançados na planilha (ago/set 2026) ── */
   const SEED_DATA = {
     "2026-08-05": { artista: "Martha Pinel", tipo: "RADIO", estilo: "Open Format", status: "confirmado" },
-    "2026-08-06": { artista: "Rafael Capetini", tipo: "DJ", estilo: "Disco/House/Funk", status: "confirmado" },
-    "2026-08-07": { artista: "Facchineti", evento: "After Doce Mara", tipo: "DJ", estilo: "Disco/House/Funk", status: "confirmado" },
-    "2026-08-08": { artista: "Mangodjs", evento: "After Doce Mara", tipo: "DJ", estilo: "Disco/House/Funk", status: "confirmado" },
+    "2026-08-06": { artista: "Rafael Capetini", tipo: "DJ", estilo: "Disco/House/Funk/BR", status: "confirmado" },
+    "2026-08-07": { artista: "Facchineti", evento: "After Doce Mara", tipo: "DJ", estilo: "Disco/House/Funk/BR", status: "confirmado" },
+    "2026-08-08": { artista: "Mangodjs", evento: "After Doce Mara", tipo: "DJ", estilo: "Disco/House/Funk/BR", status: "confirmado" },
     "2026-08-12": { artista: "Frisson", tipo: "RADIO", estilo: "Disco/House", status: "confirmado" },
     "2026-08-13": { artista: "Gigios", tipo: "DJ", estilo: "Disco/House", status: "confirmado" },
     "2026-08-14": { artista: "Chance", tipo: "DJ", estilo: "Hip-Hop", status: "confirmado" },
-    "2026-08-15": { artista: "Man from Rio", tipo: "DJ", estilo: "Disco/House/Funk", status: "confirmado" },
+    "2026-08-15": { artista: "Man from Rio", tipo: "DJ", estilo: "Disco/House/Funk/BR", status: "confirmado" },
     "2026-08-19": { artista: "Enrico Sarneri", tipo: "RADIO", estilo: "Música Br", status: "confirmado" },
     "2026-08-20": { artista: "So Lyma", tipo: "DJ", estilo: "Disco/House", status: "confirmado" },
     "2026-08-21": { artista: "Nepal", tipo: "DJ", estilo: "Open Format", status: "confirmado" },
@@ -62,14 +62,14 @@ import {
     "2026-08-26": { artista: "Frisson", tipo: "RADIO", estilo: "Open Format", status: "confirmado" },
     "2026-08-27": { artista: "Marecia", tipo: "DJ", estilo: "Disco/House", status: "confirmado" },
     "2026-08-28": { artista: "Marcelinho da Lua", tipo: "DJ", estilo: "Disco/House", status: "confirmado" },
-    "2026-08-29": { artista: "Pluma Bea", tipo: "DJ", estilo: "Disco/House/Trip Hop", status: "confirmado" },
+    "2026-08-29": { artista: "Pluma Bea", tipo: "DJ", estilo: "Disco/House/Trip Hop/Groove", status: "confirmado" },
     "2026-09-03": { artista: "Thales", tipo: "DJ", estilo: "", status: "confirmado" },
     "2026-09-04": { artista: "Lets Gabz", tipo: "DJ", estilo: "", status: "confirmado" },
     "2026-09-10": { artista: "Thales", tipo: "DJ", estilo: "", status: "confirmado" },
     "2026-09-11": { artista: "David Talipba", tipo: "DJ", estilo: "", status: "confirmado" },
     "2026-09-17": { artista: "Yas", tipo: "DJ", estilo: "", status: "confirmado" },
     "2026-09-18": { artista: "Leo Janeiro", tipo: "DJ", estilo: "", status: "confirmado" },
-    "2026-09-24": { artista: "Lets Gabz", tipo: "DJ", estilo: "", status: "confirmado" },
+    "2026-09-24": { artista: "Lets Gabs", tipo: "DJ", estilo: "", status: "confirmado" },
   };
 
   /* ── state ─────────────────────────────────────────────── */
@@ -150,13 +150,29 @@ import {
     return true;
   }
 
+  /* Se a nuvem falhar ou demorar, mostra a agenda conhecida localmente em
+     vez de deixar a tela em branco. Edições nesse modo não sincronizam. */
+  let connected = false;
+
+  function useOfflineFallback() {
+    if (connected || Object.keys(data).length) return;
+    data = { ...SEED_DATA };
+    renderCalendar();
+    showToast("Sem conexão com a nuvem — mostrando agenda salva.");
+  }
+
   signInAnonymously(auth).catch((err) => {
     console.error(err);
-    showToast("Erro ao conectar. Recarregue a página.");
+    useOfflineFallback();
   });
 
+  setTimeout(useOfflineFallback, 6000);
+
   onAuthStateChanged(auth, (user) => {
-    if (user) startSync();
+    if (user) {
+      connected = true;
+      startSync();
+    }
   });
 
   /* ── date helpers ──────────────────────────────────────── */
