@@ -1,10 +1,29 @@
-/* frisson · agenda de djs — lógica do app (sem backend, localStorage) */
+/* frisson · agenda de djs — lógica do app (sincronizada via Firebase) */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch,
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 (() => {
   "use strict";
 
-  const STORAGE_KEY = "frisson_agenda_data_v1";
-  const TEMPLATES_KEY = "frisson_agenda_templates_v1";
+  const firebaseConfig = {
+    apiKey: "AIzaSyBq_x9Mfyv0aT-wblKcbWScUGn1htCg_3g",
+    authDomain: "frisson-agenda.firebaseapp.com",
+    projectId: "frisson-agenda",
+    storageBucket: "frisson-agenda.firebasestorage.app",
+    messagingSenderId: "28732138318",
+    appId: "1:28732138318:web:67e28575aa1040770f741f",
+  };
+
+  const fbApp = initializeApp(firebaseConfig);
+  const auth = getAuth(fbApp);
+  const db = getFirestore(fbApp);
+  const bookingsCol = collection(db, "bookings");
+  const templatesDocRef = doc(db, "settings", "templates");
+
   const WEEKDAY_NAMES = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
   const MONTH_NAMES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 
@@ -56,36 +75,52 @@
   /* ── state ─────────────────────────────────────────────── */
   const today = new Date();
   let view = { year: today.getFullYear(), month: today.getMonth() + 1 }; // month 1-12
-  let data = loadData();
-  let templates = loadTemplates();
+  let data = {};
+  let templates = { ...DEFAULT_TEMPLATES };
   let activeDateKey = null;
   let activeTemplateKey = "convite";
 
-  /* ── storage ───────────────────────────────────────────── */
-  function loadData() {
+  /* ── sync (Firestore) ──────────────────────────────────── */
+  let firstBookingsSnapshot = true;
+
+  function startSync() {
+    onSnapshot(bookingsCol, (snap) => {
+      const next = {};
+      snap.forEach((d) => { next[d.id] = d.data(); });
+      data = next;
+      renderCalendar();
+      if (firstBookingsSnapshot) {
+        firstBookingsSnapshot = false;
+        if (snap.empty) seedInitialData();
+      }
+    }, (err) => {
+      console.error(err);
+      showToast("Erro ao sincronizar. Verifique sua conexão.");
+    });
+
+    onSnapshot(templatesDocRef, (snap) => {
+      templates = snap.exists() ? { ...DEFAULT_TEMPLATES, ...snap.data() } : { ...DEFAULT_TEMPLATES };
+    }, (err) => console.error(err));
+  }
+
+  async function seedInitialData() {
+    const batch = writeBatch(db);
+    Object.entries(SEED_DATA).forEach(([key, entry]) => batch.set(doc(bookingsCol, key), entry));
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_DATA));
-    return { ...SEED_DATA };
+      await batch.commit();
+    } catch (err) {
+      console.error(err);
+    }
   }
 
-  function saveData() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }
+  signInAnonymously(auth).catch((err) => {
+    console.error(err);
+    showToast("Erro ao conectar. Recarregue a página.");
+  });
 
-  function loadTemplates() {
-    try {
-      const raw = localStorage.getItem(TEMPLATES_KEY);
-      if (raw) return { ...DEFAULT_TEMPLATES, ...JSON.parse(raw) };
-    } catch (e) {}
-    return { ...DEFAULT_TEMPLATES };
-  }
-
-  function saveTemplates() {
-    localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
-  }
+  onAuthStateChanged(auth, (user) => {
+    if (user) startSync();
+  });
 
   /* ── date helpers ──────────────────────────────────────── */
   function pad2(n) { return String(n).padStart(2, "0"); }
@@ -269,27 +304,32 @@
     };
   }
 
-  document.getElementById("save-day").addEventListener("click", () => {
+  document.getElementById("save-day").addEventListener("click", async () => {
     if (!activeDateKey) return;
     const entry = readDayForm();
     if (!entry.artista) {
       showToast("Digite o nome do artista antes de salvar.");
       return;
     }
-    data[activeDateKey] = entry;
-    saveData();
-    renderCalendar();
-    updateWaPreview();
-    showToast("Escala salva.");
+    try {
+      await setDoc(doc(bookingsCol, activeDateKey), entry);
+      showToast("Escala salva.");
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra salvar. Tenta de novo.");
+    }
   });
 
-  document.getElementById("delete-day").addEventListener("click", () => {
+  document.getElementById("delete-day").addEventListener("click", async () => {
     if (!activeDateKey) return;
-    delete data[activeDateKey];
-    saveData();
-    renderCalendar();
-    closeDayPanel();
-    showToast("Dia limpo.");
+    try {
+      await deleteDoc(doc(bookingsCol, activeDateKey));
+      closeDayPanel();
+      showToast("Dia limpo.");
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra limpar. Tenta de novo.");
+    }
   });
 
   document.querySelectorAll("[data-close-panel]").forEach((btn) =>
@@ -387,15 +427,24 @@
     btn.addEventListener("click", closeTemplatesPanel)
   );
 
-  document.getElementById("save-templates").addEventListener("click", () => {
+  document.getElementById("save-templates").addEventListener("click", async () => {
     Object.keys(tplFields).forEach((k) => (templates[k] = tplFields[k].value));
-    saveTemplates();
-    showToast("Mensagens padrão salvas.");
+    try {
+      await setDoc(templatesDocRef, templates);
+      showToast("Mensagens padrão salvas.");
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra salvar. Tenta de novo.");
+    }
   });
 
-  document.getElementById("reset-templates").addEventListener("click", () => {
+  document.getElementById("reset-templates").addEventListener("click", async () => {
     templates = { ...DEFAULT_TEMPLATES };
-    saveTemplates();
+    try {
+      await setDoc(templatesDocRef, templates);
+    } catch (err) {
+      console.error(err);
+    }
     Object.keys(tplFields).forEach((k) => (tplFields[k].value = templates[k]));
     showToast("Mensagens restauradas ao padrão.");
   });
