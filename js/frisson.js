@@ -86,7 +86,7 @@
       snap.forEach((d) => { next[d.id] = d.data(); });
       data = next;
       renderCalendar();
-      renderArtistDatalist();
+      refreshArtistNames();
       if (firstBookingsSnapshot) {
         firstBookingsSnapshot = false;
         importLegacyLocalData(next).then((hadLegacy) => {
@@ -106,7 +106,7 @@
       const next = {};
       snap.forEach((d) => { next[d.id] = d.data(); });
       artists = next;
-      renderArtistDatalist();
+      refreshArtistNames();
     }, (err) => console.error(err));
   }
 
@@ -162,23 +162,19 @@
     if (connected || Object.keys(data).length) return;
     data = { ...SEED_DATA };
     renderCalendar();
-    renderArtistDatalist();
+    refreshArtistNames();
     showToast("Sem conexão com a nuvem — mostrando agenda salva.");
   }
 
   /* Lista de nomes já usados (diretório de artistas + escalas), pro
-     autocompletar do campo Artista. */
-  function renderArtistDatalist() {
+     autocompletar do campo Artista. datalist nativo não é confiável no
+     Safari do iPhone — a sugestão é desenhada à mão em vez disso. */
+  let artistNamesSorted = [];
+
+  function refreshArtistNames() {
     const names = new Set(Object.keys(artists));
     Object.values(data).forEach((e) => { if (e && e.artista) names.add(e.artista); });
-    const list = document.getElementById("artist-names");
-    if (!list) return;
-    list.innerHTML = "";
-    [...names].sort((a, b) => a.localeCompare(b, "pt-BR")).forEach((name) => {
-      const opt = document.createElement("option");
-      opt.value = name;
-      list.appendChild(opt);
-    });
+    artistNamesSorted = [...names].sort((a, b) => a.localeCompare(b, "pt-BR"));
   }
 
   async function connectFirebase() {
@@ -667,15 +663,55 @@
 
   // Ao escolher/confirmar um artista já conhecido, preenche contato e
   // dados bancários salvos dele — evita redigitar a cada nova data.
-  fArtista.addEventListener("change", () => {
-    const rec = artists[fArtista.value.trim()];
+  function applyArtistMatch(name) {
+    const rec = artists[name];
     if (rec) {
       if (!fTelefone.value && rec.telefone) fTelefone.value = rec.telefone;
       if (!fEmail.value && rec.email) fEmail.value = rec.email;
     }
-    populateBankFields(fArtista.value.trim());
+    populateBankFields(name);
     updateWaPreview();
-  });
+  }
+
+  fArtista.addEventListener("change", () => applyArtistMatch(fArtista.value.trim()));
+
+  /* Sugestões de nome desenhadas à mão (datalist nativo não aparece de
+     forma confiável no Safari do iPhone). */
+  const artistSuggestions = document.getElementById("artist-suggestions");
+
+  function showArtistSuggestions() {
+    const q = fArtista.value.trim().toLowerCase();
+    const matches = (q
+      ? artistNamesSorted.filter((n) => n.toLowerCase().includes(q) && n.toLowerCase() !== q)
+      : artistNamesSorted
+    ).slice(0, 8);
+    if (!matches.length) {
+      hideArtistSuggestions();
+      return;
+    }
+    artistSuggestions.innerHTML = "";
+    matches.forEach((name) => {
+      const item = document.createElement("div");
+      item.className = "suggestion-item";
+      item.textContent = name;
+      item.addEventListener("mousedown", (e) => e.preventDefault()); // não deixa o input perder foco antes do click
+      item.addEventListener("click", () => {
+        fArtista.value = name;
+        applyArtistMatch(name);
+        hideArtistSuggestions();
+      });
+      artistSuggestions.appendChild(item);
+    });
+    artistSuggestions.hidden = false;
+  }
+
+  function hideArtistSuggestions() {
+    artistSuggestions.hidden = true;
+  }
+
+  fArtista.addEventListener("focus", showArtistSuggestions);
+  fArtista.addEventListener("input", showArtistSuggestions);
+  fArtista.addEventListener("blur", () => setTimeout(hideArtistSuggestions, 150));
 
   function normalizePhone(raw) {
     let digits = (raw || "").replace(/\D/g, "");
