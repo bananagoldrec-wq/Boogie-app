@@ -15,7 +15,7 @@
   // Carregado sob demanda (import dinâmico) pra nunca travar o resto do
   // app se o CDN do Firebase estiver bloqueado/indisponível na rede do
   // usuário — o calendário sempre desenha, mesmo sem essas variáveis.
-  let auth, db, bookingsCol, templatesDocRef;
+  let auth, db, bookingsCol, templatesDocRef, artistsCol;
   let doc, setDoc, deleteDoc, onSnapshot, writeBatch;
   let signInAnonymously, onAuthStateChanged;
 
@@ -72,6 +72,7 @@
   let view = { year: today.getFullYear(), month: today.getMonth() + 1 }; // month 1-12
   let data = {};
   let templates = { ...DEFAULT_TEMPLATES };
+  let artists = {};
   let activeDateKey = null;
   let activeTemplateKey = "convite";
 
@@ -85,6 +86,7 @@
       snap.forEach((d) => { next[d.id] = d.data(); });
       data = next;
       renderCalendar();
+      renderArtistDatalist();
       if (firstBookingsSnapshot) {
         firstBookingsSnapshot = false;
         importLegacyLocalData(next).then((hadLegacy) => {
@@ -98,6 +100,13 @@
 
     onSnapshot(templatesDocRef, (snap) => {
       templates = snap.exists() ? { ...DEFAULT_TEMPLATES, ...snap.data() } : { ...DEFAULT_TEMPLATES };
+    }, (err) => console.error(err));
+
+    onSnapshot(artistsCol, (snap) => {
+      const next = {};
+      snap.forEach((d) => { next[d.id] = d.data(); });
+      artists = next;
+      renderArtistDatalist();
     }, (err) => console.error(err));
   }
 
@@ -153,7 +162,23 @@
     if (connected || Object.keys(data).length) return;
     data = { ...SEED_DATA };
     renderCalendar();
+    renderArtistDatalist();
     showToast("Sem conexão com a nuvem — mostrando agenda salva.");
+  }
+
+  /* Lista de nomes já usados (diretório de artistas + escalas), pro
+     autocompletar do campo Artista. */
+  function renderArtistDatalist() {
+    const names = new Set(Object.keys(artists));
+    Object.values(data).forEach((e) => { if (e && e.artista) names.add(e.artista); });
+    const list = document.getElementById("artist-names");
+    if (!list) return;
+    list.innerHTML = "";
+    [...names].sort((a, b) => a.localeCompare(b, "pt-BR")).forEach((name) => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      list.appendChild(opt);
+    });
   }
 
   async function connectFirebase() {
@@ -177,6 +202,7 @@
       db = fsMod.getFirestore(fbApp);
       bookingsCol = fsMod.collection(db, "bookings");
       templatesDocRef = doc(db, "settings", "templates");
+      artistsCol = fsMod.collection(db, "artists");
 
       signInAnonymously(auth).catch((err) => {
         console.error(err);
@@ -215,6 +241,34 @@
     return WEEKDAY_NAMES[new Date(y, m - 1, d).getDay()];
   }
 
+  /* ── arrastar para mover/trocar a data de uma escala ────── */
+  async function moveBooking(sourceKey, targetKey) {
+    if (!sourceKey || !targetKey || sourceKey === targetKey) return;
+    if (!bookingsCol) {
+      showToast("Sem conexão com a nuvem. Tenta de novo em instantes.");
+      return;
+    }
+    const sourceEntry = data[sourceKey];
+    if (!sourceEntry) return;
+    const targetEntry = data[targetKey];
+    try {
+      if (targetEntry) {
+        await Promise.all([
+          setDoc(doc(bookingsCol, targetKey), sourceEntry),
+          setDoc(doc(bookingsCol, sourceKey), targetEntry),
+        ]);
+        showToast("Datas trocadas.");
+      } else {
+        await setDoc(doc(bookingsCol, targetKey), sourceEntry);
+        await deleteDoc(doc(bookingsCol, sourceKey));
+        showToast("Escala movida.");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra mover. Tenta de novo.");
+    }
+  }
+
   /* ── render: calendar ──────────────────────────────────── */
   const calGrid = document.getElementById("cal-grid");
   const monthLabel = document.getElementById("month-label");
@@ -243,6 +297,7 @@
     cell.type = "button";
     cell.className = "day-cell" + (isTodayKey(key) ? " is-today" : "");
     cell.setAttribute("aria-label", `${day} — abrir escala do dia`);
+    cell.dataset.dateKey = key;
 
     const meta = document.createElement("div");
     meta.className = "day-meta";
@@ -285,8 +340,131 @@
       cell.appendChild(dot);
     }
 
-    cell.addEventListener("click", () => openDayPanel(key));
+    cell.addEventListener("click", () => {
+      if (suppressNextClick) { suppressNextClick = false; return; }
+      openDayPanel(key);
+    });
+
+    attachDropTarget(cell, key);
+    if (entry && entry.artista) attachDragSource(cell, key);
+
     return cell;
+  }
+
+  /* Trocar de dia: segurar e arrastar um dia com escala pra cima de outro
+     — solta em um dia vazio pra mover, ou em um dia ocupado pra trocar
+     as duas escalas de lugar. Mouse usa a API nativa de drag; toque usa
+     um "long press" próprio, já que iOS/Android não suportam a API nativa. */
+  let suppressNextClick = false;
+  let touchDrag = null;
+
+  function attachDragSource(cell, key) {
+    cell.draggable = true;
+    cell.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("text/plain", key);
+      e.dataTransfer.effectAllowed = "move";
+      cell.classList.add("drag-source");
+    });
+    cell.addEventListener("dragend", () => cell.classList.remove("drag-source"));
+
+    cell.addEventListener("touchstart", (e) => {
+      if (e.touches.length !== 1) return;
+      const startX = e.touches[0].clientX;
+      const startY = e.touches[0].clientY;
+      let longPressFired = false;
+
+      const timer = setTimeout(() => {
+        longPressFired = true;
+        startTouchDrag(key, cell, startX, startY);
+      }, 380);
+
+      const onMove = (ev) => {
+        if (touchDrag) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          updateTouchDrag(ev.touches[0].clientX, ev.touches[0].clientY);
+          return;
+        }
+        const dx = ev.touches[0].clientX - startX;
+        const dy = ev.touches[0].clientY - startY;
+        if (Math.hypot(dx, dy) > 12) clearTimeout(timer);
+      };
+      const onEnd = (ev) => {
+        clearTimeout(timer);
+        cell.removeEventListener("touchmove", onMove);
+        cell.removeEventListener("touchend", onEnd);
+        cell.removeEventListener("touchcancel", onEnd);
+        if (longPressFired) {
+          ev.stopPropagation();
+          suppressNextClick = true;
+          endTouchDrag();
+        }
+      };
+      cell.addEventListener("touchmove", onMove, { passive: false });
+      cell.addEventListener("touchend", onEnd);
+      cell.addEventListener("touchcancel", onEnd);
+    }, { passive: true });
+  }
+
+  function attachDropTarget(cell, key) {
+    cell.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      cell.classList.add("drag-over");
+    });
+    cell.addEventListener("dragleave", () => cell.classList.remove("drag-over"));
+    cell.addEventListener("drop", (e) => {
+      e.preventDefault();
+      cell.classList.remove("drag-over");
+      const sourceKey = e.dataTransfer.getData("text/plain");
+      if (sourceKey) moveBooking(sourceKey, key);
+    });
+  }
+
+  function startTouchDrag(key, cell, x, y) {
+    const ghost = cell.cloneNode(true);
+    ghost.className = "day-cell drag-ghost";
+    ghost.style.width = `${cell.offsetWidth}px`;
+    ghost.style.height = `${cell.offsetHeight}px`;
+    document.body.appendChild(ghost);
+    positionGhost(ghost, x, y);
+    cell.classList.add("drag-source");
+    touchDrag = { key, ghost, sourceCell: cell, currentTarget: null };
+  }
+
+  function positionGhost(ghost, x, y) {
+    ghost.style.left = `${x - ghost.offsetWidth / 2}px`;
+    ghost.style.top = `${y - ghost.offsetHeight / 2}px`;
+  }
+
+  function updateTouchDrag(x, y) {
+    if (!touchDrag) return;
+    positionGhost(touchDrag.ghost, x, y);
+    touchDrag.ghost.hidden = true;
+    const el = document.elementFromPoint(x, y);
+    touchDrag.ghost.hidden = false;
+    const targetCell = el && el.closest ? el.closest(".day-cell:not(.is-blank)") : null;
+    if (touchDrag.currentTarget && touchDrag.currentTarget !== targetCell) {
+      touchDrag.currentTarget.classList.remove("drag-over");
+    }
+    if (targetCell && targetCell !== touchDrag.sourceCell) {
+      targetCell.classList.add("drag-over");
+      touchDrag.currentTarget = targetCell;
+    } else {
+      touchDrag.currentTarget = null;
+    }
+  }
+
+  function endTouchDrag() {
+    if (!touchDrag) return;
+    const { key, ghost, sourceCell, currentTarget } = touchDrag;
+    ghost.remove();
+    sourceCell.classList.remove("drag-source");
+    if (currentTarget) {
+      currentTarget.classList.remove("drag-over");
+      const targetKey = currentTarget.dataset.dateKey;
+      if (targetKey) moveBooking(key, targetKey);
+    }
+    touchDrag = null;
   }
 
   /* ── month navigation ──────────────────────────────────── */
@@ -338,6 +516,19 @@
   const fEmail = document.getElementById("f-email");
   const fObs = document.getElementById("f-obs");
 
+  const fBankTitular = document.getElementById("f-bank-titular");
+  const fBankDoc = document.getElementById("f-bank-doc");
+  const fBankPix = document.getElementById("f-bank-pix");
+  const fBankOutros = document.getElementById("f-bank-outros");
+
+  function populateBankFields(artistName) {
+    const rec = artists[artistName] || {};
+    fBankTitular.value = rec.titular || "";
+    fBankDoc.value = rec.documento || "";
+    fBankPix.value = rec.pix || "";
+    fBankOutros.value = rec.outros || "";
+  }
+
   function openDayPanel(key) {
     activeDateKey = key;
     const entry = data[key] || {};
@@ -351,6 +542,7 @@
     fTelefone.value = entry.telefone || "";
     fEmail.value = entry.email || "";
     fObs.value = entry.obs || "";
+    populateBankFields(entry.artista || "");
 
     activeTemplateKey = "convite";
     renderWaTemplateChips();
@@ -394,6 +586,12 @@
     try {
       await setDoc(doc(bookingsCol, activeDateKey), entry);
       showToast("Escala salva.");
+      const contactPatch = {};
+      if (entry.telefone) contactPatch.telefone = entry.telefone;
+      if (entry.email) contactPatch.email = entry.email;
+      if (Object.keys(contactPatch).length && artistsCol) {
+        setDoc(doc(artistsCol, entry.artista), contactPatch, { merge: true }).catch((err) => console.error(err));
+      }
     } catch (err) {
       console.error(err);
       showToast("Não deu pra salvar. Tenta de novo.");
@@ -466,6 +664,18 @@
   );
   fTipo.addEventListener("change", updateWaPreview);
   fTelefone.addEventListener("input", updateWaPreview);
+
+  // Ao escolher/confirmar um artista já conhecido, preenche contato e
+  // dados bancários salvos dele — evita redigitar a cada nova data.
+  fArtista.addEventListener("change", () => {
+    const rec = artists[fArtista.value.trim()];
+    if (rec) {
+      if (!fTelefone.value && rec.telefone) fTelefone.value = rec.telefone;
+      if (!fEmail.value && rec.email) fEmail.value = rec.email;
+    }
+    populateBankFields(fArtista.value.trim());
+    updateWaPreview();
+  });
 
   function normalizePhone(raw) {
     let digits = (raw || "").replace(/\D/g, "");
@@ -542,6 +752,56 @@
   backdrop.addEventListener("click", () => {
     closeDayPanel();
     closeTemplatesPanel();
+  });
+
+  /* ── dados bancários do artista (por nome, reaproveitado entre datas) ── */
+  document.getElementById("save-bank").addEventListener("click", async () => {
+    const name = fArtista.value.trim();
+    if (!name) {
+      showToast("Digite o nome do artista antes de salvar.");
+      return;
+    }
+    if (!artistsCol) {
+      showToast("Sem conexão com a nuvem. Tenta de novo em instantes.");
+      return;
+    }
+    const patch = {
+      titular: fBankTitular.value.trim(),
+      documento: fBankDoc.value.trim(),
+      pix: fBankPix.value.trim(),
+      outros: fBankOutros.value.trim(),
+    };
+    try {
+      await setDoc(doc(artistsCol, name), patch, { merge: true });
+      showToast("Dados bancários salvos.");
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra salvar. Tenta de novo.");
+    }
+  });
+
+  document.getElementById("copy-bank").addEventListener("click", async () => {
+    const name = fArtista.value.trim();
+    if (!name) {
+      showToast("Digite o nome do artista antes de copiar.");
+      return;
+    }
+    const lines = [`Artista: ${name}`];
+    if (fBankTitular.value.trim()) lines.push(`Titular: ${fBankTitular.value.trim()}`);
+    if (fBankDoc.value.trim()) lines.push(`CPF/CNPJ: ${fBankDoc.value.trim()}`);
+    if (fBankPix.value.trim()) lines.push(`PIX: ${fBankPix.value.trim()}`);
+    if (fBankOutros.value.trim()) lines.push(`Banco: ${fBankOutros.value.trim()}`);
+    if (lines.length === 1) {
+      showToast("Nenhum dado bancário preenchido ainda.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      showToast("Dados copiados — cole pra enviar aos sócios.");
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra copiar. Copia manualmente.");
+    }
   });
 
   /* ── compartilhar agenda como imagem (identidade frisson) ── */

@@ -15,7 +15,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon-frisson.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-frisson-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-frisson-512.png" />
-  <link rel="stylesheet" href="css/frisson.css?v=8" />
+  <link rel="stylesheet" href="css/frisson.css?v=9" />
 </head>
 <body>
 
@@ -60,7 +60,7 @@
     <span><i style="background:#7fdc9a"></i>Confirmado</span>
     <span><i style="background:#e8c766"></i>Pendente</span>
     <span><i style="background:#e2685a"></i>Cancelado</span>
-    <span class="tagline">clique num dia pra editar a escala ✎</span>
+    <span class="tagline">clique pra editar · segure e arraste pra trocar de data ✎</span>
   </div>
 
   <!-- Backdrop -->
@@ -78,7 +78,8 @@
     <div class="panel-body">
       <div class="field">
         <label for="f-artista">Artista</label>
-        <input id="f-artista" type="text" placeholder="Nome do DJ ou artista" autocomplete="off" />
+        <input id="f-artista" type="text" placeholder="Nome do DJ ou artista" autocomplete="off" list="artist-names" />
+        <datalist id="artist-names"></datalist>
       </div>
 
       <div class="field-row">
@@ -144,6 +145,36 @@
         </div>
         <p class="wa-hint">A mensagem abre pronta no WhatsApp — você confere e clica em enviar por lá.</p>
       </div>
+
+      <div class="divider"></div>
+
+      <div class="bank-section">
+        <h3>Dados bancários do artista</h3>
+        <p class="wa-hint">Preenchido uma vez por artista — vale pra todas as datas dele.</p>
+        <div class="field">
+          <label for="f-bank-titular">Titular</label>
+          <input id="f-bank-titular" type="text" placeholder="Nome completo" autocomplete="off" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="f-bank-doc">CPF/CNPJ</label>
+            <input id="f-bank-doc" type="text" placeholder="opcional" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="f-bank-pix">Chave PIX</label>
+            <input id="f-bank-pix" type="text" placeholder="telefone, e-mail, CPF..." autocomplete="off" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-bank-outros">Banco / agência / conta (opcional)</label>
+          <input id="f-bank-outros" type="text" placeholder="Ex.: Nubank, ag 0001, cc 12345-6" autocomplete="off" />
+        </div>
+        <div class="panel-actions">
+          <button id="save-bank" class="btn btn-primary" type="button">Salvar dados bancários</button>
+          <button id="copy-bank" class="btn btn-ghost" type="button">Copiar</button>
+        </div>
+        <p class="wa-hint">Copia os dados pra colar numa conversa e enviar aos sócios.</p>
+      </div>
     </div>
   </aside>
 
@@ -188,6 +219,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/frisson.js?v=9"></script>
+  <script type="module" src="js/frisson.js?v=10"></script>
 </body>
 </html>
