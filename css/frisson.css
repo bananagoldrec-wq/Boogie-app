@@ -331,7 +331,32 @@ input:focus, select:focus, textarea:focus {
   gap: 14px;
 }
 
-.field { display: flex; flex-direction: column; gap: 6px; }
+.field { display: flex; flex-direction: column; gap: 6px; position: relative; }
+
+.suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: var(--bg-elev);
+  border: 1px solid var(--cyan-line);
+  border-radius: var(--radius-sm);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 60;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.suggestion-item {
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.suggestion-item:hover { background: var(--cyan-dim); }
+.suggestion-item:not(:last-child) { border-bottom: 1px solid rgba(167, 227, 234, 0.08); }
 .field label { font-size: 0.76rem; color: var(--text-dim); }
 .field-row { display: flex; gap: 10px; }
 .field-row .field { flex: 1; }

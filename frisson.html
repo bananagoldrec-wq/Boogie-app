@@ -15,7 +15,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon-frisson.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-frisson-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-frisson-512.png" />
-  <link rel="stylesheet" href="css/frisson.css?v=9" />
+  <link rel="stylesheet" href="css/frisson.css?v=10" />
 </head>
 <body>
 
@@ -78,8 +78,8 @@
     <div class="panel-body">
       <div class="field">
         <label for="f-artista">Artista</label>
-        <input id="f-artista" type="text" placeholder="Nome do DJ ou artista" autocomplete="off" list="artist-names" />
-        <datalist id="artist-names"></datalist>
+        <input id="f-artista" type="text" placeholder="Nome do DJ ou artista" autocomplete="off" />
+        <div id="artist-suggestions" class="suggestions" hidden></div>
       </div>
 
       <div class="field-row">
@@ -219,6 +219,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/frisson.js?v=10"></script>
+  <script type="module" src="js/frisson.js?v=11"></script>
 </body>
 </html>
