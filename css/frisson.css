@@ -257,6 +257,24 @@ input:focus, select:focus, textarea:focus {
 .status-dot.status-pendente { background: #e8c766; }
 .status-dot.status-cancelado { background: var(--danger); }
 
+/* ── Arrastar para mover/trocar de data ─────────────────── */
+
+.day-cell.drag-source { opacity: 0.35; }
+
+.day-cell.drag-over {
+  border-color: var(--cyan);
+  background: var(--cyan-dim);
+}
+
+.day-cell.drag-ghost {
+  position: fixed;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0.94;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+  border-color: var(--cyan);
+}
+
 /* ── Legend ─────────────────────────────────────────────── */
 
 .legend {
