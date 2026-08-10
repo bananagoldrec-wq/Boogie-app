@@ -15,7 +15,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon-frisson.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-frisson-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-frisson-512.png" />
-  <link rel="stylesheet" href="css/frisson.css?v=10" />
+  <link rel="stylesheet" href="css/frisson.css?v=11" />
 </head>
 <body>
 
@@ -45,6 +45,9 @@
     </button>
     <button id="export-csv" class="icon-btn-round" type="button" aria-label="Exportar mês em CSV" title="Exportar mês (CSV)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0-4-4m4 4 4-4M4 19h16"/></svg>
+    </button>
+    <button id="logout-btn" class="icon-btn-round" type="button" aria-label="Sair" title="Sair">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5M20 12H9M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/></svg>
     </button>
   </header>
 
@@ -217,8 +220,27 @@
     </div>
   </aside>
 
+  <!-- Login (e-mail/senha) -->
+  <div id="login-gate" class="login-gate" hidden>
+    <form id="login-form" class="login-card">
+      <div class="logo-badge login-logo">frisson</div>
+      <h2>Entrar na agenda</h2>
+      <p class="wa-hint">Acesso restrito — fala com quem administra o Frisson pra pedir sua conta.</p>
+      <div class="field">
+        <label for="login-email">E-mail</label>
+        <input id="login-email" type="email" autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label for="login-password">Senha</label>
+        <input id="login-password" type="password" autocomplete="current-password" required />
+      </div>
+      <div id="login-error" class="no-phone-hint" hidden>E-mail ou senha incorretos.</div>
+      <button id="login-submit" class="btn btn-primary" type="submit">Entrar</button>
+    </form>
+  </div>
+
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/frisson.js?v=11"></script>
+  <script type="module" src="js/frisson.js?v=12"></script>
 </body>
 </html>

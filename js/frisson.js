@@ -17,7 +17,7 @@
   // usuário — o calendário sempre desenha, mesmo sem essas variáveis.
   let auth, db, bookingsCol, templatesDocRef, artistsCol;
   let doc, setDoc, deleteDoc, onSnapshot, writeBatch;
-  let signInAnonymously, onAuthStateChanged;
+  let onAuthStateChanged, signInWithEmailAndPassword, signOut;
 
   const WEEKDAY_NAMES = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
   const MONTH_NAMES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
@@ -155,11 +155,14 @@
   }
 
   /* Se a nuvem falhar ou demorar, mostra a agenda conhecida localmente em
-     vez de deixar a tela em branco. Edições nesse modo não sincronizam. */
+     vez de deixar a tela em branco. Edições nesse modo não sincronizam.
+     Nunca dispara enquanto a tela de login estiver esperando a senha —
+     senão os dados vazariam antes de autenticar. */
   let connected = false;
+  let awaitingLogin = false;
 
   function useOfflineFallback() {
-    if (connected || Object.keys(data).length) return;
+    if (connected || awaitingLogin || Object.keys(data).length) return;
     data = { ...SEED_DATA };
     renderCalendar();
     refreshArtistNames();
@@ -185,8 +188,9 @@
         import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"),
       ]);
 
-      signInAnonymously = authMod.signInAnonymously;
       onAuthStateChanged = authMod.onAuthStateChanged;
+      signInWithEmailAndPassword = authMod.signInWithEmailAndPassword;
+      signOut = authMod.signOut;
       doc = fsMod.doc;
       setDoc = fsMod.setDoc;
       deleteDoc = fsMod.deleteDoc;
@@ -200,15 +204,21 @@
       templatesDocRef = doc(db, "settings", "templates");
       artistsCol = fsMod.collection(db, "artists");
 
-      signInAnonymously(auth).catch((err) => {
-        console.error(err);
-        useOfflineFallback();
-      });
-
       onAuthStateChanged(auth, (user) => {
         if (user) {
           connected = true;
+          awaitingLogin = false;
+          hideLoginGate();
           startSync();
+        } else {
+          connected = false;
+          awaitingLogin = true;
+          data = {};
+          artists = {};
+          closeDayPanel();
+          closeTemplatesPanel();
+          renderCalendar();
+          showLoginGate();
         }
       });
     } catch (err) {
@@ -496,6 +506,44 @@
       else goToPrevMonth();
     }
   }, { passive: true });
+
+  /* ── login (e-mail/senha) ──────────────────────────────── */
+  const loginGate = document.getElementById("login-gate");
+  const loginForm = document.getElementById("login-form");
+  const loginEmail = document.getElementById("login-email");
+  const loginPassword = document.getElementById("login-password");
+  const loginError = document.getElementById("login-error");
+  const loginSubmit = document.getElementById("login-submit");
+
+  function showLoginGate() {
+    loginGate.hidden = false;
+  }
+
+  function hideLoginGate() {
+    loginGate.hidden = true;
+    loginError.hidden = true;
+    loginPassword.value = "";
+  }
+
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!auth || !signInWithEmailAndPassword) return;
+    loginError.hidden = true;
+    loginSubmit.disabled = true;
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPassword.value);
+    } catch (err) {
+      console.error(err);
+      loginError.textContent = "E-mail ou senha incorretos.";
+      loginError.hidden = false;
+    } finally {
+      loginSubmit.disabled = false;
+    }
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", () => {
+    if (auth && signOut) signOut(auth);
+  });
 
   /* ── day panel ─────────────────────────────────────────── */
   const backdrop = document.getElementById("backdrop");

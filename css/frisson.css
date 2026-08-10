@@ -431,6 +431,41 @@ input:focus, select:focus, textarea:focus {
 
 .panel-backdrop[hidden] { display: none; }
 
+/* ── Login ──────────────────────────────────────────────── */
+
+.login-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+}
+
+.login-gate[hidden] { display: none; }
+
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: center;
+}
+
+.login-logo {
+  width: 56px;
+  height: 56px;
+  font-size: 0.85rem;
+  margin: 0 auto 4px;
+}
+
+.login-card h2 { font-size: 1.3rem; }
+.login-card .field { text-align: left; }
+.login-card .btn { width: 100%; margin-top: 4px; }
+
 /* ── Toast ──────────────────────────────────────────────── */
 
 .toast {
