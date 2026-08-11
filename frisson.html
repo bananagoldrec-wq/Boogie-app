@@ -15,7 +15,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon-frisson.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-frisson-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-frisson-512.png" />
-  <link rel="stylesheet" href="css/frisson.css?v=12" />
+  <link rel="stylesheet" href="css/frisson.css?v=13" />
 </head>
 <body>
 
@@ -83,6 +83,16 @@
         <label for="f-artista">Artista</label>
         <input id="f-artista" type="text" placeholder="Nome do DJ ou artista" autocomplete="off" />
         <div id="artist-suggestions" class="suggestions" hidden></div>
+      </div>
+
+      <div class="photo-row">
+        <div id="artist-photo-preview" class="photo-preview">Sem foto</div>
+        <div class="photo-actions">
+          <input id="f-photo-input" type="file" accept="image/*" hidden />
+          <button id="pick-photo" class="btn btn-ghost" type="button">Escolher foto</button>
+          <button id="share-photo" class="btn btn-ghost" type="button" hidden>Compartilhar</button>
+          <button id="remove-photo" class="btn btn-danger-ghost" type="button" hidden>Remover</button>
+        </div>
       </div>
 
       <div class="field-row">
@@ -237,6 +247,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/frisson.js?v=13"></script>
+  <script type="module" src="js/frisson.js?v=14"></script>
 </body>
 </html>
