@@ -292,6 +292,51 @@
   const calGrid = document.getElementById("cal-grid");
   const monthLabel = document.getElementById("month-label");
 
+  const OPEN_WEEKDAYS = [3, 4, 5, 6]; // quarta a sábado
+
+  function isOperatingDay(key) {
+    const [y, m, d] = key.split("-").map(Number);
+    return OPEN_WEEKDAYS.includes(new Date(y, m - 1, d).getDay());
+  }
+
+  /* Semanas de calendário (dom–sáb) dentro do mês em exibição, pra
+     agrupar visualmente e permitir compartilhar semana a semana. */
+  function weekRangesForMonth(year, month) {
+    const total = daysInMonth(year, month);
+    const leading = firstWeekday(year, month);
+    const ranges = [];
+    for (let day = 1; day <= total; day++) {
+      const w = Math.floor((day - 1 + leading) / 7);
+      if (!ranges[w]) ranges[w] = { week: w + 1, startDay: day, endDay: day };
+      else ranges[w].endDay = day;
+    }
+    return ranges;
+  }
+
+  function buildWeekHeader(range) {
+    const header = document.createElement("div");
+    header.className = "week-header";
+
+    const label = document.createElement("span");
+    const startKey = dateKey(view.year, view.month, range.startDay);
+    const endKey = dateKey(view.year, view.month, range.endDay);
+    label.textContent = `Semana ${range.week} · ${formatBrDate(startKey).slice(0, 5)}–${formatBrDate(endKey).slice(0, 5)}`;
+    header.appendChild(label);
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "week-share-btn";
+    btn.setAttribute("aria-label", `Compartilhar semana ${range.week}`);
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.3 10.5l7.4-4.1M8.3 13.5l7.4 4.1"/></svg>';
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      shareWeek(range);
+    });
+    header.appendChild(btn);
+
+    return header;
+  }
+
   function renderCalendar() {
     monthLabel.textContent = `${MONTH_NAMES[view.month - 1]} ${view.year}`;
     calGrid.innerHTML = "";
@@ -304,7 +349,14 @@
     }
 
     const total = daysInMonth(view.year, view.month);
+    const ranges = weekRangesForMonth(view.year, view.month);
+    let rangeIdx = 0;
+
     for (let day = 1; day <= total; day++) {
+      if (ranges[rangeIdx] && ranges[rangeIdx].startDay === day) {
+        calGrid.appendChild(buildWeekHeader(ranges[rangeIdx]));
+        rangeIdx++;
+      }
       const key = dateKey(view.year, view.month, day);
       const entry = data[key];
       calGrid.appendChild(buildDayCell(key, day, entry));
@@ -314,7 +366,9 @@
   function buildDayCell(key, day, entry) {
     const cell = document.createElement("button");
     cell.type = "button";
-    cell.className = "day-cell" + (isTodayKey(key) ? " is-today" : "");
+    cell.className = "day-cell"
+      + (isTodayKey(key) ? " is-today" : "")
+      + (isOperatingDay(key) ? " day-open" : " day-closed");
     cell.setAttribute("aria-label", `${day} — abrir escala do dia`);
     cell.dataset.dateKey = key;
 
@@ -1027,7 +1081,17 @@
     return rows;
   }
 
-  function buildShareCanvas(rows) {
+  function weekBookings(range) {
+    const rows = [];
+    for (let day = range.startDay; day <= range.endDay; day++) {
+      const key = dateKey(view.year, view.month, day);
+      const e = data[key];
+      if (e && e.artista) rows.push({ key, day, e });
+    }
+    return rows;
+  }
+
+  function buildShareCanvas(rows, title) {
     const W = 960;
     const padX = 56;
     const headerH = 132;
@@ -1069,11 +1133,10 @@
     ctx.font = "400 14px -apple-system, system-ui, sans-serif";
     ctx.fillText("bar & discos — Botafogo", badgeCX + badgeR + 18, badgeCY + 14);
 
-    const monthTitle = `${MONTH_NAMES[view.month - 1]} ${view.year}`;
     ctx.textAlign = "right";
     ctx.fillStyle = "#a7e3ea";
     ctx.font = "600 21px ui-rounded, 'SF Pro Rounded', system-ui, sans-serif";
-    ctx.fillText(monthTitle.charAt(0).toUpperCase() + monthTitle.slice(1), W - padX, badgeCY + 5);
+    ctx.fillText(title, W - padX, badgeCY + 5);
     ctx.textAlign = "left";
 
     ctx.strokeStyle = "rgba(167,227,234,0.18)";
@@ -1131,23 +1194,15 @@
     return canvas;
   }
 
-  document.getElementById("share-agenda").addEventListener("click", () => {
-    const rows = monthBookings();
-    if (!rows.length) {
-      showToast("Nenhuma escala cadastrada nesse mês ainda.");
-      return;
-    }
-    const canvas = buildShareCanvas(rows);
+  function shareOrDownloadCanvas(canvas, fileName, shareTitle) {
     canvas.toBlob(async (blob) => {
       if (!blob) return;
-      const fileName = `frisson-agenda-${view.year}-${pad2(view.month)}.png`;
-      const monthTitle = `${MONTH_NAMES[view.month - 1]} ${view.year}`;
 
       if (navigator.share && navigator.canShare) {
         const file = new File([blob], fileName, { type: "image/png" });
         if (navigator.canShare({ files: [file] })) {
           try {
-            await navigator.share({ files: [file], title: `Agenda Frisson — ${monthTitle}` });
+            await navigator.share({ files: [file], title: shareTitle });
             return;
           } catch (err) {
             if (err && err.name === "AbortError") return;
@@ -1161,9 +1216,34 @@
       a.download = fileName;
       a.click();
       URL.revokeObjectURL(url);
-      showToast("Imagem da agenda salva.");
+      showToast("Imagem salva.");
     }, "image/png");
+  }
+
+  document.getElementById("share-agenda").addEventListener("click", () => {
+    const rows = monthBookings();
+    if (!rows.length) {
+      showToast("Nenhuma escala cadastrada nesse mês ainda.");
+      return;
+    }
+    const monthName = MONTH_NAMES[view.month - 1];
+    const title = monthName.charAt(0).toUpperCase() + monthName.slice(1) + " " + view.year;
+    const canvas = buildShareCanvas(rows, title);
+    shareOrDownloadCanvas(canvas, `frisson-agenda-${view.year}-${pad2(view.month)}.png`, `Agenda Frisson — ${title}`);
   });
+
+  function shareWeek(range) {
+    const rows = weekBookings(range);
+    if (!rows.length) {
+      showToast("Nenhuma escala nessa semana ainda.");
+      return;
+    }
+    const startLabel = formatBrDate(dateKey(view.year, view.month, range.startDay)).slice(0, 5);
+    const endLabel = formatBrDate(dateKey(view.year, view.month, range.endDay)).slice(0, 5);
+    const title = `Semana ${range.week} · ${startLabel}–${endLabel}`;
+    const canvas = buildShareCanvas(rows, title);
+    shareOrDownloadCanvas(canvas, `frisson-agenda-semana-${range.week}-${view.year}-${pad2(view.month)}.png`, `Agenda Frisson — ${title}`);
+  }
 
   /* ── csv export ────────────────────────────────────────── */
   document.getElementById("export-csv").addEventListener("click", () => {

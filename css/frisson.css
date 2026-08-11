@@ -10,6 +10,10 @@
   --bg-elev: #1a1211;
   --card: #26130f;
   --card-hover: #331a14;
+  --card-open: #170b08;
+  --card-open-hover: #221007;
+  --card-closed: #4a2b21;
+  --card-closed-hover: #56342a;
   --wine: #6d2318;
   --wine-soft: rgba(109, 35, 24, 0.35);
   --cyan: #a7e3ea;
@@ -201,6 +205,14 @@ input:focus, select:focus, textarea:focus {
 
 .day-cell:hover { background: var(--card-hover); }
 
+.day-cell.day-open { background: var(--card-open); }
+.day-cell.day-open:hover { background: var(--card-open-hover); }
+.day-cell.day-closed { background: var(--card-closed); }
+.day-cell.day-closed:hover { background: var(--card-closed-hover); }
+
+.day-open .status-dot { box-shadow: 0 0 0 2px var(--card-open); }
+.day-closed .status-dot { box-shadow: 0 0 0 2px var(--card-closed); }
+
 .day-cell.is-empty-slot { background: transparent; }
 
 .day-cell.is-today { border-color: var(--cyan); }
@@ -231,6 +243,40 @@ input:focus, select:focus, textarea:focus {
 }
 
 .day-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.week-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 2px 4px;
+}
+
+.week-header:first-of-type { padding-top: 0; }
+
+.week-header span {
+  font-family: "Quicksand", sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.week-share-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--cyan-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cyan);
+  flex-shrink: 0;
+}
+
+.week-share-btn svg { width: 14px; height: 14px; }
+.week-share-btn:hover { background: var(--cyan-dim); }
 
 .tag {
   font-size: 0.62rem;
@@ -290,6 +336,7 @@ input:focus, select:focus, textarea:focus {
 
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.legend i.legend-swatch { border-radius: 3px; width: 12px; height: 12px; border: 1.5px solid var(--cyan); }
 
 /* ── Side panel (day editor / templates) ───────────────────*/
 
