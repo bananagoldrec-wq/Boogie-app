@@ -260,6 +260,65 @@
     return WEEKDAY_NAMES[new Date(y, m - 1, d).getDay()];
   }
 
+  /* ── feriados nacionais e do Rio de Janeiro ────────────── */
+  function easterSunday(year) {
+    // algoritmo de Meeus/Jones/Butcher
+    const a = year % 19;
+    const b = Math.floor(year / 100);
+    const c = year % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31);
+    const day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(year, month - 1, day);
+  }
+
+  function addDays(dateObj, delta) {
+    const d = new Date(dateObj);
+    d.setDate(d.getDate() + delta);
+    return d;
+  }
+
+  function keyFromDate(dateObj) {
+    return dateKey(dateObj.getFullYear(), dateObj.getMonth() + 1, dateObj.getDate());
+  }
+
+  let holidayCache = {};
+  function holidaysForYear(year) {
+    if (holidayCache[year]) return holidayCache[year];
+    const easter = easterSunday(year);
+    const map = {};
+    map[dateKey(year, 1, 1)] = "Ano Novo";
+    map[dateKey(year, 1, 20)] = "São Sebastião";
+    map[dateKey(year, 4, 21)] = "Tiradentes";
+    map[dateKey(year, 4, 23)] = "São Jorge";
+    map[dateKey(year, 5, 1)] = "Dia do Trabalho";
+    map[dateKey(year, 9, 7)] = "Independência";
+    map[dateKey(year, 10, 12)] = "Nossa Sra. Aparecida";
+    map[dateKey(year, 11, 2)] = "Finados";
+    map[dateKey(year, 11, 15)] = "República";
+    map[dateKey(year, 11, 20)] = "Consciência Negra";
+    map[dateKey(year, 12, 25)] = "Natal";
+    map[keyFromDate(addDays(easter, -48))] = "Carnaval";
+    map[keyFromDate(addDays(easter, -47))] = "Carnaval";
+    map[keyFromDate(addDays(easter, -2))] = "Sexta-feira Santa";
+    map[keyFromDate(addDays(easter, 60))] = "Corpus Christi";
+    holidayCache[year] = map;
+    return map;
+  }
+
+  function getHoliday(key) {
+    const year = Number(key.slice(0, 4));
+    return holidaysForYear(year)[key];
+  }
+
   /* ── arrastar para mover/trocar a data de uma escala ────── */
   async function moveBooking(sourceKey, targetKey) {
     if (!sourceKey || !targetKey || sourceKey === targetKey) return;
@@ -364,12 +423,16 @@
   }
 
   function buildDayCell(key, day, entry) {
+    const holidayName = getHoliday(key);
+
     const cell = document.createElement("button");
     cell.type = "button";
     cell.className = "day-cell"
       + (isTodayKey(key) ? " is-today" : "")
-      + (isOperatingDay(key) ? " day-open" : " day-closed");
-    cell.setAttribute("aria-label", `${day} — abrir escala do dia`);
+      + (isOperatingDay(key) ? " day-open" : " day-closed")
+      + (holidayName ? " is-holiday" : "");
+    cell.setAttribute("aria-label", `${day} — abrir escala do dia${holidayName ? ` (${holidayName})` : ""}`);
+    if (holidayName) cell.title = holidayName;
     cell.dataset.dateKey = key;
 
     const meta = document.createElement("div");
@@ -384,22 +447,32 @@
     meta.appendChild(wd);
     cell.appendChild(meta);
 
-    if (entry && entry.artista) {
+    if ((entry && entry.artista) || holidayName) {
       const content = document.createElement("div");
       content.className = "day-content";
 
-      const artist = document.createElement("div");
-      artist.className = "day-artist";
-      artist.textContent = entry.artista;
-      content.appendChild(artist);
+      if (entry && entry.artista) {
+        const artist = document.createElement("div");
+        artist.className = "day-artist";
+        artist.textContent = entry.artista;
+        content.appendChild(artist);
+      }
 
-      if (entry.tipo === "RADIO") {
+      if ((entry && entry.tipo === "RADIO") || holidayName) {
         const tags = document.createElement("div");
         tags.className = "day-tags";
-        const t = document.createElement("span");
-        t.className = "tag tag-radio";
-        t.textContent = "Rádio";
-        tags.appendChild(t);
+        if (entry && entry.tipo === "RADIO") {
+          const t = document.createElement("span");
+          t.className = "tag tag-radio";
+          t.textContent = "Rádio";
+          tags.appendChild(t);
+        }
+        if (holidayName) {
+          const t = document.createElement("span");
+          t.className = "tag tag-holiday";
+          t.textContent = holidayName;
+          tags.appendChild(t);
+        }
         content.appendChild(tags);
       }
 

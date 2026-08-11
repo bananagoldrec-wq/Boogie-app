@@ -14,6 +14,9 @@
   --card-open-hover: #221007;
   --card-closed: #4a2b21;
   --card-closed-hover: #56342a;
+  --card-holiday: #4a3d14;
+  --card-holiday-hover: #574921;
+  --gold: #e8c766;
   --wine: #6d2318;
   --wine-soft: rgba(109, 35, 24, 0.35);
   --cyan: #a7e3ea;
@@ -213,6 +216,10 @@ input:focus, select:focus, textarea:focus {
 .day-open .status-dot { box-shadow: 0 0 0 2px var(--card-open); }
 .day-closed .status-dot { box-shadow: 0 0 0 2px var(--card-closed); }
 
+.day-cell.is-holiday { background: var(--card-holiday); border-color: rgba(232, 199, 102, 0.4); }
+.day-cell.is-holiday:hover { background: var(--card-holiday-hover); }
+.is-holiday .status-dot { box-shadow: 0 0 0 2px var(--card-holiday); }
+
 .day-cell.is-empty-slot { background: transparent; }
 
 .day-cell.is-today { border-color: var(--cyan); }
@@ -288,6 +295,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .tag.tag-radio { background: var(--cyan-dim); }
+.tag.tag-holiday { background: rgba(232, 199, 102, 0.18); border-color: rgba(232, 199, 102, 0.45); color: var(--gold); }
 
 .status-dot {
   position: absolute;
