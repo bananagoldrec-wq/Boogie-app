@@ -1309,9 +1309,7 @@
       showToast("Nenhuma escala nessa semana ainda.");
       return;
     }
-    const startLabel = formatBrDate(dateKey(view.year, view.month, range.startDay)).slice(0, 5);
-    const endLabel = formatBrDate(dateKey(view.year, view.month, range.endDay)).slice(0, 5);
-    const title = `Semana ${range.week} · ${startLabel}–${endLabel}`;
+    const title = `Semana ${range.week}`;
     const canvas = buildShareCanvas(rows, title);
     shareOrDownloadCanvas(canvas, `frisson-agenda-semana-${range.week}-${view.year}-${pad2(view.month)}.png`, `Agenda Frisson — ${title}`);
   }
