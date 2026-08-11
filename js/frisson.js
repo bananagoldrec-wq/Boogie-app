@@ -582,13 +582,123 @@
   const fBankPix = document.getElementById("f-bank-pix");
   const fBankOutros = document.getElementById("f-bank-outros");
 
+  const photoInput = document.getElementById("f-photo-input");
+  const photoPreview = document.getElementById("artist-photo-preview");
+  const pickPhotoBtn = document.getElementById("pick-photo");
+  const sharePhotoBtn = document.getElementById("share-photo");
+  const removePhotoBtn = document.getElementById("remove-photo");
+
   function populateBankFields(artistName) {
     const rec = artists[artistName] || {};
     fBankTitular.value = rec.titular || "";
     fBankDoc.value = rec.documento || "";
     fBankPix.value = rec.pix || "";
     fBankOutros.value = rec.outros || "";
+    renderPhotoPreview(rec.foto || "");
   }
+
+  function renderPhotoPreview(dataUri) {
+    photoPreview.innerHTML = "";
+    if (dataUri) {
+      const img = document.createElement("img");
+      img.src = dataUri;
+      img.alt = "";
+      photoPreview.appendChild(img);
+      sharePhotoBtn.hidden = false;
+      removePhotoBtn.hidden = false;
+    } else {
+      photoPreview.textContent = "Sem foto";
+      sharePhotoBtn.hidden = true;
+      removePhotoBtn.hidden = true;
+    }
+  }
+
+  function resizeImageFile(file, maxSize, quality) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+        if (width > height && width > maxSize) {
+          height = Math.round(height * (maxSize / width));
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = Math.round(width * (maxSize / height));
+          height = maxSize;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Não foi possível ler a imagem."));
+      };
+      img.src = url;
+    });
+  }
+
+  pickPhotoBtn.addEventListener("click", () => photoInput.click());
+
+  photoInput.addEventListener("change", async () => {
+    const file = photoInput.files[0];
+    photoInput.value = "";
+    if (!file) return;
+    const name = fArtista.value.trim();
+    if (!name) {
+      showToast("Digite o nome do artista antes de adicionar a foto.");
+      return;
+    }
+    if (!artistsCol) {
+      showToast("Sem conexão com a nuvem. Tenta de novo em instantes.");
+      return;
+    }
+    try {
+      const dataUri = await resizeImageFile(file, 640, 0.75);
+      renderPhotoPreview(dataUri);
+      await setDoc(doc(artistsCol, name), { foto: dataUri }, { merge: true });
+      showToast("Foto salva.");
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra salvar a foto. Tenta uma imagem menor.");
+    }
+  });
+
+  removePhotoBtn.addEventListener("click", async () => {
+    const name = fArtista.value.trim();
+    if (!name || !artistsCol) return;
+    try {
+      await setDoc(doc(artistsCol, name), { foto: "" }, { merge: true });
+      renderPhotoPreview("");
+      showToast("Foto removida.");
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra remover. Tenta de novo.");
+    }
+  });
+
+  sharePhotoBtn.addEventListener("click", async () => {
+    const name = fArtista.value.trim();
+    const foto = (artists[name] || {}).foto;
+    if (!foto) return;
+    try {
+      const blob = await (await fetch(foto)).blob();
+      const file = new File([blob], `${name}.jpg`, { type: blob.type || "image/jpeg" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: name });
+        return;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    const a = document.createElement("a");
+    a.href = foto;
+    a.download = `${name}.jpg`;
+    a.click();
+  });
 
   function openDayPanel(key) {
     activeDateKey = key;
