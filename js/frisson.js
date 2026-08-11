@@ -377,9 +377,7 @@
     header.className = "week-header";
 
     const label = document.createElement("span");
-    const startKey = dateKey(view.year, view.month, range.startDay);
-    const endKey = dateKey(view.year, view.month, range.endDay);
-    label.textContent = `Semana ${range.week} · ${formatBrDate(startKey).slice(0, 5)}–${formatBrDate(endKey).slice(0, 5)}`;
+    label.textContent = `Semana ${range.week}`;
     header.appendChild(label);
 
     const btn = document.createElement("button");
