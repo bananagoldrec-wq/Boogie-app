@@ -17,7 +17,15 @@
   // usuário — o calendário sempre desenha, mesmo sem essas variáveis.
   let auth, db, bookingsCol, templatesDocRef, artistsCol;
   let doc, setDoc, deleteDoc, onSnapshot, writeBatch;
-  let onAuthStateChanged, signInWithEmailAndPassword, signOut;
+  let signInAnonymously, onAuthStateChanged;
+
+  // Trava de acesso simples: uma senha única embutida no app, checada
+  // localmente antes de sequer conectar no Firebase. Protege a tela contra
+  // visitantes casuais, mas não é segurança de verdade — quem souber ler o
+  // código do app encontra a senha, e o banco de dados segue acessível a
+  // qualquer sessão anônima autenticada por trás dela.
+  const APP_PASSWORD = "231019";
+  const UNLOCK_KEY = "frisson_agenda_unlocked_v1";
 
   const WEEKDAY_NAMES = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
   const MONTH_NAMES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
@@ -155,14 +163,11 @@
   }
 
   /* Se a nuvem falhar ou demorar, mostra a agenda conhecida localmente em
-     vez de deixar a tela em branco. Edições nesse modo não sincronizam.
-     Nunca dispara enquanto a tela de login estiver esperando a senha —
-     senão os dados vazariam antes de autenticar. */
+     vez de deixar a tela em branco. Edições nesse modo não sincronizam. */
   let connected = false;
-  let awaitingLogin = false;
 
   function useOfflineFallback() {
-    if (connected || awaitingLogin || Object.keys(data).length) return;
+    if (connected || Object.keys(data).length) return;
     data = { ...SEED_DATA };
     renderCalendar();
     refreshArtistNames();
@@ -188,9 +193,8 @@
         import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"),
       ]);
 
+      signInAnonymously = authMod.signInAnonymously;
       onAuthStateChanged = authMod.onAuthStateChanged;
-      signInWithEmailAndPassword = authMod.signInWithEmailAndPassword;
-      signOut = authMod.signOut;
       doc = fsMod.doc;
       setDoc = fsMod.setDoc;
       deleteDoc = fsMod.deleteDoc;
@@ -204,21 +208,15 @@
       templatesDocRef = doc(db, "settings", "templates");
       artistsCol = fsMod.collection(db, "artists");
 
+      signInAnonymously(auth).catch((err) => {
+        console.error(err);
+        useOfflineFallback();
+      });
+
       onAuthStateChanged(auth, (user) => {
         if (user) {
           connected = true;
-          awaitingLogin = false;
-          hideLoginGate();
           startSync();
-        } else {
-          connected = false;
-          awaitingLogin = true;
-          data = {};
-          artists = {};
-          closeDayPanel();
-          closeTemplatesPanel();
-          renderCalendar();
-          showLoginGate();
         }
       });
     } catch (err) {
@@ -227,8 +225,23 @@
     }
   }
 
-  connectFirebase();
-  setTimeout(useOfflineFallback, 6000);
+  /* ── trava de senha (local, antes de conectar no Firebase) ──────── */
+  function isUnlocked() {
+    try {
+      return localStorage.getItem(UNLOCK_KEY) === "1";
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function unlockApp() {
+    try {
+      localStorage.setItem(UNLOCK_KEY, "1");
+    } catch (err) {}
+    hideLoginGate();
+    connectFirebase();
+    setTimeout(useOfflineFallback, 6000);
+  }
 
   /* ── date helpers ──────────────────────────────────────── */
   function pad2(n) { return String(n).padStart(2, "0"); }
@@ -507,16 +520,15 @@
     }
   }, { passive: true });
 
-  /* ── login (e-mail/senha) ──────────────────────────────── */
+  /* ── trava de senha (interface) ─────────────────────────── */
   const loginGate = document.getElementById("login-gate");
   const loginForm = document.getElementById("login-form");
-  const loginEmail = document.getElementById("login-email");
   const loginPassword = document.getElementById("login-password");
   const loginError = document.getElementById("login-error");
-  const loginSubmit = document.getElementById("login-submit");
 
   function showLoginGate() {
     loginGate.hidden = false;
+    loginPassword.focus();
   }
 
   function hideLoginGate() {
@@ -525,25 +537,30 @@
     loginPassword.value = "";
   }
 
-  loginForm.addEventListener("submit", async (e) => {
+  loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    if (!auth || !signInWithEmailAndPassword) return;
-    loginError.hidden = true;
-    loginSubmit.disabled = true;
-    try {
-      await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPassword.value);
-    } catch (err) {
-      console.error(err);
-      loginError.textContent = "E-mail ou senha incorretos.";
+    if (loginPassword.value === APP_PASSWORD) {
+      unlockApp();
+    } else {
       loginError.hidden = false;
-    } finally {
-      loginSubmit.disabled = false;
+      loginPassword.value = "";
+      loginPassword.focus();
     }
   });
 
   document.getElementById("logout-btn").addEventListener("click", () => {
-    if (auth && signOut) signOut(auth);
+    try {
+      localStorage.removeItem(UNLOCK_KEY);
+    } catch (err) {}
+    location.reload();
   });
+
+  if (isUnlocked()) {
+    connectFirebase();
+    setTimeout(useOfflineFallback, 6000);
+  } else {
+    showLoginGate();
+  }
 
   /* ── day panel ─────────────────────────────────────────── */
   const backdrop = document.getElementById("backdrop");
