@@ -80,6 +80,23 @@
     reativacao: "Reativar",
   };
 
+  /* ── Shows já marcados, lançados a partir da agenda do Beno ──
+     Entram uma vez só por aparelho (SEED_KEY marca que já rodou, pra
+     não ressuscitarem depois de apagados). O id é fixo por data, então
+     ligar a sincronização depois não duplica nada. */
+  const SEED_KEY = "beno_seed_agenda_v1";
+  const SEED_SHOWS = [
+    { data: "2026-09-13", casa: "Quinta m…", cortado: true },
+    { data: "2026-09-15", casa: "Baz" },
+    { data: "2026-09-17", casa: "Vienna" },
+    { data: "2026-09-18", casa: "Slovakia" },
+    { data: "2026-09-23", casa: "Amor reco…", cortado: true },
+    { data: "2026-09-25", casa: "Alvine" },
+    { data: "2026-09-26", casa: "Lux" },
+    { data: "2026-10-09", casa: "Zurich" },
+    { data: "2026-10-10", casa: "Zurich" },
+  ];
+
   /* ── Estado ─────────────────────────────────────────────── */
   const today = new Date();
   const TODAY_KEY = keyFromDate(today);
@@ -409,6 +426,30 @@
     if (!dealFilter) return true;
     const hay = normalizeName([deal.casa, deal.contato, deal.bairro, deal.estilo, deal.notas].join(" "));
     return hay.includes(normalizeName(dealFilter));
+  }
+
+  function seedId(dataAlvo, casa) {
+    const slug = normalizeName(casa).replace(/[^a-z0-9]+/g, "") || "show";
+    return `seed-${dataAlvo}-${slug}`;
+  }
+
+  async function seedAgendaOnce() {
+    try {
+      if (localStorage.getItem(SEED_KEY)) return;
+      localStorage.setItem(SEED_KEY, "1");
+    } catch (err) {
+      return; // sem localStorage não dá pra saber se já rodou — não semeia
+    }
+    for (const show of SEED_SHOWS) {
+      await persistDeal(makeDeal({
+        id: seedId(show.data, show.casa),
+        casa: show.casa,
+        dataAlvo: show.data,
+        etapa: "fechado",
+        notas: show.cortado ? "Nome veio cortado no print do Google Agenda — conferir." : "",
+      }));
+    }
+    renderAll();
   }
 
   /* ── Modelo: contatos ───────────────────────────────────── */
@@ -1426,12 +1467,34 @@
   const importPreview = document.getElementById("import-preview");
   const importConfirm = document.getElementById("import-confirm");
 
-  document.getElementById("open-import").addEventListener("click", () => {
-    importText.value = "";
+  let importMode = "contatos";
+
+  function resetImportPreview() {
     importPreview.hidden = true;
     importPreview.innerHTML = "";
     importConfirm.hidden = true;
     importCandidates = [];
+  }
+
+  function setImportMode(mode) {
+    importMode = mode;
+    document.querySelectorAll("#import-mode .wa-chip").forEach((chip) =>
+      chip.classList.toggle("active", chip.dataset.mode === mode)
+    );
+    document.querySelectorAll("[data-mode-hint]").forEach((el) => {
+      el.hidden = el.dataset.modeHint !== mode;
+    });
+    importConfirm.textContent = mode === "shows" ? "Lançar na agenda" : "Cadastrar contatos";
+    resetImportPreview();
+  }
+
+  document.querySelectorAll("#import-mode .wa-chip").forEach((chip) =>
+    chip.addEventListener("click", () => setImportMode(chip.dataset.mode))
+  );
+
+  document.getElementById("open-import").addEventListener("click", () => {
+    importText.value = "";
+    setImportMode("contatos");
     closeAllPanelsExcept(importPanel);
     backdrop.hidden = false;
     importPanel.hidden = false;
@@ -1464,46 +1527,136 @@
     };
   }
 
+  /* Lê "15/09 – Baz" ou "2026-10-09 Zurich". Sem o ano, assume o
+     próximo — e a pré-visualização mostra a data cheia pra conferir. */
+  function parseShowLine(line) {
+    const raw = line.trim();
+    if (!raw) return null;
+
+    let y = null, m, d, rest;
+    const iso = raw.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+    const br = raw.match(/(\d{1,2})[/.](\d{1,2})(?:[/.](\d{2,4}))?/);
+
+    if (iso) {
+      y = Number(iso[1]); m = Number(iso[2]); d = Number(iso[3]);
+      rest = raw.replace(iso[0], " ");
+    } else if (br) {
+      d = Number(br[1]); m = Number(br[2]);
+      if (br[3]) y = Number(br[3]) < 100 ? 2000 + Number(br[3]) : Number(br[3]);
+      rest = raw.replace(br[0], " ");
+    } else {
+      return null;
+    }
+
+    if (!m || m > 12 || !d || d > 31) return null;
+    if (!y) {
+      y = today.getFullYear();
+      // data que já passou há mais de um mês provavelmente é do ano que vem
+      if (dateKey(y, m, d) < addDaysKey(TODAY_KEY, -30)) y += 1;
+    }
+
+    const dataAlvo = dateKey(y, m, d);
+    // rejeita data inexistente (31/02 e afins)
+    if (new Date(y, m - 1, d).getDate() !== d) return null;
+
+    const parts = rest.split(/\s*[–—\-/|,;\t]\s*/).map((p) => p.trim()).filter(Boolean);
+    return { dataAlvo, casa: parts[0] || "", contato: parts[1] || "", bairro: parts[2] || "", linhaOriginal: raw };
+  }
+
+  function renderContactPreview(c) {
+    const row = document.createElement("div");
+    const incompleto = !c.nome && !c.casa;
+    row.className = "import-row" + (incompleto ? " is-bad" : "");
+
+    const title = document.createElement("b");
+    title.textContent = c.nome || c.casa || "(sem nome)";
+    row.appendChild(title);
+
+    const details = [c.casa && c.nome ? c.casa : "", c.bairro, prettyPhone(c.whatsapp)].filter(Boolean);
+    if (details.length) {
+      const sub = document.createElement("span");
+      sub.textContent = ` — ${details.join(" · ")}`;
+      row.appendChild(sub);
+    }
+    if (incompleto) {
+      const warn = document.createElement("span");
+      warn.textContent = " — sem nome, revise depois";
+      row.appendChild(warn);
+    }
+    return row;
+  }
+
+  function renderShowPreview(s) {
+    const row = document.createElement("div");
+    const semNome = !s.casa;
+    row.className = "import-row" + (semNome ? " is-bad" : "");
+
+    const title = document.createElement("b");
+    title.textContent = s.casa || "(sem nome)";
+    row.appendChild(title);
+
+    const sub = document.createElement("span");
+    sub.textContent = ` — ${formatBrDate(s.dataAlvo)} (${weekdayNameFromKey(s.dataAlvo)})`
+      + (s.contato ? ` · ${s.contato}` : "");
+    row.appendChild(sub);
+    return row;
+  }
+
   document.getElementById("import-preview-btn").addEventListener("click", () => {
     const lines = importText.value.split("\n");
-    importCandidates = lines.map(parseImportLine).filter(Boolean);
+    const parser = importMode === "shows" ? parseShowLine : parseImportLine;
+    importCandidates = lines.map(parser).filter(Boolean);
 
     importPreview.innerHTML = "";
     if (!importCandidates.length) {
       importPreview.hidden = true;
       importConfirm.hidden = true;
-      return showToast("Não encontrei nenhum contato nesse texto.");
+      return showToast(importMode === "shows"
+        ? "Não achei nenhuma data nesse texto. Cada linha precisa começar com a data."
+        : "Não encontrei nenhum contato nesse texto.");
     }
 
-    importCandidates.forEach((c) => {
-      const row = document.createElement("div");
-      const incompleto = !c.nome && !c.casa;
-      row.className = "import-row" + (incompleto ? " is-bad" : "");
-
-      const title = document.createElement("b");
-      title.textContent = c.nome || c.casa || "(sem nome)";
-      row.appendChild(title);
-
-      const details = [c.casa && c.nome ? c.casa : "", c.bairro, prettyPhone(c.whatsapp)].filter(Boolean);
-      if (details.length) {
-        const sub = document.createElement("span");
-        sub.textContent = ` — ${details.join(" · ")}`;
-        row.appendChild(sub);
-      }
-      if (incompleto) {
-        const warn = document.createElement("span");
-        warn.textContent = " — sem nome, revise depois";
-        row.appendChild(warn);
-      }
-      importPreview.appendChild(row);
-    });
+    const render = importMode === "shows" ? renderShowPreview : renderContactPreview;
+    importCandidates.forEach((c) => importPreview.appendChild(render(c)));
 
     importPreview.hidden = false;
     importConfirm.hidden = false;
-    showToast(`${importCandidates.length} contato(s) prontos pra cadastrar.`);
+    showToast(importMode === "shows"
+      ? `${importCandidates.length} show(s) prontos pra lançar.`
+      : `${importCandidates.length} contato(s) prontos pra cadastrar.`);
   });
 
+  async function confirmShowImport() {
+    let novos = 0;
+    let atualizados = 0;
+
+    for (const s of importCandidates) {
+      // mesma data + mesma casa = é o mesmo show, atualiza em vez de duplicar
+      const existing = Object.values(deals).find((d) =>
+        d.dataAlvo === s.dataAlvo && normalizeName(d.casa) === normalizeName(s.casa));
+
+      if (existing) {
+        await persistDeal({ ...existing, contato: s.contato || existing.contato, bairro: s.bairro || existing.bairro });
+        atualizados++;
+      } else {
+        await persistDeal(makeDeal({
+          casa: s.casa, contato: s.contato, bairro: s.bairro,
+          dataAlvo: s.dataAlvo, etapa: "fechado", estilo: config.estiloPadrao,
+        }));
+        novos++;
+      }
+    }
+
+    onlyLate = false;
+    switchView("agenda");
+    renderAll();
+    closeAllPanels();
+    showToast(`${novos} show(s) lançado(s), ${atualizados} atualizado(s).`);
+  }
+
   importConfirm.addEventListener("click", async () => {
+    if (importMode === "shows") return confirmShowImport();
+
     let novos = 0;
     let atualizados = 0;
 
@@ -1671,6 +1824,7 @@
   loadLocal();
   switchView("pipeline");
   renderAll();
+  seedAgendaOnce();
 
   if (isUnlocked()) {
     loginGate.hidden = true;

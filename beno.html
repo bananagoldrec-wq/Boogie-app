@@ -343,20 +343,37 @@
   <!-- ══════════ PANEL: IMPORT ══════════ -->
   <aside id="import-panel" class="side-panel" hidden aria-label="Importar contatos">
     <div class="panel-head">
-      <h2>Importar contatos</h2>
+      <h2>Importar</h2>
       <button class="icon-btn-round" type="button" data-close-import aria-label="Fechar">×</button>
     </div>
     <div class="panel-body">
-      <p class="wa-hint">
+      <div id="import-mode" class="wa-templates">
+        <button class="wa-chip active" type="button" data-mode="contatos">Contatos</button>
+        <button class="wa-chip" type="button" data-mode="shows">Shows (agenda)</button>
+      </div>
+
+      <p class="wa-hint" data-mode-hint="contatos">
         Cola aqui a lista de curadores — um por linha. Aceita quase qualquer formato:
         separe por <b>–</b>, <b>/</b>, <b>|</b> ou vírgula. O telefone é reconhecido em
         qualquer posição da linha.
       </p>
-      <div class="tpl-vars">
+      <div class="tpl-vars" data-mode-hint="contatos">
         Nome – Casa – Bairro – (21) 90000-0000<br />
         Marcos / Blue Note / Centro / 21999998888<br />
         21 98888-7777 Ana Souza — Comuna
       </div>
+
+      <p class="wa-hint" data-mode-hint="shows" hidden>
+        Cola os shows que já estão marcados — um por linha, começando pela data.
+        Sem o ano, ele assume o próximo. Entram na agenda como <b>Fechado</b>, e a
+        data completa aparece na pré-visualização pra você conferir antes.
+      </p>
+      <div class="tpl-vars" data-mode-hint="shows" hidden>
+        15/09 – Baz<br />
+        18/09 – Slovakia – Bratislava<br />
+        2026-10-09 Zurich
+      </div>
+
       <div class="field">
         <label for="import-text">Lista</label>
         <textarea id="import-text" rows="9" placeholder="Cola aqui..."></textarea>
@@ -366,7 +383,7 @@
       </div>
       <div id="import-preview" class="import-preview" hidden></div>
       <div class="panel-actions">
-        <button id="import-confirm" class="btn btn-primary" type="button" hidden>Cadastrar contatos</button>
+        <button id="import-confirm" class="btn btn-primary" type="button" hidden>Cadastrar</button>
       </div>
     </div>
   </aside>
