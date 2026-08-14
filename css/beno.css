@@ -328,11 +328,14 @@ input:focus, select:focus, textarea:focus {
 
 .column.drag-over { border-color: var(--acc); background: var(--acc-dim); }
 
+/* min-height mantém o topo dos cards alinhado entre as colunas, mesmo
+   quando um título ocupa duas linhas ("Proposta enviada") */
 .column-head {
   display: flex;
   align-items: center;
   gap: 7px;
   padding: 2px 4px 6px;
+  min-height: 34px;
 }
 
 .column-dot {
@@ -428,12 +431,14 @@ input:focus, select:focus, textarea:focus {
 
 .mini-btn {
   flex: 1;
+  min-width: 0;
   padding: 5px 8px;
   border-radius: 6px;
   border: 1px solid var(--acc-line);
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-dim);
+  white-space: nowrap;
 }
 
 .mini-btn:hover { background: var(--acc-dim); color: var(--acc); }

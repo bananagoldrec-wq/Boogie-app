@@ -722,7 +722,7 @@
       const nextBtn = document.createElement("button");
       nextBtn.type = "button";
       nextBtn.className = "mini-btn";
-      nextBtn.textContent = "Avançar →";
+      nextBtn.textContent = "Avançar";
       nextBtn.title = `Mover pra "${STAGES[stageIdx + 1].label}"`;
       nextBtn.addEventListener("click", (e) => { e.stopPropagation(); moveDealToStage(deal.id, STAGES[stageIdx + 1].key); });
       actions.appendChild(nextBtn);
