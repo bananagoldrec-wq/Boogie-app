@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Negociação de shows do DJ Beno no Rio de Janeiro: curadores, casas, pipeline de contato e agenda, com mensagens prontas no WhatsApp." />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="theme-color" content="#0d0b13" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Beno Negocia" />
+  <title>beno · negociação de shows</title>
+  <link rel="stylesheet" href="css/beno.css?v=1" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="logo-badge">beno</div>
+    <div class="brand-block">
+      <span class="brand-name">negociações</span>
+      <span class="brand-sub">shows &amp; DJ sets — Rio de Janeiro</span>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <div id="month-nav" class="month-nav" hidden>
+      <button id="prev-month" type="button" aria-label="Mês anterior">‹</button>
+      <span id="month-label">—</span>
+      <button id="next-month" type="button" aria-label="Próximo mês">›</button>
+    </div>
+
+    <button id="open-import" class="icon-btn-round" type="button" aria-label="Importar contatos" title="Importar contatos em massa">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V3m0 13-4-4m4 4 4-4M4 20h16"/></svg>
+    </button>
+    <button id="open-templates" class="icon-btn-round" type="button" aria-label="Mensagens padrão" title="Mensagens padrão">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H7l-3 3z"/></svg>
+    </button>
+    <button id="export-csv" class="icon-btn-round" type="button" aria-label="Exportar CSV" title="Exportar tudo (CSV)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M12 11v6m0 0-2.5-2.5M12 17l2.5-2.5"/></svg>
+    </button>
+    <button id="logout-btn" class="icon-btn-round" type="button" aria-label="Sair" title="Sair">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5M20 12H9M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/></svg>
+    </button>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab is-active" type="button" data-view="pipeline" role="tab">Negociações</button>
+    <button class="tab" type="button" data-view="agenda" role="tab">Agenda</button>
+    <button class="tab" type="button" data-view="contatos" role="tab">Contatos</button>
+  </nav>
+
+  <!-- Faixa de follow-ups vencidos -->
+  <div id="followup-bar" class="followup-bar" hidden>
+    <span id="followup-text"></span>
+    <button id="followup-action" class="btn-inline" type="button">Ver agora</button>
+  </div>
+
+  <!-- ══════════ VIEW: PIPELINE ══════════ -->
+  <section id="view-pipeline" class="view">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="deal-search" type="search" placeholder="Buscar casa, curador, bairro..." autocomplete="off" />
+      </div>
+      <button id="new-deal" class="btn btn-primary btn-compact" type="button">+ Negociação</button>
+    </div>
+
+    <div id="stats-row" class="stats-row"></div>
+    <div id="board" class="board"></div>
+  </section>
+
+  <!-- ══════════ VIEW: AGENDA ══════════ -->
+  <section id="view-agenda" class="view" hidden>
+    <div class="cal-wrap">
+      <div class="cal-weekdays">
+        <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+      </div>
+      <div id="cal-grid" class="cal-grid"></div>
+    </div>
+
+    <div class="legend">
+      <span><i style="background:var(--acc)"></i>Hoje</span>
+      <span><i style="background:var(--st-fechado)"></i>Fechado</span>
+      <span><i style="background:var(--st-proposta)"></i>Proposta enviada</span>
+      <span><i style="background:var(--st-conversando)"></i>Conversando</span>
+      <span><i style="background:var(--st-tocou)"></i>Já tocou</span>
+      <span><i class="legend-swatch" style="background:var(--card-holiday)"></i>Feriado</span>
+      <span class="tagline">clique num dia pra ver ou marcar ✎</span>
+    </div>
+  </section>
+
+  <!-- ══════════ VIEW: CONTATOS ══════════ -->
+  <section id="view-contatos" class="view" hidden>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="contact-search" type="search" placeholder="Buscar curador, casa, bairro..." autocomplete="off" />
+      </div>
+      <button id="new-contact" class="btn btn-primary btn-compact" type="button">+ Contato</button>
+    </div>
+    <div id="contact-list" class="contact-list"></div>
+  </section>
+
+  <!-- Backdrop -->
+  <div id="backdrop" class="panel-backdrop" hidden></div>
+
+  <!-- ══════════ PANEL: NEGOCIAÇÃO ══════════ -->
+  <aside id="deal-panel" class="side-panel" hidden aria-label="Editar negociação">
+    <div class="panel-head">
+      <div>
+        <h2>Negociação</h2>
+        <div id="deal-panel-sub" class="panel-date"></div>
+      </div>
+      <button class="icon-btn-round" type="button" data-close-panel aria-label="Fechar">×</button>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <label for="d-contato">Curador / contato</label>
+        <input id="d-contato" type="text" placeholder="Nome de quem decide" autocomplete="off" />
+        <div id="contact-suggestions" class="suggestions" hidden></div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="d-casa">Casa / festa</label>
+          <input id="d-casa" type="text" placeholder="Ex.: Comuna" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="d-bairro">Bairro</label>
+          <input id="d-bairro" type="text" placeholder="Ex.: Botafogo" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="d-etapa">Etapa</label>
+        <select id="d-etapa"></select>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="d-data">Data pretendida</label>
+          <input id="d-data" type="date" />
+        </div>
+        <div class="field">
+          <label for="d-followup">Próximo follow-up</label>
+          <input id="d-followup" type="date" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="d-cache-pedido">Cachê pedido (R$)</label>
+          <input id="d-cache-pedido" type="number" inputmode="numeric" placeholder="0" />
+        </div>
+        <div class="field">
+          <label for="d-cache-fechado">Cachê fechado (R$)</label>
+          <input id="d-cache-fechado" type="number" inputmode="numeric" placeholder="0" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="d-whatsapp">WhatsApp do curador</label>
+        <input id="d-whatsapp" type="tel" placeholder="(21) 90000-0000" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="d-estilo">Estilo do set</label>
+        <input id="d-estilo" type="text" placeholder="Ex.: Disco/House/Boogie" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="d-notas">Notas da conversa</label>
+        <textarea id="d-notas" rows="3" placeholder="O que ficou combinado, quem indicou, restrições..."></textarea>
+      </div>
+
+      <div class="panel-actions">
+        <button id="save-deal" class="btn btn-primary" type="button">Salvar</button>
+        <button id="delete-deal" class="btn btn-danger-ghost" type="button">Excluir</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="wa-section">
+        <h3>Mensagem no WhatsApp</h3>
+        <div id="wa-templates" class="wa-templates"></div>
+        <div class="field">
+          <textarea id="wa-preview" class="wa-preview" rows="5"></textarea>
+        </div>
+        <div id="wa-warning" class="no-phone-hint" hidden>Cadastre o WhatsApp do curador pra poder enviar.</div>
+        <div class="panel-actions">
+          <button id="send-whatsapp" class="btn btn-primary" type="button">Abrir no WhatsApp</button>
+          <button id="copy-whatsapp" class="btn btn-ghost" type="button">Copiar</button>
+        </div>
+        <p class="wa-hint">A mensagem abre pronta no WhatsApp — você confere e envia por lá. Ao enviar, a etapa avança e o próximo follow-up é agendado sozinho.</p>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="hist-section">
+        <h3>Histórico</h3>
+        <div class="field">
+          <textarea id="d-hist-input" rows="2" placeholder="Anotar o que rolou nessa conversa..."></textarea>
+        </div>
+        <div class="panel-actions">
+          <button id="add-hist" class="btn btn-ghost" type="button">Registrar contato</button>
+        </div>
+        <div id="hist-list" class="hist-list"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════ PANEL: CONTATO ══════════ -->
+  <aside id="contact-panel" class="side-panel" hidden aria-label="Editar contato">
+    <div class="panel-head">
+      <div>
+        <h2>Contato</h2>
+        <div id="contact-panel-sub" class="panel-date"></div>
+      </div>
+      <button class="icon-btn-round" type="button" data-close-contact aria-label="Fechar">×</button>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <label for="c-nome">Nome do curador</label>
+        <input id="c-nome" type="text" placeholder="Quem decide a grade" autocomplete="off" />
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="c-casa">Casa / festa</label>
+          <input id="c-casa" type="text" placeholder="Ex.: Selvática" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="c-bairro">Bairro</label>
+          <input id="c-bairro" type="text" placeholder="Ex.: Lapa" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="c-funcao">Função</label>
+          <select id="c-funcao">
+            <option value="curador">Curador</option>
+            <option value="produtor">Produtor</option>
+            <option value="dono">Dono / sócio</option>
+            <option value="booker">Booker</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="c-melhor-dia">Melhor dia</label>
+          <input id="c-melhor-dia" type="text" placeholder="Ex.: qui/sex" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="c-whatsapp">WhatsApp</label>
+        <input id="c-whatsapp" type="tel" placeholder="(21) 90000-0000" autocomplete="off" />
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="c-instagram">Instagram</label>
+          <input id="c-instagram" type="text" placeholder="@perfil" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="c-email">E-mail</label>
+          <input id="c-email" type="email" placeholder="opcional" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="c-estilo">Linha musical da casa</label>
+          <input id="c-estilo" type="text" placeholder="Ex.: Disco/House" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="c-cache">Cachê de referência (R$)</label>
+          <input id="c-cache" type="number" inputmode="numeric" placeholder="0" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="c-notas">Notas</label>
+        <textarea id="c-notas" rows="3" placeholder="Como chegou nele, o que ele curte, histórico..."></textarea>
+      </div>
+
+      <div class="panel-actions">
+        <button id="save-contact" class="btn btn-primary" type="button">Salvar</button>
+        <button id="delete-contact" class="btn btn-danger-ghost" type="button">Excluir</button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="panel-actions">
+        <button id="deal-from-contact" class="btn btn-ghost" type="button">Abrir negociação com esse contato</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════ PANEL: TEMPLATES ══════════ -->
+  <aside id="templates-panel" class="side-panel" hidden aria-label="Mensagens padrão">
+    <div class="panel-head">
+      <h2>Mensagens padrão</h2>
+      <button class="icon-btn-round" type="button" data-close-templates aria-label="Fechar">×</button>
+    </div>
+    <div class="panel-body">
+      <div class="tpl-vars">
+        Use: <b>{curador}</b> <b>{casa}</b> <b>{bairro}</b> <b>{data}</b> <b>{diaSemana}</b> <b>{estilo}</b> <b>{cache}</b> <b>{dj}</b> <b>{linkSet}</b> <b>{linkInsta}</b>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="cfg-dj">Seu nome artístico</label>
+          <input id="cfg-dj" type="text" placeholder="Beno" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="cfg-estilo">Seu estilo padrão</label>
+          <input id="cfg-estilo" type="text" placeholder="Disco/Boogie/House" autocomplete="off" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="cfg-link-set">Link do set / press kit</label>
+          <input id="cfg-link-set" type="url" placeholder="https://soundcloud.com/..." autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="cfg-link-insta">Instagram</label>
+          <input id="cfg-link-insta" type="text" placeholder="@beno" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div id="tpl-fields"></div>
+
+      <div class="panel-actions">
+        <button id="save-templates" class="btn btn-primary" type="button">Salvar</button>
+        <button id="reset-templates" class="btn btn-ghost" type="button">Restaurar padrão</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════ PANEL: IMPORT ══════════ -->
+  <aside id="import-panel" class="side-panel" hidden aria-label="Importar contatos">
+    <div class="panel-head">
+      <h2>Importar contatos</h2>
+      <button class="icon-btn-round" type="button" data-close-import aria-label="Fechar">×</button>
+    </div>
+    <div class="panel-body">
+      <p class="wa-hint">
+        Cola aqui a lista de curadores — um por linha. Aceita quase qualquer formato:
+        separe por <b>–</b>, <b>/</b>, <b>|</b> ou vírgula. O telefone é reconhecido em
+        qualquer posição da linha.
+      </p>
+      <div class="tpl-vars">
+        Nome – Casa – Bairro – (21) 90000-0000<br />
+        Marcos / Blue Note / Centro / 21999998888<br />
+        21 98888-7777 Ana Souza — Comuna
+      </div>
+      <div class="field">
+        <label for="import-text">Lista</label>
+        <textarea id="import-text" rows="9" placeholder="Cola aqui..."></textarea>
+      </div>
+      <div class="panel-actions">
+        <button id="import-preview-btn" class="btn btn-ghost" type="button">Pré-visualizar</button>
+      </div>
+      <div id="import-preview" class="import-preview" hidden></div>
+      <div class="panel-actions">
+        <button id="import-confirm" class="btn btn-primary" type="button" hidden>Cadastrar contatos</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Trava de senha -->
+  <div id="login-gate" class="login-gate" hidden>
+    <form id="login-form" class="login-card">
+      <div class="logo-badge login-logo">beno</div>
+      <h2>Acesso restrito</h2>
+      <p class="wa-hint">Digite a senha pra abrir suas negociações.</p>
+      <div class="field">
+        <label for="login-password">Senha</label>
+        <input id="login-password" type="password" inputmode="numeric" autocomplete="current-password" required />
+      </div>
+      <div id="login-error" class="no-phone-hint" hidden>Senha incorreta.</div>
+      <button id="login-submit" class="btn btn-primary" type="submit">Entrar</button>
+    </form>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="js/beno.js?v=1"></script>
+</body>
+</html>

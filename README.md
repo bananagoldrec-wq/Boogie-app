@@ -1,3 +1,69 @@
+# 🎧 beno · negociação de shows
+
+App pra **negociar shows no Rio de Janeiro**: cadastro de curadores e casas,
+funil de negociação, agenda e mensagens prontas no WhatsApp. Mesmo jeitão da
+agenda do Frisson — abre em `beno.html`.
+
+## Como funciona
+
+**Três abas:**
+
+- **Negociações** — funil em colunas (A contatar → Contatado → Conversando →
+  Proposta enviada → Fechado → Já tocou → Recusado). Arraste o card entre
+  colunas (ou use *Avançar →*). No celular vira uma lista por etapa.
+- **Agenda** — calendário mensal com as datas pretendidas, feriados nacionais e
+  do Rio destacados. Clique num dia vazio pra abrir uma negociação já com a
+  data; arraste um dia pro outro pra remarcar.
+- **Contatos** — cadastro de curadores/casas com WhatsApp, Instagram, bairro,
+  linha musical, cachê de referência e melhor dia.
+
+**O que ele automatiza:**
+
+1. **Follow-up sozinho.** Cada etapa tem um prazo de cobrança (contatado = 3
+   dias, proposta = 2 dias, e assim por diante). Sempre que você mexe na
+   negociação — muda de etapa, manda mensagem ou registra um contato — o app
+   já agenda a próxima cobrança. A faixa amarela no topo mostra quem está
+   esperando resposta, e o botão filtra só esses.
+2. **Mensagem certa pra cada momento.** O app sugere o texto conforme a etapa
+   (1º contato, apresentação, proposta, follow-up, confirmação, agradecimento,
+   reativação) e abre pronto no WhatsApp. Ao abrir, a etapa avança e o
+   follow-up é reagendado sozinho.
+3. **Cadastro em massa.** No ícone ⤓ você cola sua lista de curadores — um por
+   linha, em quase qualquer formato — e o app separa nome, casa, bairro e
+   telefone. Dá pra revisar antes de confirmar.
+4. **Cadastro que cresce sozinho.** O que você digita numa negociação atualiza
+   a ficha do contato, e digitar um nome já cadastrado preenche o resto.
+
+**Mensagens padrão** ficam no ícone 💬, com as variáveis `{curador}` `{casa}`
+`{bairro}` `{data}` `{diaSemana}` `{estilo}` `{cache}` `{dj}` `{linkSet}`
+`{linkInsta}`. É lá também que você põe seu nome artístico, estilo padrão e os
+links do set e do Instagram. O ícone 📄 exporta tudo em CSV.
+
+## Onde os dados ficam
+
+Grava sempre no **próprio aparelho** (`localStorage`), então funciona offline e
+sem configuração nenhuma. Em paralelo tenta sincronizar no **Firestore**, nas
+coleções `beno_negociacoes`, `beno_contatos` e `beno_config` — separadas das da
+agenda do Frisson. Se o Firebase não responder ou as regras não liberarem essas
+coleções, o app segue rodando normalmente só no aparelho.
+
+Pra ligar a sincronização entre celular e computador, libere as coleções nas
+regras do Firestore:
+
+```
+match /beno_negociacoes/{doc} { allow read, write: if request.auth != null; }
+match /beno_contatos/{doc}    { allow read, write: if request.auth != null; }
+match /beno_config/{doc}      { allow read, write: if request.auth != null; }
+```
+
+> ⚠️ A senha de acesso (`APP_PASSWORD` no topo de `js/beno.js`) trava a tela
+> contra visitante casual, mas **não é segurança de verdade**: quem abrir o
+> código do app encontra a senha, e o banco fica acessível a qualquer sessão
+> anônima por trás dela. Como aqui trafegam contatos e cachês, vale trocar a
+> senha e, se quiser isolamento real, criar um projeto Firebase só pra esse app.
+
+---
+
 # 🪩 Disco & Boogie Globe
 
 Descoberta de música **disco e boogie dos anos 70 e 80** através de um mapa-múndi
