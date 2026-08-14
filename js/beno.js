@@ -27,8 +27,10 @@
   /* Trava de acesso simples: senha única embutida no app, checada
      localmente. Segura visitante casual, mas não é segurança de verdade —
      quem ler o código do app acha a senha. Troque aqui quando quiser. */
-  const APP_PASSWORD = "210719";
-  const UNLOCK_KEY = "beno_negocia_unlocked_v1";
+  const APP_PASSWORD = "231019";
+  /* o sufixo acompanha a senha: trocar a senha desconecta os aparelhos
+     que já estavam destravados, em vez de deixá-los entrando pela antiga */
+  const UNLOCK_KEY = "beno_negocia_unlocked_v2";
   const LOCAL_KEY = "beno_negocia_data_v1";
 
   const WEEKDAY_NAMES = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
