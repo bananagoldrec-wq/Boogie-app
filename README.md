@@ -56,6 +56,12 @@ match /beno_contatos/{doc}    { allow read, write: if request.auth != null; }
 match /beno_config/{doc}      { allow read, write: if request.auth != null; }
 ```
 
+> 🔁 **Ao mexer em `js/beno.js` ou `css/beno.css`, suba o `?v=` do
+> `beno.html`.** O GitHub Pages manda `max-age=600` nos arquivos e o
+> `index.html` registra um service worker no site inteiro, então sem trocar a
+> URL o navegador continua rodando a versão antiga — foi assim que uma troca
+> de senha não pegou nos aparelhos que já tinham aberto o app.
+
 > ⚠️ A senha de acesso (`APP_PASSWORD` no topo de `js/beno.js`) trava a tela
 > contra visitante casual, mas **não é segurança de verdade**: quem abrir o
 > código do app encontra a senha, e o banco fica acessível a qualquer sessão
