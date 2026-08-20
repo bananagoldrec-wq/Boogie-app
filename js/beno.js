@@ -100,14 +100,41 @@
   ];
 
   /* Curadores passados pelo Beno. Cada um entra como contato e já abre
-     uma negociação em "A contatar", pronta pro primeiro contato. */
-  const SEED_CURADORES_KEY = "beno_seed_curadores_v1";
-  const SEED_CURADORES = [
-    { nome: "Bernardo Campos", whatsapp: "+55 21 99130-4661" },
-    { nome: "Gui Varella", whatsapp: "+55 21 99890-9024" },
-    { nome: "Mexicano", whatsapp: "+55 11 98755-8876" },
-    { nome: "Douglas Reis", whatsapp: "+55 11 91315-3913", email: "douglas@asapdigital.agency" },
-    { nome: "André", whatsapp: "+55 19 3656-5999" },
+     uma negociação em "A contatar", pronta pro primeiro contato.
+     Cada lote tem sua própria chave, pra que um lote novo entre sem
+     ressuscitar quem foi apagado de um lote anterior. */
+  const SEED_CURADOR_LOTES = [
+    {
+      key: "beno_seed_curadores_v1",
+      curadores: [
+        { nome: "Bernardo Campos", whatsapp: "+55 21 99130-4661" },
+        { nome: "Gui Varella", whatsapp: "+55 21 99890-9024" },
+        { nome: "Mexicano", whatsapp: "+55 11 98755-8876" },
+        { nome: "Douglas Reis", whatsapp: "+55 11 91315-3913", email: "douglas@asapdigital.agency" },
+        { nome: "André", whatsapp: "+55 19 3656-5999" },
+      ],
+    },
+    {
+      key: "beno_seed_curadores_v2",
+      curadores: [
+        { nome: "Maz", whatsapp: "+351 910 469 507" },
+        { nome: "HUGO_FRASA", whatsapp: "+55 11 93474-2620" },
+        { nome: "Thiago Guiselini", whatsapp: "+351 964 535 586" },
+        { nome: "Nuno Leote (princesa)", whatsapp: "+351 966 703 329", notas: 'Status do WhatsApp: "Punji Stick" — confirmar se é a festa/casa dele.' },
+        { nome: "Facchinetti", whatsapp: "+55 21 96929-5800", email: "fatchiapizza@gmail.com", notas: 'Status do WhatsApp: "Sobre Fatchia somente fatchiapizza@gmail.com".' },
+        { nome: "Marco Antonio", whatsapp: "+55 21 99985-8313", notas: 'Conta comercial no WhatsApp, categoria "Arts & entertainment". Atende 09:00–18:00.' },
+        { nome: "Caio Bucker", whatsapp: "+55 21 99942-3957" },
+        {
+          nome: "Mikolaï",
+          casa: "Picture Perfect Agency",
+          funcao: "booker",
+          whatsapp: "+33 6 72 60 34 93",
+          email: "mikolai@pictureperfect-agency.com",
+          notas: "Talent agent. Site: https://www.pictureperfect-agency.com — atende sexta só com hora marcada.",
+        },
+        { nome: "Marie Bouret", whatsapp: "+55 21 98425-2021" },
+      ],
+    },
   ];
 
   /* ── Estado ─────────────────────────────────────────────── */
@@ -178,14 +205,21 @@
   }
 
   function normalizePhone(raw) {
-    let digits = (raw || "").replace(/\D/g, "");
+    const str = (raw || "").trim();
+    const digits = str.replace(/\D/g, "");
     if (!digits) return "";
-    if (digits.length <= 11) digits = "55" + digits; // assume Brasil quando sem DDI
+    /* Escrito com "+", o código do país já está ali — não mexer. Sem o "+",
+       um celular francês (+33, 11 dígitos) viraria um número brasileiro. */
+    if (str.startsWith("+")) return digits;
+    if (digits.length <= 11) return "55" + digits; // sem DDI, assume Brasil
     return digits;
   }
 
   function prettyPhone(raw) {
-    const digits = (raw || "").replace(/\D/g, "").replace(/^55/, "");
+    const str = (raw || "").trim();
+    // fora do Brasil, mantém como o Beno escreveu — o formato (DD) é daqui
+    if (str.startsWith("+") && !str.startsWith("+55")) return str;
+    const digits = str.replace(/\D/g, "").replace(/^55/, "");
     if (digits.length === 11) return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
     if (digits.length === 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
     return raw || "";
@@ -466,31 +500,42 @@
   }
 
   async function seedCuradoresOnce() {
-    try {
-      if (localStorage.getItem(SEED_CURADORES_KEY)) return;
-      localStorage.setItem(SEED_CURADORES_KEY, "1");
-    } catch (err) {
-      return;
+    let semeou = false;
+
+    for (const lote of SEED_CURADOR_LOTES) {
+      try {
+        if (localStorage.getItem(lote.key)) continue;
+        localStorage.setItem(lote.key, "1");
+      } catch (err) {
+        return; // sem localStorage não dá pra saber se já rodou — não semeia
+      }
+
+      for (const cur of lote.curadores) {
+        const slug = normalizeName(cur.nome).replace(/[^a-z0-9]+/g, "") || "curador";
+        const contact = makeContact({
+          id: `seed-cur-${slug}`,
+          nome: cur.nome,
+          casa: cur.casa || "",
+          funcao: cur.funcao || "curador",
+          whatsapp: cur.whatsapp,
+          email: cur.email || "",
+          notas: cur.notas || "",
+        });
+        await persistContact(contact);
+        await persistDeal(makeDeal({
+          id: `seed-neg-${slug}`,
+          contato: cur.nome,
+          contatoId: contact.id,
+          casa: cur.casa || "",
+          whatsapp: cur.whatsapp,
+          etapa: "a_contatar",
+          estilo: config.estiloPadrao,
+        }));
+        semeou = true;
+      }
     }
-    for (const cur of SEED_CURADORES) {
-      const slug = normalizeName(cur.nome).replace(/[^a-z0-9]+/g, "") || "curador";
-      const contact = makeContact({
-        id: `seed-cur-${slug}`,
-        nome: cur.nome,
-        whatsapp: cur.whatsapp,
-        email: cur.email || "",
-      });
-      await persistContact(contact);
-      await persistDeal(makeDeal({
-        id: `seed-neg-${slug}`,
-        contato: cur.nome,
-        contatoId: contact.id,
-        whatsapp: cur.whatsapp,
-        etapa: "a_contatar",
-        estilo: config.estiloPadrao,
-      }));
-    }
-    renderAll();
+
+    if (semeou) renderAll();
   }
 
   /* ── Modelo: contatos ───────────────────────────────────── */
