@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Beno Negocia" />
   <title>beno · negociação de shows</title>
-  <link rel="stylesheet" href="css/beno.css?v=6" />
+  <link rel="stylesheet" href="css/beno.css?v=7" />
 </head>
 <body>
 
@@ -377,16 +377,44 @@
       </div>
 
       <p class="wa-hint" data-mode-hint="ics" hidden>
-        Traz os shows direto do Google Agenda, sem digitar nada. No computador:
-        Google Agenda → <b>Configurações</b> → <b>Importar e exportar</b> →
-        <b>Exportar</b>. Ele baixa um <b>.zip</b> — descompacte e escolha aqui o
-        <b>.ics</b> da agenda onde ficam seus shows. Compromisso pessoal também
-        vem junto, então <b>desmarque na lista</b> o que não for show.
+        Traz os shows do Google Agenda. Conecte sua conta uma vez e depois é só
+        buscar — o app <b>só lê</b> sua agenda, nunca escreve nem apaga nada.
+        Compromisso pessoal vem junto, então <b>desmarque na lista</b> o que não
+        for show. Compromisso encerrado há mais de 60 dias é ignorado.
       </p>
+
+      <div class="field" data-mode-hint="ics" id="google-setup" hidden>
+        <label for="cfg-google-client">Client ID do Google</label>
+        <input id="cfg-google-client" type="text" placeholder="000000-abc.apps.googleusercontent.com" autocomplete="off" spellcheck="false" />
+        <p class="wa-hint">
+          Criado uma vez no <b>Google Cloud Console</b> (de graça). O passo a passo
+          está no README do projeto. Em <b>origens JavaScript autorizadas</b> use
+          exatamente <b>https://bananagoldrec-wq.github.io</b>.
+        </p>
+      </div>
+
+      <div class="panel-actions" data-mode-hint="ics" hidden>
+        <button id="google-connect" class="btn btn-primary" type="button">Conectar com o Google</button>
+        <button id="google-disconnect" class="btn btn-ghost" type="button" hidden>Desconectar</button>
+      </div>
+
+      <div id="google-account" class="import-calname" hidden></div>
+
+      <div class="field" id="google-cal-field" hidden>
+        <label for="google-cal">Qual agenda tem seus shows</label>
+        <select id="google-cal"></select>
+      </div>
+
+      <div class="panel-actions" id="google-fetch-actions" hidden>
+        <button id="google-fetch" class="btn btn-primary" type="button">Buscar shows</button>
+      </div>
+
+      <div class="divider" data-mode-hint="ics" hidden></div>
+
       <div class="field" data-mode-hint="ics" hidden>
-        <label for="import-file">Arquivo .ics do Google Agenda</label>
+        <label for="import-file">Ou use um arquivo .ics exportado</label>
         <input id="import-file" type="file" accept=".ics,text/calendar" />
-        <p class="wa-hint">Compromisso encerrado há mais de 60 dias é ignorado.</p>
+        <p class="wa-hint">Alternativa sem conectar conta: Google Agenda → Configurações → Importar e exportar → Exportar, descompacte o .zip.</p>
       </div>
 
       <div class="field">
@@ -425,6 +453,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/beno.js?v=6"></script>
+  <script type="module" src="js/beno.js?v=7"></script>
 </body>
 </html>

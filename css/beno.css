@@ -43,6 +43,10 @@
 
 * { box-sizing: border-box; }
 
+/* `hidden` precisa vencer o `display: flex` de .field/.panel-actions —
+   sem isso o atributo não esconde nada nesses blocos. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   padding: 0;

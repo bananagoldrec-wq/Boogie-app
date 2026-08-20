@@ -61,6 +61,8 @@
     estiloPadrao: "Disco/Boogie/House",
     linkSet: "",
     linkInsta: "",
+    googleClientId: "",
+    googleCalendarId: "",
     templates: {
       primeiroContato: "Oi {curador}, tudo bem? Aqui é o {dj}, DJ do Rio 🎧 Acompanho o trabalho de vocês no {casa} e queria muito tocar aí. Meu set é de {estilo}. Posso te mandar meu material?",
       apresentacao: "{curador}, segue meu material: {linkSet} — Instagram {linkInsta}. Set de {estilo}, tocando bastante aqui no Rio. Se abrir alguma data no {casa} me chama que eu me viro pra encaixar 🙌",
@@ -1608,6 +1610,16 @@
     importConfirm.textContent = mode === "contatos" ? "Cadastrar contatos" : "Lançar na agenda";
     importTextLabel.textContent = mode === "ics" ? "Ou cole aqui o conteúdo do .ics" : "Lista";
 
+    /* Os blocos da conexão com o Google não têm data-mode-hint porque
+       aparecem/somem também conforme o estado da conexão. */
+    if (mode === "ics") {
+      if (googleCalendars.length && tokenValido()) mostrarConectado(); else mostrarDesconectado();
+    } else {
+      googleAccountBox.hidden = true;
+      googleCalField.hidden = true;
+      googleFetchActions.hidden = true;
+    }
+
     /* Limpar o campo de arquivo é o que permite reimportar o MESMO .ics
        depois de atualizar a agenda no Google — sem isso, escolher o
        arquivo de novo não dispara evento nenhum e nada acontece. */
@@ -1634,6 +1646,102 @@
     buildImportPreview();
   });
 
+  /* ── Botões da conexão com o Google ─────────────────────── */
+
+  const cfgGoogleClient = document.getElementById("cfg-google-client");
+  const googleConnectBtn = document.getElementById("google-connect");
+  const googleDisconnectBtn = document.getElementById("google-disconnect");
+  const googleAccountBox = document.getElementById("google-account");
+  const googleCalField = document.getElementById("google-cal-field");
+  const googleCalSelect = document.getElementById("google-cal");
+  const googleFetchActions = document.getElementById("google-fetch-actions");
+
+  function mostrarDesconectado() {
+    googleAccountBox.hidden = true;
+    googleCalField.hidden = true;
+    googleFetchActions.hidden = true;
+    googleDisconnectBtn.hidden = true;
+    googleConnectBtn.textContent = "Conectar com o Google";
+  }
+
+  function mostrarConectado() {
+    const principal = googleCalendars.find((c) => c.primary) || googleCalendars[0];
+    const conta = (principal && (principal.id || principal.summary)) || "conta conectada";
+
+    googleAccountBox.hidden = false;
+    googleAccountBox.textContent = `Conectado como ${conta} · somente leitura`;
+
+    googleCalSelect.innerHTML = "";
+    googleCalendars.forEach((cal) => {
+      const opt = document.createElement("option");
+      opt.value = cal.id;
+      opt.textContent = cal.summary + (cal.primary ? " (principal)" : "");
+      googleCalSelect.appendChild(opt);
+    });
+    if (config.googleCalendarId && googleCalendars.some((c) => c.id === config.googleCalendarId)) {
+      googleCalSelect.value = config.googleCalendarId;
+    }
+
+    googleCalField.hidden = false;
+    googleFetchActions.hidden = false;
+    googleDisconnectBtn.hidden = false;
+    googleConnectBtn.textContent = "Trocar de conta";
+  }
+
+  async function conectarGoogle() {
+    const clientId = cfgGoogleClient.value.trim();
+    if (!clientId) return showToast("Cole o Client ID do Google primeiro.");
+    if (clientId !== config.googleClientId) {
+      config.googleClientId = clientId;
+      await persistConfig();
+    }
+
+    googleToken = "";
+    const data = await googleGet(
+      "https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=reader&maxResults=250",
+      true
+    );
+    if (!data) return;
+
+    googleCalendars = (data.items || []).filter((c) => !c.deleted);
+    if (!googleCalendars.length) {
+      mostrarDesconectado();
+      return showToast("Essa conta não tem agenda nenhuma acessível.");
+    }
+    mostrarConectado();
+    showToast(`${googleCalendars.length} agenda(s) encontradas. Escolha e toque em Buscar shows.`);
+  }
+
+  googleConnectBtn.addEventListener("click", conectarGoogle);
+
+  googleDisconnectBtn.addEventListener("click", () => {
+    googleToken = "";
+    googleTokenExpira = 0;
+    googleCalendars = [];
+    mostrarDesconectado();
+    resetImportPreview();
+    showToast("Desconectado. O app não guarda seu acesso ao Google.");
+  });
+
+  googleCalSelect.addEventListener("change", async () => {
+    config.googleCalendarId = googleCalSelect.value;
+    await persistConfig();
+  });
+
+  document.getElementById("google-fetch").addEventListener("click", async () => {
+    const calId = googleCalSelect.value;
+    if (!calId) return showToast("Escolha uma agenda primeiro.");
+    showToast("Buscando na sua agenda...");
+    const shows = await buscarEventosGoogle(calId);
+    if (!shows) return;
+    if (!shows.length) {
+      resetImportPreview();
+      return showToast("Nenhum compromisso futuro nessa agenda.");
+    }
+    const escolhida = googleCalendars.find((c) => c.id === calId);
+    mostrarPreviewShows(shows, escolhida ? escolhida.summary : calId);
+  });
+
   function checkboxes() {
     return Array.from(importPreview.querySelectorAll(".import-check"));
   }
@@ -1654,6 +1762,8 @@
 
   document.getElementById("open-import").addEventListener("click", () => {
     importText.value = "";
+    cfgGoogleClient.value = config.googleClientId || "";
+    if (googleCalendars.length && tokenValido()) mostrarConectado(); else mostrarDesconectado();
     setImportMode("contatos");
     closeAllPanelsExcept(importPanel);
     backdrop.hidden = false;
@@ -1807,6 +1917,146 @@
     return { shows, ignorados, calName };
   }
 
+  /* ── Google Agenda pela API (opcional) ───────────────────
+     Só leitura: o escopo pedido é calendar.readonly, então o app
+     consegue listar as agendas e os compromissos, e não tem como
+     escrever nem apagar nada na conta do Beno. O token vale ~1h e
+     fica só na memória — nunca é gravado no aparelho. */
+
+  const GOOGLE_SCOPE = "https://www.googleapis.com/auth/calendar.readonly";
+
+  let gisPronto = false;
+  let googleToken = "";
+  let googleTokenExpira = 0;
+  let googleCalendars = [];
+
+  function carregarGis() {
+    if (gisPronto || (window.google && window.google.accounts && window.google.accounts.oauth2)) {
+      gisPronto = true;
+      return Promise.resolve(true);
+    }
+    return new Promise((resolve) => {
+      /* Rede bloqueada costuma pendurar o script sem disparar erro —
+         sem esse prazo, o botão Conectar não daria retorno nenhum. */
+      const prazo = setTimeout(() => resolve(false), 12000);
+      const fim = (ok) => { clearTimeout(prazo); resolve(ok); };
+
+      const s = document.createElement("script");
+      s.src = "https://accounts.google.com/gsi/client";
+      s.async = true;
+      s.onload = () => { gisPronto = true; fim(true); };
+      s.onerror = () => fim(false);
+      document.head.appendChild(s);
+    });
+  }
+
+  function tokenValido() { return googleToken && Date.now() < googleTokenExpira - 60000; }
+
+  /* interativo = true mostra o seletor de conta; false tenta renovar calado */
+  async function pedirTokenGoogle(interativo) {
+    if (tokenValido()) return googleToken;
+
+    const clientId = (config.googleClientId || "").trim();
+    if (!clientId) {
+      showToast("Cole o Client ID do Google primeiro.");
+      return "";
+    }
+    if (!(await carregarGis())) {
+      showToast("Não consegui carregar o login do Google. Verifique a conexão.");
+      return "";
+    }
+
+    return new Promise((resolve) => {
+      let respondido = false;
+      const done = (v) => { if (!respondido) { respondido = true; resolve(v); } };
+
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: GOOGLE_SCOPE,
+        callback: (resp) => {
+          if (!resp || resp.error || !resp.access_token) {
+            if (interativo) showToast(`O Google recusou: ${(resp && resp.error) || "sem token"}.`);
+            return done("");
+          }
+          googleToken = resp.access_token;
+          googleTokenExpira = Date.now() + (Number(resp.expires_in) || 3600) * 1000;
+          done(googleToken);
+        },
+        error_callback: (err) => {
+          if (interativo) showToast(`Login do Google não concluído (${(err && err.type) || "erro"}).`);
+          done("");
+        },
+      });
+
+      client.requestAccessToken({ prompt: interativo ? "select_account" : "" });
+    });
+  }
+
+  async function googleGet(url, interativo) {
+    const token = await pedirTokenGoogle(interativo);
+    if (!token) return null;
+    let res;
+    try {
+      res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    } catch (err) {
+      showToast("Não consegui falar com o Google. Verifique a conexão.");
+      return null;
+    }
+    if (res.status === 401 || res.status === 403) {
+      googleToken = "";
+      showToast("O acesso ao Google expirou. Toque em Conectar de novo.");
+      return null;
+    }
+    if (!res.ok) {
+      showToast(`O Google respondeu ${res.status}.`);
+      return null;
+    }
+    return res.json();
+  }
+
+  /* Traz os compromissos já com recorrência expandida (singleEvents),
+     o que resolve melhor que o .ics, onde só dá pra pegar a 1ª data. */
+  async function buscarEventosGoogle(calendarId) {
+    const eventos = [];
+    let pageToken = "";
+    do {
+      const params = new URLSearchParams({
+        timeMin: new Date(Date.now() - 60 * 86400000).toISOString(),
+        singleEvents: "true",
+        orderBy: "startTime",
+        maxResults: "250",
+      });
+      if (pageToken) params.set("pageToken", pageToken);
+      const data = await googleGet(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
+        false
+      );
+      if (!data) return null;
+      eventos.push(...(data.items || []));
+      pageToken = data.nextPageToken || "";
+    } while (pageToken && eventos.length < 1000);
+
+    return eventos
+      .filter((ev) => ev.status !== "cancelled")
+      .map((ev) => {
+        const inicio = ev.start || {};
+        const dataAlvo = inicio.date
+          ? inicio.date
+          : inicio.dateTime ? keyFromDate(new Date(inicio.dateTime)) : "";
+        return dataAlvo ? {
+          dataAlvo,
+          casa: (ev.summary || "").trim() || "(sem título)",
+          contato: "",
+          bairro: "",
+          googleUid: ev.iCalUID || ev.id || "",
+          local: (ev.location || "").trim(),
+          repete: false,
+        } : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.dataAlvo.localeCompare(b.dataAlvo));
+  }
+
   /* ── Pré-visualização (com caixinha pra escolher o que entra) ── */
 
   function buildPreviewRow(index, isBad, fill) {
@@ -1894,16 +2144,7 @@
         : "Não encontrei nenhum contato nesse texto.");
     }
 
-    // fica fora da lista que rola, pra não sumir de vista ao rolar
-    importCalName.hidden = !calName;
-    if (calName) importCalName.textContent = `Agenda do arquivo: ${calName}`;
-
-    const render = importMode === "contatos" ? renderContactPreview : renderShowPreview;
-    importCandidates.forEach((c, i) => importPreview.appendChild(render(c, i)));
-
-    importPreview.hidden = false;
-    importConfirm.hidden = false;
-    importSelectAll.hidden = importCandidates.length < 2;
+    pintarPreview(calName ? `Agenda do arquivo: ${calName}` : "");
 
     if (importMode === "ics") {
       showToast(`${importCandidates.length} compromisso(s) encontrados`
@@ -1914,6 +2155,28 @@
         ? `${importCandidates.length} show(s) prontos pra lançar.`
         : `${importCandidates.length} contato(s) prontos pra cadastrar.`);
     }
+  }
+
+  /* Desenha a lista a partir de importCandidates, com a etiqueta da
+     origem fora da área que rola pra não sumir de vista. */
+  function pintarPreview(etiqueta) {
+    importCalName.hidden = !etiqueta;
+    if (etiqueta) importCalName.textContent = etiqueta;
+
+    const render = importMode === "contatos" ? renderContactPreview : renderShowPreview;
+    importPreview.innerHTML = "";
+    importCandidates.forEach((c, i) => importPreview.appendChild(render(c, i)));
+
+    importPreview.hidden = false;
+    importConfirm.hidden = false;
+    importSelectAll.hidden = importCandidates.length < 2;
+  }
+
+  /* Usada pela busca via API, que já entrega os shows prontos. */
+  function mostrarPreviewShows(shows, nomeAgenda) {
+    importCandidates = shows;
+    pintarPreview(`Agenda: ${nomeAgenda}`);
+    showToast(`${shows.length} compromisso(s) na agenda. Desmarque o que não for show.`);
   }
 
   document.getElementById("import-preview-btn").addEventListener("click", buildImportPreview);

@@ -34,12 +34,42 @@ agenda do Frisson — abre em `beno.html`.
      formato; ele separa nome, casa, bairro e telefone.
    - **Shows (agenda)** — cola uma linha por show começando pela data
      (`15/09 – Baz`); sem o ano, assume o próximo.
-   - **Google Agenda** — lê o `.ics` exportado do Google (Configurações →
-     Importar e exportar → Exportar, descompacte o `.zip`). Entende linha
-     dobrada, texto escapado, dia inteiro, hora com fuso e hora em UTC;
-     ignora cancelado e o que acabou há mais de 60 dias. Guarda o id do
-     evento, então reimportar o mesmo arquivo **atualiza** os shows — inclusive
-     movendo a data de quem você remarcou no Google — em vez de duplicar.
+   - **Google Agenda** — conecta na conta (veja abaixo) e busca os shows
+     direto, ou lê um `.ics` exportado. Ignora cancelado e o que acabou há
+     mais de 60 dias. Guarda o id do evento, então buscar de novo **atualiza**
+     os shows — inclusive movendo a data de quem você remarcou no Google — em
+     vez de duplicar.
+
+## Conectar no Google Agenda
+
+O app pede **só leitura** (`calendar.readonly`): ele lista suas agendas e lê os
+compromissos, e não tem como escrever nem apagar nada. O token vale ~1h e fica
+só na memória — nunca é gravado no aparelho.
+
+Precisa de um **Client ID**, criado uma vez (de graça) na conta que tem a
+agenda:
+
+1. Abra [console.cloud.google.com](https://console.cloud.google.com) logado na
+   conta certa e crie um projeto (ex.: `Beno Agenda`).
+2. **APIs e serviços → Biblioteca** → procure **Google Calendar API** →
+   **Ativar**.
+3. **APIs e serviços → Tela de permissão OAuth**:
+   - Conta do Google Workspace (domínio próprio): escolha **Interno** — sem
+     verificação e sem tela de "app não verificado".
+   - Gmail comum: escolha **Externo** e adicione seu e-mail em **Usuários de
+     teste**. Aí aparece um aviso de app não verificado, que é só avançar.
+4. **APIs e serviços → Credenciais → Criar credenciais → ID do cliente OAuth**:
+   - Tipo: **Aplicativo da Web**
+   - **Origens JavaScript autorizadas**: `https://bananagoldrec-wq.github.io`
+   - URI de redirecionamento não é necessário.
+5. Copie o **ID do cliente** e cole no app, em ⤓ → **Google Agenda**.
+
+O Client ID é público por natureza (fica visível no código de qualquer site que
+o use), então não tem problema ele ficar salvo no app.
+
+> O botão de conectar só funciona no endereço do GitHub Pages, que é a origem
+> autorizada — não funciona em `localhost` nem no preview do Claude, a menos que
+> você adicione essas origens também.
 4. **Cadastro que cresce sozinho.** O que você digita numa negociação atualiza
    a ficha do contato, e digitar um nome já cadastrado preenche o resto.
 
