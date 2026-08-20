@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Beno Negocia" />
   <title>beno · negociação de shows</title>
-  <link rel="stylesheet" href="css/beno.css?v=7" />
+  <link rel="stylesheet" href="css/beno.css?v=9" />
 </head>
 <body>
 
@@ -46,8 +46,8 @@
   </header>
 
   <nav class="tabs" role="tablist">
-    <button class="tab is-active" type="button" data-view="pipeline" role="tab">Negociações</button>
-    <button class="tab" type="button" data-view="agenda" role="tab">Agenda</button>
+    <button class="tab is-active" type="button" data-view="agenda" role="tab">Agenda</button>
+    <button class="tab" type="button" data-view="pipeline" role="tab">Negociações</button>
     <button class="tab" type="button" data-view="contatos" role="tab">Contatos</button>
   </nav>
 
@@ -58,7 +58,7 @@
   </div>
 
   <!-- ══════════ VIEW: PIPELINE ══════════ -->
-  <section id="view-pipeline" class="view">
+  <section id="view-pipeline" class="view" hidden>
     <div class="toolbar">
       <div class="search-wrap">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -72,7 +72,8 @@
   </section>
 
   <!-- ══════════ VIEW: AGENDA ══════════ -->
-  <section id="view-agenda" class="view" hidden>
+  <section id="view-agenda" class="view">
+    <div id="month-summary" class="stats-row"></div>
     <div class="cal-wrap">
       <div class="cal-weekdays">
         <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
@@ -453,6 +454,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/beno.js?v=7"></script>
+  <script type="module" src="js/beno.js?v=9"></script>
 </body>
 </html>

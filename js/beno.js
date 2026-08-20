@@ -965,6 +965,7 @@
 
   const calGrid = document.getElementById("cal-grid");
   const monthLabel = document.getElementById("month-label");
+  const monthSummary = document.getElementById("month-summary");
 
   function dealsByDate() {
     const map = {};
@@ -976,8 +977,51 @@
     return map;
   }
 
+  /* Quanto o mês exibido está rendendo. Show fechado usa o cachê
+     fechado e, quando ele está em branco, cai pro pedido — que é o
+     que costuma estar preenchido quando só um dos dois foi digitado. */
+  function renderMonthSummary() {
+    const prefixo = `${view.year}-${pad2(view.month)}`;
+    const doMes = Object.values(deals).filter((d) => (d.dataAlvo || "").startsWith(prefixo));
+
+    const fechados = doMes.filter((d) => d.etapa === "fechado" || d.etapa === "tocou");
+    const emAberto = doMes.filter((d) => !TERMINAL_STAGES.includes(d.etapa));
+
+    const soma = (lista, campos) => lista.reduce((total, d) => {
+      for (const campo of campos) if (Number(d[campo])) return total + Number(d[campo]);
+      return total;
+    }, 0);
+
+    const confirmado = soma(fechados, ["cacheFechado", "cachePedido"]);
+    const previsto = soma(emAberto, ["cachePedido", "cacheFechado"]);
+    const semValor = fechados.filter((d) => !Number(d.cacheFechado) && !Number(d.cachePedido)).length;
+
+    const cards = [
+      { value: fechados.length, label: "Shows no mês" },
+      { value: formatMoney(confirmado) || "R$ 0", label: "Fechado", destaque: true },
+      { value: formatMoney(previsto) || "R$ 0", label: "Em negociação" },
+    ];
+    if (semValor) cards.push({ value: semValor, label: "Sem cachê preenchido", alerta: true });
+
+    monthSummary.innerHTML = "";
+    cards.forEach((c) => {
+      const el = document.createElement("div");
+      el.className = "stat" + (c.destaque ? " stat-destaque" : "") + (c.alerta ? " stat-alerta" : "");
+      const v = document.createElement("div");
+      v.className = "stat-value";
+      v.textContent = c.value;
+      const l = document.createElement("div");
+      l.className = "stat-label";
+      l.textContent = c.label;
+      el.appendChild(v);
+      el.appendChild(l);
+      monthSummary.appendChild(el);
+    });
+  }
+
   function renderCalendar() {
     monthLabel.textContent = `${MONTH_NAMES[view.month - 1]} ${view.year}`;
+    renderMonthSummary();
     calGrid.innerHTML = "";
 
     const byDate = dealsByDate();
@@ -1026,47 +1070,38 @@
       const content = document.createElement("div");
       content.className = "day-content";
 
-      dayDeals.slice(0, 2).forEach((deal) => {
-        const casa = document.createElement("div");
-        casa.className = "day-casa";
-        casa.textContent = deal.casa || deal.contato || "(sem casa)";
-        content.appendChild(casa);
-        if (deal.contato && deal.casa) {
-          const cur = document.createElement("div");
-          cur.className = "day-curador";
-          cur.textContent = deal.contato;
-          content.appendChild(cur);
-        }
-      });
-
-      if (dayDeals.length > 2) {
-        const more = document.createElement("div");
-        more.className = "day-curador";
-        more.textContent = `+${dayDeals.length - 2}`;
-        content.appendChild(more);
+      if (holidayName) {
+        const feriado = document.createElement("span");
+        feriado.className = "day-chip day-chip-feriado";
+        feriado.textContent = holidayName;
+        feriado.title = holidayName;
+        content.appendChild(feriado);
       }
 
-      if (holidayName) {
-        const tags = document.createElement("div");
-        tags.className = "day-tags";
-        const t = document.createElement("span");
-        t.className = "tag tag-holiday";
-        t.textContent = holidayName;
-        tags.appendChild(t);
-        content.appendChild(tags);
+      /* Tarjinha por show, colorida pela etapa — o mesmo jeito do
+         Google Agenda, pra caber o mês inteiro na tela do celular. */
+      dayDeals.slice(0, 3).forEach((deal) => {
+        const chip = document.createElement("span");
+        chip.className = "day-chip";
+        chip.style.background = `var(--st-${deal.etapa})`;
+        chip.textContent = deal.casa || deal.contato || "(sem casa)";
+        const valor = formatMoney(deal.cacheFechado || deal.cachePedido);
+        chip.title = [deal.casa || deal.contato, deal.contato && deal.casa ? deal.contato : "",
+          STAGE_BY_KEY[deal.etapa].label, valor].filter(Boolean).join(" · ");
+        content.appendChild(chip);
+      });
+
+      if (dayDeals.length > 3) {
+        const more = document.createElement("span");
+        more.className = "day-more";
+        more.textContent = `+${dayDeals.length - 3}`;
+        content.appendChild(more);
       }
 
       cell.appendChild(content);
     }
 
-    if (dayDeals.length) {
-      const dot = document.createElement("span");
-      dot.className = "status-dot";
-      dot.style.background = `var(--st-${dayDeals[0].etapa})`;
-      dot.title = STAGE_BY_KEY[dayDeals[0].etapa].label;
-      cell.appendChild(dot);
-      makeDragSource(cell, dayDeals[0].id);
-    }
+    if (dayDeals.length) makeDragSource(cell, dayDeals[0].id);
 
     cell.addEventListener("click", () => {
       if (suppressNextClick) return;
@@ -2392,7 +2427,7 @@
   /* ── Início ─────────────────────────────────────────────── */
 
   loadLocal();
-  switchView("pipeline");
+  switchView("agenda"); // a agenda é a tela do dia a dia
   renderAll();
   seedAgendaOnce().then(seedCuradoresOnce);
 
