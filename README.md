@@ -28,9 +28,18 @@ agenda do Frisson — abre em `beno.html`.
    (1º contato, apresentação, proposta, follow-up, confirmação, agradecimento,
    reativação) e abre pronto no WhatsApp. Ao abrir, a etapa avança e o
    follow-up é reagendado sozinho.
-3. **Cadastro em massa.** No ícone ⤓ você cola sua lista de curadores — um por
-   linha, em quase qualquer formato — e o app separa nome, casa, bairro e
-   telefone. Dá pra revisar antes de confirmar.
+3. **Cadastro em massa.** O ícone ⤓ importa de três jeitos, sempre com
+   pré-visualização e caixinha pra escolher o que entra:
+   - **Contatos** — cola a lista de curadores, um por linha, em quase qualquer
+     formato; ele separa nome, casa, bairro e telefone.
+   - **Shows (agenda)** — cola uma linha por show começando pela data
+     (`15/09 – Baz`); sem o ano, assume o próximo.
+   - **Google Agenda** — lê o `.ics` exportado do Google (Configurações →
+     Importar e exportar → Exportar, descompacte o `.zip`). Entende linha
+     dobrada, texto escapado, dia inteiro, hora com fuso e hora em UTC;
+     ignora cancelado e o que acabou há mais de 60 dias. Guarda o id do
+     evento, então reimportar o mesmo arquivo **atualiza** os shows — inclusive
+     movendo a data de quem você remarcou no Google — em vez de duplicar.
 4. **Cadastro que cresce sozinho.** O que você digita numa negociação atualiza
    a ficha do contato, e digitar um nome já cadastrado preenche o resto.
 

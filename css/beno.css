@@ -762,7 +762,28 @@ input:focus, select:focus, textarea:focus {
   border-radius: var(--radius-sm);
   padding: 9px 11px;
   font-size: 0.8rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  line-height: 1.45;
 }
+
+.import-check {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin: 2px 0 0;
+  accent-color: var(--acc);
+  cursor: pointer;
+}
+
+.import-body { min-width: 0; overflow-wrap: break-word; }
+
+/* item desmarcado apaga, pra deixar claro o que vai entrar */
+.import-row:has(.import-check:not(:checked)) { opacity: 0.45; }
+
+#import-select-all .btn { padding: 7px 12px; font-size: 0.78rem; }
 
 .import-row.is-bad { border: 1px solid rgba(255, 107, 94, 0.35); color: var(--danger); }
 .import-row b { font-family: "Quicksand", sans-serif; }

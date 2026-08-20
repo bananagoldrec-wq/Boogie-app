@@ -432,6 +432,7 @@
       notas: "",
       ultimoContato: "",
       proximoFollowup: "",
+      googleUid: "", // id do evento no Google Agenda, quando veio de lá
       historico: [],
       criadoEm: TODAY_KEY,
       ...overrides,
@@ -1580,11 +1581,17 @@
   const importConfirm = document.getElementById("import-confirm");
 
   let importMode = "contatos";
+  let icsRawText = "";
+
+  const importSelectAll = document.getElementById("import-select-all");
+  const importTextLabel = document.getElementById("import-text-label");
+  const importFile = document.getElementById("import-file");
 
   function resetImportPreview() {
     importPreview.hidden = true;
     importPreview.innerHTML = "";
     importConfirm.hidden = true;
+    importSelectAll.hidden = true;
     importCandidates = [];
   }
 
@@ -1596,8 +1603,47 @@
     document.querySelectorAll("[data-mode-hint]").forEach((el) => {
       el.hidden = el.dataset.modeHint !== mode;
     });
-    importConfirm.textContent = mode === "shows" ? "Lançar na agenda" : "Cadastrar contatos";
+    importConfirm.textContent = mode === "contatos" ? "Cadastrar contatos" : "Lançar na agenda";
+    importTextLabel.textContent = mode === "ics" ? "Ou cole aqui o conteúdo do .ics" : "Lista";
+
+    /* Limpar o campo de arquivo é o que permite reimportar o MESMO .ics
+       depois de atualizar a agenda no Google — sem isso, escolher o
+       arquivo de novo não dispara evento nenhum e nada acontece. */
+    importFile.value = "";
+    icsRawText = "";
     resetImportPreview();
+  }
+
+  /* Lê o .ics escolhido e já mostra a pré-visualização. */
+  importFile.addEventListener("change", async () => {
+    const file = importFile.files && importFile.files[0];
+    if (!file) return;
+    try {
+      icsRawText = await file.text();
+    } catch (err) {
+      console.error(err);
+      return showToast("Não consegui ler esse arquivo.");
+    }
+    if (!/BEGIN:VCALENDAR/i.test(icsRawText)) {
+      icsRawText = "";
+      return showToast("Esse arquivo não parece um .ics de agenda.");
+    }
+    showToast(`Arquivo lido: ${file.name}`);
+    buildImportPreview();
+  });
+
+  function checkboxes() {
+    return Array.from(importPreview.querySelectorAll(".import-check"));
+  }
+
+  document.getElementById("check-all").addEventListener("click", () =>
+    checkboxes().forEach((c) => (c.checked = true)));
+  document.getElementById("uncheck-all").addEventListener("click", () =>
+    checkboxes().forEach((c) => (c.checked = false)));
+
+  function selectedCandidates() {
+    const marcados = new Set(checkboxes().filter((c) => c.checked).map((c) => Number(c.dataset.index)));
+    return importCandidates.filter((_, i) => marcados.has(i));
   }
 
   document.querySelectorAll("#import-mode .wa-chip").forEach((chip) =>
@@ -1675,85 +1721,218 @@
     return { dataAlvo, casa: parts[0] || "", contato: parts[1] || "", bairro: parts[2] || "", linhaOriginal: raw };
   }
 
-  function renderContactPreview(c) {
-    const row = document.createElement("div");
+  /* ── Leitura do .ics exportado do Google Agenda ──────────
+     Só precisa entender o suficiente pra virar show: quando é, como
+     se chama e onde. Segue o RFC 5545 no que importa — linha dobrada,
+     texto escapado e as três formas de data que o Google escreve. */
+
+  function unfoldIcs(text) {
+    // linha longa é quebrada e continuada com espaço/tab na seguinte
+    return text.replace(/\r\n[ \t]/g, "").replace(/\n[ \t]/g, "");
+  }
+
+  function icsUnescape(value) {
+    return value
+      .replace(/\\n/gi, " ")
+      .replace(/\\,/g, ",")
+      .replace(/\\;/g, ";")
+      .replace(/\\\\/g, "\\")
+      .trim();
+  }
+
+  function icsDateToKey(value) {
+    const m = (value || "").match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/);
+    if (!m) return "";
+    const [, y, mo, d, hh, mm, ss, zulu] = m;
+    if (!hh) return `${y}-${mo}-${d}`; // dia inteiro
+    if (zulu) {
+      // veio em UTC — converte pro fuso do aparelho antes de virar data
+      return keyFromDate(new Date(Date.UTC(+y, +mo - 1, +d, +hh, +mm, +ss || 0)));
+    }
+    return `${y}-${mo}-${d}`; // hora local (com ou sem TZID)
+  }
+
+  function parseIcs(text) {
+    const events = [];
+    let cur = null;
+    for (const line of unfoldIcs(text).split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (trimmed === "BEGIN:VEVENT") { cur = {}; continue; }
+      if (trimmed === "END:VEVENT") { if (cur) events.push(cur); cur = null; continue; }
+      if (!cur) continue;
+
+      const sep = line.indexOf(":");
+      if (sep < 0) continue;
+      const name = line.slice(0, sep).split(";")[0].trim().toUpperCase();
+      const value = line.slice(sep + 1);
+
+      if (name === "UID") cur.uid = value.trim();
+      else if (name === "SUMMARY") cur.summary = icsUnescape(value);
+      else if (name === "LOCATION") cur.location = icsUnescape(value);
+      else if (name === "STATUS") cur.status = value.trim().toUpperCase();
+      else if (name === "DTSTART") cur.dtstart = value.trim();
+      else if (name === "RRULE") cur.rrule = value.trim();
+    }
+    return events;
+  }
+
+  /* Vira lista de shows, já descartando o que não interessa. */
+  function icsToShows(text) {
+    const corte = addDaysKey(TODAY_KEY, -60);
+    const shows = [];
+    let ignorados = 0;
+
+    parseIcs(text).forEach((ev) => {
+      const dataAlvo = icsDateToKey(ev.dtstart);
+      if (!dataAlvo || ev.status === "CANCELLED" || dataAlvo < corte) { ignorados++; return; }
+      shows.push({
+        dataAlvo,
+        casa: (ev.summary || "").trim() || "(sem título)",
+        contato: "",
+        bairro: "",
+        googleUid: ev.uid || "",
+        local: ev.location || "",
+        repete: Boolean(ev.rrule),
+      });
+    });
+
+    shows.sort((a, b) => a.dataAlvo.localeCompare(b.dataAlvo));
+    return { shows, ignorados };
+  }
+
+  /* ── Pré-visualização (com caixinha pra escolher o que entra) ── */
+
+  function buildPreviewRow(index, isBad, fill) {
+    const row = document.createElement("label");
+    row.className = "import-row" + (isBad ? " is-bad" : "");
+
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.className = "import-check";
+    check.checked = true;
+    check.dataset.index = String(index);
+    row.appendChild(check);
+
+    const body = document.createElement("span");
+    body.className = "import-body";
+    fill(body);
+    row.appendChild(body);
+    return row;
+  }
+
+  function renderContactPreview(c, index) {
     const incompleto = !c.nome && !c.casa;
-    row.className = "import-row" + (incompleto ? " is-bad" : "");
+    return buildPreviewRow(index, incompleto, (body) => {
+      const title = document.createElement("b");
+      title.textContent = c.nome || c.casa || "(sem nome)";
+      body.appendChild(title);
 
-    const title = document.createElement("b");
-    title.textContent = c.nome || c.casa || "(sem nome)";
-    row.appendChild(title);
+      const details = [c.casa && c.nome ? c.casa : "", c.bairro, prettyPhone(c.whatsapp)].filter(Boolean);
+      if (details.length) {
+        const sub = document.createElement("span");
+        sub.textContent = ` — ${details.join(" · ")}`;
+        body.appendChild(sub);
+      }
+      if (incompleto) {
+        const warn = document.createElement("span");
+        warn.textContent = " — sem nome, revise depois";
+        body.appendChild(warn);
+      }
+    });
+  }
 
-    const details = [c.casa && c.nome ? c.casa : "", c.bairro, prettyPhone(c.whatsapp)].filter(Boolean);
-    if (details.length) {
+  function renderShowPreview(s, index) {
+    return buildPreviewRow(index, !s.casa, (body) => {
+      const title = document.createElement("b");
+      title.textContent = s.casa || "(sem nome)";
+      body.appendChild(title);
+
+      const extras = [s.contato, s.local, s.repete ? "evento que se repete — entra só nesta data" : ""].filter(Boolean);
       const sub = document.createElement("span");
-      sub.textContent = ` — ${details.join(" · ")}`;
-      row.appendChild(sub);
-    }
-    if (incompleto) {
-      const warn = document.createElement("span");
-      warn.textContent = " — sem nome, revise depois";
-      row.appendChild(warn);
-    }
-    return row;
+      sub.textContent = ` — ${formatBrDate(s.dataAlvo)} (${weekdayNameFromKey(s.dataAlvo)})`
+        + (extras.length ? ` · ${extras.join(" · ")}` : "");
+      body.appendChild(sub);
+    });
   }
 
-  function renderShowPreview(s) {
-    const row = document.createElement("div");
-    const semNome = !s.casa;
-    row.className = "import-row" + (semNome ? " is-bad" : "");
+  function buildImportPreview() {
+    let ignorados = 0;
 
-    const title = document.createElement("b");
-    title.textContent = s.casa || "(sem nome)";
-    row.appendChild(title);
-
-    const sub = document.createElement("span");
-    sub.textContent = ` — ${formatBrDate(s.dataAlvo)} (${weekdayNameFromKey(s.dataAlvo)})`
-      + (s.contato ? ` · ${s.contato}` : "");
-    row.appendChild(sub);
-    return row;
-  }
-
-  document.getElementById("import-preview-btn").addEventListener("click", () => {
-    const lines = importText.value.split("\n");
-    const parser = importMode === "shows" ? parseShowLine : parseImportLine;
-    importCandidates = lines.map(parser).filter(Boolean);
+    if (importMode === "ics") {
+      const raw = icsRawText || importText.value;
+      if (!raw.trim()) {
+        resetImportPreview();
+        return showToast("Escolha o arquivo .ics ou cole o conteúdo dele.");
+      }
+      const lido = icsToShows(raw);
+      importCandidates = lido.shows;
+      ignorados = lido.ignorados;
+    } else {
+      const parser = importMode === "shows" ? parseShowLine : parseImportLine;
+      importCandidates = importText.value.split("\n").map(parser).filter(Boolean);
+    }
 
     importPreview.innerHTML = "";
     if (!importCandidates.length) {
-      importPreview.hidden = true;
-      importConfirm.hidden = true;
+      resetImportPreview();
+      if (importMode === "ics") {
+        return showToast(ignorados
+          ? `Nenhum compromisso futuro nesse arquivo (${ignorados} antigos ou cancelados).`
+          : "Não achei compromisso nenhum nesse arquivo.");
+      }
       return showToast(importMode === "shows"
         ? "Não achei nenhuma data nesse texto. Cada linha precisa começar com a data."
         : "Não encontrei nenhum contato nesse texto.");
     }
 
-    const render = importMode === "shows" ? renderShowPreview : renderContactPreview;
-    importCandidates.forEach((c) => importPreview.appendChild(render(c)));
+    const render = importMode === "contatos" ? renderContactPreview : renderShowPreview;
+    importCandidates.forEach((c, i) => importPreview.appendChild(render(c, i)));
 
     importPreview.hidden = false;
     importConfirm.hidden = false;
-    showToast(importMode === "shows"
-      ? `${importCandidates.length} show(s) prontos pra lançar.`
-      : `${importCandidates.length} contato(s) prontos pra cadastrar.`);
-  });
+    importSelectAll.hidden = importCandidates.length < 2;
 
-  async function confirmShowImport() {
+    if (importMode === "ics") {
+      showToast(`${importCandidates.length} compromisso(s) encontrados`
+        + (ignorados ? ` · ${ignorados} antigos/cancelados ignorados` : "")
+        + ". Desmarque o que não for show.");
+    } else {
+      showToast(importMode === "shows"
+        ? `${importCandidates.length} show(s) prontos pra lançar.`
+        : `${importCandidates.length} contato(s) prontos pra cadastrar.`);
+    }
+  }
+
+  document.getElementById("import-preview-btn").addEventListener("click", buildImportPreview);
+
+  async function confirmShowImport(escolhidos) {
     let novos = 0;
     let atualizados = 0;
 
-    for (const s of importCandidates) {
-      // mesma data + mesma casa = é o mesmo show, atualiza em vez de duplicar
+    for (const s of escolhidos) {
+      /* Mesmo evento do Google (pelo UID) ou mesma data + mesma casa:
+         atualiza em vez de duplicar. Assim, reimportar o .ics depois
+         de remarcar um show no Google move a data aqui também. */
       const existing = Object.values(deals).find((d) =>
-        d.dataAlvo === s.dataAlvo && normalizeName(d.casa) === normalizeName(s.casa));
+        (s.googleUid && d.googleUid === s.googleUid) ||
+        (d.dataAlvo === s.dataAlvo && normalizeName(d.casa) === normalizeName(s.casa)));
 
       if (existing) {
-        await persistDeal({ ...existing, contato: s.contato || existing.contato, bairro: s.bairro || existing.bairro });
+        await persistDeal({
+          ...existing,
+          dataAlvo: s.dataAlvo || existing.dataAlvo,
+          casa: s.casa || existing.casa,
+          contato: s.contato || existing.contato,
+          bairro: s.bairro || existing.bairro,
+          googleUid: s.googleUid || existing.googleUid || "",
+        });
         atualizados++;
       } else {
         await persistDeal(makeDeal({
           casa: s.casa, contato: s.contato, bairro: s.bairro,
           dataAlvo: s.dataAlvo, etapa: "fechado", estilo: config.estiloPadrao,
+          googleUid: s.googleUid || "",
+          notas: s.local ? `Local no Google Agenda: ${s.local}` : "",
         }));
         novos++;
       }
@@ -1761,18 +1940,21 @@
 
     onlyLate = false;
     switchView("agenda");
+    view = { year: Number(escolhidos[0].dataAlvo.slice(0, 4)), month: Number(escolhidos[0].dataAlvo.slice(5, 7)) };
     renderAll();
     closeAllPanels();
     showToast(`${novos} show(s) lançado(s), ${atualizados} atualizado(s).`);
   }
 
   importConfirm.addEventListener("click", async () => {
-    if (importMode === "shows") return confirmShowImport();
+    const escolhidos = selectedCandidates();
+    if (!escolhidos.length) return showToast("Marque ao menos um item pra importar.");
+    if (importMode !== "contatos") return confirmShowImport(escolhidos);
 
     let novos = 0;
     let atualizados = 0;
 
-    for (const c of importCandidates) {
+    for (const c of escolhidos) {
       const existing = findContactByName(c.nome);
       if (existing) {
         await persistContact({

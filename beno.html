@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Beno Negocia" />
   <title>beno · negociação de shows</title>
-  <link rel="stylesheet" href="css/beno.css?v=4" />
+  <link rel="stylesheet" href="css/beno.css?v=5" />
 </head>
 <body>
 
@@ -351,6 +351,7 @@
       <div id="import-mode" class="wa-templates">
         <button class="wa-chip active" type="button" data-mode="contatos">Contatos</button>
         <button class="wa-chip" type="button" data-mode="shows">Shows (agenda)</button>
+        <button class="wa-chip" type="button" data-mode="ics">Google Agenda</button>
       </div>
 
       <p class="wa-hint" data-mode-hint="contatos">
@@ -375,9 +376,26 @@
         2026-10-09 Zurich
       </div>
 
+      <p class="wa-hint" data-mode-hint="ics" hidden>
+        Traz os shows direto do Google Agenda, sem digitar nada. No computador:
+        Google Agenda → <b>Configurações</b> → <b>Importar e exportar</b> →
+        <b>Exportar</b>. Ele baixa um <b>.zip</b> — descompacte e escolha aqui o
+        <b>.ics</b> da agenda onde ficam seus shows. Compromisso pessoal também
+        vem junto, então <b>desmarque na lista</b> o que não for show.
+      </p>
+      <div class="field" data-mode-hint="ics" hidden>
+        <label for="import-file">Arquivo .ics do Google Agenda</label>
+        <input id="import-file" type="file" accept=".ics,text/calendar" />
+        <p class="wa-hint">Compromisso encerrado há mais de 60 dias é ignorado.</p>
+      </div>
+
       <div class="field">
-        <label for="import-text">Lista</label>
+        <label for="import-text" id="import-text-label">Lista</label>
         <textarea id="import-text" rows="9" placeholder="Cola aqui..."></textarea>
+      </div>
+      <div id="import-select-all" class="panel-actions" hidden>
+        <button id="check-all" class="btn btn-ghost" type="button">Marcar todos</button>
+        <button id="uncheck-all" class="btn btn-ghost" type="button">Desmarcar todos</button>
       </div>
       <div class="panel-actions">
         <button id="import-preview-btn" class="btn btn-ghost" type="button">Pré-visualizar</button>
@@ -406,6 +424,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/beno.js?v=4"></script>
+  <script type="module" src="js/beno.js?v=5"></script>
 </body>
 </html>
