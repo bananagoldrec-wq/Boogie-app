@@ -56,6 +56,12 @@
      passa a "contatado" sozinho assim que a mensagem é aberta. */
   const STAGE_AFTER_MESSAGE = { a_contatar: "contatado" };
 
+  /* Press kit hospedado junto do app — link fixo, sempre no ar, que o
+     Beno manda pros curadores. Absoluto porque vai viajar pro WhatsApp. */
+  const PRESSKIT_BASE = "https://bananagoldrec-wq.github.io/Boogie-app/press";
+  const PRESSKIT_URL = `${PRESSKIT_BASE}/beno-presskit-pt.pdf`;
+  const PRESSKIT_EN_URL = `${PRESSKIT_BASE}/beno-presskit-en.pdf`;
+
   const DEFAULT_CONFIG = {
     dj: "Beno",
     estiloPadrao: "Disco/Boogie/House",
@@ -65,7 +71,8 @@
     googleCalendarId: "",
     templates: {
       primeiroContato: "Oi {curador}, tudo bem? Aqui é o {dj}, DJ do Rio 🎧 Acompanho o trabalho de vocês no {casa} e queria muito tocar aí. Meu set é de {estilo}. Posso te mandar meu material?",
-      apresentacao: "{curador}, segue meu material: {linkSet} — Instagram {linkInsta}. Set de {estilo}, tocando bastante aqui no Rio. Se abrir alguma data no {casa} me chama que eu me viro pra encaixar 🙌",
+      apresentacao: "{curador}, segue meu press kit: {presskit} — Instagram {linkInsta}. Set de {estilo}, tocando bastante aqui no Rio. Se abrir alguma data no {casa} me chama que eu me viro pra encaixar 🙌",
+      apresentacaoEn: "Hi {curador}, this is {dj}, DJ from Rio 🎧 Here's my press kit: {presskitEn} — Instagram {linkInsta}. I play {estilo} and I'd love to play at {casa}. Any date coming up?",
       proposta: "Oi {curador}! Sobre a data {data} ({diaSemana}) no {casa}: fecho por {cache}. Levo set de {estilo}, no tempo que vocês precisarem. Topa?",
       followup: "Opa {curador}, tudo certo? Passando pra não perder o fio — conseguiu ver a possibilidade de data no {casa}? Qualquer coisa me chama 🙏",
       confirmacao: "Fechadíssimo, {curador}! Confirmado então: {data} ({diaSemana}) no {casa}. Chego com antecedência e já te mando os dados pra nota. Valeu demais 🎶",
@@ -77,6 +84,7 @@
   const TEMPLATE_LABELS = {
     primeiroContato: "1º contato",
     apresentacao: "Apresentação",
+    apresentacaoEn: "Apresentação (EN)",
     proposta: "Proposta",
     followup: "Follow-up",
     confirmacao: "Confirmação",
@@ -595,6 +603,8 @@
     /* Sem casa cadastrada, some com o trecho "no {casa}" inteiro — senão
        sai "tocar no sua casa", que entrega que a mensagem é automática. */
     if (!deal.casa) tpl = tpl.replace(/\s+n[oa]\s+\{casa\}/g, "");
+    // idem pro Instagram: sem o perfil, sai "— Instagram." sozinho
+    if (!config.linkInsta) tpl = tpl.replace(/\s*[—–-]?\s*Instagram\s+\{linkInsta\}/gi, "");
     return tpl
       .replaceAll("{curador}", deal.contato || "tudo bem")
       .replaceAll("{casa}", deal.casa || "")
@@ -606,6 +616,8 @@
       .replaceAll("{dj}", config.dj || "Beno")
       .replaceAll("{linkSet}", config.linkSet || "")
       .replaceAll("{linkInsta}", config.linkInsta || "")
+      .replaceAll("{presskit}", PRESSKIT_URL)
+      .replaceAll("{presskitEn}", PRESSKIT_EN_URL)
       // sobra de espaço deixada por variável vazia
       .replace(/[ \t]{2,}/g, " ")
       .replace(/[ \t]+([.,!?])/g, "$1")
@@ -1439,6 +1451,29 @@
     if (!activeDealId) return;
     sendWhatsApp(readDealForm(), waPreview.value, activeTemplateKey);
   });
+
+  /* Anexa o link do press kit ao fim da mensagem que está sendo escrita,
+     sem repetir caso ele já esteja lá. */
+  document.querySelectorAll("[data-presskit]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const url = btn.dataset.presskit === "en" ? PRESSKIT_EN_URL : PRESSKIT_URL;
+      if (waPreview.value.includes(url)) return showToast("Esse link já está na mensagem.");
+      waPreview.value = `${waPreview.value.trim()}\n\n${url}`.trim();
+      showToast(btn.dataset.presskit === "en" ? "Press kit (EN) anexado." : "Press kit anexado.");
+    })
+  );
+
+  document.querySelectorAll("[data-copy-presskit]").forEach((btn) =>
+    btn.addEventListener("click", async () => {
+      const url = btn.dataset.copyPresskit === "en" ? PRESSKIT_EN_URL : PRESSKIT_URL;
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast("Link copiado.");
+      } catch (err) {
+        showToast(url);
+      }
+    })
+  );
 
   document.getElementById("copy-whatsapp").addEventListener("click", async () => {
     try {

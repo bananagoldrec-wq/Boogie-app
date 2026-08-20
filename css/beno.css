@@ -729,6 +729,16 @@ input:focus, select:focus, textarea:focus {
 
 .wa-chip.active { background: var(--acc); color: #14121a; border-color: var(--acc); font-weight: 600; }
 
+.presskit-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.presskit-label { font-size: 0.74rem; color: var(--text-dim); }
+.presskit-row .wa-chip { text-decoration: none; }
+
 .wa-preview { min-height: 110px; resize: vertical; }
 .wa-hint { font-size: 0.72rem; color: var(--text-faint); line-height: 1.5; }
 .wa-hint b { color: var(--text-dim); }

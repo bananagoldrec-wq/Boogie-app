@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Beno Negocia" />
   <title>beno · negociação de shows</title>
-  <link rel="stylesheet" href="css/beno.css?v=9" />
+  <link rel="stylesheet" href="css/beno.css?v=10" />
 </head>
 <body>
 
@@ -189,6 +189,11 @@
         <div class="field">
           <textarea id="wa-preview" class="wa-preview" rows="5"></textarea>
         </div>
+        <div class="presskit-row">
+          <span class="presskit-label">Anexar press kit:</span>
+          <button class="wa-chip" type="button" data-presskit="pt">Português</button>
+          <button class="wa-chip" type="button" data-presskit="en">English</button>
+        </div>
         <div id="wa-warning" class="no-phone-hint" hidden>Cadastre o WhatsApp do curador pra poder enviar.</div>
         <div id="wa-links-warning" class="no-phone-hint" hidden></div>
         <div class="panel-actions">
@@ -308,7 +313,15 @@
     </div>
     <div class="panel-body">
       <div class="tpl-vars">
-        Use: <b>{curador}</b> <b>{casa}</b> <b>{bairro}</b> <b>{data}</b> <b>{diaSemana}</b> <b>{estilo}</b> <b>{cache}</b> <b>{dj}</b> <b>{linkSet}</b> <b>{linkInsta}</b>
+        Use: <b>{curador}</b> <b>{casa}</b> <b>{bairro}</b> <b>{data}</b> <b>{diaSemana}</b> <b>{estilo}</b> <b>{cache}</b> <b>{dj}</b> <b>{linkSet}</b> <b>{linkInsta}</b> <b>{presskit}</b> <b>{presskitEn}</b>
+      </div>
+
+      <div class="presskit-row">
+        <span class="presskit-label">Press kit:</span>
+        <a class="wa-chip" href="press/beno-presskit-pt.pdf" target="_blank" rel="noopener">Abrir PT</a>
+        <a class="wa-chip" href="press/beno-presskit-en.pdf" target="_blank" rel="noopener">Abrir EN</a>
+        <button class="wa-chip" type="button" data-copy-presskit="pt">Copiar link PT</button>
+        <button class="wa-chip" type="button" data-copy-presskit="en">Copiar link EN</button>
       </div>
 
       <div class="field-row">
@@ -454,6 +467,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/beno.js?v=9"></script>
+  <script type="module" src="js/beno.js?v=10"></script>
 </body>
 </html>
