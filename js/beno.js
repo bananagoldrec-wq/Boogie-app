@@ -20,7 +20,7 @@
     appId: "1:28732138318:web:67e28575aa1040770f741f",
   };
 
-  let db, dealsCol, contactsCol, configDocRef;
+  let db, dealsCol, contactsCol, logCol, configDocRef;
   let doc, setDoc, deleteDoc, onSnapshot;
   let connected = false;
 
@@ -147,12 +147,68 @@
     },
   ];
 
+  /* Aeroportos que aparecem nas viagens do Beno — só pra mostrar a
+     cidade junto da sigla. Sigla desconhecida aparece como está. */
+  const AEROPORTOS = {
+    GIG: "Rio de Janeiro · Galeão", SDU: "Rio de Janeiro · Santos Dumont",
+    GRU: "São Paulo · Guarulhos", CGH: "São Paulo · Congonhas",
+    LIS: "Lisboa · Portela", OPO: "Porto", FAO: "Faro",
+    TLS: "Toulouse · Blagnac", CDG: "Paris · Charles de Gaulle", ORY: "Paris · Orly",
+    VIE: "Viena", BTS: "Bratislava", ZRH: "Zurique", GVA: "Genebra",
+    LUX: "Luxemburgo", BCN: "Barcelona", MAD: "Madri", BRU: "Bruxelas",
+    AMS: "Amsterdã", BER: "Berlim", MXP: "Milão · Malpensa", LHR: "Londres · Heathrow",
+  };
+
+  /* Passagens que o Beno já comprou. Mesmo esquema dos outros lotes:
+     entra uma vez por aparelho, com id fixo pra não duplicar. */
+  const SEED_LOGISTICA_KEY = "beno_seed_logistica_v1";
+  const AGENCIA = "Travel Blue Turismo · Alessandro (21) 98875-5873 · alessandro@travelblueturismo.com.br";
+  const SEED_LOGISTICA = [
+    {
+      id: "seed-log-tp74", tipo: "voo", companhia: "TAP", numero: "TP74", localizador: "C5ZJTY",
+      origem: "GIG", destino: "LIS", terminalOrigem: "2", terminalDestino: "1",
+      data: "2026-09-08", hora: "15:35", dataFim: "2026-09-09", horaFim: "05:20",
+      obs: `Ida. Bilhete 047 9293904023. Bagagem despachada inclusa. ${AGENCIA}`,
+    },
+    {
+      id: "seed-log-tp490", tipo: "voo", companhia: "TAP", numero: "TP490", localizador: "C5ZJTY",
+      origem: "LIS", destino: "TLS", terminalOrigem: "1", terminalDestino: "",
+      data: "2026-09-09", hora: "09:00", dataFim: "2026-09-09", horaFim: "11:55",
+      obs: "Conexão de 3h40 em Lisboa. Voo da TAP operado pela NI.",
+    },
+    {
+      id: "seed-log-tp491", tipo: "voo", companhia: "TAP", numero: "TP491", localizador: "C5ZJTY",
+      origem: "TLS", destino: "LIS", terminalOrigem: "", terminalDestino: "1",
+      data: "2026-09-13", hora: "12:25", dataFim: "2026-09-13", horaFim: "13:30",
+      obs: "Voo da TAP operado pela NI. Chega em Lisboa 13:30 — dia do show de 13/09.",
+    },
+    {
+      id: "seed-log-fr4166", tipo: "voo", companhia: "Ryanair", numero: "FR4166", localizador: "E6S32K",
+      origem: "LIS", destino: "VIE", terminalOrigem: "", terminalDestino: "",
+      data: "2026-09-16", hora: "18:20", dataFim: "2026-09-16", horaFim: "22:50",
+      obs: "Ida pra Viena.",
+    },
+    {
+      id: "seed-log-fr4167", tipo: "voo", companhia: "Ryanair", numero: "FR4167", localizador: "E6S32K",
+      origem: "VIE", destino: "LIS", terminalOrigem: "", terminalDestino: "",
+      data: "2026-09-20", hora: "15:00", dataFim: "2026-09-20", horaFim: "17:45",
+      obs: "Volta de Viena pra Lisboa.",
+    },
+    {
+      id: "seed-log-tp73", tipo: "voo", companhia: "TAP", numero: "TP73", localizador: "C5ZJTY",
+      origem: "LIS", destino: "GIG", terminalOrigem: "1", terminalDestino: "2",
+      data: "2026-10-18", hora: "11:45", dataFim: "2026-10-18", horaFim: "17:45",
+      obs: `Volta pro Rio. ${AGENCIA}`,
+    },
+  ];
+
   /* ── Estado ─────────────────────────────────────────────── */
   const today = new Date();
   const TODAY_KEY = keyFromDate(today);
 
   let deals = {};
   let contacts = {};
+  let logistica = {};
   let config = deepClone(DEFAULT_CONFIG);
 
   let currentView = "pipeline";
@@ -294,7 +350,7 @@
 
   function saveLocal() {
     try {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify({ deals, contacts, config }));
+      localStorage.setItem(LOCAL_KEY, JSON.stringify({ deals, contacts, logistica, config }));
     } catch (err) {
       console.error("Não deu pra salvar localmente:", err);
     }
@@ -307,6 +363,7 @@
       const parsed = JSON.parse(raw);
       deals = parsed.deals || {};
       contacts = parsed.contacts || {};
+      logistica = parsed.logistica || {};
       config = { ...DEFAULT_CONFIG, ...(parsed.config || {}), templates: { ...DEFAULT_CONFIG.templates, ...((parsed.config || {}).templates || {}) } };
     } catch (err) {
       console.error("Não deu pra ler os dados locais:", err);
@@ -326,6 +383,22 @@
     saveLocal();
     if (connected) {
       try { await setDoc(doc(contactsCol, contact.id), contact); } catch (err) { console.error(err); }
+    }
+  }
+
+  async function persistLog(item) {
+    logistica[item.id] = item;
+    saveLocal();
+    if (connected) {
+      try { await setDoc(doc(logCol, item.id), item); } catch (err) { console.error(err); }
+    }
+  }
+
+  async function removeLog(id) {
+    delete logistica[id];
+    saveLocal();
+    if (connected) {
+      try { await deleteDoc(doc(logCol, id)); } catch (err) { console.error(err); }
     }
   }
 
@@ -370,6 +443,7 @@
       db = fsMod.getFirestore(fbApp);
       dealsCol = fsMod.collection(db, "beno_negociacoes");
       contactsCol = fsMod.collection(db, "beno_contatos");
+      logCol = fsMod.collection(db, "beno_logistica");
       configDocRef = doc(db, "beno_config", "app");
 
       authMod.signInAnonymously(auth).catch((err) => console.error(err));
@@ -412,6 +486,17 @@
         if (!next[c.id]) { next[c.id] = c; setDoc(doc(contactsCol, c.id), c).catch(console.error); }
       });
       contacts = next;
+      saveLocal();
+      renderAll();
+    }, (err) => { console.error(err); connected = false; });
+
+    onSnapshot(logCol, (snap) => {
+      const next = {};
+      snap.forEach((d) => { next[d.id] = d.data(); });
+      Object.values(logistica).forEach((l) => {
+        if (!next[l.id]) { next[l.id] = l; setDoc(doc(logCol, l.id), l).catch(console.error); }
+      });
+      logistica = next;
       saveLocal();
       renderAll();
     }, (err) => { console.error(err); connected = false; });
@@ -973,6 +1058,197 @@
     });
   }
 
+  /* ── Render: logística ──────────────────────────────────
+     Uma linha do tempo só, misturando voo, hospedagem e show — é o
+     que faz a viagem fazer sentido ("chega dia 16, toca dia 17"). */
+
+  const logTimeline = document.getElementById("log-timeline");
+  let mostrarPassado = false;
+  let logFilter = "";
+
+  function cidadeDoAeroporto(sigla) {
+    const nome = AEROPORTOS[(sigla || "").toUpperCase()];
+    return nome ? nome.split(" · ")[0] : (sigla || "").toUpperCase();
+  }
+
+  async function seedLogisticaOnce() {
+    try {
+      if (localStorage.getItem(SEED_LOGISTICA_KEY)) return;
+      localStorage.setItem(SEED_LOGISTICA_KEY, "1");
+    } catch (err) {
+      return;
+    }
+    for (const item of SEED_LOGISTICA) await persistLog({ ...item, criadoEm: TODAY_KEY });
+    renderAll();
+  }
+
+  /* Junta tudo numa lista ordenada por data e hora. */
+  function itensDaLinhaDoTempo() {
+    const itens = [];
+
+    Object.values(logistica).forEach((l) => {
+      if (!l.data) return;
+      /* Sem hora, vai pro fim do dia: um check-in sem horário deve
+         aparecer depois do voo que chega naquele mesmo dia. */
+      itens.push({ ...l, ordem: `${l.data} ${l.hora || "23:58"}` });
+    });
+
+    Object.values(deals).forEach((d) => {
+      if (!d.dataAlvo || TERMINAL_STAGES.includes(d.etapa) && d.etapa === "recusado") return;
+      if (!d.dataAlvo) return;
+      itens.push({
+        id: `show-${d.id}`,
+        tipo: "show",
+        dealId: d.id,
+        titulo: d.casa || d.contato || "(sem casa)",
+        etapa: d.etapa,
+        cidade: d.bairro || "",
+        data: d.dataAlvo,
+        ordem: `${d.dataAlvo} 23:59`, // show cai no fim do dia, depois do voo
+      });
+    });
+
+    itens.sort((a, b) => a.ordem.localeCompare(b.ordem));
+    return itens;
+  }
+
+  function combinaComFiltroLog(item) {
+    if (!logFilter) return true;
+    const alvo = [item.titulo, item.companhia, item.numero, item.localizador,
+      item.origem, item.destino, cidadeDoAeroporto(item.origem), cidadeDoAeroporto(item.destino),
+      item.nome, item.endereco, item.cidade, item.obs].filter(Boolean).join(" ");
+    return normalizeName(alvo).includes(normalizeName(logFilter));
+  }
+
+  function renderLogistica() {
+    logTimeline.innerHTML = "";
+    document.getElementById("toggle-passado").textContent =
+      mostrarPassado ? "Esconder o que já passou" : "Mostrar o que já passou";
+
+    const todos = itensDaLinhaDoTempo().filter(combinaComFiltroLog);
+    const itens = mostrarPassado ? todos : todos.filter((i) => (i.dataFim || i.data) >= TODAY_KEY);
+
+    if (!itens.length) {
+      const vazio = document.createElement("div");
+      vazio.className = "empty-state";
+      vazio.textContent = todos.length
+        ? "Nada daqui pra frente. Toque em “Mostrar o que já passou”."
+        : "Nenhum voo ou hospedagem ainda. Use “+ Voo” ou “+ Hospedagem”.";
+      logTimeline.appendChild(vazio);
+      return;
+    }
+
+    let mesAtual = "";
+    itens.forEach((item) => {
+      const mes = item.data.slice(0, 7);
+      if (mes !== mesAtual) {
+        mesAtual = mes;
+        const cab = document.createElement("div");
+        cab.className = "log-month";
+        cab.textContent = `${MONTH_NAMES[Number(mes.slice(5, 7)) - 1]} ${mes.slice(0, 4)}`;
+        logTimeline.appendChild(cab);
+      }
+      logTimeline.appendChild(buildLogRow(item));
+    });
+  }
+
+  function buildLogRow(item) {
+    const row = document.createElement("div");
+    row.className = `log-row log-${item.tipo}`;
+
+    const quando = document.createElement("div");
+    quando.className = "log-when";
+    const dia = document.createElement("span");
+    dia.className = "log-day";
+    dia.textContent = item.data.slice(8, 10);
+    const mes = document.createElement("span");
+    mes.className = "log-weekday";
+    mes.textContent = weekdayNameFromKey(item.data).slice(0, 3);
+    quando.appendChild(dia);
+    quando.appendChild(mes);
+    row.appendChild(quando);
+
+    const corpo = document.createElement("div");
+    corpo.className = "log-body";
+
+    const titulo = document.createElement("div");
+    titulo.className = "log-title";
+
+    if (item.tipo === "voo") {
+      titulo.textContent = `✈ ${cidadeDoAeroporto(item.origem)} → ${cidadeDoAeroporto(item.destino)}`;
+      corpo.appendChild(titulo);
+
+      const linha1 = document.createElement("div");
+      linha1.className = "log-sub";
+      const chegaOutroDia = item.dataFim && item.dataFim !== item.data;
+      linha1.textContent = `${item.hora || "--:--"} → ${item.horaFim || "--:--"}`
+        + (chegaOutroDia ? ` (+1 dia, ${formatShortDate(item.dataFim)})` : "");
+      corpo.appendChild(linha1);
+
+      const linha2 = document.createElement("div");
+      linha2.className = "log-sub";
+      /* Sigla + terminal, compacto — o nome das cidades já está no título.
+         Escrever o aeroporto por extenso aqui embaralhava com o separador. */
+      const de = `${item.origem}${item.terminalOrigem ? ` T${item.terminalOrigem}` : ""}`;
+      const para = `${item.destino}${item.terminalDestino ? ` T${item.terminalDestino}` : ""}`;
+      linha2.textContent = [
+        [item.companhia, item.numero].filter(Boolean).join(" "),
+        `${de} → ${para}`,
+      ].filter(Boolean).join(" · ");
+      corpo.appendChild(linha2);
+
+      if (item.localizador) {
+        const loc = document.createElement("span");
+        loc.className = "pill";
+        loc.textContent = `reserva ${item.localizador}`;
+        corpo.appendChild(loc);
+      }
+    } else if (item.tipo === "hospedagem") {
+      titulo.textContent = `🏨 ${item.nome || "(sem nome)"}`;
+      corpo.appendChild(titulo);
+
+      const noites = document.createElement("div");
+      noites.className = "log-sub";
+      noites.textContent = item.dataFim
+        ? `check-in ${formatShortDate(item.data)} · check-out ${formatShortDate(item.dataFim)}`
+        : `check-in ${formatShortDate(item.data)}`;
+      corpo.appendChild(noites);
+
+      if (item.endereco) {
+        const end = document.createElement("a");
+        end.className = "log-endereco";
+        end.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.endereco)}`;
+        end.target = "_blank";
+        end.rel = "noopener";
+        end.textContent = item.endereco;
+        corpo.appendChild(end);
+      }
+    } else {
+      titulo.textContent = `🎧 ${item.titulo}`;
+      corpo.appendChild(titulo);
+      const sub = document.createElement("div");
+      sub.className = "log-sub";
+      sub.textContent = [STAGE_BY_KEY[item.etapa].label, item.cidade].filter(Boolean).join(" · ");
+      corpo.appendChild(sub);
+    }
+
+    if (item.obs) {
+      const obs = document.createElement("div");
+      obs.className = "log-obs";
+      obs.textContent = item.obs;
+      corpo.appendChild(obs);
+    }
+
+    row.appendChild(corpo);
+
+    row.addEventListener("click", () => {
+      if (item.tipo === "show") openDealPanel(item.dealId);
+      else openLogPanel(item.id);
+    });
+
+    return row;
+  }
+
   /* ── Render: agenda ─────────────────────────────────────── */
 
   const calGrid = document.getElementById("cal-grid");
@@ -1207,9 +1483,11 @@
     contactPanel.hidden = true;
     templatesPanel.hidden = true;
     importPanel.hidden = true;
+    logPanel.hidden = true;
     backdrop.hidden = true;
     activeDealId = null;
     activeContactId = null;
+    activeLogId = null;
     hideSuggestions();
   }
 
@@ -1245,7 +1523,7 @@
   }
 
   function closeAllPanelsExcept(keep) {
-    [dealPanel, contactPanel, templatesPanel, importPanel].forEach((p) => {
+    [dealPanel, contactPanel, templatesPanel, importPanel, logPanel].forEach((p) => {
       if (p !== keep) p.hidden = true;
     });
   }
@@ -1586,6 +1864,113 @@
       estilo: contact.estilo || config.estiloPadrao,
       cachePedido: contact.cacheRef || "",
     });
+  });
+
+  /* ── Painel: logística ──────────────────────────────────── */
+
+  const logPanel = document.getElementById("log-panel");
+  const lCampos = {
+    companhia: document.getElementById("l-companhia"),
+    numero: document.getElementById("l-numero"),
+    origem: document.getElementById("l-origem"),
+    destino: document.getElementById("l-destino"),
+    terminalOrigem: document.getElementById("l-terminal-origem"),
+    terminalDestino: document.getElementById("l-terminal-destino"),
+    localizador: document.getElementById("l-localizador"),
+    nome: document.getElementById("l-nome"),
+    endereco: document.getElementById("l-endereco"),
+    cidade: document.getElementById("l-cidade"),
+    data: document.getElementById("l-data"),
+    hora: document.getElementById("l-hora"),
+    dataFim: document.getElementById("l-data-fim"),
+    horaFim: document.getElementById("l-hora-fim"),
+    obs: document.getElementById("l-obs"),
+  };
+
+  let activeLogId = null;
+
+  function makeLogItem(overrides) {
+    return {
+      id: newId(), tipo: "voo", companhia: "", numero: "", localizador: "",
+      origem: "", destino: "", terminalOrigem: "", terminalDestino: "",
+      nome: "", endereco: "", cidade: "",
+      data: "", hora: "", dataFim: "", horaFim: "", obs: "",
+      criadoEm: TODAY_KEY, ...overrides,
+    };
+  }
+
+  function aplicarTipoNoPainel(tipo) {
+    document.querySelectorAll("[data-log-tipo]").forEach((el) => {
+      el.hidden = el.dataset.logTipo !== tipo;
+    });
+    const voo = tipo === "voo";
+    document.getElementById("log-panel-title").textContent = voo ? "Voo" : "Hospedagem";
+    document.getElementById("l-data-label").textContent = voo ? "Data de saída" : "Check-in";
+    document.getElementById("l-data-fim-label").textContent = voo ? "Data de chegada" : "Check-out";
+    document.getElementById("l-hora-label").textContent = voo ? "Hora" : "Hora (opcional)";
+    document.getElementById("l-hora-fim-label").textContent = voo ? "Hora" : "Hora (opcional)";
+  }
+
+  function openLogPanel(id) {
+    const item = logistica[id];
+    if (!item) return;
+    activeLogId = id;
+    Object.keys(lCampos).forEach((k) => { lCampos[k].value = item[k] || ""; });
+    aplicarTipoNoPainel(item.tipo);
+    document.getElementById("log-panel-sub").textContent =
+      item.tipo === "voo" ? [item.companhia, item.numero].filter(Boolean).join(" ") : (item.cidade || "");
+    closeAllPanelsExcept(logPanel);
+    backdrop.hidden = false;
+    logPanel.hidden = false;
+  }
+
+  async function criarLog(tipo) {
+    const item = makeLogItem({ tipo });
+    await persistLog(item);
+    switchView("logistica");
+    renderAll();
+    openLogPanel(item.id);
+  }
+
+  document.getElementById("new-voo").addEventListener("click", () => criarLog("voo"));
+  document.getElementById("new-hosp").addEventListener("click", () => criarLog("hospedagem"));
+
+  document.getElementById("save-log").addEventListener("click", async () => {
+    if (!activeLogId) return;
+    const base = logistica[activeLogId];
+    const item = { ...base };
+    Object.keys(lCampos).forEach((k) => { item[k] = lCampos[k].value.trim(); });
+    item.origem = item.origem.toUpperCase();
+    item.destino = item.destino.toUpperCase();
+
+    if (!item.data) return showToast(item.tipo === "voo" ? "Preencha a data de saída." : "Preencha o check-in.");
+    if (item.tipo === "voo" && !item.origem && !item.destino) return showToast("Preencha ao menos a origem ou o destino.");
+    if (item.tipo === "hospedagem" && !item.nome) return showToast("Preencha o nome do lugar.");
+    if (item.dataFim && item.dataFim < item.data) return showToast("A data final está antes da inicial.");
+
+    await persistLog(item);
+    renderAll();
+    closeAllPanels();
+    showToast("Salvo.");
+  });
+
+  document.getElementById("delete-log").addEventListener("click", async () => {
+    if (!activeLogId) return;
+    if (!confirm("Excluir esse item da logística?")) return;
+    await removeLog(activeLogId);
+    renderAll();
+    closeAllPanels();
+    showToast("Excluído.");
+  });
+
+  document.getElementById("toggle-passado").addEventListener("click", () => {
+    mostrarPassado = !mostrarPassado;
+    renderLogistica();
+  });
+
+  document.getElementById("log-search").addEventListener("input", (e) => {
+    logFilter = e.target.value;
+    renderLogistica();
   });
 
   /* ── Painel: mensagens padrão ───────────────────────────── */
@@ -2367,6 +2752,7 @@
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.view === name));
     document.getElementById("view-pipeline").hidden = name !== "pipeline";
     document.getElementById("view-agenda").hidden = name !== "agenda";
+    document.getElementById("view-logistica").hidden = name !== "logistica";
     document.getElementById("view-contatos").hidden = name !== "contatos";
     monthNav.hidden = name !== "agenda";
   }
@@ -2400,7 +2786,7 @@
   });
 
   backdrop.addEventListener("click", closeAllPanels);
-  document.querySelectorAll("[data-close-panel], [data-close-contact], [data-close-templates], [data-close-import]")
+  document.querySelectorAll("[data-close-panel], [data-close-contact], [data-close-templates], [data-close-import], [data-close-log]")
     .forEach((btn) => btn.addEventListener("click", closeAllPanels));
 
   document.addEventListener("keydown", (e) => {
@@ -2456,6 +2842,7 @@
     renderBoard();
     renderContacts();
     renderCalendar();
+    renderLogistica();
     renderFollowupBar();
   }
 
@@ -2464,7 +2851,7 @@
   loadLocal();
   switchView("agenda"); // a agenda é a tela do dia a dia
   renderAll();
-  seedAgendaOnce().then(seedCuradoresOnce);
+  seedAgendaOnce().then(seedCuradoresOnce).then(seedLogisticaOnce);
 
   if (isUnlocked()) {
     loginGate.hidden = true;

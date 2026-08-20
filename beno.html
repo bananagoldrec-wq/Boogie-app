@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Beno Negocia" />
   <title>beno · negociação de shows</title>
-  <link rel="stylesheet" href="css/beno.css?v=10" />
+  <link rel="stylesheet" href="css/beno.css?v=11" />
 </head>
 <body>
 
@@ -48,6 +48,7 @@
   <nav class="tabs" role="tablist">
     <button class="tab is-active" type="button" data-view="agenda" role="tab">Agenda</button>
     <button class="tab" type="button" data-view="pipeline" role="tab">Negociações</button>
+    <button class="tab" type="button" data-view="logistica" role="tab">Logística</button>
     <button class="tab" type="button" data-view="contatos" role="tab">Contatos</button>
   </nav>
 
@@ -90,6 +91,22 @@
       <span><i class="legend-swatch" style="background:var(--card-holiday)"></i>Feriado</span>
       <span class="tagline">clique num dia pra ver ou marcar ✎</span>
     </div>
+  </section>
+
+  <!-- ══════════ VIEW: LOGÍSTICA ══════════ -->
+  <section id="view-logistica" class="view" hidden>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="log-search" type="search" placeholder="Buscar voo, cidade, hotel..." autocomplete="off" />
+      </div>
+      <button id="new-voo" class="btn btn-primary btn-compact" type="button">+ Voo</button>
+      <button id="new-hosp" class="btn btn-ghost btn-compact" type="button">+ Hospedagem</button>
+    </div>
+    <div class="toolbar">
+      <button id="toggle-passado" class="wa-chip" type="button">Mostrar o que já passou</button>
+    </div>
+    <div id="log-timeline" class="log-timeline"></div>
   </section>
 
   <!-- ══════════ VIEW: CONTATOS ══════════ -->
@@ -305,6 +322,108 @@
     </div>
   </aside>
 
+  <!-- ══════════ PANEL: LOGÍSTICA ══════════ -->
+  <aside id="log-panel" class="side-panel" hidden aria-label="Editar logística">
+    <div class="panel-head">
+      <div>
+        <h2 id="log-panel-title">Voo</h2>
+        <div id="log-panel-sub" class="panel-date"></div>
+      </div>
+      <button class="icon-btn-round" type="button" data-close-log aria-label="Fechar">×</button>
+    </div>
+    <div class="panel-body">
+      <!-- campos de voo -->
+      <div data-log-tipo="voo">
+        <div class="field-row">
+          <div class="field">
+            <label for="l-companhia">Companhia</label>
+            <input id="l-companhia" type="text" placeholder="TAP, Ryanair..." autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="l-numero">Voo</label>
+            <input id="l-numero" type="text" placeholder="TP74" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="l-origem">De (sigla)</label>
+            <input id="l-origem" type="text" placeholder="LIS" autocomplete="off" maxlength="4" />
+          </div>
+          <div class="field">
+            <label for="l-destino">Para (sigla)</label>
+            <input id="l-destino" type="text" placeholder="VIE" autocomplete="off" maxlength="4" />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="l-terminal-origem">Terminal saída</label>
+            <input id="l-terminal-origem" type="text" placeholder="1" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="l-terminal-destino">Terminal chegada</label>
+            <input id="l-terminal-destino" type="text" placeholder="2" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="l-localizador">Localizador / reserva</label>
+          <input id="l-localizador" type="text" placeholder="C5ZJTY" autocomplete="off" />
+        </div>
+      </div>
+
+      <!-- campos de hospedagem -->
+      <div data-log-tipo="hospedagem" hidden>
+        <div class="field">
+          <label for="l-nome">Nome do lugar</label>
+          <input id="l-nome" type="text" placeholder="Hotel, Airbnb, casa de amigo..." autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="l-endereco">Endereço</label>
+          <textarea id="l-endereco" rows="2" placeholder="Rua, número, bairro, cidade"></textarea>
+        </div>
+        <div class="field">
+          <label for="l-cidade">Cidade</label>
+          <input id="l-cidade" type="text" placeholder="Lisboa" autocomplete="off" />
+        </div>
+      </div>
+
+      <!-- comuns -->
+      <div class="field-row">
+        <div class="field">
+          <label for="l-data" id="l-data-label">Data de saída</label>
+          <input id="l-data" type="date" />
+        </div>
+        <div class="field">
+          <label for="l-hora" id="l-hora-label">Hora</label>
+          <input id="l-hora" type="time" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="l-data-fim" id="l-data-fim-label">Data de chegada</label>
+          <input id="l-data-fim" type="date" />
+        </div>
+        <div class="field">
+          <label for="l-hora-fim" id="l-hora-fim-label">Hora</label>
+          <input id="l-hora-fim" type="time" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="l-obs">Observações</label>
+        <textarea id="l-obs" rows="3" placeholder="Bagagem, contato da agência, quem recebe..."></textarea>
+      </div>
+
+      <div class="panel-actions">
+        <button id="save-log" class="btn btn-primary" type="button">Salvar</button>
+        <button id="delete-log" class="btn btn-danger-ghost" type="button">Excluir</button>
+      </div>
+    </div>
+  </aside>
+
   <!-- ══════════ PANEL: TEMPLATES ══════════ -->
   <aside id="templates-panel" class="side-panel" hidden aria-label="Mensagens padrão">
     <div class="panel-head">
@@ -467,6 +586,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/beno.js?v=10"></script>
+  <script type="module" src="js/beno.js?v=11"></script>
 </body>
 </html>

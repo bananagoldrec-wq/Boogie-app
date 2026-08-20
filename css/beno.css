@@ -968,3 +968,94 @@ input:focus, select:focus, textarea:focus {
   .week-header span { font-size: 0.68rem; }
 
 }
+
+/* ── Logística ──────────────────────────────────────────── */
+
+.log-timeline {
+  max-width: 1180px;
+  margin: 16px auto 0;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.log-month {
+  font-family: "Quicksand", sans-serif;
+  font-weight: 700;
+  font-size: 0.76rem;
+  color: var(--acc);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 14px 2px 2px;
+}
+
+.log-month:first-child { padding-top: 0; }
+
+.log-row {
+  display: flex;
+  gap: 14px;
+  background: var(--card);
+  border: 1px solid transparent;
+  border-left: 3px solid var(--text-faint);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.log-row:hover { background: var(--card-hover); }
+.log-voo { border-left-color: var(--st-contatado); }
+.log-hospedagem { border-left-color: var(--violet); }
+.log-show { border-left-color: var(--st-fechado); }
+
+.log-when {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 34px;
+  flex-shrink: 0;
+  line-height: 1.1;
+}
+
+.log-day { font-family: "Quicksand", sans-serif; font-weight: 700; font-size: 1.15rem; }
+
+.log-weekday {
+  font-size: 0.58rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.log-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+
+.log-title {
+  font-family: "Quicksand", sans-serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  overflow-wrap: break-word;
+}
+
+.log-sub { font-size: 0.76rem; color: var(--text-dim); overflow-wrap: break-word; }
+
+.log-endereco {
+  font-size: 0.76rem;
+  color: var(--acc);
+  overflow-wrap: break-word;
+}
+
+.log-obs {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  line-height: 1.45;
+  overflow-wrap: break-word;
+}
+
+.log-body .pill { align-self: flex-start; margin-top: 3px; }
+
+@media (max-width: 760px) {
+  .log-timeline { padding: 0 12px; }
+  .log-row { padding: 10px 12px; gap: 10px; }
+  .log-title { font-size: 0.86rem; }
+}
