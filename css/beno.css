@@ -1008,7 +1008,6 @@ input:focus, select:focus, textarea:focus {
 .log-row:hover { background: var(--card-hover); }
 .log-voo { border-left-color: var(--st-contatado); }
 .log-hospedagem { border-left-color: var(--violet); }
-.log-show { border-left-color: var(--st-fechado); }
 
 .log-when {
   display: flex;

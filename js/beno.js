@@ -1082,39 +1082,20 @@
     renderAll();
   }
 
-  /* Junta tudo numa lista ordenada por data e hora. */
+  /* Só o que é logística — voo e hospedagem. Os shows ficam na agenda
+     e no funil; aqui eles só atrapalhavam a leitura das viagens. */
   function itensDaLinhaDoTempo() {
-    const itens = [];
-
-    Object.values(logistica).forEach((l) => {
-      if (!l.data) return;
+    return Object.values(logistica)
+      .filter((l) => l.data)
       /* Sem hora, vai pro fim do dia: um check-in sem horário deve
          aparecer depois do voo que chega naquele mesmo dia. */
-      itens.push({ ...l, ordem: `${l.data} ${l.hora || "23:58"}` });
-    });
-
-    Object.values(deals).forEach((d) => {
-      if (!d.dataAlvo || TERMINAL_STAGES.includes(d.etapa) && d.etapa === "recusado") return;
-      if (!d.dataAlvo) return;
-      itens.push({
-        id: `show-${d.id}`,
-        tipo: "show",
-        dealId: d.id,
-        titulo: d.casa || d.contato || "(sem casa)",
-        etapa: d.etapa,
-        cidade: d.bairro || "",
-        data: d.dataAlvo,
-        ordem: `${d.dataAlvo} 23:59`, // show cai no fim do dia, depois do voo
-      });
-    });
-
-    itens.sort((a, b) => a.ordem.localeCompare(b.ordem));
-    return itens;
+      .map((l) => ({ ...l, ordem: `${l.data} ${l.hora || "23:58"}` }))
+      .sort((a, b) => a.ordem.localeCompare(b.ordem));
   }
 
   function combinaComFiltroLog(item) {
     if (!logFilter) return true;
-    const alvo = [item.titulo, item.companhia, item.numero, item.localizador,
+    const alvo = [item.companhia, item.numero, item.localizador,
       item.origem, item.destino, cidadeDoAeroporto(item.origem), cidadeDoAeroporto(item.destino),
       item.nome, item.endereco, item.cidade, item.obs].filter(Boolean).join(" ");
     return normalizeName(alvo).includes(normalizeName(logFilter));
@@ -1203,7 +1184,7 @@
         loc.textContent = `reserva ${item.localizador}`;
         corpo.appendChild(loc);
       }
-    } else if (item.tipo === "hospedagem") {
+    } else {
       titulo.textContent = `🏨 ${item.nome || "(sem nome)"}`;
       corpo.appendChild(titulo);
 
@@ -1223,13 +1204,6 @@
         end.textContent = item.endereco;
         corpo.appendChild(end);
       }
-    } else {
-      titulo.textContent = `🎧 ${item.titulo}`;
-      corpo.appendChild(titulo);
-      const sub = document.createElement("div");
-      sub.className = "log-sub";
-      sub.textContent = [STAGE_BY_KEY[item.etapa].label, item.cidade].filter(Boolean).join(" · ");
-      corpo.appendChild(sub);
     }
 
     if (item.obs) {
@@ -1241,11 +1215,7 @@
 
     row.appendChild(corpo);
 
-    row.addEventListener("click", () => {
-      if (item.tipo === "show") openDealPanel(item.dealId);
-      else openLogPanel(item.id);
-    });
-
+    row.addEventListener("click", () => openLogPanel(item.id));
     return row;
   }
 
