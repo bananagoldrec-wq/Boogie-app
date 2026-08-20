@@ -1586,12 +1586,14 @@
   const importSelectAll = document.getElementById("import-select-all");
   const importTextLabel = document.getElementById("import-text-label");
   const importFile = document.getElementById("import-file");
+  const importCalName = document.getElementById("import-calname");
 
   function resetImportPreview() {
     importPreview.hidden = true;
     importPreview.innerHTML = "";
     importConfirm.hidden = true;
     importSelectAll.hidden = true;
+    importCalName.hidden = true;
     importCandidates = [];
   }
 
@@ -1776,9 +1778,14 @@
     return events;
   }
 
-  /* Vira lista de shows, já descartando o que não interessa. */
+  /* Vira lista de shows, já descartando o que não interessa.
+     X-WR-CALNAME é o nome da agenda dentro do arquivo — na agenda
+     principal costuma ser o próprio e-mail da conta, o que deixa o
+     Beno conferir se exportou da conta certa. */
   function icsToShows(text) {
     const corte = addDaysKey(TODAY_KEY, -60);
+    const calMatch = unfoldIcs(text).match(/^X-WR-CALNAME:(.*)$/im);
+    const calName = calMatch ? icsUnescape(calMatch[1]) : "";
     const shows = [];
     let ignorados = 0;
 
@@ -1797,7 +1804,7 @@
     });
 
     shows.sort((a, b) => a.dataAlvo.localeCompare(b.dataAlvo));
-    return { shows, ignorados };
+    return { shows, ignorados, calName };
   }
 
   /* ── Pré-visualização (com caixinha pra escolher o que entra) ── */
@@ -1857,6 +1864,7 @@
 
   function buildImportPreview() {
     let ignorados = 0;
+    let calName = "";
 
     if (importMode === "ics") {
       const raw = icsRawText || importText.value;
@@ -1867,6 +1875,7 @@
       const lido = icsToShows(raw);
       importCandidates = lido.shows;
       ignorados = lido.ignorados;
+      calName = lido.calName;
     } else {
       const parser = importMode === "shows" ? parseShowLine : parseImportLine;
       importCandidates = importText.value.split("\n").map(parser).filter(Boolean);
@@ -1884,6 +1893,10 @@
         ? "Não achei nenhuma data nesse texto. Cada linha precisa começar com a data."
         : "Não encontrei nenhum contato nesse texto.");
     }
+
+    // fica fora da lista que rola, pra não sumir de vista ao rolar
+    importCalName.hidden = !calName;
+    if (calName) importCalName.textContent = `Agenda do arquivo: ${calName}`;
 
     const render = importMode === "contatos" ? renderContactPreview : renderShowPreview;
     importCandidates.forEach((c, i) => importPreview.appendChild(render(c, i)));

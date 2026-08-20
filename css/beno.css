@@ -785,6 +785,17 @@ input:focus, select:focus, textarea:focus {
 
 #import-select-all .btn { padding: 7px 12px; font-size: 0.78rem; }
 
+#import-calname[hidden] { display: none; }
+
+.import-calname {
+  font-size: 0.76rem;
+  color: var(--acc);
+  background: var(--acc-dim);
+  border-radius: var(--radius-sm);
+  padding: 8px 11px;
+  overflow-wrap: break-word;
+}
+
 .import-row.is-bad { border: 1px solid rgba(255, 107, 94, 0.35); color: var(--danger); }
 .import-row b { font-family: "Quicksand", sans-serif; }
 .import-row span { color: var(--text-faint); }
