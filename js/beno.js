@@ -99,6 +99,17 @@
     { data: "2026-10-10", casa: "Zurich" },
   ];
 
+  /* Curadores passados pelo Beno. Cada um entra como contato e já abre
+     uma negociação em "A contatar", pronta pro primeiro contato. */
+  const SEED_CURADORES_KEY = "beno_seed_curadores_v1";
+  const SEED_CURADORES = [
+    { nome: "Bernardo Campos", whatsapp: "+55 21 99130-4661" },
+    { nome: "Gui Varella", whatsapp: "+55 21 99890-9024" },
+    { nome: "Mexicano", whatsapp: "+55 11 98755-8876" },
+    { nome: "Douglas Reis", whatsapp: "+55 11 91315-3913", email: "douglas@asapdigital.agency" },
+    { nome: "André", whatsapp: "+55 19 3656-5999" },
+  ];
+
   /* ── Estado ─────────────────────────────────────────────── */
   const today = new Date();
   const TODAY_KEY = keyFromDate(today);
@@ -454,6 +465,34 @@
     renderAll();
   }
 
+  async function seedCuradoresOnce() {
+    try {
+      if (localStorage.getItem(SEED_CURADORES_KEY)) return;
+      localStorage.setItem(SEED_CURADORES_KEY, "1");
+    } catch (err) {
+      return;
+    }
+    for (const cur of SEED_CURADORES) {
+      const slug = normalizeName(cur.nome).replace(/[^a-z0-9]+/g, "") || "curador";
+      const contact = makeContact({
+        id: `seed-cur-${slug}`,
+        nome: cur.nome,
+        whatsapp: cur.whatsapp,
+        email: cur.email || "",
+      });
+      await persistContact(contact);
+      await persistDeal(makeDeal({
+        id: `seed-neg-${slug}`,
+        contato: cur.nome,
+        contatoId: contact.id,
+        whatsapp: cur.whatsapp,
+        etapa: "a_contatar",
+        estilo: config.estiloPadrao,
+      }));
+    }
+    renderAll();
+  }
+
   /* ── Modelo: contatos ───────────────────────────────────── */
 
   function makeContact(overrides) {
@@ -503,11 +542,14 @@
   /* ── Mensagens ──────────────────────────────────────────── */
 
   function buildMessage(templateKey, deal) {
-    const tpl = (config.templates && config.templates[templateKey]) || "";
+    let tpl = (config.templates && config.templates[templateKey]) || "";
     const dataKey = deal.dataAlvo;
+    /* Sem casa cadastrada, some com o trecho "no {casa}" inteiro — senão
+       sai "tocar no sua casa", que entrega que a mensagem é automática. */
+    if (!deal.casa) tpl = tpl.replace(/\s+n[oa]\s+\{casa\}/g, "");
     return tpl
       .replaceAll("{curador}", deal.contato || "tudo bem")
-      .replaceAll("{casa}", deal.casa || "sua casa")
+      .replaceAll("{casa}", deal.casa || "")
       .replaceAll("{bairro}", deal.bairro || "")
       .replaceAll("{data}", dataKey ? formatBrDate(dataKey) : "a combinar")
       .replaceAll("{diaSemana}", dataKey ? weekdayNameFromKey(dataKey) : "dia a combinar")
@@ -515,7 +557,20 @@
       .replaceAll("{cache}", formatMoney(deal.cachePedido) || "combinar")
       .replaceAll("{dj}", config.dj || "Beno")
       .replaceAll("{linkSet}", config.linkSet || "")
-      .replaceAll("{linkInsta}", config.linkInsta || "");
+      .replaceAll("{linkInsta}", config.linkInsta || "")
+      // sobra de espaço deixada por variável vazia
+      .replace(/[ \t]{2,}/g, " ")
+      .replace(/[ \t]+([.,!?])/g, "$1")
+      .trim();
+  }
+
+  /* Avisa antes de mandar uma mensagem que depende de um link que o
+     Beno ainda não cadastrou — evita enviar um texto capenga ao curador. */
+  function missingLinkFor(templateKey) {
+    const tpl = (config.templates && config.templates[templateKey]) || "";
+    if (tpl.includes("{linkSet}") && !config.linkSet) return "o link do seu set";
+    if (tpl.includes("{linkInsta}") && !config.linkInsta) return "seu Instagram";
+    return "";
   }
 
   /* ── Arrastar e soltar (mouse + toque) ──────────────────── */
@@ -826,10 +881,15 @@
       name.textContent = c.casa || c.nome || "(sem nome)";
       card.appendChild(name);
 
-      const sub = document.createElement("div");
-      sub.className = "contact-sub";
-      sub.textContent = [c.nome, c.bairro].filter(Boolean).join(" · ") || "—";
-      card.appendChild(sub);
+      // o título já mostra a casa (ou o nome, quando não há casa) —
+      // não repetir o nome embaixo quando ele é o próprio título
+      const subParts = [c.casa ? c.nome : "", c.bairro].filter(Boolean);
+      if (subParts.length) {
+        const sub = document.createElement("div");
+        sub.className = "contact-sub";
+        sub.textContent = subParts.join(" · ");
+        card.appendChild(sub);
+      }
 
       if (c.whatsapp) {
         const phone = document.createElement("div");
@@ -1036,6 +1096,7 @@
   const dNotas = document.getElementById("d-notas");
   const waPreview = document.getElementById("wa-preview");
   const waWarning = document.getElementById("wa-warning");
+  const waLinksWarning = document.getElementById("wa-links-warning");
   const histList = document.getElementById("hist-list");
   const suggestionsBox = document.getElementById("contact-suggestions");
 
@@ -1160,6 +1221,10 @@
   function updateWaPreview() {
     waPreview.value = buildMessage(activeTemplateKey, readDealForm());
     waWarning.hidden = Boolean(dWhatsapp.value.trim());
+
+    const faltando = missingLinkFor(activeTemplateKey);
+    waLinksWarning.hidden = !faltando;
+    if (faltando) waLinksWarning.textContent = `Essa mensagem usa ${faltando}, que ainda não está cadastrado — preencha em Mensagens padrão (ícone 💬).`;
   }
 
   [dContato, dCasa, dBairro, dData, dEstilo, dCachePedido].forEach((el) =>
@@ -1826,7 +1891,7 @@
   loadLocal();
   switchView("pipeline");
   renderAll();
-  seedAgendaOnce();
+  seedAgendaOnce().then(seedCuradoresOnce);
 
   if (isUnlocked()) {
     loginGate.hidden = true;
