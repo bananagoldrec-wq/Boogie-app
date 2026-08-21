@@ -1,0 +1,21 @@
+# Blueprint do Render pra subir só a API do coach (o app em si fica no
+# GitHub Pages). Em render.com: New → Blueprint → aponta pra este repositório.
+# Ele pede a ANTHROPIC_API_KEY na hora; nada de chave escrita aqui.
+services:
+  - type: web
+    name: coach-api
+    runtime: node
+    plan: free
+    branch: claude/disco-boogie-globe-app-fp48c2
+    buildCommand: npm install --prefix server --omit=dev
+    startCommand: node server/index.mjs
+    healthCheckPath: /api/health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false          # digitada no painel, nunca no repositório
+      - key: COACH_STATIC
+        value: "0"           # o app é servido pelo Pages
+      - key: COACH_ORIGIN
+        value: https://bananagoldrec-wq.github.io
+      - key: COACH_RATE_LIMIT
+        value: "40"

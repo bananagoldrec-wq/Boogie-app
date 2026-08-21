@@ -1291,6 +1291,34 @@
     }, "image/png");
   }
 
+  document.getElementById("rider-pdf-link").addEventListener("click", async () => {
+    try {
+      const blob = await (await fetch(RIDER_URL)).blob();
+      const file = new File([blob], "frisson-informacoes-tecnicas.pdf", { type: "application/pdf" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Guia técnico Frisson" });
+        return;
+      }
+    } catch (err) {
+      if (err && err.name === "AbortError") return;
+      console.error(err);
+    }
+    if (navigator.share) {
+      try {
+        await navigator.share({ url: RIDER_URL, title: "Guia técnico Frisson" });
+        return;
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(RIDER_URL);
+      showToast("Link do guia copiado — cole no WhatsApp.");
+    } catch (err) {
+      window.open(RIDER_URL, "_blank", "noopener");
+    }
+  });
+
   document.getElementById("share-agenda").addEventListener("click", () => {
     const rows = monthBookings();
     if (!rows.length) {
