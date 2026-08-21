@@ -715,8 +715,10 @@
   }
 
   /* Cidade digitada à mão vence a deduzida pelo telefone. */
+  const SEM_CIDADE = "Sem cidade";
+
   function cidadeDoContato(c) {
-    return (c.cidade || "").trim() || cidadeDoTelefone(c.whatsapp) || "Sem cidade";
+    return (c.cidade || "").trim() || cidadeDoTelefone(c.whatsapp) || SEM_CIDADE;
   }
 
   /* Contatos que o Beno pediu pra tirar. Roda uma vez por aparelho.
@@ -955,19 +957,29 @@
       return;
     }
 
-    // agrupa por cidade; a cidade com mais gente vem primeiro
+    /* Agrupa por cidade. Quem não tem telefone nem cidade digitada fica
+       de fora da lista — os dados continuam salvos, e o contato reaparece
+       assim que ganhar um telefone ou uma cidade. */
     const grupos = {};
+    let semCidade = 0;
     items.forEach((c) => {
       const cidade = cidadeDoContato(c);
+      if (cidade === SEM_CIDADE) { semCidade++; return; }
       (grupos[cidade] = grupos[cidade] || []).push(c);
     });
 
+    if (!Object.keys(grupos).length) {
+      const vazio = document.createElement("div");
+      vazio.className = "empty-state";
+      vazio.textContent = semCidade
+        ? `${semCidade} contato(s) sem telefone e sem cidade não aparecem aqui. Cadastre o telefone ou a cidade pra eles voltarem.`
+        : "Nenhum contato bate com essa busca.";
+      contactList.appendChild(vazio);
+      return;
+    }
+
     Object.keys(grupos)
-      .sort((a, b) => {
-        if (a === "Sem cidade") return 1;
-        if (b === "Sem cidade") return -1;
-        return grupos[b].length - grupos[a].length || a.localeCompare(b, "pt-BR");
-      })
+      .sort((a, b) => grupos[b].length - grupos[a].length || a.localeCompare(b, "pt-BR"))
       .forEach((cidade) => {
         /* Buscando, tudo abre — senão o resultado ficaria escondido
            dentro de uma cidade fechada e pareceria que não achou nada. */
