@@ -137,6 +137,7 @@
         {
           nome: "Mikolaï",
           casa: "Picture Perfect Agency",
+          cidade: "Portugal",
           funcao: "booker",
           whatsapp: "+33 6 72 60 34 93",
           email: "mikolai@pictureperfect-agency.com",
@@ -605,6 +606,7 @@
           id: `seed-cur-${slug}`,
           nome: cur.nome,
           casa: cur.casa || "",
+          cidade: cur.cidade || "",
           funcao: cur.funcao || "curador",
           whatsapp: cur.whatsapp,
           email: cur.email || "",
@@ -621,12 +623,14 @@
   /* Casas que o Beno foi confirmando depois do cadastro inicial.
      Só preenche campo vazio — nunca sobrescreve o que ele digitou.
      Pra completar mais um, é só somar à lista e subir a chave. */
-  const COMPLEMENTOS_KEY = "beno_complementos_v1";
+  const COMPLEMENTOS_KEY = "beno_complementos_v2";
   const COMPLEMENTOS = [
     { nome: "Bernardo Campos", casa: "Quartinho" },
     { nome: "Caio Bucker", casa: "Destilaria Maravilha" },
     { nome: "Douglas Reis", casa: "Major, Sala e Fugaz" },
     { nome: "Marco Antonio", casa: "Macuna" },
+    // número francês, mas é o contato dele em Portugal
+    { nome: "Mikolaï", cidade: "Portugal" },
   ];
 
   async function completarContatosOnce() {
@@ -642,7 +646,7 @@
       if (!contato) continue;
       const atualizado = { ...contato };
       let alterou = false;
-      ["casa", "bairro", "estilo", "instagram", "email"].forEach((campo) => {
+      ["casa", "bairro", "cidade", "estilo", "instagram", "email"].forEach((campo) => {
         if (info[campo] && !atualizado[campo]) { atualizado[campo] = info[campo]; alterou = true; }
       });
       if (alterou) { await persistContact(atualizado); mudou = true; }
