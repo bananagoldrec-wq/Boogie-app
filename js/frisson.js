@@ -1359,6 +1359,13 @@
     toastTimer = setTimeout(() => (el.hidden = true), 2600);
   }
 
+  /* ── service worker (habilita instalar como app) ──────── */
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw-frisson.js").catch(() => {});
+    });
+  }
+
   /* ── init ──────────────────────────────────────────────── */
   renderCalendar();
 })();
