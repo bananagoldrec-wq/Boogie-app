@@ -1082,13 +1082,29 @@ input:focus, select:focus, textarea:focus {
 /* cabeçalho de cidade na lista de contatos */
 .contact-group {
   grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
   font-family: "Quicksand", sans-serif;
   font-weight: 700;
-  font-size: 0.76rem;
+  font-size: 0.86rem;
   color: var(--acc);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 16px 2px 2px;
+  letter-spacing: 0.02em;
+  background: var(--card);
+  border: 1px solid rgba(201, 242, 77, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 13px 15px;
 }
 
-.contact-group:first-child { padding-top: 0; }
+.contact-group:hover { background: var(--card-hover); }
+.contact-group.is-open { background: var(--acc-dim); border-color: var(--acc-line); }
+
+.contact-group-seta {
+  font-size: 1.05rem;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+
+.contact-group.is-open .contact-group-seta { transform: rotate(90deg); }

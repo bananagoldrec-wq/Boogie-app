@@ -214,6 +214,8 @@
   let currentView = "pipeline";
   let view = { year: today.getFullYear(), month: today.getMonth() + 1 };
   let contactFilter = "";
+  const GRUPOS_KEY = "beno_grupos_abertos_v1";
+  let gruposAbertos = new Set();
   let activeDealId = null;
   let activeContactId = null;
   let activeTemplateKey = "primeiroContato";
@@ -939,15 +941,45 @@
         return grupos[b].length - grupos[a].length || a.localeCompare(b, "pt-BR");
       })
       .forEach((cidade) => {
-        const cab = document.createElement("div");
-        cab.className = "contact-group";
-        cab.textContent = `${cidade} · ${grupos[cidade].length}`;
+        /* Buscando, tudo abre — senão o resultado ficaria escondido
+           dentro de uma cidade fechada e pareceria que não achou nada. */
+        const aberto = Boolean(filter) || gruposAbertos.has(cidade);
+
+        const cab = document.createElement("button");
+        cab.type = "button";
+        cab.className = "contact-group" + (aberto ? " is-open" : "");
+        cab.setAttribute("aria-expanded", String(aberto));
+
+        const seta = document.createElement("span");
+        seta.className = "contact-group-seta";
+        seta.textContent = "›";
+        cab.appendChild(seta);
+        cab.appendChild(document.createTextNode(`${cidade} · ${grupos[cidade].length}`));
+
+        cab.addEventListener("click", () => {
+          if (gruposAbertos.has(cidade)) gruposAbertos.delete(cidade);
+          else gruposAbertos.add(cidade);
+          salvarGruposAbertos();
+          renderContacts();
+        });
         contactList.appendChild(cab);
 
+        if (!aberto) return;
         grupos[cidade]
           .sort((a, b) => (a.nome || a.casa || "").localeCompare(b.nome || b.casa || "", "pt-BR"))
           .forEach((c) => contactList.appendChild(buildContactCard(c)));
       });
+  }
+
+  function salvarGruposAbertos() {
+    try { localStorage.setItem(GRUPOS_KEY, JSON.stringify([...gruposAbertos])); } catch (err) {}
+  }
+
+  function carregarGruposAbertos() {
+    try {
+      const raw = localStorage.getItem(GRUPOS_KEY);
+      if (raw) gruposAbertos = new Set(JSON.parse(raw));
+    } catch (err) {}
   }
 
   function buildContactCard(c) {
@@ -2806,6 +2838,7 @@
   }
 
   loadLocal();
+  carregarGruposAbertos();
   switchView("agenda"); // a agenda é a tela do dia a dia
   renderAll();
   seedAgendaOnce().then(seedCuradoresOnce).then(seedLogisticaOnce)
