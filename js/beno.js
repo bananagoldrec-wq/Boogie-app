@@ -213,9 +213,7 @@
 
   let currentView = "pipeline";
   let view = { year: today.getFullYear(), month: today.getMonth() + 1 };
-  let dealFilter = "";
   let contactFilter = "";
-  let onlyLate = false;
   let activeDealId = null;
   let activeContactId = null;
   let activeTemplateKey = "primeiroContato";
@@ -564,13 +562,6 @@
     deal.historico = deal.historico.slice(0, 40);
   }
 
-  function matchesDealFilter(deal) {
-    if (onlyLate && !isLate(deal)) return false;
-    if (!dealFilter) return true;
-    const hay = normalizeName([deal.casa, deal.contato, deal.bairro, deal.estilo, deal.notas].join(" "));
-    return hay.includes(normalizeName(dealFilter));
-  }
-
   function seedId(dataAlvo, casa) {
     const slug = normalizeName(casa).replace(/[^a-z0-9]+/g, "") || "show";
     return `seed-${dataAlvo}-${slug}`;
@@ -618,15 +609,6 @@
           notas: cur.notas || "",
         });
         await persistContact(contact);
-        await persistDeal(makeDeal({
-          id: `seed-neg-${slug}`,
-          contato: cur.nome,
-          contatoId: contact.id,
-          casa: cur.casa || "",
-          whatsapp: cur.whatsapp,
-          etapa: "a_contatar",
-          estilo: config.estiloPadrao,
-        }));
         semeou = true;
       }
     }
@@ -817,188 +799,17 @@
     document.removeEventListener("touchcancel", onTouchDragEnd);
   }
 
-  /* ── Render: funil ──────────────────────────────────────── */
-
-  const board = document.getElementById("board");
-  const statsRow = document.getElementById("stats-row");
-
-  function renderStats() {
-    const all = Object.values(deals);
-    const abertas = all.filter((d) => !TERMINAL_STAGES.includes(d.etapa)).length;
-    const fechados = all.filter((d) => d.etapa === "fechado");
-    const tocou = all.filter((d) => d.etapa === "tocou");
-    const receita = [...fechados, ...tocou].reduce((sum, d) => sum + (Number(d.cacheFechado) || 0), 0);
-    const atrasadas = lateDeals().length;
-
-    const cards = [
-      { value: abertas, label: "Em aberto" },
-      { value: fechados.length, label: "Fechados" },
-      { value: atrasadas, label: "Pra cobrar" },
-      { value: formatMoney(receita) || "R$ 0", label: "Fechado em R$" },
-    ];
-
-    statsRow.innerHTML = "";
-    cards.forEach((c) => {
-      const el = document.createElement("div");
-      el.className = "stat";
-      const v = document.createElement("div");
-      v.className = "stat-value";
-      v.textContent = c.value;
-      const l = document.createElement("div");
-      l.className = "stat-label";
-      l.textContent = c.label;
-      el.appendChild(v);
-      el.appendChild(l);
-      statsRow.appendChild(el);
-    });
-  }
-
-  function renderBoard() {
-    board.innerHTML = "";
-    const visible = Object.values(deals).filter(matchesDealFilter);
-
-    if (!Object.keys(deals).length) {
-      const empty = document.createElement("div");
-      empty.className = "empty-state";
-      empty.textContent = "Nenhuma negociação ainda. Toque em “+ Negociação” ou importe sua lista de curadores pelo ícone ⤓ lá em cima.";
-      board.appendChild(empty);
-      return;
-    }
-
-    STAGES.forEach((stage) => {
-      const col = document.createElement("div");
-      col.className = "column";
-      col.dataset.drop = "stage";
-      col.dataset.stage = stage.key;
-
-      const head = document.createElement("div");
-      head.className = "column-head";
-      const dot = document.createElement("span");
-      dot.className = "column-dot";
-      dot.style.background = `var(--st-${stage.key})`;
-      const title = document.createElement("span");
-      title.className = "column-title";
-      title.textContent = stage.label;
-      const count = document.createElement("span");
-      count.className = "column-count";
-      head.appendChild(dot);
-      head.appendChild(title);
-      head.appendChild(count);
-      col.appendChild(head);
-
-      const items = visible
-        .filter((d) => d.etapa === stage.key)
-        .sort((a, b) => (a.proximoFollowup || "9999").localeCompare(b.proximoFollowup || "9999"));
-
-      count.textContent = items.length;
-      items.forEach((deal) => col.appendChild(buildDealCard(deal)));
-
-      if (!items.length) {
-        const empty = document.createElement("div");
-        empty.className = "column-empty";
-        empty.textContent = "—";
-        col.appendChild(empty);
-      }
-
-      makeDropTarget(col, (dealId) => moveDealToStage(dealId, stage.key));
-      board.appendChild(col);
-    });
-  }
-
-  function buildDealCard(deal) {
-    const card = document.createElement("div");
-    card.className = "deal-card" + (isLate(deal) ? " is-late" : "");
-    card.style.borderLeftColor = `var(--st-${deal.etapa})`;
-
-    const casa = document.createElement("div");
-    casa.className = "deal-casa";
-    casa.textContent = deal.casa || "(sem casa)";
-    card.appendChild(casa);
-
-    if (deal.contato || deal.bairro) {
-      const sub = document.createElement("div");
-      sub.className = "deal-sub";
-      sub.textContent = [deal.contato, deal.bairro].filter(Boolean).join(" · ");
-      card.appendChild(sub);
-    }
-
-    const meta = document.createElement("div");
-    meta.className = "deal-meta";
-
-    if (deal.dataAlvo) {
-      const p = document.createElement("span");
-      p.className = "pill pill-date";
-      p.textContent = formatShortDate(deal.dataAlvo);
-      meta.appendChild(p);
-    }
-
-    const valor = deal.cacheFechado || deal.cachePedido;
-    if (valor) {
-      const p = document.createElement("span");
-      p.className = "pill pill-cache";
-      p.textContent = formatMoney(valor);
-      meta.appendChild(p);
-    }
-
-    if (deal.proximoFollowup && !TERMINAL_STAGES.includes(deal.etapa)) {
-      const p = document.createElement("span");
-      const late = isLate(deal);
-      p.className = "pill " + (late ? "pill-late" : "pill-soon");
-      p.textContent = late ? `cobrar ${formatShortDate(deal.proximoFollowup)}` : `↻ ${formatShortDate(deal.proximoFollowup)}`;
-      meta.appendChild(p);
-    }
-
-    if (meta.children.length) card.appendChild(meta);
-
-    const actions = document.createElement("div");
-    actions.className = "deal-actions";
-
-    const waBtn = document.createElement("button");
-    waBtn.type = "button";
-    waBtn.className = "mini-btn mini-wa";
-    waBtn.textContent = "WhatsApp";
-    waBtn.addEventListener("click", (e) => { e.stopPropagation(); quickWhatsApp(deal.id); });
-    actions.appendChild(waBtn);
-
-    const stageIdx = STAGES.findIndex((s) => s.key === deal.etapa);
-    if (stageIdx >= 0 && stageIdx < STAGES.length - 3) {
-      const nextBtn = document.createElement("button");
-      nextBtn.type = "button";
-      nextBtn.className = "mini-btn";
-      nextBtn.textContent = "Avançar";
-      nextBtn.title = `Mover pra "${STAGES[stageIdx + 1].label}"`;
-      nextBtn.addEventListener("click", (e) => { e.stopPropagation(); moveDealToStage(deal.id, STAGES[stageIdx + 1].key); });
-      actions.appendChild(nextBtn);
-    }
-
-    card.appendChild(actions);
-
-    card.addEventListener("click", () => {
-      if (suppressNextClick) return;
-      openDealPanel(deal.id);
-    });
-
-    makeDragSource(card, deal.id);
-    return card;
-  }
-
-  async function moveDealToStage(dealId, stageKey) {
-    const deal = deals[dealId];
-    if (!deal || deal.etapa === stageKey) return;
-    const updated = { ...deal, etapa: stageKey };
-    touchDeal(updated);
-    addHistory(updated, `Etapa → ${STAGE_BY_KEY[stageKey].label}`);
-    await persistDeal(updated);
-    renderAll();
-    const stage = STAGE_BY_KEY[stageKey];
-    showToast(stage.followupDays
-      ? `${stage.label} · cobrar de novo em ${stage.followupDays} dia(s).`
-      : stage.label);
-  }
-
   /* ── Render: contatos ───────────────────────────────────── */
 
   const contactList = document.getElementById("contact-list");
+
+  /* Quantos dias desde a última mensagem — o único "status" que sobrou.
+     Serve pra ele ver quem esfriou, sem funil nenhum. */
+  function diasDesde(dataKey) {
+    if (!dataKey) return null;
+    const [y, m, d] = dataKey.split("-").map(Number);
+    return Math.round((Date.now() - new Date(y, m - 1, d).getTime()) / 86400000);
+  }
 
   function renderContacts() {
     contactList.innerHTML = "";
@@ -1012,7 +823,7 @@
       empty.className = "empty-state";
       empty.textContent = Object.keys(contacts).length
         ? "Nenhum contato bate com essa busca."
-        : "Nenhum contato ainda. Use “+ Contato” ou importe sua lista pelo ícone ⤓ lá em cima.";
+        : "Nenhum contato ainda. Use \u201c+ Contato\u201d ou importe sua lista pelo ícone ⤓ lá em cima.";
       contactList.appendChild(empty);
       return;
     }
@@ -1021,6 +832,7 @@
       const card = document.createElement("div");
       card.className = "contact-card";
 
+      // a casa que a pessoa cura é o que identifica o contato
       const name = document.createElement("div");
       name.className = "contact-name";
       name.textContent = c.casa || c.nome || "(sem nome)";
@@ -1045,14 +857,40 @@
 
       const tags = document.createElement("div");
       tags.className = "contact-tags";
-      [c.funcao, c.estilo, c.melhorDia, formatMoney(c.cacheRef)].filter(Boolean).forEach((t) => {
+      [c.estilo, c.melhorDia, formatMoney(c.cacheRef)].filter(Boolean).forEach((t) => {
         const pill = document.createElement("span");
         pill.className = "pill";
         pill.textContent = t;
         tags.appendChild(pill);
       });
+
+      const dias = diasDesde(c.ultimoContato);
+      if (dias !== null) {
+        const pill = document.createElement("span");
+        pill.className = "pill " + (dias >= 14 ? "pill-late" : "pill-cache");
+        pill.textContent = dias === 0 ? "falei hoje" : dias === 1 ? "falei ontem" : `falei há ${dias} dias`;
+        tags.appendChild(pill);
+      }
       if (tags.children.length) card.appendChild(tags);
 
+      const acoes = document.createElement("div");
+      acoes.className = "contact-actions";
+
+      const msg = document.createElement("button");
+      msg.type = "button";
+      msg.className = "btn btn-primary btn-msg";
+      msg.textContent = "Mandar mensagem";
+      msg.addEventListener("click", (e) => { e.stopPropagation(); openContactPanel(c.id, true); });
+      acoes.appendChild(msg);
+
+      const editar = document.createElement("button");
+      editar.type = "button";
+      editar.className = "btn btn-ghost btn-msg";
+      editar.textContent = "Editar";
+      editar.addEventListener("click", (e) => { e.stopPropagation(); openContactPanel(c.id); });
+      acoes.appendChild(editar);
+
+      card.appendChild(acoes);
       card.addEventListener("click", () => openContactPanel(c.id));
       contactList.appendChild(card);
     });
@@ -1381,41 +1219,6 @@
     showToast(`Data movida pra ${formatBrDate(dateKeyTarget)}.`);
   }
 
-  /* ── Faixa de follow-up ─────────────────────────────────── */
-
-  const followupBar = document.getElementById("followup-bar");
-  const followupText = document.getElementById("followup-text");
-
-  const followupAction = document.getElementById("followup-action");
-
-  function renderFollowupBar() {
-    const late = lateDeals();
-
-    if (onlyLate) {
-      followupBar.hidden = false;
-      followupText.textContent = "Mostrando só quem está esperando cobrança.";
-      followupAction.textContent = "Ver todas";
-      return;
-    }
-
-    if (!late.length) {
-      followupBar.hidden = true;
-      return;
-    }
-
-    followupBar.hidden = false;
-    followupAction.textContent = "Ver agora";
-    followupText.textContent = late.length === 1
-      ? "1 negociação esperando você cobrar."
-      : `${late.length} negociações esperando você cobrar.`;
-  }
-
-  followupAction.addEventListener("click", () => {
-    onlyLate = !onlyLate;
-    switchView("pipeline");
-    renderAll();
-  });
-
   /* ── Painel: negociação ─────────────────────────────────── */
 
   const backdrop = document.getElementById("backdrop");
@@ -1623,18 +1426,13 @@
     updateWaPreview();
   }
 
-  /* Criar sempre leva pro funil, pra ele ver onde a negociação caiu
-     — inclusive quando parte de um contato ou de um dia da agenda. */
+  /* Show novo só nasce de um dia do calendário, então sempre tem data. */
   async function createDeal(overrides) {
     const deal = makeDeal({ estilo: config.estiloPadrao, ...overrides });
     await persistDeal(deal);
-    onlyLate = false;
-    switchView("pipeline");
     renderAll();
     openDealPanel(deal.id);
   }
-
-  document.getElementById("new-deal").addEventListener("click", () => createDeal({}));
 
   document.getElementById("save-deal").addEventListener("click", async () => {
     if (!activeDealId) return;
@@ -1732,15 +1530,6 @@
     }
   });
 
-  /* Botão WhatsApp direto do card, sem abrir o painel: usa a mensagem
-     que faz sentido pra etapa em que a negociação está. */
-  function quickWhatsApp(dealId) {
-    const deal = deals[dealId];
-    if (!deal) return;
-    const templateKey = suggestTemplate(deal);
-    sendWhatsApp(deal, buildMessage(templateKey, deal), templateKey);
-  }
-
   /* ── Painel: contato ────────────────────────────────────── */
 
   const cNome = document.getElementById("c-nome");
@@ -1755,7 +1544,88 @@
   const cCache = document.getElementById("c-cache");
   const cNotas = document.getElementById("c-notas");
 
-  function openContactPanel(id) {
+  /* ── Mensagem a partir do contato ───────────────────────
+     As mensagens são escritas em cima de uma negociação; aqui o
+     contato veste esse formato, sem data e sem etapa. */
+
+  const cWaTemplates = document.getElementById("c-wa-templates");
+  const cWaPreview = document.getElementById("c-wa-preview");
+  const cWaWarning = document.getElementById("c-wa-warning");
+  const cWaLinksWarning = document.getElementById("c-wa-links-warning");
+  let cTemplateKey = "primeiroContato";
+
+  function contatoComoDeal() {
+    return {
+      contato: cNome.value.trim(),
+      casa: cCasa.value.trim(),
+      bairro: cBairro.value.trim(),
+      estilo: cEstilo.value.trim() || config.estiloPadrao,
+      cachePedido: cCache.value,
+      dataAlvo: "",
+      whatsapp: cWhatsapp.value.trim(),
+    };
+  }
+
+  function renderContactChips() {
+    cWaTemplates.innerHTML = "";
+    Object.keys(TEMPLATE_LABELS).forEach((key) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "wa-chip" + (key === cTemplateKey ? " active" : "");
+      chip.textContent = TEMPLATE_LABELS[key];
+      chip.addEventListener("click", () => {
+        cTemplateKey = key;
+        renderContactChips();
+        updateContactPreview();
+      });
+      cWaTemplates.appendChild(chip);
+    });
+  }
+
+  function updateContactPreview() {
+    cWaPreview.value = buildMessage(cTemplateKey, contatoComoDeal());
+    cWaWarning.hidden = Boolean(cWhatsapp.value.trim());
+    const faltando = missingLinkFor(cTemplateKey);
+    cWaLinksWarning.hidden = !faltando;
+    if (faltando) cWaLinksWarning.textContent = `Essa mensagem usa ${faltando}, que ainda não está cadastrado — preencha em Mensagens padrão (ícone 💬).`;
+  }
+
+  document.querySelectorAll("[data-c-presskit]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const url = btn.dataset.cPresskit === "en" ? PRESSKIT_EN_URL : PRESSKIT_URL;
+      if (cWaPreview.value.includes(url)) return showToast("Esse link já está na mensagem.");
+      cWaPreview.value = `${cWaPreview.value.trim()}\n\n${url}`.trim();
+      showToast("Press kit anexado.");
+    })
+  );
+
+  document.getElementById("c-copy-whatsapp").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(cWaPreview.value);
+      showToast("Mensagem copiada.");
+    } catch (err) {
+      showToast("Não deu pra copiar — selecione e copie na mão.");
+    }
+  });
+
+  document.getElementById("c-send-whatsapp").addEventListener("click", async () => {
+    if (!activeContactId) return;
+    const phone = normalizePhone(cWhatsapp.value);
+    if (!phone) {
+      cWaWarning.hidden = false;
+      return showToast("Cadastre o WhatsApp desse contato primeiro.");
+    }
+    // registra a data pra ele saber depois quem já foi falado
+    await persistContact({ ...contacts[activeContactId], ultimoContato: TODAY_KEY });
+    renderContacts();
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(cWaPreview.value)}`, "_blank", "noopener");
+  });
+
+  [cNome, cCasa, cBairro, cEstilo, cCache].forEach((el) =>
+    el.addEventListener("input", updateContactPreview));
+  cWhatsapp.addEventListener("input", () => { cWaWarning.hidden = Boolean(cWhatsapp.value.trim()); });
+
+  function openContactPanel(id, focarMensagem) {
     const contact = contacts[id];
     if (!contact) return;
     activeContactId = id;
@@ -1772,14 +1642,25 @@
     cCache.value = contact.cacheRef || "";
     cNotas.value = contact.notas || "";
 
-    const linked = Object.values(deals).filter((d) => d.contatoId === id).length;
-    document.getElementById("contact-panel-sub").textContent = linked
-      ? `${linked} negociação(ões) ligada(s)`
-      : "sem negociação aberta";
+    const dias = diasDesde(contact.ultimoContato);
+    document.getElementById("contact-panel-sub").textContent =
+      dias === null ? "ainda não falei com essa pessoa"
+      : dias === 0 ? "falei hoje"
+      : dias === 1 ? "falei ontem"
+      : `falei há ${dias} dias`;
+
+    cTemplateKey = contact.ultimoContato ? "followup" : "primeiroContato";
+    renderContactChips();
+    updateContactPreview();
 
     closeAllPanelsExcept(contactPanel);
     backdrop.hidden = false;
     contactPanel.hidden = false;
+
+    if (focarMensagem) {
+      // veio pelo botão "Mandar mensagem": rola direto pra ela
+      requestAnimationFrame(() => cWaPreview.scrollIntoView({ block: "center" }));
+    }
   }
 
   document.getElementById("new-contact").addEventListener("click", async () => {
@@ -1820,20 +1701,6 @@
     renderAll();
     closeAllPanels();
     showToast("Contato excluído.");
-  });
-
-  document.getElementById("deal-from-contact").addEventListener("click", async () => {
-    const contact = contacts[activeContactId];
-    if (!contact) return;
-    await createDeal({
-      contato: contact.nome,
-      contatoId: contact.id,
-      casa: contact.casa,
-      bairro: contact.bairro,
-      whatsapp: contact.whatsapp,
-      estilo: contact.estilo || config.estiloPadrao,
-      cachePedido: contact.cacheRef || "",
-    });
   });
 
   /* ── Painel: logística ──────────────────────────────────── */
@@ -2639,7 +2506,6 @@
       }
     }
 
-    onlyLate = false;
     switchView("agenda");
     view = { year: Number(escolhidos[0].dataAlvo.slice(0, 4)), month: Number(escolhidos[0].dataAlvo.slice(5, 7)) };
     renderAll();
@@ -2720,7 +2586,6 @@
   function switchView(name) {
     currentView = name;
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.view === name));
-    document.getElementById("view-pipeline").hidden = name !== "pipeline";
     document.getElementById("view-agenda").hidden = name !== "agenda";
     document.getElementById("view-logistica").hidden = name !== "logistica";
     document.getElementById("view-contatos").hidden = name !== "contatos";
@@ -2741,13 +2606,6 @@
     view.month++;
     if (view.month > 12) { view.month = 1; view.year++; }
     renderCalendar();
-  });
-
-  document.getElementById("deal-search").addEventListener("input", (e) => {
-    dealFilter = e.target.value;
-    if (dealFilter) onlyLate = false;
-    renderBoard();
-    renderFollowupBar();
   });
 
   document.getElementById("contact-search").addEventListener("input", (e) => {
@@ -2808,20 +2666,26 @@
   /* ── Render geral ───────────────────────────────────────── */
 
   function renderAll() {
-    renderStats();
-    renderBoard();
     renderContacts();
     renderCalendar();
     renderLogistica();
-    renderFollowupBar();
   }
 
   /* ── Início ─────────────────────────────────────────────── */
 
+  /* Com o funil fora, negociação sem data não aparece em lugar nenhum.
+     As que existiam eram as criadas por curador na semeadura, e o que
+     elas guardavam já está no contato — então sai o que ficou órfão. */
+  async function limparNegociacoesSemData() {
+    const orfas = Object.values(deals).filter((d) => !d.dataAlvo && String(d.id).startsWith("seed-neg-"));
+    for (const d of orfas) await removeDeal(d.id);
+    if (orfas.length) renderAll();
+  }
+
   loadLocal();
   switchView("agenda"); // a agenda é a tela do dia a dia
   renderAll();
-  seedAgendaOnce().then(seedCuradoresOnce).then(seedLogisticaOnce);
+  seedAgendaOnce().then(seedCuradoresOnce).then(seedLogisticaOnce).then(limparNegociacoesSemData);
 
   if (isUnlocked()) {
     loginGate.hidden = true;

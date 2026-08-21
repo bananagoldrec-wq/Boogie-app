@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Beno Negocia" />
   <title>beno · negociação de shows</title>
-  <link rel="stylesheet" href="css/beno.css?v=12" />
+  <link rel="stylesheet" href="css/beno.css?v=13" />
 </head>
 <body>
 
@@ -47,30 +47,9 @@
 
   <nav class="tabs" role="tablist">
     <button class="tab is-active" type="button" data-view="agenda" role="tab">Agenda</button>
-    <button class="tab" type="button" data-view="pipeline" role="tab">Negociações</button>
     <button class="tab" type="button" data-view="logistica" role="tab">Logística</button>
     <button class="tab" type="button" data-view="contatos" role="tab">Contatos</button>
   </nav>
-
-  <!-- Faixa de follow-ups vencidos -->
-  <div id="followup-bar" class="followup-bar" hidden>
-    <span id="followup-text"></span>
-    <button id="followup-action" class="btn-inline" type="button">Ver agora</button>
-  </div>
-
-  <!-- ══════════ VIEW: PIPELINE ══════════ -->
-  <section id="view-pipeline" class="view" hidden>
-    <div class="toolbar">
-      <div class="search-wrap">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-        <input id="deal-search" type="search" placeholder="Buscar casa, curador, bairro..." autocomplete="off" />
-      </div>
-      <button id="new-deal" class="btn btn-primary btn-compact" type="button">+ Negociação</button>
-    </div>
-
-    <div id="stats-row" class="stats-row"></div>
-    <div id="board" class="board"></div>
-  </section>
 
   <!-- ══════════ VIEW: AGENDA ══════════ -->
   <section id="view-agenda" class="view">
@@ -114,7 +93,7 @@
     <div class="toolbar">
       <div class="search-wrap">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-        <input id="contact-search" type="search" placeholder="Buscar curador, casa, bairro..." autocomplete="off" />
+        <input id="contact-search" type="search" placeholder="Buscar casa, curador, bairro..." autocomplete="off" />
       </div>
       <button id="new-contact" class="btn btn-primary btn-compact" type="button">+ Contato</button>
     </div>
@@ -316,8 +295,25 @@
       </div>
 
       <div class="divider"></div>
-      <div class="panel-actions">
-        <button id="deal-from-contact" class="btn btn-ghost" type="button">Abrir negociação com esse contato</button>
+
+      <div class="wa-section">
+        <h3>Mandar mensagem</h3>
+        <div id="c-wa-templates" class="wa-templates"></div>
+        <div class="field">
+          <textarea id="c-wa-preview" class="wa-preview" rows="5"></textarea>
+        </div>
+        <div class="presskit-row">
+          <span class="presskit-label">Anexar press kit:</span>
+          <button class="wa-chip" type="button" data-c-presskit="pt">Português</button>
+          <button class="wa-chip" type="button" data-c-presskit="en">English</button>
+        </div>
+        <div id="c-wa-warning" class="no-phone-hint" hidden>Cadastre o WhatsApp desse contato pra poder enviar.</div>
+        <div id="c-wa-links-warning" class="no-phone-hint" hidden></div>
+        <div class="panel-actions">
+          <button id="c-send-whatsapp" class="btn btn-primary" type="button">Abrir no WhatsApp</button>
+          <button id="c-copy-whatsapp" class="btn btn-ghost" type="button">Copiar</button>
+        </div>
+        <p class="wa-hint">Abre pronta no WhatsApp — você confere e envia por lá.</p>
       </div>
     </div>
   </aside>
@@ -586,6 +582,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/beno.js?v=12"></script>
+  <script type="module" src="js/beno.js?v=13"></script>
 </body>
 </html>
