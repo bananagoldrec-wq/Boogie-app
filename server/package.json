@@ -1,0 +1,16 @@
+{
+  "name": "coach-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Server side of the Coach app: keeps the Anthropic API key and talks to Claude.",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs",
+    "dev": "node --watch index.mjs"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0"
+  }
+}
