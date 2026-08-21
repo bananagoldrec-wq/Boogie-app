@@ -1687,6 +1687,28 @@
     })
   );
 
+  /* Menu do press kit na barra de cima: dois PDFs não cabem em um
+     botão só, então ele abre as quatro opções logo abaixo. */
+  const presskitMenu = document.getElementById("presskit-menu");
+  const presskitBtn = document.getElementById("open-presskit");
+
+  function fecharPresskitMenu() {
+    presskitMenu.hidden = true;
+    presskitBtn.setAttribute("aria-expanded", "false");
+  }
+
+  presskitBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const abrindo = presskitMenu.hidden;
+    presskitMenu.hidden = !abrindo;
+    presskitBtn.setAttribute("aria-expanded", String(abrindo));
+  });
+
+  presskitMenu.addEventListener("click", () => fecharPresskitMenu());
+  document.addEventListener("click", (e) => {
+    if (!presskitMenu.hidden && !presskitMenu.contains(e.target)) fecharPresskitMenu();
+  });
+
   document.querySelectorAll("[data-copy-presskit]").forEach((btn) =>
     btn.addEventListener("click", async () => {
       const url = btn.dataset.copyPresskit === "en" ? PRESSKIT_EN_URL : PRESSKIT_URL;
@@ -2801,7 +2823,7 @@
     .forEach((btn) => btn.addEventListener("click", closeAllPanels));
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeAllPanels();
+    if (e.key === "Escape") { closeAllPanels(); fecharPresskitMenu(); }
   });
 
   /* ── Trava de senha ─────────────────────────────────────── */

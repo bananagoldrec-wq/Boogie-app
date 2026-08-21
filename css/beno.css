@@ -1108,3 +1108,37 @@ input:focus, select:focus, textarea:focus {
 }
 
 .contact-group.is-open .contact-group-seta { transform: rotate(90deg); }
+
+/* ── Menu do press kit na barra de cima ─────────────────── */
+
+.pk-wrap { position: relative; flex-shrink: 0; }
+
+.pk-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elev);
+  border: 1px solid var(--acc-line);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.pk-menu a,
+.pk-menu button {
+  padding: 11px 14px;
+  font-size: 0.84rem;
+  color: var(--text);
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pk-menu a:hover,
+.pk-menu button:hover { background: var(--acc-dim); color: var(--acc); }
+.pk-menu a:not(:last-child),
+.pk-menu button:not(:last-child) { border-bottom: 1px solid rgba(201, 242, 77, 0.1); }
