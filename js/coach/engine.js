@@ -37,25 +37,201 @@ const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
 /* ------------------------------------------------------------------ conversa */
 
-const ACK_SHORT = ["Got it.", "Right.", "Okay.", "Mm-hm."];
-const EXPAND = [
-  "Tell me a bit more about that.",
+/* O professor local não tem modelo nenhum atrás dele, então tudo o que ele
+   pode fazer é ouvir com atenção: pegar o que o aluno acabou de dizer e
+   responder àquilo, em vez de recitar a próxima pergunta da lista.
+
+   São três passos — ler a fala (`read`), escolher o que fazer com ela
+   (`chooseQuestion` e companhia) e montar a resposta (`reply`) — e uma regra
+   que vale pra tudo: nada que ele já disse nesta conversa aparece de novo. */
+
+const POSITIVE = /\b(love|loved|like|liked|great|good|nice|amazing|awesome|beautiful|happy|fun|funny|best|favourite|favorite|enjoy|enjoyed|perfect|wonderful|excited|glad)\b/i;
+const NEGATIVE = /\b(hate|hated|bad|awful|terrible|worst|boring|bored|sad|angry|tired|exhausted|stress|stressed|difficult|hard|problem|worried|annoying|horrible|scared|afraid)\b/i;
+const NO_IDEA = /^(i don'?t know|no idea|not sure|dunno|nothing|not really)\b/i;
+const LAUGH = /\b(haha+|hehe|lol)\b/i;
+
+/* Perguntas que pegam carona no que o aluno acabou de falar. Não dependem do
+   tema: é o que faz o professor parecer que estava mesmo escutando. */
+const HOOKS = [
+  { re: /\b(food|eat\w*|ate|dinner|lunch|breakfast|restaurant\w*|cook\w*|dish\w*|meal\w*)\b/i,
+    asks: ["What did you eat?", "Are you into cooking, or more of an eating-out person?", "What's the one dish you'd never get tired of?"] },
+  { re: /\b(friend\w*|mate|mates|colleague\w*)\b/i,
+    asks: ["How long have you known them?", "What do you usually do together?", "Are you the one who organises things, or do you just show up?"] },
+  { re: /\b(family|families|mother|father|mum|mom|dad|parents?|brother\w*|sister\w*|son|daughter\w*|wife|husband|partner|kids?|child|children)\b/i,
+    asks: ["Are you close?", "Do they live nearby?", "What's your family like when everyone's together?"] },
+  { re: /\b(boss|office|meeting\w*|client\w*|colleague\w*|deadline\w*|overtime)\b/i,
+    asks: ["Is it busy at the moment?", "What's a normal day like for you?", "Do you get on with the people you work with?"] },
+  { re: /\b(money|expensive|cheap|price\w*|cost\w*|pay|paid|paying|salary|budget)\b/i,
+    asks: ["Is that stressful to deal with?", "Are you careful with money, or more relaxed about it?", "Was it worth it, in the end?"] },
+  { re: /\b(tired|exhaust\w*|stress\w*|busy|struggl\w*|pressure|worried|worry\w*)\b/i,
+    asks: ["What helps when it gets like that?", "Has it been like this for a while?", "How do you switch off after a day like that?"] },
+  { re: /\b(music|song\w*|band|bands|concert\w*|album\w*|playlist\w*|guitar|piano|sing\w*)\b/i,
+    asks: ["What have you been listening to lately?", "Have you seen them live?", "Does music help you focus, or distract you?"] },
+  { re: /\b(film\w*|movie\w*|series|netflix|episode\w*|watch\w*|cinema)\b/i,
+    asks: ["What did you watch?", "Would you recommend it?", "Do you watch in English, with or without subtitles?"] },
+  { re: /\b(travel\w*|trip\w*|flight\w*|holiday\w*|vacation\w*|beach\w*|abroad|visit\w*|airport)\b/i,
+    asks: ["What was the best part of it?", "Would you go back?", "Do you plan your trips, or improvise?"] },
+  { re: /\b(weather|rain\w*|hot|cold|snow\w*|sun|sunny|winter|summer)\b/i,
+    asks: ["Does the weather change your mood?", "Would you rather have it too hot or too cold?"] },
+  { re: /\b(english|language\w*|learn\w*|study|studying|studied|school|universit\w*|course\w*|classes|lesson\w*)\b/i,
+    asks: ["What made you start?", "What's the hardest part for you?", "Where do you use your English most?"] },
+  { re: /\b(morning\w*|night\w*|sleep\w*|slept|wake|woke|weekend\w*)\b/i,
+    asks: ["Are you getting enough sleep these days?", "What does a good weekend look like for you?"] },
+  { re: /\b(dog\w*|cat|cats|pet|pets|puppy)\b/i,
+    asks: ["What's their name?", "Are you more of a dog person or a cat person?"] },
+  { re: /\b(sport\w*|football|soccer|gym|running|jogging|training|match|matches|tournament\w*)\b/i,
+    asks: ["Do you play, or mostly watch?", "How often do you get to do that?"] },
+  { re: /\b(phone\w*|app|apps|computer\w*|internet|online|technology)\b/i,
+    asks: ["Could you go a week without it?", "Has that changed how you spend your day?"] },
+  { re: /\b(house|home|flat|apartment|room\w*|neighbou?rhood|neighbou?r\w*|move|moved|moving)\b/i,
+    asks: ["What's the area like?", "Have you been there long?", "Would you move somewhere else if you could?"] },
+];
+
+/* Reações curtas, separadas por como o aluno soou. */
+const REACT = {
+  positive: ["Nice.", "Oh, that's great.", "Love that.", "That sounds good.", "Good for you.", "I like that."],
+  negative: ["Ah, that's rough.", "Sorry to hear that.", "That sounds hard.", "Yeah, I get that.", "Hmm, not fun."],
+  neutral: ["Right.", "Okay.", "Mm-hm.", "I see.", "Fair enough.", "Got it."],
+  laugh: ["Ha, fair.", "Right, I can picture it.", "That's funny."],
+};
+
+/* Uma frase que mostra que ele entendeu — não é pergunta. */
+const MIRROR = [
+  (w) => cap(w) + " — okay.",
+  (w) => "Ah, " + w + ".",
+  (w) => cap(w) + ", interesting.",
+  (w) => "So it's about " + w + ", then.",
+];
+
+/* De vez em quando ele fala de si: é o que separa conversa de questionário. */
+const SELF = [
+  "I'm the same, honestly.",
+  "Funny, I'd have said the opposite.",
+  "That happens to me too.",
+  "I've heard that a lot lately.",
+  "Yeah, I know exactly what you mean.",
+  "That's not the answer I usually get, actually.",
+];
+
+/* Quando o aluno trava ou responde com uma palavra só. */
+const OPEN_UP = [
+  "Tell me a bit more.",
   "Go on — why is that?",
   "Say a little more, I'm curious.",
   "What's the story behind that?",
+  "Give me an example.",
+  "How come?",
 ];
 
-/** Uma pergunta de retorno quando o aluno devolve a pergunta ao professor. */
+const NO_WORRIES = [
+  "No worries — let me ask it another way.",
+  "That's fine. Different question, then.",
+  "Okay, let's try an easier one.",
+];
+
+/* Perguntas genéricas pra quando a escada do tema acabou. */
+const DEEPEN = [
+  "And how did that make you feel?",
+  "Has it always been like that?",
+  "What would you change about it, if you could?",
+  "Would your friends say the same about you?",
+  "What's the best thing that came out of that?",
+  "Do you think that'll be different in a few years?",
+];
+
 const BOUNCE = [
   "Me? I'd probably say the same, honestly.",
-  "Good question. I'd have to think about it.",
-  "For me it changes a lot, depending on the day.",
+  "Good question — I'd have to think about it.",
+  "For me it changes with the day, to be honest.",
+  "Honestly, I'm more curious about your answer.",
 ];
 
-/** É pergunta do aluno pro professor? */
-function isQuestion(text) {
+const isQuestion = (text) => {
   const t = text.trim().toLowerCase();
   return t.endsWith("?") || /^(what|where|when|why|how|who|which|do|does|did|are|is|can|could|would|will|have|has)\b/.test(t);
+};
+
+const shuffle = (list) =>
+  list.map((v) => ({ v, k: Math.random() })).sort((a, b) => a.k - b.k).map((x) => x.v);
+
+/* Advérbio e vago não dizem nada de volta: "Ah, mostly." não é escutar. */
+const WEAK = /ly$|^(thing|things|stuff|people|time|times|lot|lots|kind|sort|really|maybe|thanks)$/;
+const NOT_A_NAME = /^(yeah|yes|okay|well|maybe|sorry|actually|today|tomorrow|yesterday|because|but|and|the|then|when|monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/i;
+
+const strongest = (list) =>
+  list.filter((w) => !WEAK.test(w)).sort((a, b) => b.length - a.length)[0] || "";
+
+/** Lê a fala do aluno e resume o que dá pra usar dela. */
+function read(text) {
+  const all = words(text);
+  const content = contentWords(text);
+  /* nome próprio dito pelo aluno vale mais que qualquer palavra comum —
+     mas maiúscula de início de frase não é nome próprio */
+  const proper = [...text.matchAll(/(^|[.!?]\s+|\s)([A-Z][a-z]{2,})\b/g)]
+    .filter((m) => m[1] !== "" && m[1].trim() === "")
+    .map((m) => m[2])
+    .filter((w) => !NOT_A_NAME.test(w));
+  return {
+    raw: text,
+    length: all.length,
+    short: all.length <= 3,
+    question: isQuestion(text),
+    /* travado é dizer que não sabe. "To go" é resposta curta, não impasse */
+    stuck: NO_IDEA.test(text.trim()) && all.length <= 6,
+    mood: LAUGH.test(text) ? "laugh"
+      : NEGATIVE.test(text) ? "negative"
+        : POSITIVE.test(text) ? "positive" : "neutral",
+    keyword: proper[0] || "",
+    focus: proper[0] || strongest(content) || "",
+    content,
+  };
+}
+
+/** Tudo o que o professor já disse, pra nunca repetir uma frase. */
+const alreadySaid = (transcript) =>
+  transcript.filter((t) => t.role === "assistant").map((t) => t.text).join("  ");
+
+/** Escolhe da lista o que ainda não foi dito; se tudo já foi, sorteia. */
+function fresh(list, said, arg) {
+  const made = list.map((item) => (typeof item === "function" ? item(arg) : item));
+  const unused = made.filter((line) => !said.includes(line));
+  return pick(unused.length ? unused : made);
+}
+
+/** A pergunta da vez: primeiro o que o aluno acabou de dizer, depois o tema. */
+function chooseQuestion(sense, topic, said, turn) {
+  /* o tema dá o chão da conversa no começo — mas se ele já contou uma
+     história inteira, seguir o que ele disse vale mais que a lista */
+  if (!sense.stuck && (turn >= 2 || sense.length >= 8)) {
+    /* o gancho mais forte é o assunto que ele mais tocou na frase, e dentro
+       dele a pergunta mais direta — sortear aqui é o que soava aleatório */
+    const hits = HOOKS
+      .map((h) => {
+        const all = [...sense.raw.matchAll(new RegExp(h.re.source, "gi"))];
+        return { h, n: all.length, last: all.length ? all[all.length - 1].index : -1 };
+      })
+      .filter((x) => x.n > 0)
+      .sort((a, b) => b.n - a.n || b.last - a.last);
+    for (const { h } of hits) {
+      const unused = h.asks.filter((q) => !said.includes(q));
+      if (unused.length) return unused[0];
+    }
+  }
+  const beats = topic.beats.filter((q) => !said.includes(q));
+  if (beats.length) return beats[0];
+  const deep = DEEPEN.filter((q) => !said.includes(q));
+  return deep.length ? pick(deep) : pick(DEEPEN);
+}
+
+/** Uma expressão do tema que combina com o que o aluno acabou de dizer. */
+function teachable(topic, sense, said, known) {
+  if (!sense.content.length) return null;
+  const knownSet = new Set(known.map((k) => k.toLowerCase()));
+  return topic.vocab.find((v) => {
+    if (knownSet.has(v.term.toLowerCase()) || said.includes(v.term)) return false;
+    const hint = words(v.def + " " + v.term).filter((w) => w.length > 3 && !STOP.has(w));
+    return hint.some((w) => sense.content.includes(w));
+  }) || null;
 }
 
 /**
@@ -70,54 +246,74 @@ function isQuestion(text) {
 export function reply({ topicId, levelId, transcript = [], userText = "", known = [] }) {
   const topic = topicById(topicId);
   const level = levelById(levelId);
+  const rank = levelIndex(levelId);
+  const said = alreadySaid(transcript);
   const turn = transcript.filter((t) => t.role === "user").length;
+  const sense = read(userText);
   const parts = [];
 
-  const said = contentWords(userText);
-  const short = words(userText).length <= 3;
+  /* 1. reagir — mas não a toda fala, senão vira tique */
+  const reactChance = sense.short ? 0.9 : rank === 0 ? 0.8 : 0.55;
+  /* quando ele travou, o "no worries" já faz as vezes de reação */
+  if (!sense.stuck && !sense.question && Math.random() < reactChance) {
+    parts.push(fresh(REACT[sense.mood], said));
+  }
 
-  /* 1. reação curta e humana */
-  parts.push(pick(short ? ACK_SHORT : topic.reacts));
+  /* 2. o miolo: devolver algo do que ele disse, ou falar de si */
+  if (sense.question && turn > 0) {
+    parts.push(fresh(BOUNCE, said));
+  } else if (sense.stuck) {
+    parts.push(fresh(NO_WORRIES, said));
+  } else if (rank >= 1 && !sense.short && sense.keyword && Math.random() < 0.6) {
+    parts.push(fresh(MIRROR, said, sense.keyword));
+  } else if (rank >= 2 && !sense.short && sense.mood !== "negative" && Math.random() < 0.3) {
+    /* falar de si em cima de uma queixa soa surdo — só quando cabe */
+    parts.push(fresh(SELF, said));
+  }
 
-  /* 2. um comentário que mostra que ele entendeu */
-  if (isQuestion(userText) && turn > 0) {
-    parts.push(pick(BOUNCE));
-  } else if (said.length && levelIndex(levelId) >= 1) {
-    const key = said[said.length - 1];
+  /* 3. ensinar uma expressão de vez em quando, sem virar aula */
+  /* ensinar em cima de um "não sei" não ensina nada: só quando ele falou */
+  const canTeach = !sense.stuck && !sense.short;
+  const teach = canTeach && turn > 1 && turn % 4 === 0 ? teachable(topic, sense, said, known) : null;
+  if (teach) {
+    parts.push('There\'s a phrase for that — "' + teach.term + '". You could say: ' + teach.ex);
+  } else if (canTeach && known.length && turn > 3 && turn % 6 === 0) {
+    /* reaproveita algo que ele já aprendeu aqui, como quem comenta */
+    const unused = known.filter((t) => !said.includes(t));
+    const term = pick(unused.length ? unused : known);
     parts.push(pick([
-      `${cap(key)} — that's interesting.`,
-      `So ${key} matters to you.`,
-      `I like that you mentioned ${key}.`,
+      'That\'s what we\'d call "' + term + '", by the way.',
+      'Sounds like "' + term + '" to me.',
+      'You could use "' + term + '" for that one.',
     ]));
   }
 
-  /* 3. reaproveitar, de vez em quando, uma palavra que o aluno já aprendeu */
-  if (known.length && turn > 1 && turn % 3 === 0) {
-    const term = pick(known);
-    parts.push(`By the way — would you say that's "${term}"?`);
+  /* 4. e a pergunta que mantém a conversa de pé */
+  const yesNo = /^(yes|no|yeah|nope|sure|maybe|i think so)\.?$/i.test(userText.trim());
+  const lastSaid = [...transcript].reverse().find((t) => t.role === "assistant");
+  const pushedLately = OPEN_UP.some((line) => (lastSaid ? lastSaid.text : "").includes(line));
+  if (sense.short && !sense.stuck && !yesNo && !sense.question && rank >= 1 && turn > 0 && !pushedLately && Math.random() < 0.5) {
+    parts.push(fresh(OPEN_UP, said));
+  } else if (!teach) {
+    parts.push(chooseQuestion(sense, topic, said, turn));
   }
 
-  /* 4. a próxima pergunta da escada, ou um pedido pra desenvolver */
-  if (short && turn > 0) {
-    parts.push(pick(EXPAND));
-  } else {
-    parts.push(topic.beats[turn % topic.beats.length]);
-  }
-
-  /* Nível baixo fala menos: corta o comentário do meio. */
-  const keep = level.replySentences;
-  const text = parts.slice(0, Math.max(2, keep)).join(" ");
-  return { text, source: "offline" };
+  /* nível baixo ouve menos coisa de uma vez */
+  const text = parts.filter(Boolean).slice(0, Math.max(2, level.replySentences)).join(" ");
+  return { text: text || pick(DEEPEN), source: "offline" };
 }
 
 /** Primeira fala da conversa. */
 export function opening({ topicId, levelId, name }) {
   const topic = topicById(topicId);
-  const hello = name ? `Hey ${name}! ` : "";
   const line = pick(topic.openers);
-  const level = levelById(levelId);
+  /* várias aberturas já começam com um "Hey" — dois cumprimentos soam falsos */
+  const greets = /^(hey|hi|hello|good morning|good evening|morning|welcome|alright)\b/i.test(line);
+  const hello = name
+    ? (greets ? name + ", " : pick(["Hey " + name + "! ", name + ", hi! ", "Good to see you, " + name + ". "]))
+    : (greets ? "" : pick(["Hey! ", "Hi there. ", ""]));
   return {
-    text: level.id === "beginner" ? hello + line : hello + line,
+    text: greets && name ? hello + line[0].toLowerCase() + line.slice(1) : hello + line,
     source: "offline",
   };
 }
