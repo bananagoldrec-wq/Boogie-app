@@ -1063,3 +1063,18 @@ input:focus, select:focus, textarea:focus {
 
 .contact-actions { display: flex; gap: 8px; margin-top: 10px; }
 .contact-actions .btn-msg { flex: 1; padding: 9px 10px; font-size: 0.8rem; }
+
+/* a casa que a pessoa cura, ao lado do nome */
+.contact-casa {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--acc-dim);
+  border: 1px solid var(--acc-line);
+  color: var(--acc);
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  vertical-align: middle;
+}

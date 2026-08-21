@@ -117,10 +117,10 @@
     {
       key: "beno_seed_curadores_v1",
       curadores: [
-        { nome: "Bernardo Campos", whatsapp: "+55 21 99130-4661" },
+        { nome: "Bernardo Campos", casa: "Quartinho", whatsapp: "+55 21 99130-4661" },
         { nome: "Gui Varella", whatsapp: "+55 21 99890-9024" },
         { nome: "Mexicano", whatsapp: "+55 11 98755-8876" },
-        { nome: "Douglas Reis", whatsapp: "+55 11 91315-3913", email: "douglas@asapdigital.agency" },
+        { nome: "Douglas Reis", casa: "Major, Sala e Fugaz", whatsapp: "+55 11 91315-3913", email: "douglas@asapdigital.agency" },
         { nome: "André", whatsapp: "+55 19 3656-5999" },
       ],
     },
@@ -132,8 +132,8 @@
         { nome: "Thiago Guiselini", whatsapp: "+351 964 535 586" },
         { nome: "Nuno Leote (princesa)", whatsapp: "+351 966 703 329", notas: 'Status do WhatsApp: "Punji Stick" — confirmar se é a festa/casa dele.' },
         { nome: "Facchinetti", whatsapp: "+55 21 96929-5800", email: "fatchiapizza@gmail.com", notas: 'Status do WhatsApp: "Sobre Fatchia somente fatchiapizza@gmail.com".' },
-        { nome: "Marco Antonio", whatsapp: "+55 21 99985-8313", notas: 'Conta comercial no WhatsApp, categoria "Arts & entertainment". Atende 09:00–18:00.' },
-        { nome: "Caio Bucker", whatsapp: "+55 21 99942-3957" },
+        { nome: "Marco Antonio", casa: "Macuna", whatsapp: "+55 21 99985-8313", notas: 'Conta comercial no WhatsApp, categoria "Arts & entertainment". Atende 09:00–18:00.' },
+        { nome: "Caio Bucker", casa: "Destilaria Maravilha", whatsapp: "+55 21 99942-3957" },
         {
           nome: "Mikolaï",
           casa: "Picture Perfect Agency",
@@ -616,6 +616,38 @@
     if (semeou) renderAll();
   }
 
+  /* Casas que o Beno foi confirmando depois do cadastro inicial.
+     Só preenche campo vazio — nunca sobrescreve o que ele digitou.
+     Pra completar mais um, é só somar à lista e subir a chave. */
+  const COMPLEMENTOS_KEY = "beno_complementos_v1";
+  const COMPLEMENTOS = [
+    { nome: "Bernardo Campos", casa: "Quartinho" },
+    { nome: "Caio Bucker", casa: "Destilaria Maravilha" },
+    { nome: "Douglas Reis", casa: "Major, Sala e Fugaz" },
+    { nome: "Marco Antonio", casa: "Macuna" },
+  ];
+
+  async function completarContatosOnce() {
+    try {
+      if (localStorage.getItem(COMPLEMENTOS_KEY)) return;
+      localStorage.setItem(COMPLEMENTOS_KEY, "1");
+    } catch (err) {
+      return;
+    }
+    let mudou = false;
+    for (const info of COMPLEMENTOS) {
+      const contato = findContactByName(info.nome);
+      if (!contato) continue;
+      const atualizado = { ...contato };
+      let alterou = false;
+      ["casa", "bairro", "estilo", "instagram", "email"].forEach((campo) => {
+        if (info[campo] && !atualizado[campo]) { atualizado[campo] = info[campo]; alterou = true; }
+      });
+      if (alterou) { await persistContact(atualizado); mudou = true; }
+    }
+    if (mudou) renderAll();
+  }
+
   /* ── Modelo: contatos ───────────────────────────────────── */
 
   function makeContact(overrides) {
@@ -816,7 +848,7 @@
     const filter = normalizeName(contactFilter);
     const items = Object.values(contacts)
       .filter((c) => !filter || normalizeName([c.nome, c.casa, c.bairro, c.estilo, c.notas].join(" ")).includes(filter))
-      .sort((a, b) => (a.casa || a.nome || "").localeCompare(b.casa || b.nome || "", "pt-BR"));
+      .sort((a, b) => (a.nome || a.casa || "").localeCompare(b.nome || b.casa || "", "pt-BR"));
 
     if (!items.length) {
       const empty = document.createElement("div");
@@ -832,27 +864,24 @@
       const card = document.createElement("div");
       card.className = "contact-card";
 
-      // a casa que a pessoa cura é o que identifica o contato
+      // nome da pessoa com a casa que ela cura logo ao lado
       const name = document.createElement("div");
       name.className = "contact-name";
-      name.textContent = c.casa || c.nome || "(sem nome)";
+      name.textContent = c.nome || c.casa || "(sem nome)";
+      if (c.casa && c.nome) {
+        const casa = document.createElement("span");
+        casa.className = "contact-casa";
+        casa.textContent = c.casa;
+        name.appendChild(casa);
+      }
       card.appendChild(name);
 
-      // o título já mostra a casa (ou o nome, quando não há casa) —
-      // não repetir o nome embaixo quando ele é o próprio título
-      const subParts = [c.casa ? c.nome : "", c.bairro].filter(Boolean);
+      const subParts = [prettyPhone(c.whatsapp), c.bairro].filter(Boolean);
       if (subParts.length) {
         const sub = document.createElement("div");
         sub.className = "contact-sub";
         sub.textContent = subParts.join(" · ");
         card.appendChild(sub);
-      }
-
-      if (c.whatsapp) {
-        const phone = document.createElement("div");
-        phone.className = "contact-sub";
-        phone.textContent = prettyPhone(c.whatsapp);
-        card.appendChild(phone);
       }
 
       const tags = document.createElement("div");
@@ -2685,7 +2714,8 @@
   loadLocal();
   switchView("agenda"); // a agenda é a tela do dia a dia
   renderAll();
-  seedAgendaOnce().then(seedCuradoresOnce).then(seedLogisticaOnce).then(limparNegociacoesSemData);
+  seedAgendaOnce().then(seedCuradoresOnce).then(seedLogisticaOnce)
+    .then(limparNegociacoesSemData).then(completarContatosOnce);
 
   if (isUnlocked()) {
     loginGate.hidden = true;
