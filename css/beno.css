@@ -1058,3 +1058,87 @@ input:focus, select:focus, textarea:focus {
   .log-row { padding: 10px 12px; gap: 10px; }
   .log-title { font-size: 0.86rem; }
 }
+
+/* ── Contatos: ação direta no card ──────────────────────── */
+
+.contact-actions { display: flex; gap: 8px; margin-top: 10px; }
+.contact-actions .btn-msg { flex: 1; padding: 9px 10px; font-size: 0.8rem; }
+
+/* a casa que a pessoa cura, ao lado do nome */
+.contact-casa {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--acc-dim);
+  border: 1px solid var(--acc-line);
+  color: var(--acc);
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+/* cabeçalho de cidade na lista de contatos */
+.contact-group {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  font-family: "Quicksand", sans-serif;
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: var(--acc);
+  letter-spacing: 0.02em;
+  background: var(--card);
+  border: 1px solid rgba(201, 242, 77, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 13px 15px;
+}
+
+.contact-group:hover { background: var(--card-hover); }
+.contact-group.is-open { background: var(--acc-dim); border-color: var(--acc-line); }
+
+.contact-group-seta {
+  font-size: 1.05rem;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+
+.contact-group.is-open .contact-group-seta { transform: rotate(90deg); }
+
+/* ── Menu do press kit na barra de cima ─────────────────── */
+
+.pk-wrap { position: relative; flex-shrink: 0; }
+
+.pk-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elev);
+  border: 1px solid var(--acc-line);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.pk-menu a,
+.pk-menu button {
+  padding: 11px 14px;
+  font-size: 0.84rem;
+  color: var(--text);
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pk-menu a:hover,
+.pk-menu button:hover { background: var(--acc-dim); color: var(--acc); }
+.pk-menu a:not(:last-child),
+.pk-menu button:not(:last-child) { border-bottom: 1px solid rgba(201, 242, 77, 0.1); }

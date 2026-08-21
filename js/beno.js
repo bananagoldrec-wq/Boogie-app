@@ -117,10 +117,10 @@
     {
       key: "beno_seed_curadores_v1",
       curadores: [
-        { nome: "Bernardo Campos", whatsapp: "+55 21 99130-4661" },
+        { nome: "Bernardo Campos", casa: "Quartinho", whatsapp: "+55 21 99130-4661" },
         { nome: "Gui Varella", whatsapp: "+55 21 99890-9024" },
         { nome: "Mexicano", whatsapp: "+55 11 98755-8876" },
-        { nome: "Douglas Reis", whatsapp: "+55 11 91315-3913", email: "douglas@asapdigital.agency" },
+        { nome: "Douglas Reis", casa: "Major, Sala e Fugaz", whatsapp: "+55 11 91315-3913", email: "douglas@asapdigital.agency" },
         { nome: "André", whatsapp: "+55 19 3656-5999" },
       ],
     },
@@ -132,11 +132,12 @@
         { nome: "Thiago Guiselini", whatsapp: "+351 964 535 586" },
         { nome: "Nuno Leote (princesa)", whatsapp: "+351 966 703 329", notas: 'Status do WhatsApp: "Punji Stick" — confirmar se é a festa/casa dele.' },
         { nome: "Facchinetti", whatsapp: "+55 21 96929-5800", email: "fatchiapizza@gmail.com", notas: 'Status do WhatsApp: "Sobre Fatchia somente fatchiapizza@gmail.com".' },
-        { nome: "Marco Antonio", whatsapp: "+55 21 99985-8313", notas: 'Conta comercial no WhatsApp, categoria "Arts & entertainment". Atende 09:00–18:00.' },
-        { nome: "Caio Bucker", whatsapp: "+55 21 99942-3957" },
+        { nome: "Marco Antonio", casa: "Macuna", whatsapp: "+55 21 99985-8313", notas: 'Conta comercial no WhatsApp, categoria "Arts & entertainment". Atende 09:00–18:00.' },
+        { nome: "Caio Bucker", casa: "Destilaria Maravilha", whatsapp: "+55 21 99942-3957" },
         {
           nome: "Mikolaï",
           casa: "Picture Perfect Agency",
+          cidade: "Portugal",
           funcao: "booker",
           whatsapp: "+33 6 72 60 34 93",
           email: "mikolai@pictureperfect-agency.com",
@@ -213,9 +214,9 @@
 
   let currentView = "pipeline";
   let view = { year: today.getFullYear(), month: today.getMonth() + 1 };
-  let dealFilter = "";
   let contactFilter = "";
-  let onlyLate = false;
+  const GRUPOS_KEY = "beno_grupos_abertos_v1";
+  let gruposAbertos = new Set();
   let activeDealId = null;
   let activeContactId = null;
   let activeTemplateKey = "primeiroContato";
@@ -564,13 +565,6 @@
     deal.historico = deal.historico.slice(0, 40);
   }
 
-  function matchesDealFilter(deal) {
-    if (onlyLate && !isLate(deal)) return false;
-    if (!dealFilter) return true;
-    const hay = normalizeName([deal.casa, deal.contato, deal.bairro, deal.estilo, deal.notas].join(" "));
-    return hay.includes(normalizeName(dealFilter));
-  }
-
   function seedId(dataAlvo, casa) {
     const slug = normalizeName(casa).replace(/[^a-z0-9]+/g, "") || "show";
     return `seed-${dataAlvo}-${slug}`;
@@ -612,26 +606,141 @@
           id: `seed-cur-${slug}`,
           nome: cur.nome,
           casa: cur.casa || "",
+          cidade: cur.cidade || "",
           funcao: cur.funcao || "curador",
           whatsapp: cur.whatsapp,
           email: cur.email || "",
           notas: cur.notas || "",
         });
         await persistContact(contact);
-        await persistDeal(makeDeal({
-          id: `seed-neg-${slug}`,
-          contato: cur.nome,
-          contatoId: contact.id,
-          casa: cur.casa || "",
-          whatsapp: cur.whatsapp,
-          etapa: "a_contatar",
-          estilo: config.estiloPadrao,
-        }));
         semeou = true;
       }
     }
 
     if (semeou) renderAll();
+  }
+
+  /* Casas que o Beno foi confirmando depois do cadastro inicial.
+     Só preenche campo vazio — nunca sobrescreve o que ele digitou.
+     Pra completar mais um, é só somar à lista e subir a chave. */
+  const COMPLEMENTOS_KEY = "beno_complementos_v2";
+  const COMPLEMENTOS = [
+    { nome: "Bernardo Campos", casa: "Quartinho" },
+    { nome: "Caio Bucker", casa: "Destilaria Maravilha" },
+    { nome: "Douglas Reis", casa: "Major, Sala e Fugaz" },
+    { nome: "Marco Antonio", casa: "Macuna" },
+    // número francês, mas é o contato dele em Portugal
+    { nome: "Mikolaï", cidade: "Portugal" },
+  ];
+
+  async function completarContatosOnce() {
+    try {
+      if (localStorage.getItem(COMPLEMENTOS_KEY)) return;
+      localStorage.setItem(COMPLEMENTOS_KEY, "1");
+    } catch (err) {
+      return;
+    }
+    let mudou = false;
+    for (const info of COMPLEMENTOS) {
+      const contato = findContactByName(info.nome);
+      if (!contato) continue;
+      const atualizado = { ...contato };
+      let alterou = false;
+      ["casa", "bairro", "cidade", "estilo", "instagram", "email"].forEach((campo) => {
+        if (info[campo] && !atualizado[campo]) { atualizado[campo] = info[campo]; alterou = true; }
+      });
+      if (alterou) { await persistContact(atualizado); mudou = true; }
+    }
+    if (mudou) renderAll();
+  }
+
+  /* ── Cidade a partir do telefone ────────────────────────
+     No Brasil o DDD entrega a cidade. Fora, não: celular de Portugal
+     e da França começa com prefixo de operadora, não de região — por
+     isso o melhor que dá é o país, até o Beno digitar a cidade. */
+
+  const DDD_CIDADE = {
+    11: "São Paulo", 12: "São José dos Campos", 13: "Santos", 14: "Bauru",
+    15: "Sorocaba", 16: "Ribeirão Preto", 17: "São José do Rio Preto",
+    18: "Presidente Prudente", 19: "Campinas",
+    21: "Rio de Janeiro", 22: "Campos dos Goytacazes", 24: "Volta Redonda",
+    27: "Vitória", 28: "Cachoeiro de Itapemirim",
+    31: "Belo Horizonte", 32: "Juiz de Fora", 33: "Governador Valadares",
+    34: "Uberlândia", 35: "Poços de Caldas", 37: "Divinópolis", 38: "Montes Claros",
+    41: "Curitiba", 42: "Ponta Grossa", 43: "Londrina", 44: "Maringá",
+    45: "Foz do Iguaçu", 46: "Francisco Beltrão", 47: "Joinville",
+    48: "Florianópolis", 49: "Chapecó",
+    51: "Porto Alegre", 53: "Pelotas", 54: "Caxias do Sul", 55: "Santa Maria",
+    61: "Brasília", 62: "Goiânia", 63: "Palmas", 64: "Rio Verde",
+    65: "Cuiabá", 66: "Rondonópolis", 67: "Campo Grande",
+    68: "Rio Branco", 69: "Porto Velho",
+    71: "Salvador", 73: "Ilhéus", 74: "Juazeiro", 75: "Feira de Santana",
+    77: "Barreiras", 79: "Aracaju",
+    81: "Recife", 82: "Maceió", 83: "João Pessoa", 84: "Natal",
+    85: "Fortaleza", 86: "Teresina", 87: "Petrolina", 88: "Juazeiro do Norte",
+    89: "Picos", 91: "Belém", 92: "Manaus", 93: "Santarém", 94: "Marabá",
+    95: "Boa Vista", 96: "Macapá", 97: "Coari", 98: "São Luís", 99: "Imperatriz",
+  };
+
+  const DDI_PAIS = {
+    1: "Estados Unidos / Canadá", 30: "Grécia", 31: "Holanda", 32: "Bélgica",
+    33: "França", 34: "Espanha", 39: "Itália", 41: "Suíça", 43: "Áustria",
+    44: "Reino Unido", 45: "Dinamarca", 46: "Suécia", 47: "Noruega",
+    48: "Polônia", 49: "Alemanha", 52: "México", 54: "Argentina",
+    56: "Chile", 57: "Colômbia", 61: "Austrália", 81: "Japão",
+    212: "Marrocos", 244: "Angola", 258: "Moçambique", 351: "Portugal",
+    353: "Irlanda", 358: "Finlândia", 420: "Chéquia", 421: "Eslováquia",
+    598: "Uruguai", 972: "Israel",
+  };
+
+  function cidadeDoTelefone(raw) {
+    const str = (raw || "").trim();
+    const digits = str.replace(/\D/g, "");
+    if (!digits) return "";
+
+    // brasileiro: escrito com +55, ou sem DDI nenhum
+    let br = "";
+    if (str.startsWith("+55")) br = digits.slice(2);
+    else if (!str.startsWith("+")) br = digits.length > 11 && digits.startsWith("55") ? digits.slice(2) : digits;
+    if (br.length >= 10) return DDD_CIDADE[Number(br.slice(0, 2))] || "Brasil";
+
+    // estrangeiro: código de país tem 1 a 3 dígitos, tenta o mais longo
+    if (str.startsWith("+")) {
+      for (const tamanho of [3, 2, 1]) {
+        const pais = DDI_PAIS[Number(digits.slice(0, tamanho))];
+        if (pais) return pais;
+      }
+    }
+    return "";
+  }
+
+  /* Cidade digitada à mão vence a deduzida pelo telefone. */
+  function cidadeDoContato(c) {
+    return (c.cidade || "").trim() || cidadeDoTelefone(c.whatsapp) || "Sem cidade";
+  }
+
+  /* Contatos que o Beno pediu pra tirar. Roda uma vez por aparelho.
+     A comparação é exata (ignorando acento e maiúscula) tanto no nome
+     quanto na casa — de propósito, pra não levar junto um homônimo. */
+  const REMOCOES_KEY = "beno_remocoes_v1";
+  const REMOCOES = ["Jazz Mansion", "Curtis"];
+
+  async function removerContatosOnce() {
+    try {
+      if (localStorage.getItem(REMOCOES_KEY)) return;
+      localStorage.setItem(REMOCOES_KEY, "1");
+    } catch (err) {
+      return;
+    }
+    const alvos = REMOCOES.map(normalizeName);
+    const achados = Object.values(contacts).filter((c) =>
+      alvos.includes(normalizeName(c.nome)) || alvos.includes(normalizeName(c.casa)));
+
+    for (const c of achados) await removeContact(c.id);
+    if (achados.length) {
+      renderAll();
+      showToast(`Removido: ${achados.map((c) => c.nome || c.casa).join(", ")}.`);
+    }
   }
 
   /* ── Modelo: contatos ───────────────────────────────────── */
@@ -642,6 +751,7 @@
       nome: "",
       casa: "",
       bairro: "",
+      cidade: "",
       funcao: "curador",
       whatsapp: "",
       instagram: "",
@@ -817,245 +927,151 @@
     document.removeEventListener("touchcancel", onTouchDragEnd);
   }
 
-  /* ── Render: funil ──────────────────────────────────────── */
-
-  const board = document.getElementById("board");
-  const statsRow = document.getElementById("stats-row");
-
-  function renderStats() {
-    const all = Object.values(deals);
-    const abertas = all.filter((d) => !TERMINAL_STAGES.includes(d.etapa)).length;
-    const fechados = all.filter((d) => d.etapa === "fechado");
-    const tocou = all.filter((d) => d.etapa === "tocou");
-    const receita = [...fechados, ...tocou].reduce((sum, d) => sum + (Number(d.cacheFechado) || 0), 0);
-    const atrasadas = lateDeals().length;
-
-    const cards = [
-      { value: abertas, label: "Em aberto" },
-      { value: fechados.length, label: "Fechados" },
-      { value: atrasadas, label: "Pra cobrar" },
-      { value: formatMoney(receita) || "R$ 0", label: "Fechado em R$" },
-    ];
-
-    statsRow.innerHTML = "";
-    cards.forEach((c) => {
-      const el = document.createElement("div");
-      el.className = "stat";
-      const v = document.createElement("div");
-      v.className = "stat-value";
-      v.textContent = c.value;
-      const l = document.createElement("div");
-      l.className = "stat-label";
-      l.textContent = c.label;
-      el.appendChild(v);
-      el.appendChild(l);
-      statsRow.appendChild(el);
-    });
-  }
-
-  function renderBoard() {
-    board.innerHTML = "";
-    const visible = Object.values(deals).filter(matchesDealFilter);
-
-    if (!Object.keys(deals).length) {
-      const empty = document.createElement("div");
-      empty.className = "empty-state";
-      empty.textContent = "Nenhuma negociação ainda. Toque em “+ Negociação” ou importe sua lista de curadores pelo ícone ⤓ lá em cima.";
-      board.appendChild(empty);
-      return;
-    }
-
-    STAGES.forEach((stage) => {
-      const col = document.createElement("div");
-      col.className = "column";
-      col.dataset.drop = "stage";
-      col.dataset.stage = stage.key;
-
-      const head = document.createElement("div");
-      head.className = "column-head";
-      const dot = document.createElement("span");
-      dot.className = "column-dot";
-      dot.style.background = `var(--st-${stage.key})`;
-      const title = document.createElement("span");
-      title.className = "column-title";
-      title.textContent = stage.label;
-      const count = document.createElement("span");
-      count.className = "column-count";
-      head.appendChild(dot);
-      head.appendChild(title);
-      head.appendChild(count);
-      col.appendChild(head);
-
-      const items = visible
-        .filter((d) => d.etapa === stage.key)
-        .sort((a, b) => (a.proximoFollowup || "9999").localeCompare(b.proximoFollowup || "9999"));
-
-      count.textContent = items.length;
-      items.forEach((deal) => col.appendChild(buildDealCard(deal)));
-
-      if (!items.length) {
-        const empty = document.createElement("div");
-        empty.className = "column-empty";
-        empty.textContent = "—";
-        col.appendChild(empty);
-      }
-
-      makeDropTarget(col, (dealId) => moveDealToStage(dealId, stage.key));
-      board.appendChild(col);
-    });
-  }
-
-  function buildDealCard(deal) {
-    const card = document.createElement("div");
-    card.className = "deal-card" + (isLate(deal) ? " is-late" : "");
-    card.style.borderLeftColor = `var(--st-${deal.etapa})`;
-
-    const casa = document.createElement("div");
-    casa.className = "deal-casa";
-    casa.textContent = deal.casa || "(sem casa)";
-    card.appendChild(casa);
-
-    if (deal.contato || deal.bairro) {
-      const sub = document.createElement("div");
-      sub.className = "deal-sub";
-      sub.textContent = [deal.contato, deal.bairro].filter(Boolean).join(" · ");
-      card.appendChild(sub);
-    }
-
-    const meta = document.createElement("div");
-    meta.className = "deal-meta";
-
-    if (deal.dataAlvo) {
-      const p = document.createElement("span");
-      p.className = "pill pill-date";
-      p.textContent = formatShortDate(deal.dataAlvo);
-      meta.appendChild(p);
-    }
-
-    const valor = deal.cacheFechado || deal.cachePedido;
-    if (valor) {
-      const p = document.createElement("span");
-      p.className = "pill pill-cache";
-      p.textContent = formatMoney(valor);
-      meta.appendChild(p);
-    }
-
-    if (deal.proximoFollowup && !TERMINAL_STAGES.includes(deal.etapa)) {
-      const p = document.createElement("span");
-      const late = isLate(deal);
-      p.className = "pill " + (late ? "pill-late" : "pill-soon");
-      p.textContent = late ? `cobrar ${formatShortDate(deal.proximoFollowup)}` : `↻ ${formatShortDate(deal.proximoFollowup)}`;
-      meta.appendChild(p);
-    }
-
-    if (meta.children.length) card.appendChild(meta);
-
-    const actions = document.createElement("div");
-    actions.className = "deal-actions";
-
-    const waBtn = document.createElement("button");
-    waBtn.type = "button";
-    waBtn.className = "mini-btn mini-wa";
-    waBtn.textContent = "WhatsApp";
-    waBtn.addEventListener("click", (e) => { e.stopPropagation(); quickWhatsApp(deal.id); });
-    actions.appendChild(waBtn);
-
-    const stageIdx = STAGES.findIndex((s) => s.key === deal.etapa);
-    if (stageIdx >= 0 && stageIdx < STAGES.length - 3) {
-      const nextBtn = document.createElement("button");
-      nextBtn.type = "button";
-      nextBtn.className = "mini-btn";
-      nextBtn.textContent = "Avançar";
-      nextBtn.title = `Mover pra "${STAGES[stageIdx + 1].label}"`;
-      nextBtn.addEventListener("click", (e) => { e.stopPropagation(); moveDealToStage(deal.id, STAGES[stageIdx + 1].key); });
-      actions.appendChild(nextBtn);
-    }
-
-    card.appendChild(actions);
-
-    card.addEventListener("click", () => {
-      if (suppressNextClick) return;
-      openDealPanel(deal.id);
-    });
-
-    makeDragSource(card, deal.id);
-    return card;
-  }
-
-  async function moveDealToStage(dealId, stageKey) {
-    const deal = deals[dealId];
-    if (!deal || deal.etapa === stageKey) return;
-    const updated = { ...deal, etapa: stageKey };
-    touchDeal(updated);
-    addHistory(updated, `Etapa → ${STAGE_BY_KEY[stageKey].label}`);
-    await persistDeal(updated);
-    renderAll();
-    const stage = STAGE_BY_KEY[stageKey];
-    showToast(stage.followupDays
-      ? `${stage.label} · cobrar de novo em ${stage.followupDays} dia(s).`
-      : stage.label);
-  }
-
   /* ── Render: contatos ───────────────────────────────────── */
 
   const contactList = document.getElementById("contact-list");
+
+  /* Quantos dias desde a última mensagem — o único "status" que sobrou.
+     Serve pra ele ver quem esfriou, sem funil nenhum. */
+  function diasDesde(dataKey) {
+    if (!dataKey) return null;
+    const [y, m, d] = dataKey.split("-").map(Number);
+    return Math.round((Date.now() - new Date(y, m - 1, d).getTime()) / 86400000);
+  }
 
   function renderContacts() {
     contactList.innerHTML = "";
     const filter = normalizeName(contactFilter);
     const items = Object.values(contacts)
-      .filter((c) => !filter || normalizeName([c.nome, c.casa, c.bairro, c.estilo, c.notas].join(" ")).includes(filter))
-      .sort((a, b) => (a.casa || a.nome || "").localeCompare(b.casa || b.nome || "", "pt-BR"));
+      .filter((c) => !filter || normalizeName([c.nome, c.casa, c.bairro, c.cidade, c.estilo, c.notas].join(" ")).includes(filter));
 
     if (!items.length) {
       const empty = document.createElement("div");
       empty.className = "empty-state";
       empty.textContent = Object.keys(contacts).length
         ? "Nenhum contato bate com essa busca."
-        : "Nenhum contato ainda. Use “+ Contato” ou importe sua lista pelo ícone ⤓ lá em cima.";
+        : "Nenhum contato ainda. Use \u201c+ Contato\u201d ou importe sua lista pelo ícone ⤓ lá em cima.";
       contactList.appendChild(empty);
       return;
     }
 
+    // agrupa por cidade; a cidade com mais gente vem primeiro
+    const grupos = {};
     items.forEach((c) => {
-      const card = document.createElement("div");
-      card.className = "contact-card";
-
-      const name = document.createElement("div");
-      name.className = "contact-name";
-      name.textContent = c.casa || c.nome || "(sem nome)";
-      card.appendChild(name);
-
-      // o título já mostra a casa (ou o nome, quando não há casa) —
-      // não repetir o nome embaixo quando ele é o próprio título
-      const subParts = [c.casa ? c.nome : "", c.bairro].filter(Boolean);
-      if (subParts.length) {
-        const sub = document.createElement("div");
-        sub.className = "contact-sub";
-        sub.textContent = subParts.join(" · ");
-        card.appendChild(sub);
-      }
-
-      if (c.whatsapp) {
-        const phone = document.createElement("div");
-        phone.className = "contact-sub";
-        phone.textContent = prettyPhone(c.whatsapp);
-        card.appendChild(phone);
-      }
-
-      const tags = document.createElement("div");
-      tags.className = "contact-tags";
-      [c.funcao, c.estilo, c.melhorDia, formatMoney(c.cacheRef)].filter(Boolean).forEach((t) => {
-        const pill = document.createElement("span");
-        pill.className = "pill";
-        pill.textContent = t;
-        tags.appendChild(pill);
-      });
-      if (tags.children.length) card.appendChild(tags);
-
-      card.addEventListener("click", () => openContactPanel(c.id));
-      contactList.appendChild(card);
+      const cidade = cidadeDoContato(c);
+      (grupos[cidade] = grupos[cidade] || []).push(c);
     });
+
+    Object.keys(grupos)
+      .sort((a, b) => {
+        if (a === "Sem cidade") return 1;
+        if (b === "Sem cidade") return -1;
+        return grupos[b].length - grupos[a].length || a.localeCompare(b, "pt-BR");
+      })
+      .forEach((cidade) => {
+        /* Buscando, tudo abre — senão o resultado ficaria escondido
+           dentro de uma cidade fechada e pareceria que não achou nada. */
+        const aberto = Boolean(filter) || gruposAbertos.has(cidade);
+
+        const cab = document.createElement("button");
+        cab.type = "button";
+        cab.className = "contact-group" + (aberto ? " is-open" : "");
+        cab.setAttribute("aria-expanded", String(aberto));
+
+        const seta = document.createElement("span");
+        seta.className = "contact-group-seta";
+        seta.textContent = "›";
+        cab.appendChild(seta);
+        cab.appendChild(document.createTextNode(`${cidade} · ${grupos[cidade].length}`));
+
+        cab.addEventListener("click", () => {
+          if (gruposAbertos.has(cidade)) gruposAbertos.delete(cidade);
+          else gruposAbertos.add(cidade);
+          salvarGruposAbertos();
+          renderContacts();
+        });
+        contactList.appendChild(cab);
+
+        if (!aberto) return;
+        grupos[cidade]
+          .sort((a, b) => (a.nome || a.casa || "").localeCompare(b.nome || b.casa || "", "pt-BR"))
+          .forEach((c) => contactList.appendChild(buildContactCard(c)));
+      });
+  }
+
+  function salvarGruposAbertos() {
+    try { localStorage.setItem(GRUPOS_KEY, JSON.stringify([...gruposAbertos])); } catch (err) {}
+  }
+
+  function carregarGruposAbertos() {
+    try {
+      const raw = localStorage.getItem(GRUPOS_KEY);
+      if (raw) gruposAbertos = new Set(JSON.parse(raw));
+    } catch (err) {}
+  }
+
+  function buildContactCard(c) {
+    const card = document.createElement("div");
+    card.className = "contact-card";
+
+    // nome da pessoa com a casa que ela cura logo ao lado
+    const name = document.createElement("div");
+    name.className = "contact-name";
+    name.textContent = c.nome || c.casa || "(sem nome)";
+    if (c.casa && c.nome) {
+      const casa = document.createElement("span");
+      casa.className = "contact-casa";
+      casa.textContent = c.casa;
+      name.appendChild(casa);
+    }
+    card.appendChild(name);
+
+    const subParts = [prettyPhone(c.whatsapp), c.bairro].filter(Boolean);
+    if (subParts.length) {
+      const sub = document.createElement("div");
+      sub.className = "contact-sub";
+      sub.textContent = subParts.join(" · ");
+      card.appendChild(sub);
+    }
+
+    const tags = document.createElement("div");
+    tags.className = "contact-tags";
+    [c.estilo, c.melhorDia, formatMoney(c.cacheRef)].filter(Boolean).forEach((t) => {
+      const pill = document.createElement("span");
+      pill.className = "pill";
+      pill.textContent = t;
+      tags.appendChild(pill);
+    });
+
+    const dias = diasDesde(c.ultimoContato);
+    if (dias !== null) {
+      const pill = document.createElement("span");
+      pill.className = "pill " + (dias >= 14 ? "pill-late" : "pill-cache");
+      pill.textContent = dias === 0 ? "falei hoje" : dias === 1 ? "falei ontem" : `falei há ${dias} dias`;
+      tags.appendChild(pill);
+    }
+    if (tags.children.length) card.appendChild(tags);
+
+    const acoes = document.createElement("div");
+    acoes.className = "contact-actions";
+
+    const msg = document.createElement("button");
+    msg.type = "button";
+    msg.className = "btn btn-primary btn-msg";
+    msg.textContent = "Mandar mensagem";
+    msg.addEventListener("click", (e) => { e.stopPropagation(); openContactPanel(c.id, true); });
+    acoes.appendChild(msg);
+
+    const editar = document.createElement("button");
+    editar.type = "button";
+    editar.className = "btn btn-ghost btn-msg";
+    editar.textContent = "Editar";
+    editar.addEventListener("click", (e) => { e.stopPropagation(); openContactPanel(c.id); });
+    acoes.appendChild(editar);
+
+    card.appendChild(acoes);
+    card.addEventListener("click", () => openContactPanel(c.id));
+    return card;
   }
 
   /* ── Render: logística ──────────────────────────────────
@@ -1381,41 +1397,6 @@
     showToast(`Data movida pra ${formatBrDate(dateKeyTarget)}.`);
   }
 
-  /* ── Faixa de follow-up ─────────────────────────────────── */
-
-  const followupBar = document.getElementById("followup-bar");
-  const followupText = document.getElementById("followup-text");
-
-  const followupAction = document.getElementById("followup-action");
-
-  function renderFollowupBar() {
-    const late = lateDeals();
-
-    if (onlyLate) {
-      followupBar.hidden = false;
-      followupText.textContent = "Mostrando só quem está esperando cobrança.";
-      followupAction.textContent = "Ver todas";
-      return;
-    }
-
-    if (!late.length) {
-      followupBar.hidden = true;
-      return;
-    }
-
-    followupBar.hidden = false;
-    followupAction.textContent = "Ver agora";
-    followupText.textContent = late.length === 1
-      ? "1 negociação esperando você cobrar."
-      : `${late.length} negociações esperando você cobrar.`;
-  }
-
-  followupAction.addEventListener("click", () => {
-    onlyLate = !onlyLate;
-    switchView("pipeline");
-    renderAll();
-  });
-
   /* ── Painel: negociação ─────────────────────────────────── */
 
   const backdrop = document.getElementById("backdrop");
@@ -1623,18 +1604,13 @@
     updateWaPreview();
   }
 
-  /* Criar sempre leva pro funil, pra ele ver onde a negociação caiu
-     — inclusive quando parte de um contato ou de um dia da agenda. */
+  /* Show novo só nasce de um dia do calendário, então sempre tem data. */
   async function createDeal(overrides) {
     const deal = makeDeal({ estilo: config.estiloPadrao, ...overrides });
     await persistDeal(deal);
-    onlyLate = false;
-    switchView("pipeline");
     renderAll();
     openDealPanel(deal.id);
   }
-
-  document.getElementById("new-deal").addEventListener("click", () => createDeal({}));
 
   document.getElementById("save-deal").addEventListener("click", async () => {
     if (!activeDealId) return;
@@ -1711,6 +1687,28 @@
     })
   );
 
+  /* Menu do press kit na barra de cima: dois PDFs não cabem em um
+     botão só, então ele abre as quatro opções logo abaixo. */
+  const presskitMenu = document.getElementById("presskit-menu");
+  const presskitBtn = document.getElementById("open-presskit");
+
+  function fecharPresskitMenu() {
+    presskitMenu.hidden = true;
+    presskitBtn.setAttribute("aria-expanded", "false");
+  }
+
+  presskitBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const abrindo = presskitMenu.hidden;
+    presskitMenu.hidden = !abrindo;
+    presskitBtn.setAttribute("aria-expanded", String(abrindo));
+  });
+
+  presskitMenu.addEventListener("click", () => fecharPresskitMenu());
+  document.addEventListener("click", (e) => {
+    if (!presskitMenu.hidden && !presskitMenu.contains(e.target)) fecharPresskitMenu();
+  });
+
   document.querySelectorAll("[data-copy-presskit]").forEach((btn) =>
     btn.addEventListener("click", async () => {
       const url = btn.dataset.copyPresskit === "en" ? PRESSKIT_EN_URL : PRESSKIT_URL;
@@ -1732,20 +1730,12 @@
     }
   });
 
-  /* Botão WhatsApp direto do card, sem abrir o painel: usa a mensagem
-     que faz sentido pra etapa em que a negociação está. */
-  function quickWhatsApp(dealId) {
-    const deal = deals[dealId];
-    if (!deal) return;
-    const templateKey = suggestTemplate(deal);
-    sendWhatsApp(deal, buildMessage(templateKey, deal), templateKey);
-  }
-
   /* ── Painel: contato ────────────────────────────────────── */
 
   const cNome = document.getElementById("c-nome");
   const cCasa = document.getElementById("c-casa");
   const cBairro = document.getElementById("c-bairro");
+  const cCidade = document.getElementById("c-cidade");
   const cFuncao = document.getElementById("c-funcao");
   const cMelhorDia = document.getElementById("c-melhor-dia");
   const cWhatsapp = document.getElementById("c-whatsapp");
@@ -1755,7 +1745,89 @@
   const cCache = document.getElementById("c-cache");
   const cNotas = document.getElementById("c-notas");
 
-  function openContactPanel(id) {
+  /* ── Mensagem a partir do contato ───────────────────────
+     As mensagens são escritas em cima de uma negociação; aqui o
+     contato veste esse formato, sem data e sem etapa. */
+
+  const cWaTemplates = document.getElementById("c-wa-templates");
+  const cWaPreview = document.getElementById("c-wa-preview");
+  const cWaWarning = document.getElementById("c-wa-warning");
+  const cWaLinksWarning = document.getElementById("c-wa-links-warning");
+  let cTemplateKey = "primeiroContato";
+
+  function contatoComoDeal() {
+    return {
+      contato: cNome.value.trim(),
+      casa: cCasa.value.trim(),
+      bairro: cBairro.value.trim(),
+      cidade: cCidade.value.trim(),
+      estilo: cEstilo.value.trim() || config.estiloPadrao,
+      cachePedido: cCache.value,
+      dataAlvo: "",
+      whatsapp: cWhatsapp.value.trim(),
+    };
+  }
+
+  function renderContactChips() {
+    cWaTemplates.innerHTML = "";
+    Object.keys(TEMPLATE_LABELS).forEach((key) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "wa-chip" + (key === cTemplateKey ? " active" : "");
+      chip.textContent = TEMPLATE_LABELS[key];
+      chip.addEventListener("click", () => {
+        cTemplateKey = key;
+        renderContactChips();
+        updateContactPreview();
+      });
+      cWaTemplates.appendChild(chip);
+    });
+  }
+
+  function updateContactPreview() {
+    cWaPreview.value = buildMessage(cTemplateKey, contatoComoDeal());
+    cWaWarning.hidden = Boolean(cWhatsapp.value.trim());
+    const faltando = missingLinkFor(cTemplateKey);
+    cWaLinksWarning.hidden = !faltando;
+    if (faltando) cWaLinksWarning.textContent = `Essa mensagem usa ${faltando}, que ainda não está cadastrado — preencha em Mensagens padrão (ícone 💬).`;
+  }
+
+  document.querySelectorAll("[data-c-presskit]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const url = btn.dataset.cPresskit === "en" ? PRESSKIT_EN_URL : PRESSKIT_URL;
+      if (cWaPreview.value.includes(url)) return showToast("Esse link já está na mensagem.");
+      cWaPreview.value = `${cWaPreview.value.trim()}\n\n${url}`.trim();
+      showToast("Press kit anexado.");
+    })
+  );
+
+  document.getElementById("c-copy-whatsapp").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(cWaPreview.value);
+      showToast("Mensagem copiada.");
+    } catch (err) {
+      showToast("Não deu pra copiar — selecione e copie na mão.");
+    }
+  });
+
+  document.getElementById("c-send-whatsapp").addEventListener("click", async () => {
+    if (!activeContactId) return;
+    const phone = normalizePhone(cWhatsapp.value);
+    if (!phone) {
+      cWaWarning.hidden = false;
+      return showToast("Cadastre o WhatsApp desse contato primeiro.");
+    }
+    // registra a data pra ele saber depois quem já foi falado
+    await persistContact({ ...contacts[activeContactId], ultimoContato: TODAY_KEY });
+    renderContacts();
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(cWaPreview.value)}`, "_blank", "noopener");
+  });
+
+  [cNome, cCasa, cBairro, cEstilo, cCache].forEach((el) =>
+    el.addEventListener("input", updateContactPreview));
+  cWhatsapp.addEventListener("input", () => { cWaWarning.hidden = Boolean(cWhatsapp.value.trim()); });
+
+  function openContactPanel(id, focarMensagem) {
     const contact = contacts[id];
     if (!contact) return;
     activeContactId = id;
@@ -1763,6 +1835,8 @@
     cNome.value = contact.nome || "";
     cCasa.value = contact.casa || "";
     cBairro.value = contact.bairro || "";
+    cCidade.value = contact.cidade || "";
+    cCidade.placeholder = cidadeDoTelefone(contact.whatsapp) || "deduzida pelo telefone";
     cFuncao.value = contact.funcao || "curador";
     cMelhorDia.value = contact.melhorDia || "";
     cWhatsapp.value = contact.whatsapp || "";
@@ -1772,14 +1846,25 @@
     cCache.value = contact.cacheRef || "";
     cNotas.value = contact.notas || "";
 
-    const linked = Object.values(deals).filter((d) => d.contatoId === id).length;
-    document.getElementById("contact-panel-sub").textContent = linked
-      ? `${linked} negociação(ões) ligada(s)`
-      : "sem negociação aberta";
+    const dias = diasDesde(contact.ultimoContato);
+    document.getElementById("contact-panel-sub").textContent =
+      dias === null ? "ainda não falei com essa pessoa"
+      : dias === 0 ? "falei hoje"
+      : dias === 1 ? "falei ontem"
+      : `falei há ${dias} dias`;
+
+    cTemplateKey = contact.ultimoContato ? "followup" : "primeiroContato";
+    renderContactChips();
+    updateContactPreview();
 
     closeAllPanelsExcept(contactPanel);
     backdrop.hidden = false;
     contactPanel.hidden = false;
+
+    if (focarMensagem) {
+      // veio pelo botão "Mandar mensagem": rola direto pra ela
+      requestAnimationFrame(() => cWaPreview.scrollIntoView({ block: "center" }));
+    }
   }
 
   document.getElementById("new-contact").addEventListener("click", async () => {
@@ -1797,6 +1882,7 @@
       nome: cNome.value.trim(),
       casa: cCasa.value.trim(),
       bairro: cBairro.value.trim(),
+      cidade: cCidade.value.trim(),
       funcao: cFuncao.value,
       melhorDia: cMelhorDia.value.trim(),
       whatsapp: cWhatsapp.value.trim(),
@@ -1820,20 +1906,6 @@
     renderAll();
     closeAllPanels();
     showToast("Contato excluído.");
-  });
-
-  document.getElementById("deal-from-contact").addEventListener("click", async () => {
-    const contact = contacts[activeContactId];
-    if (!contact) return;
-    await createDeal({
-      contato: contact.nome,
-      contatoId: contact.id,
-      casa: contact.casa,
-      bairro: contact.bairro,
-      whatsapp: contact.whatsapp,
-      estilo: contact.estilo || config.estiloPadrao,
-      cachePedido: contact.cacheRef || "",
-    });
   });
 
   /* ── Painel: logística ──────────────────────────────────── */
@@ -2639,7 +2711,6 @@
       }
     }
 
-    onlyLate = false;
     switchView("agenda");
     view = { year: Number(escolhidos[0].dataAlvo.slice(0, 4)), month: Number(escolhidos[0].dataAlvo.slice(5, 7)) };
     renderAll();
@@ -2720,7 +2791,6 @@
   function switchView(name) {
     currentView = name;
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.view === name));
-    document.getElementById("view-pipeline").hidden = name !== "pipeline";
     document.getElementById("view-agenda").hidden = name !== "agenda";
     document.getElementById("view-logistica").hidden = name !== "logistica";
     document.getElementById("view-contatos").hidden = name !== "contatos";
@@ -2743,13 +2813,6 @@
     renderCalendar();
   });
 
-  document.getElementById("deal-search").addEventListener("input", (e) => {
-    dealFilter = e.target.value;
-    if (dealFilter) onlyLate = false;
-    renderBoard();
-    renderFollowupBar();
-  });
-
   document.getElementById("contact-search").addEventListener("input", (e) => {
     contactFilter = e.target.value;
     renderContacts();
@@ -2760,7 +2823,7 @@
     .forEach((btn) => btn.addEventListener("click", closeAllPanels));
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeAllPanels();
+    if (e.key === "Escape") { closeAllPanels(); fecharPresskitMenu(); }
   });
 
   /* ── Trava de senha ─────────────────────────────────────── */
@@ -2808,20 +2871,28 @@
   /* ── Render geral ───────────────────────────────────────── */
 
   function renderAll() {
-    renderStats();
-    renderBoard();
     renderContacts();
     renderCalendar();
     renderLogistica();
-    renderFollowupBar();
   }
 
   /* ── Início ─────────────────────────────────────────────── */
 
+  /* Com o funil fora, negociação sem data não aparece em lugar nenhum.
+     As que existiam eram as criadas por curador na semeadura, e o que
+     elas guardavam já está no contato — então sai o que ficou órfão. */
+  async function limparNegociacoesSemData() {
+    const orfas = Object.values(deals).filter((d) => !d.dataAlvo && String(d.id).startsWith("seed-neg-"));
+    for (const d of orfas) await removeDeal(d.id);
+    if (orfas.length) renderAll();
+  }
+
   loadLocal();
+  carregarGruposAbertos();
   switchView("agenda"); // a agenda é a tela do dia a dia
   renderAll();
-  seedAgendaOnce().then(seedCuradoresOnce).then(seedLogisticaOnce);
+  seedAgendaOnce().then(seedCuradoresOnce).then(seedLogisticaOnce)
+    .then(limparNegociacoesSemData).then(completarContatosOnce).then(removerContatosOnce);
 
   if (isUnlocked()) {
     loginGate.hidden = true;
