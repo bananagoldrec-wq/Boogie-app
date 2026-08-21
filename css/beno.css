@@ -1078,3 +1078,17 @@ input:focus, select:focus, textarea:focus {
   font-weight: 600;
   vertical-align: middle;
 }
+
+/* cabeçalho de cidade na lista de contatos */
+.contact-group {
+  grid-column: 1 / -1;
+  font-family: "Quicksand", sans-serif;
+  font-weight: 700;
+  font-size: 0.76rem;
+  color: var(--acc);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 16px 2px 2px;
+}
+
+.contact-group:first-child { padding-top: 0; }

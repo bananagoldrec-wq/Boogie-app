@@ -648,6 +648,71 @@
     if (mudou) renderAll();
   }
 
+  /* ── Cidade a partir do telefone ────────────────────────
+     No Brasil o DDD entrega a cidade. Fora, não: celular de Portugal
+     e da França começa com prefixo de operadora, não de região — por
+     isso o melhor que dá é o país, até o Beno digitar a cidade. */
+
+  const DDD_CIDADE = {
+    11: "São Paulo", 12: "São José dos Campos", 13: "Santos", 14: "Bauru",
+    15: "Sorocaba", 16: "Ribeirão Preto", 17: "São José do Rio Preto",
+    18: "Presidente Prudente", 19: "Campinas",
+    21: "Rio de Janeiro", 22: "Campos dos Goytacazes", 24: "Volta Redonda",
+    27: "Vitória", 28: "Cachoeiro de Itapemirim",
+    31: "Belo Horizonte", 32: "Juiz de Fora", 33: "Governador Valadares",
+    34: "Uberlândia", 35: "Poços de Caldas", 37: "Divinópolis", 38: "Montes Claros",
+    41: "Curitiba", 42: "Ponta Grossa", 43: "Londrina", 44: "Maringá",
+    45: "Foz do Iguaçu", 46: "Francisco Beltrão", 47: "Joinville",
+    48: "Florianópolis", 49: "Chapecó",
+    51: "Porto Alegre", 53: "Pelotas", 54: "Caxias do Sul", 55: "Santa Maria",
+    61: "Brasília", 62: "Goiânia", 63: "Palmas", 64: "Rio Verde",
+    65: "Cuiabá", 66: "Rondonópolis", 67: "Campo Grande",
+    68: "Rio Branco", 69: "Porto Velho",
+    71: "Salvador", 73: "Ilhéus", 74: "Juazeiro", 75: "Feira de Santana",
+    77: "Barreiras", 79: "Aracaju",
+    81: "Recife", 82: "Maceió", 83: "João Pessoa", 84: "Natal",
+    85: "Fortaleza", 86: "Teresina", 87: "Petrolina", 88: "Juazeiro do Norte",
+    89: "Picos", 91: "Belém", 92: "Manaus", 93: "Santarém", 94: "Marabá",
+    95: "Boa Vista", 96: "Macapá", 97: "Coari", 98: "São Luís", 99: "Imperatriz",
+  };
+
+  const DDI_PAIS = {
+    1: "Estados Unidos / Canadá", 30: "Grécia", 31: "Holanda", 32: "Bélgica",
+    33: "França", 34: "Espanha", 39: "Itália", 41: "Suíça", 43: "Áustria",
+    44: "Reino Unido", 45: "Dinamarca", 46: "Suécia", 47: "Noruega",
+    48: "Polônia", 49: "Alemanha", 52: "México", 54: "Argentina",
+    56: "Chile", 57: "Colômbia", 61: "Austrália", 81: "Japão",
+    212: "Marrocos", 244: "Angola", 258: "Moçambique", 351: "Portugal",
+    353: "Irlanda", 358: "Finlândia", 420: "Chéquia", 421: "Eslováquia",
+    598: "Uruguai", 972: "Israel",
+  };
+
+  function cidadeDoTelefone(raw) {
+    const str = (raw || "").trim();
+    const digits = str.replace(/\D/g, "");
+    if (!digits) return "";
+
+    // brasileiro: escrito com +55, ou sem DDI nenhum
+    let br = "";
+    if (str.startsWith("+55")) br = digits.slice(2);
+    else if (!str.startsWith("+")) br = digits.length > 11 && digits.startsWith("55") ? digits.slice(2) : digits;
+    if (br.length >= 10) return DDD_CIDADE[Number(br.slice(0, 2))] || "Brasil";
+
+    // estrangeiro: código de país tem 1 a 3 dígitos, tenta o mais longo
+    if (str.startsWith("+")) {
+      for (const tamanho of [3, 2, 1]) {
+        const pais = DDI_PAIS[Number(digits.slice(0, tamanho))];
+        if (pais) return pais;
+      }
+    }
+    return "";
+  }
+
+  /* Cidade digitada à mão vence a deduzida pelo telefone. */
+  function cidadeDoContato(c) {
+    return (c.cidade || "").trim() || cidadeDoTelefone(c.whatsapp) || "Sem cidade";
+  }
+
   /* ── Modelo: contatos ───────────────────────────────────── */
 
   function makeContact(overrides) {
@@ -656,6 +721,7 @@
       nome: "",
       casa: "",
       bairro: "",
+      cidade: "",
       funcao: "curador",
       whatsapp: "",
       instagram: "",
@@ -847,8 +913,7 @@
     contactList.innerHTML = "";
     const filter = normalizeName(contactFilter);
     const items = Object.values(contacts)
-      .filter((c) => !filter || normalizeName([c.nome, c.casa, c.bairro, c.estilo, c.notas].join(" ")).includes(filter))
-      .sort((a, b) => (a.nome || a.casa || "").localeCompare(b.nome || b.casa || "", "pt-BR"));
+      .filter((c) => !filter || normalizeName([c.nome, c.casa, c.bairro, c.cidade, c.estilo, c.notas].join(" ")).includes(filter));
 
     if (!items.length) {
       const empty = document.createElement("div");
@@ -860,69 +925,93 @@
       return;
     }
 
+    // agrupa por cidade; a cidade com mais gente vem primeiro
+    const grupos = {};
     items.forEach((c) => {
-      const card = document.createElement("div");
-      card.className = "contact-card";
-
-      // nome da pessoa com a casa que ela cura logo ao lado
-      const name = document.createElement("div");
-      name.className = "contact-name";
-      name.textContent = c.nome || c.casa || "(sem nome)";
-      if (c.casa && c.nome) {
-        const casa = document.createElement("span");
-        casa.className = "contact-casa";
-        casa.textContent = c.casa;
-        name.appendChild(casa);
-      }
-      card.appendChild(name);
-
-      const subParts = [prettyPhone(c.whatsapp), c.bairro].filter(Boolean);
-      if (subParts.length) {
-        const sub = document.createElement("div");
-        sub.className = "contact-sub";
-        sub.textContent = subParts.join(" · ");
-        card.appendChild(sub);
-      }
-
-      const tags = document.createElement("div");
-      tags.className = "contact-tags";
-      [c.estilo, c.melhorDia, formatMoney(c.cacheRef)].filter(Boolean).forEach((t) => {
-        const pill = document.createElement("span");
-        pill.className = "pill";
-        pill.textContent = t;
-        tags.appendChild(pill);
-      });
-
-      const dias = diasDesde(c.ultimoContato);
-      if (dias !== null) {
-        const pill = document.createElement("span");
-        pill.className = "pill " + (dias >= 14 ? "pill-late" : "pill-cache");
-        pill.textContent = dias === 0 ? "falei hoje" : dias === 1 ? "falei ontem" : `falei há ${dias} dias`;
-        tags.appendChild(pill);
-      }
-      if (tags.children.length) card.appendChild(tags);
-
-      const acoes = document.createElement("div");
-      acoes.className = "contact-actions";
-
-      const msg = document.createElement("button");
-      msg.type = "button";
-      msg.className = "btn btn-primary btn-msg";
-      msg.textContent = "Mandar mensagem";
-      msg.addEventListener("click", (e) => { e.stopPropagation(); openContactPanel(c.id, true); });
-      acoes.appendChild(msg);
-
-      const editar = document.createElement("button");
-      editar.type = "button";
-      editar.className = "btn btn-ghost btn-msg";
-      editar.textContent = "Editar";
-      editar.addEventListener("click", (e) => { e.stopPropagation(); openContactPanel(c.id); });
-      acoes.appendChild(editar);
-
-      card.appendChild(acoes);
-      card.addEventListener("click", () => openContactPanel(c.id));
-      contactList.appendChild(card);
+      const cidade = cidadeDoContato(c);
+      (grupos[cidade] = grupos[cidade] || []).push(c);
     });
+
+    Object.keys(grupos)
+      .sort((a, b) => {
+        if (a === "Sem cidade") return 1;
+        if (b === "Sem cidade") return -1;
+        return grupos[b].length - grupos[a].length || a.localeCompare(b, "pt-BR");
+      })
+      .forEach((cidade) => {
+        const cab = document.createElement("div");
+        cab.className = "contact-group";
+        cab.textContent = `${cidade} · ${grupos[cidade].length}`;
+        contactList.appendChild(cab);
+
+        grupos[cidade]
+          .sort((a, b) => (a.nome || a.casa || "").localeCompare(b.nome || b.casa || "", "pt-BR"))
+          .forEach((c) => contactList.appendChild(buildContactCard(c)));
+      });
+  }
+
+  function buildContactCard(c) {
+    const card = document.createElement("div");
+    card.className = "contact-card";
+
+    // nome da pessoa com a casa que ela cura logo ao lado
+    const name = document.createElement("div");
+    name.className = "contact-name";
+    name.textContent = c.nome || c.casa || "(sem nome)";
+    if (c.casa && c.nome) {
+      const casa = document.createElement("span");
+      casa.className = "contact-casa";
+      casa.textContent = c.casa;
+      name.appendChild(casa);
+    }
+    card.appendChild(name);
+
+    const subParts = [prettyPhone(c.whatsapp), c.bairro].filter(Boolean);
+    if (subParts.length) {
+      const sub = document.createElement("div");
+      sub.className = "contact-sub";
+      sub.textContent = subParts.join(" · ");
+      card.appendChild(sub);
+    }
+
+    const tags = document.createElement("div");
+    tags.className = "contact-tags";
+    [c.estilo, c.melhorDia, formatMoney(c.cacheRef)].filter(Boolean).forEach((t) => {
+      const pill = document.createElement("span");
+      pill.className = "pill";
+      pill.textContent = t;
+      tags.appendChild(pill);
+    });
+
+    const dias = diasDesde(c.ultimoContato);
+    if (dias !== null) {
+      const pill = document.createElement("span");
+      pill.className = "pill " + (dias >= 14 ? "pill-late" : "pill-cache");
+      pill.textContent = dias === 0 ? "falei hoje" : dias === 1 ? "falei ontem" : `falei há ${dias} dias`;
+      tags.appendChild(pill);
+    }
+    if (tags.children.length) card.appendChild(tags);
+
+    const acoes = document.createElement("div");
+    acoes.className = "contact-actions";
+
+    const msg = document.createElement("button");
+    msg.type = "button";
+    msg.className = "btn btn-primary btn-msg";
+    msg.textContent = "Mandar mensagem";
+    msg.addEventListener("click", (e) => { e.stopPropagation(); openContactPanel(c.id, true); });
+    acoes.appendChild(msg);
+
+    const editar = document.createElement("button");
+    editar.type = "button";
+    editar.className = "btn btn-ghost btn-msg";
+    editar.textContent = "Editar";
+    editar.addEventListener("click", (e) => { e.stopPropagation(); openContactPanel(c.id); });
+    acoes.appendChild(editar);
+
+    card.appendChild(acoes);
+    card.addEventListener("click", () => openContactPanel(c.id));
+    return card;
   }
 
   /* ── Render: logística ──────────────────────────────────
@@ -1564,6 +1653,7 @@
   const cNome = document.getElementById("c-nome");
   const cCasa = document.getElementById("c-casa");
   const cBairro = document.getElementById("c-bairro");
+  const cCidade = document.getElementById("c-cidade");
   const cFuncao = document.getElementById("c-funcao");
   const cMelhorDia = document.getElementById("c-melhor-dia");
   const cWhatsapp = document.getElementById("c-whatsapp");
@@ -1588,6 +1678,7 @@
       contato: cNome.value.trim(),
       casa: cCasa.value.trim(),
       bairro: cBairro.value.trim(),
+      cidade: cCidade.value.trim(),
       estilo: cEstilo.value.trim() || config.estiloPadrao,
       cachePedido: cCache.value,
       dataAlvo: "",
@@ -1662,6 +1753,8 @@
     cNome.value = contact.nome || "";
     cCasa.value = contact.casa || "";
     cBairro.value = contact.bairro || "";
+    cCidade.value = contact.cidade || "";
+    cCidade.placeholder = cidadeDoTelefone(contact.whatsapp) || "deduzida pelo telefone";
     cFuncao.value = contact.funcao || "curador";
     cMelhorDia.value = contact.melhorDia || "";
     cWhatsapp.value = contact.whatsapp || "";
@@ -1707,6 +1800,7 @@
       nome: cNome.value.trim(),
       casa: cCasa.value.trim(),
       bairro: cBairro.value.trim(),
+      cidade: cCidade.value.trim(),
       funcao: cFuncao.value,
       melhorDia: cMelhorDia.value.trim(),
       whatsapp: cWhatsapp.value.trim(),
