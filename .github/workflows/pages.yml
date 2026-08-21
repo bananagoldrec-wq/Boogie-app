@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - claude/disco-boogie-globe-app-fp48c2
+      - claude/english-conversation-coach-88mtqo
   workflow_dispatch:
 
 permissions:
@@ -25,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: claude/disco-boogie-globe-app-fp48c2
+          ref: claude/english-conversation-coach-88mtqo
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
