@@ -719,6 +719,30 @@
     return (c.cidade || "").trim() || cidadeDoTelefone(c.whatsapp) || "Sem cidade";
   }
 
+  /* Contatos que o Beno pediu pra tirar. Roda uma vez por aparelho.
+     A comparação é exata (ignorando acento e maiúscula) tanto no nome
+     quanto na casa — de propósito, pra não levar junto um homônimo. */
+  const REMOCOES_KEY = "beno_remocoes_v1";
+  const REMOCOES = ["Jazz Mansion", "Curtis"];
+
+  async function removerContatosOnce() {
+    try {
+      if (localStorage.getItem(REMOCOES_KEY)) return;
+      localStorage.setItem(REMOCOES_KEY, "1");
+    } catch (err) {
+      return;
+    }
+    const alvos = REMOCOES.map(normalizeName);
+    const achados = Object.values(contacts).filter((c) =>
+      alvos.includes(normalizeName(c.nome)) || alvos.includes(normalizeName(c.casa)));
+
+    for (const c of achados) await removeContact(c.id);
+    if (achados.length) {
+      renderAll();
+      showToast(`Removido: ${achados.map((c) => c.nome || c.casa).join(", ")}.`);
+    }
+  }
+
   /* ── Modelo: contatos ───────────────────────────────────── */
 
   function makeContact(overrides) {
@@ -2846,7 +2870,7 @@
   switchView("agenda"); // a agenda é a tela do dia a dia
   renderAll();
   seedAgendaOnce().then(seedCuradoresOnce).then(seedLogisticaOnce)
-    .then(limparNegociacoesSemData).then(completarContatosOnce);
+    .then(limparNegociacoesSemData).then(completarContatosOnce).then(removerContatosOnce);
 
   if (isUnlocked()) {
     loginGate.hidden = true;
