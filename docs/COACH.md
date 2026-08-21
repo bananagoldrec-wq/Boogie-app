@@ -52,29 +52,65 @@ assume e você nem percebe. O selo no topo mostra qual está no ar.
 
 ## Ligar o Claude
 
-A chave **nunca** fica no navegador. Ela vive no servidor em `server/`.
+Sem isso o app funciona, mas o professor é o local — bom pra treinar, longe
+de uma conversa de verdade. Com o Claude ligado ele entende o que você disse
+e responde àquilo, como qualquer bom professor faria.
+
+A chave **nunca** fica no navegador: ela vive no servidor em `server/`.
+
+### Opção A — no seu computador (2 minutos, pra experimentar)
 
 ```bash
 cd server
 npm install
-export ANTHROPIC_API_KEY="sk-ant-..."      # a sua chave
+export ANTHROPIC_API_KEY="sk-ant-..."      # sua chave
 npm start                                   # http://localhost:8787/coach.html
 ```
 
-Isso já sobe o app inteiro (front + API) em `localhost:8787`. Como front e API
-ficam na mesma origem, o app se conecta sozinho.
+Isso sobe o app inteiro (front + API) na mesma porta, e o app se conecta
+sozinho. Serve pra testar; o celular na rua não alcança esse endereço.
 
-Publicando separado — front no GitHub Pages, API em outro lugar:
+### Opção B — no ar de graça, pelo Render (5 minutos, sem terminal)
+
+O repositório já traz o `render.yaml` pronto.
+
+1. Pegue uma chave em [console.anthropic.com](https://console.anthropic.com)
+   → *API keys* → **Create key**. Copie: ela só aparece uma vez.
+2. Entre em [render.com](https://render.com) com a conta do GitHub.
+3. **New → Blueprint**, escolha este repositório e confirme. Ele lê o
+   `render.yaml` e monta o serviço `coach-api` sozinho.
+4. Quando pedir **ANTHROPIC_API_KEY**, cole a chave. É o único campo.
+5. Espere o *deploy* ficar verde e copie o endereço (algo como
+   `https://coach-api.onrender.com`).
+6. Abra no celular:
+   `https://SEU-USUARIO.github.io/Boogie-app/coach.html?server=COLE-O-ENDERECO-AQUI`
+   O app guarda o servidor e o selo no topo vira **Claude**.
+
+O plano gratuito do Render dorme depois de 15 minutos parado: a primeira
+conversa do dia demora uns 30 segundos pra primeira resposta. Se isso
+incomodar, o plano pago mais barato resolve — ou use a opção C.
+
+### Opção C — container (Fly, Railway, Cloud Run, o que preferir)
+
+O `Dockerfile` na raiz sobe só a API:
 
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
-export COACH_ORIGIN="https://seu-usuario.github.io"   # libera só o seu site
-export COACH_STATIC=0                                  # só a API
-npm start
+fly launch --no-deploy            # ou o equivalente do seu provedor
+fly secrets set ANTHROPIC_API_KEY="sk-ant-..."
+fly deploy
 ```
 
-Depois, no app: **Profile → AI coach → Server address** → endereço do servidor →
-**Connect**.
+Depois, mesma coisa: abra o app com `?server=https://seu-app.fly.dev`, ou
+cole o endereço em **Profile → AI coach → Server address → Connect**.
+
+### Quanto custa
+
+Cada conversa de dez minutos gasta mais ou menos **US$ 0,10 a 0,20** em API
+(o texto da conversa vai e volta a cada turno; o áudio nunca sai do
+aparelho). A parte fixa do prompt é cacheada, o que derruba boa parte disso
+em conversas seguidas. Se quiser gastar menos, `COACH_MODEL=claude-haiku-4-5`
+troca o modelo — responde mais rápido e mais barato, com menos nuance nas
+correções.
 
 ### Variáveis do servidor
 
@@ -130,6 +166,8 @@ js/coach/ui.js          → helpers de interface (folha, aviso, gráfico, medido
 js/coach/app.js         → rotas, onboarding e tela de voz
 server/coach.mjs        → prompts e chamadas ao Claude (roda só no servidor)
 server/index.mjs        → HTTP: /api/*, CORS, limite por IP e estáticos
+render.yaml             → sobe só a API no Render, sem terminal
+Dockerfile              → a mesma API em container (Fly, Railway, Cloud Run)
 sw-coach.js             → service worker (rede primeiro, cache como reserva)
 manifest-coach.json     → instalar como app
 tools/make_coach_icons.py → gera os ícones em PNG puro

@@ -353,11 +353,19 @@ async function boot() {
   store.load();
   wire();
 
+  /* coach.html?server=https://... configura o servidor de uma vez, pra não
+     ter que digitar endereço no celular */
+  const asked = new URLSearchParams(location.search).get("server");
+  if (asked !== null) {
+    store.update((s) => { s.server.url = asked.trim(); });
+    history.replaceState(null, "", location.pathname);
+  }
+
   const saved = store.get().server.url;
   if (saved) {
     const res = await ai.connect(saved);
     store.update((s) => { s.server.status = res.ok ? "ok" : "off"; });
-  } else {
+  } else if (asked === null) {
     await ai.autodetect();
     if (ai.isOnline()) {
       store.update((s) => { s.server.url = ai.baseUrl(); s.server.status = "ok"; });
