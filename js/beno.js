@@ -125,6 +125,16 @@
       ],
     },
     {
+      key: "beno_seed_curadores_v4",
+      curadores: [
+        { nome: "Brook", whatsapp: "+351 939 015 160" },
+        { nome: "Kamila Tuga", whatsapp: "+55 21 97138-7700" },
+        { nome: "Gabriel Ferrari Soga", whatsapp: "+55 21 98234-1727" },
+        { nome: "Renata Calma", whatsapp: "+55 11 94853-1129" },
+        { nome: "Myriam", whatsapp: "+41 78 767 77 56", notas: 'Conta comercial, categoria "Arts & entertainment", atende 24h.' },
+      ],
+    },
+    {
       key: "beno_seed_curadores_v3",
       curadores: [
         { nome: "Bruno", whatsapp: "+55 21 99790-7855" },
