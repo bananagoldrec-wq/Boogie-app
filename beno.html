@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Beno Negocia" />
   <title>beno · negociação de shows</title>
-  <link rel="stylesheet" href="css/beno.css?v=21" />
+  <link rel="stylesheet" href="css/beno.css?v=22" />
 </head>
 <body>
 
@@ -157,15 +157,9 @@
         </div>
       </div>
 
-      <div class="field-row">
-        <div class="field">
-          <label for="d-cache-pedido">Cachê pedido (R$)</label>
-          <input id="d-cache-pedido" type="number" inputmode="numeric" placeholder="0" />
-        </div>
-        <div class="field">
-          <label for="d-cache-fechado">Cachê fechado (R$)</label>
-          <input id="d-cache-fechado" type="number" inputmode="numeric" placeholder="0" />
-        </div>
+      <div class="field">
+        <label for="d-cache">Cachê (R$)</label>
+        <input id="d-cache" type="number" inputmode="numeric" placeholder="0" />
       </div>
 
       <div class="field">
@@ -297,7 +291,7 @@
           <input id="c-estilo" type="text" placeholder="Ex.: Disco/House" autocomplete="off" />
         </div>
         <div class="field">
-          <label for="c-cache">Cachê de referência (R$)</label>
+          <label for="c-cache">Cachê (R$)</label>
           <input id="c-cache" type="number" inputmode="numeric" placeholder="0" />
         </div>
       </div>
@@ -600,6 +594,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/beno.js?v=21"></script>
+  <script type="module" src="js/beno.js?v=22"></script>
 </body>
 </html>
