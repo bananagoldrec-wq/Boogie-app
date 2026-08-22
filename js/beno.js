@@ -1280,18 +1280,16 @@
     const prefixo = `${view.year}-${pad2(view.month)}`;
     const doMes = Object.values(deals).filter((d) => (d.dataAlvo || "").startsWith(prefixo));
     const total = doMes.reduce((soma, d) => soma + (Number(d.cache) || 0), 0);
-    const semValor = doMes.filter((d) => !Number(d.cache)).length;
 
     const cards = [
       { value: doMes.length, label: "Shows no mês" },
       { value: formatMoney(total) || "R$ 0", label: "Cachê do mês", destaque: true },
     ];
-    if (semValor) cards.push({ value: semValor, label: "Sem cachê preenchido", alerta: true });
 
     monthSummary.innerHTML = "";
     cards.forEach((c) => {
       const el = document.createElement("div");
-      el.className = "stat" + (c.destaque ? " stat-destaque" : "") + (c.alerta ? " stat-alerta" : "");
+      el.className = "stat" + (c.destaque ? " stat-destaque" : "");
       const v = document.createElement("div");
       v.className = "stat-value";
       v.textContent = c.value;
