@@ -99,6 +99,40 @@ const REMINDER_MSGS = [
   'Diz não pra fissura. Diz sim pra você mesmo.',
 ];
 
+// Weekly routine template — seeded into each new week automatically
+const ROUTINE = [
+  // Monday: Yoga manhã + Estúdio + Leitura + Aula de Yoga tarde
+  [0,  7,  0, 'Yoga',              'exercise', '07:00', '08:00'],
+  [0, 10,  0, 'Estúdio de Música', 'goal',     '10:00', '14:00'],
+  [0, 14,  0, 'Leitura',           'study',    '14:00', '15:00'],
+  [0, 17, 30, 'Aula de Yoga',      'exercise', '17:30', '19:00'],
+  // Tuesday: Academia + Yoga + Estúdio + Leitura + Aula de Yoga tarde
+  [1,  7,  0, 'Musculação',        'exercise', '07:00', '08:30'],
+  [1,  8, 30, 'Yoga',              'exercise', '08:30', '10:00'],
+  [1, 10,  0, 'Estúdio de Música', 'goal',     '10:00', '14:00'],
+  [1, 14,  0, 'Leitura',           'study',    '14:00', '15:00'],
+  [1, 17, 30, 'Aula de Yoga',      'exercise', '17:30', '19:00'],
+  // Wednesday: Yoga manhã + Estúdio + Leitura + Bar noite
+  [2,  7,  0, 'Yoga',              'exercise', '07:00', '08:00'],
+  [2, 10,  0, 'Estúdio de Música', 'goal',     '10:00', '14:00'],
+  [2, 14,  0, 'Leitura',           'study',    '14:00', '15:00'],
+  [2, 20,  0, 'Bar',               'work',     '20:00', null],
+  // Thursday: Academia + Yoga + Estúdio + Leitura + Bar noite
+  [3,  7,  0, 'Musculação',        'exercise', '07:00', '08:30'],
+  [3,  8, 30, 'Yoga',              'exercise', '08:30', '10:00'],
+  [3, 10,  0, 'Estúdio de Música', 'goal',     '10:00', '14:00'],
+  [3, 14,  0, 'Leitura',           'study',    '14:00', '15:00'],
+  [3, 20,  0, 'Bar',               'work',     '20:00', null],
+  // Friday: Estúdio + Leitura + Bar noite
+  [4, 10,  0, 'Estúdio de Música', 'goal',     '10:00', '14:00'],
+  [4, 14,  0, 'Leitura',           'study',    '14:00', '15:00'],
+  [4, 20,  0, 'Bar',               'work',     '20:00', null],
+  // Saturday: Estúdio + Bar noite
+  [5, 10,  0, 'Estúdio de Música', 'goal',     '10:00', '14:00'],
+  [5, 20,  0, 'Bar',               'work',     '20:00', null],
+  // Sunday: rest (no activities)
+];
+
 // ── State ────────────────────────────────────────────────────────────────────
 
 let S = loadState();
@@ -235,6 +269,22 @@ function setAct(di, h, m = 0, act) {
     S.activities[k] = act;
   }
   save();
+}
+
+function seedRoutineIfEmpty() {
+  if (!S.seededWeeks) S.seededWeeks = [];
+  const wkKey = wk();
+  if (S.seededWeeks.includes(wkKey)) return;
+  const hasActivity = Object.keys(S.activities).some(k => k.startsWith(wkKey));
+  if (hasActivity) {
+    S.seededWeeks.push(wkKey); save(); return;
+  }
+  ROUTINE.forEach(([di, h, m, text, category, startTime, endTime]) => {
+    S.activities[aKey(di, h, m)] = { text, category, done: false, startTime, endTime };
+  });
+  S.seededWeeks.push(wkKey);
+  save();
+  setTimeout(() => showReminderToast('Rotina da semana carregada! 📅'), 500);
 }
 
 // ── XP & Level engine ─────────────────────────────────────────────────────────
@@ -399,6 +449,7 @@ function updateTodayProgress() {
 // ── Grid ──────────────────────────────────────────────────────────────────────
 
 function buildGrid() {
+  seedRoutineIfEmpty();
   const grid = q('#week-grid');
   grid.innerHTML = '';
 
