@@ -125,6 +125,15 @@
       ],
     },
     {
+      key: "beno_seed_curadores_v5",
+      curadores: [
+        { nome: "Leonid Lipelis", whatsapp: "+7 905 738-93-49" },
+        { nome: "Anton scruscru", whatsapp: "+374 96 903293", instagram: "@scruscru" },
+        { nome: "Richard Gringo", whatsapp: "+33 7 86 97 19 98" },
+        { nome: "Enrico Sarneri", whatsapp: "+39 366 165 6355", instagram: "@e.sarneri" },
+      ],
+    },
+    {
       key: "beno_seed_curadores_v4",
       curadores: [
         { nome: "Brook", whatsapp: "+351 939 015 160" },
@@ -628,6 +637,7 @@
           cidade: cur.cidade || "",
           funcao: cur.funcao || "curador",
           whatsapp: cur.whatsapp,
+          instagram: cur.instagram || "",
           email: cur.email || "",
           notas: cur.notas || "",
         });
@@ -702,12 +712,12 @@
   };
 
   const DDI_PAIS = {
-    1: "Estados Unidos / Canadá", 30: "Grécia", 31: "Holanda", 32: "Bélgica",
+    1: "Estados Unidos / Canadá", 7: "Rússia", 30: "Grécia", 31: "Holanda", 32: "Bélgica",
     33: "França", 34: "Espanha", 39: "Itália", 41: "Suíça", 43: "Áustria",
     44: "Reino Unido", 45: "Dinamarca", 46: "Suécia", 47: "Noruega",
     48: "Polônia", 49: "Alemanha", 52: "México", 54: "Argentina",
     56: "Chile", 57: "Colômbia", 61: "Austrália", 81: "Japão",
-    212: "Marrocos", 244: "Angola", 258: "Moçambique", 351: "Portugal",
+    212: "Marrocos", 244: "Angola", 258: "Moçambique", 351: "Portugal", 374: "Armênia",
     353: "Irlanda", 358: "Finlândia", 420: "Chéquia", 421: "Eslováquia",
     598: "Uruguai", 972: "Israel",
   };
