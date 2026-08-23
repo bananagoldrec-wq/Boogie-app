@@ -8,7 +8,7 @@ const DAYS     = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 const DAY_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
 const START_H  = 6;
 const END_H    = 20;
-const ROUTINE_VERSION = 2;
+const ROUTINE_VERSION = 3;
 
 const CATS = [
   { id:'exercise', label:'Exercício',   color:'#A8C4A2' },
@@ -169,12 +169,9 @@ function loadState() {
     if (!raw) return defaultState();
     const state = JSON.parse(raw);
     if ((state.routineVersion || 0) < ROUTINE_VERSION) {
-      Object.values(state.activities || {}).forEach(act => {
-        if (act && act.text === 'Estúdio de Música') act.text = 'Estúdio';
-        if (act && act.text === 'Leitura' && act.startTime === '14:00') {
-          act.startTime = '16:00'; act.endTime = '17:00';
-        }
-      });
+      // Clear all activities and re-seed fresh with the full current routine
+      // (preserves XP, streak, achievements, and smoking data)
+      state.activities = {};
       state.seededWeeks = [];
       state.routineVersion = ROUTINE_VERSION;
       localStorage.setItem(SK, JSON.stringify(state));
