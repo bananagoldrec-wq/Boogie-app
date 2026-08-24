@@ -3,6 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
+      - main
       - claude/english-conversation-coach-88mtqo
       - claude/disco-boogie-globe-app-fp48c2
   workflow_dispatch:

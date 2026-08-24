@@ -125,6 +125,35 @@
       ],
     },
     {
+      key: "beno_seed_curadores_v5",
+      curadores: [
+        { nome: "Leonid Lipelis", whatsapp: "+7 905 738-93-49" },
+        { nome: "Anton scruscru", whatsapp: "+374 96 903293", instagram: "@scruscru" },
+        { nome: "Richard Gringo", whatsapp: "+33 7 86 97 19 98" },
+        { nome: "Enrico Sarneri", whatsapp: "+39 366 165 6355", instagram: "@e.sarneri" },
+      ],
+    },
+    {
+      key: "beno_seed_curadores_v4",
+      curadores: [
+        { nome: "Brook", whatsapp: "+351 939 015 160" },
+        { nome: "Kamila Tuga", whatsapp: "+55 21 97138-7700" },
+        { nome: "Gabriel Ferrari Soga", whatsapp: "+55 21 98234-1727" },
+        { nome: "Renata Calma", whatsapp: "+55 11 94853-1129" },
+        { nome: "Myriam", whatsapp: "+41 78 767 77 56", notas: 'Conta comercial, categoria "Arts & entertainment", atende 24h.' },
+      ],
+    },
+    {
+      key: "beno_seed_curadores_v3",
+      curadores: [
+        { nome: "Bruno", whatsapp: "+55 21 99790-7855" },
+        { nome: "JP", whatsapp: "+55 31 98826-1732" },
+        { nome: "Bali G", whatsapp: "+421 951 269 617" },
+        { nome: "Lucas Amorim", whatsapp: "+55 11 99203-2803" },
+        { nome: "Vitor Kurc", whatsapp: "+55 11 99977-7712" },
+      ],
+    },
+    {
       key: "beno_seed_curadores_v2",
       curadores: [
         { nome: "Maz", whatsapp: "+351 910 469 507" },
@@ -522,8 +551,7 @@
       whatsapp: "",
       etapa: "a_contatar",
       dataAlvo: "",
-      cachePedido: "",
-      cacheFechado: "",
+      cache: "",
       estilo: "",
       notas: "",
       ultimoContato: "",
@@ -609,6 +637,7 @@
           cidade: cur.cidade || "",
           funcao: cur.funcao || "curador",
           whatsapp: cur.whatsapp,
+          instagram: cur.instagram || "",
           email: cur.email || "",
           notas: cur.notas || "",
         });
@@ -683,12 +712,12 @@
   };
 
   const DDI_PAIS = {
-    1: "Estados Unidos / Canadá", 30: "Grécia", 31: "Holanda", 32: "Bélgica",
+    1: "Estados Unidos / Canadá", 7: "Rússia", 30: "Grécia", 31: "Holanda", 32: "Bélgica",
     33: "França", 34: "Espanha", 39: "Itália", 41: "Suíça", 43: "Áustria",
     44: "Reino Unido", 45: "Dinamarca", 46: "Suécia", 47: "Noruega",
     48: "Polônia", 49: "Alemanha", 52: "México", 54: "Argentina",
     56: "Chile", 57: "Colômbia", 61: "Austrália", 81: "Japão",
-    212: "Marrocos", 244: "Angola", 258: "Moçambique", 351: "Portugal",
+    212: "Marrocos", 244: "Angola", 258: "Moçambique", 351: "Portugal", 374: "Armênia",
     353: "Irlanda", 358: "Finlândia", 420: "Chéquia", 421: "Eslováquia",
     598: "Uruguai", 972: "Israel",
   };
@@ -715,8 +744,10 @@
   }
 
   /* Cidade digitada à mão vence a deduzida pelo telefone. */
+  const SEM_CIDADE = "Sem cidade";
+
   function cidadeDoContato(c) {
-    return (c.cidade || "").trim() || cidadeDoTelefone(c.whatsapp) || "Sem cidade";
+    return (c.cidade || "").trim() || cidadeDoTelefone(c.whatsapp) || SEM_CIDADE;
   }
 
   /* Contatos que o Beno pediu pra tirar. Roda uma vez por aparelho.
@@ -807,7 +838,7 @@
       .replaceAll("{data}", dataKey ? formatBrDate(dataKey) : "a combinar")
       .replaceAll("{diaSemana}", dataKey ? weekdayNameFromKey(dataKey) : "dia a combinar")
       .replaceAll("{estilo}", deal.estilo || config.estiloPadrao || "")
-      .replaceAll("{cache}", formatMoney(deal.cachePedido) || "combinar")
+      .replaceAll("{cache}", formatMoney(deal.cache) || "combinar")
       .replaceAll("{dj}", config.dj || "Beno")
       .replaceAll("{linkSet}", config.linkSet || "")
       .replaceAll("{linkInsta}", config.linkInsta || "")
@@ -955,19 +986,29 @@
       return;
     }
 
-    // agrupa por cidade; a cidade com mais gente vem primeiro
+    /* Agrupa por cidade. Quem não tem telefone nem cidade digitada fica
+       de fora da lista — os dados continuam salvos, e o contato reaparece
+       assim que ganhar um telefone ou uma cidade. */
     const grupos = {};
+    let semCidade = 0;
     items.forEach((c) => {
       const cidade = cidadeDoContato(c);
+      if (cidade === SEM_CIDADE) { semCidade++; return; }
       (grupos[cidade] = grupos[cidade] || []).push(c);
     });
 
+    if (!Object.keys(grupos).length) {
+      const vazio = document.createElement("div");
+      vazio.className = "empty-state";
+      vazio.textContent = semCidade
+        ? `${semCidade} contato(s) sem telefone e sem cidade não aparecem aqui. Cadastre o telefone ou a cidade pra eles voltarem.`
+        : "Nenhum contato bate com essa busca.";
+      contactList.appendChild(vazio);
+      return;
+    }
+
     Object.keys(grupos)
-      .sort((a, b) => {
-        if (a === "Sem cidade") return 1;
-        if (b === "Sem cidade") return -1;
-        return grupos[b].length - grupos[a].length || a.localeCompare(b, "pt-BR");
-      })
+      .sort((a, b) => grupos[b].length - grupos[a].length || a.localeCompare(b, "pt-BR"))
       .forEach((cidade) => {
         /* Buscando, tudo abre — senão o resultado ficaria escondido
            dentro de uma cidade fechada e pareceria que não achou nada. */
@@ -1254,33 +1295,21 @@
   /* Quanto o mês exibido está rendendo. Show fechado usa o cachê
      fechado e, quando ele está em branco, cai pro pedido — que é o
      que costuma estar preenchido quando só um dos dois foi digitado. */
+  /* Quanto o mês exibido está rendendo, num número só. */
   function renderMonthSummary() {
     const prefixo = `${view.year}-${pad2(view.month)}`;
     const doMes = Object.values(deals).filter((d) => (d.dataAlvo || "").startsWith(prefixo));
-
-    const fechados = doMes.filter((d) => d.etapa === "fechado" || d.etapa === "tocou");
-    const emAberto = doMes.filter((d) => !TERMINAL_STAGES.includes(d.etapa));
-
-    const soma = (lista, campos) => lista.reduce((total, d) => {
-      for (const campo of campos) if (Number(d[campo])) return total + Number(d[campo]);
-      return total;
-    }, 0);
-
-    const confirmado = soma(fechados, ["cacheFechado", "cachePedido"]);
-    const previsto = soma(emAberto, ["cachePedido", "cacheFechado"]);
-    const semValor = fechados.filter((d) => !Number(d.cacheFechado) && !Number(d.cachePedido)).length;
+    const total = doMes.reduce((soma, d) => soma + (Number(d.cache) || 0), 0);
 
     const cards = [
-      { value: fechados.length, label: "Shows no mês" },
-      { value: formatMoney(confirmado) || "R$ 0", label: "Fechado", destaque: true },
-      { value: formatMoney(previsto) || "R$ 0", label: "Em negociação" },
+      { value: doMes.length, label: "Shows no mês" },
+      { value: formatMoney(total) || "R$ 0", label: "Cachê do mês", destaque: true },
     ];
-    if (semValor) cards.push({ value: semValor, label: "Sem cachê preenchido", alerta: true });
 
     monthSummary.innerHTML = "";
     cards.forEach((c) => {
       const el = document.createElement("div");
-      el.className = "stat" + (c.destaque ? " stat-destaque" : "") + (c.alerta ? " stat-alerta" : "");
+      el.className = "stat" + (c.destaque ? " stat-destaque" : "");
       const v = document.createElement("div");
       v.className = "stat-value";
       v.textContent = c.value;
@@ -1359,7 +1388,7 @@
         chip.className = "day-chip";
         chip.style.background = `var(--st-${deal.etapa})`;
         chip.textContent = deal.casa || deal.contato || "(sem casa)";
-        const valor = formatMoney(deal.cacheFechado || deal.cachePedido);
+        const valor = formatMoney(deal.cache);
         chip.title = [deal.casa || deal.contato, deal.contato && deal.casa ? deal.contato : "",
           STAGE_BY_KEY[deal.etapa].label, valor].filter(Boolean).join(" · ");
         content.appendChild(chip);
@@ -1411,8 +1440,7 @@
   const dEtapa = document.getElementById("d-etapa");
   const dData = document.getElementById("d-data");
   const dFollowup = document.getElementById("d-followup");
-  const dCachePedido = document.getElementById("d-cache-pedido");
-  const dCacheFechado = document.getElementById("d-cache-fechado");
+  const dCache = document.getElementById("d-cache");
   const dWhatsapp = document.getElementById("d-whatsapp");
   const dEstilo = document.getElementById("d-estilo");
   const dNotas = document.getElementById("d-notas");
@@ -1453,8 +1481,7 @@
     dEtapa.value = deal.etapa || "a_contatar";
     dData.value = deal.dataAlvo || "";
     dFollowup.value = deal.proximoFollowup || "";
-    dCachePedido.value = deal.cachePedido || "";
-    dCacheFechado.value = deal.cacheFechado || "";
+    dCache.value = deal.cache || "";
     dWhatsapp.value = deal.whatsapp || "";
     dEstilo.value = deal.estilo || "";
     dNotas.value = deal.notas || "";
@@ -1503,8 +1530,7 @@
       etapa: dEtapa.value,
       dataAlvo: dData.value,
       proximoFollowup: dFollowup.value,
-      cachePedido: dCachePedido.value,
-      cacheFechado: dCacheFechado.value,
+      cache: dCache.value,
       whatsapp: dWhatsapp.value.trim(),
       estilo: dEstilo.value.trim(),
       notas: dNotas.value.trim(),
@@ -1551,7 +1577,7 @@
     if (faltando) waLinksWarning.textContent = `Essa mensagem usa ${faltando}, que ainda não está cadastrado — preencha em Mensagens padrão (ícone 💬).`;
   }
 
-  [dContato, dCasa, dBairro, dData, dEstilo, dCachePedido].forEach((el) =>
+  [dContato, dCasa, dBairro, dData, dEstilo, dCache].forEach((el) =>
     el.addEventListener("input", updateWaPreview)
   );
   dEtapa.addEventListener("change", () => {
@@ -1762,7 +1788,7 @@
       bairro: cBairro.value.trim(),
       cidade: cCidade.value.trim(),
       estilo: cEstilo.value.trim() || config.estiloPadrao,
-      cachePedido: cCache.value,
+      cache: cCache.value,
       dataAlvo: "",
       whatsapp: cWhatsapp.value.trim(),
     };
@@ -2766,10 +2792,10 @@
   }
 
   document.getElementById("export-csv").addEventListener("click", () => {
-    const dealRows = [["Casa", "Curador", "Bairro", "Etapa", "Data", "Cachê pedido", "Cachê fechado", "WhatsApp", "Estilo", "Último contato", "Próximo follow-up", "Notas"]];
+    const dealRows = [["Casa", "Curador", "Bairro", "Etapa", "Data", "Cachê", "WhatsApp", "Estilo", "Último contato", "Próximo follow-up", "Notas"]];
     Object.values(deals).forEach((d) => dealRows.push([
       d.casa, d.contato, d.bairro, (STAGE_BY_KEY[d.etapa] || {}).label || d.etapa,
-      formatBrDate(d.dataAlvo), d.cachePedido, d.cacheFechado, prettyPhone(d.whatsapp),
+      formatBrDate(d.dataAlvo), d.cache, prettyPhone(d.whatsapp),
       d.estilo, formatBrDate(d.ultimoContato), formatBrDate(d.proximoFollowup), d.notas,
     ]));
 
@@ -2887,12 +2913,32 @@
     if (orfas.length) renderAll();
   }
 
+  /* Antes eram dois campos, cachê pedido e cachê fechado. Viram um só:
+     vale o fechado quando houver, senão o pedido. Uma vez por aparelho. */
+  async function unificarCacheOnce() {
+    const CHAVE = "beno_cache_unificado_v1";
+    try {
+      if (localStorage.getItem(CHAVE)) return;
+      localStorage.setItem(CHAVE, "1");
+    } catch (err) {
+      return;
+    }
+    let mudou = false;
+    for (const d of Object.values(deals)) {
+      if (d.cache || (!d.cacheFechado && !d.cachePedido)) continue;
+      const { cachePedido, cacheFechado, ...resto } = d;
+      await persistDeal({ ...resto, cache: cacheFechado || cachePedido });
+      mudou = true;
+    }
+    if (mudou) renderAll();
+  }
+
   loadLocal();
   carregarGruposAbertos();
   switchView("agenda"); // a agenda é a tela do dia a dia
   renderAll();
   seedAgendaOnce().then(seedCuradoresOnce).then(seedLogisticaOnce)
-    .then(limparNegociacoesSemData).then(completarContatosOnce).then(removerContatosOnce);
+    .then(limparNegociacoesSemData).then(completarContatosOnce).then(removerContatosOnce).then(unificarCacheOnce);
 
   if (isUnlocked()) {
     loginGate.hidden = true;
