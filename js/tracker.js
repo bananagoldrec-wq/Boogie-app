@@ -6,8 +6,9 @@ const SK = 'rotina-v2';
 
 const DAYS     = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 const DAY_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
-const START_H  = 5;
-const END_H    = 23;
+const START_H  = 6;
+const END_H    = 20;
+const ROUTINE_VERSION = 2;
 
 const CATS = [
   { id:'exercise', label:'Exercício',   color:'#A8C4A2' },
@@ -82,17 +83,103 @@ const TAPER_PHASES = [
   { limit:0, altDay:false, days:0,  label:'Livre!',          range:'Depois'  },
 ];
 
+const REMINDER_TIMES = [
+  { h:10, m:0, msg:'Bom dia! Um dia de cada vez — você consegue. 💚' },
+  { h:14, m:0, msg:'Tarde chegando. Se veio a fissura, espere 5 min — ela passa. 💪' },
+  { h:18, m:0, msg:'Noite chegando, o momento mais difícil. Continue forte! 🌟' },
+];
+
+const REMINDER_MSGS = [
+  'Respire fundo. A fissura dura só 3–5 minutos e passa.',
+  'Você é mais forte que esse desejo. Espere 5 minutos.',
+  'Cada hora que passa é uma vitória real. Vai em frente!',
+  'Pense em como você vai se sentir amanhã se aguentar agora.',
+  'Sua saúde vale muito mais. Continue firme!',
+  'Beba água, respire fundo, faça uma caminhada curta.',
+  'Você já passou pelos momentos mais difíceis. Este também vai passar.',
+  'Diz não pra fissura. Diz sim pra você mesmo.',
+];
+
+// Weekly routine template — seeded into each new week automatically
+const ROUTINE = [
+  // Every day: Calistenia aquecimento 6:10–6:40
+  [0, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
+  [1, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
+  [2, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
+  [3, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
+  [4, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
+  [5, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
+  [6, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
+  // Monday: Yoga + Estúdio + Violão + Piano + Leitura + Aula de Yoga
+  [0,  7,  0, 'Yoga',         'exercise', '07:00', '08:00'],
+  [0, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
+  [0, 14,  0, 'Violão',       'goal',     '14:00', '15:00'],
+  [0, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
+  [0, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
+  [0, 17, 30, 'Aula de Yoga', 'exercise', '17:30', '19:00'],
+  // Tuesday: Academia + Yoga + Estúdio + Violão + Piano + Leitura + Aula de Yoga
+  [1,  7,  0, 'Musculação',   'exercise', '07:00', '08:30'],
+  [1,  8, 30, 'Yoga',         'exercise', '08:30', '10:00'],
+  [1, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
+  [1, 14,  0, 'Violão',       'goal',     '14:00', '15:00'],
+  [1, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
+  [1, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
+  [1, 17, 30, 'Aula de Yoga', 'exercise', '17:30', '19:00'],
+  // Wednesday: Yoga + Estúdio + Violão + Piano + Leitura + Bar
+  [2,  7,  0, 'Yoga',         'exercise', '07:00', '08:00'],
+  [2, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
+  [2, 14,  0, 'Violão',       'goal',     '14:00', '15:00'],
+  [2, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
+  [2, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
+  [2, 20,  0, 'Bar',          'work',     '20:00', null],
+  // Thursday: Academia + Yoga + Estúdio + Violão + Piano + Leitura + Bar
+  [3,  7,  0, 'Musculação',   'exercise', '07:00', '08:30'],
+  [3,  8, 30, 'Yoga',         'exercise', '08:30', '10:00'],
+  [3, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
+  [3, 14,  0, 'Violão',       'goal',     '14:00', '15:00'],
+  [3, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
+  [3, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
+  [3, 20,  0, 'Bar',          'work',     '20:00', null],
+  // Friday: Estúdio + Violão + Piano + Leitura + Bar
+  [4, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
+  [4, 14,  0, 'Violão',       'goal',     '14:00', '15:00'],
+  [4, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
+  [4, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
+  [4, 20,  0, 'Bar',          'work',     '20:00', null],
+  // Saturday: Estúdio + Violão + Piano + Leitura + Bar
+  [5, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
+  [5, 14,  0, 'Violão',       'goal',     '14:00', '15:00'],
+  [5, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
+  [5, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
+  [5, 20,  0, 'Bar',          'work',     '20:00', null],
+  // Sunday: descanso (só Calistenia acima)
+];
+
 // ── State ────────────────────────────────────────────────────────────────────
 
 let S = loadState();
-let weekStart = getMonday(new Date());
-let editCell  = null;
-let selCat    = null;
+let weekStart        = getMonday(new Date());
+let editCell         = null;
+let selCat           = null;
+let _lastReminderKey = null;
 
 function loadState() {
   try {
     const raw = localStorage.getItem(SK);
-    return raw ? JSON.parse(raw) : defaultState();
+    if (!raw) return defaultState();
+    const state = JSON.parse(raw);
+    if ((state.routineVersion || 0) < ROUTINE_VERSION) {
+      Object.values(state.activities || {}).forEach(act => {
+        if (act && act.text === 'Estúdio de Música') act.text = 'Estúdio';
+        if (act && act.text === 'Leitura' && act.startTime === '14:00') {
+          act.startTime = '16:00'; act.endTime = '17:00';
+        }
+      });
+      state.seededWeeks = [];
+      state.routineVersion = ROUTINE_VERSION;
+      localStorage.setItem(SK, JSON.stringify(state));
+    }
+    return state;
   } catch { return defaultState(); }
 }
 
@@ -196,17 +283,43 @@ function getMonday(d) {
 }
 
 function wk()  { return weekStart.toISOString().slice(0,10); }
-function aKey(di,h) { return `${wk()}-${DAY_KEYS[di]}-${h}`; }
+function aKey(di, h, m = 0) { return `${wk()}-${DAY_KEYS[di]}-${h}-${m}`; }
 
 // ── Activity CRUD ─────────────────────────────────────────────────────────────
 
-function getAct(di,h) { return S.activities[aKey(di,h)] || null; }
+function getAct(di, h, m = 0) {
+  const newKey = aKey(di, h, m);
+  if (S.activities[newKey] !== undefined) return S.activities[newKey] || null;
+  // backward compat: old keys had no minute part
+  if (m === 0) return S.activities[`${wk()}-${DAY_KEYS[di]}-${h}`] || null;
+  return null;
+}
 
-function setAct(di,h,act) {
-  const k = aKey(di,h);
-  if (!act) { delete S.activities[k]; }
-  else       { S.activities[k] = act; }
+function setAct(di, h, m = 0, act) {
+  const k = aKey(di, h, m);
+  if (!act) {
+    delete S.activities[k];
+    if (m === 0) delete S.activities[`${wk()}-${DAY_KEYS[di]}-${h}`];
+  } else {
+    S.activities[k] = act;
+  }
   save();
+}
+
+function seedRoutineIfEmpty() {
+  if (!S.seededWeeks) S.seededWeeks = [];
+  const wkKey = wk();
+  if (S.seededWeeks.includes(wkKey)) return;
+  const hasActivity = Object.keys(S.activities).some(k => k.startsWith(wkKey));
+  if (hasActivity) {
+    S.seededWeeks.push(wkKey); save(); return;
+  }
+  ROUTINE.forEach(([di, h, m, text, category, startTime, endTime]) => {
+    S.activities[aKey(di, h, m)] = { text, category, done: false, startTime, endTime };
+  });
+  S.seededWeeks.push(wkKey);
+  save();
+  setTimeout(() => showReminderToast('Rotina da semana carregada! 📅'), 500);
 }
 
 // ── XP & Level engine ─────────────────────────────────────────────────────────
@@ -297,12 +410,12 @@ function showAchToast(def) {
 
 // ── Mark done / undo ──────────────────────────────────────────────────────────
 
-function toggleDone(di, h, originEl) {
-  const act = getAct(di, h);
+function toggleDone(di, h, m, originEl) {
+  const act = getAct(di, h, m);
   if (!act) return;
 
   act.done = !act.done;
-  setAct(di, h, act);
+  setAct(di, h, m, act);
 
   if (act.done) {
     S.totalDone = (S.totalDone || 0) + 1;
@@ -335,8 +448,10 @@ function checkAllTodayDone() {
   const di = now.getDay() === 0 ? 6 : now.getDay() - 1;
 
   for (let h = START_H; h <= END_H; h++) {
-    const act = getAct(di, h);
-    if (act && !act.done) return false;
+    for (const m of [0, 30]) {
+      const act = getAct(di, h, m);
+      if (act && !act.done) return false;
+    }
   }
   return true;
 }
@@ -355,8 +470,10 @@ function updateTodayProgress() {
   const di    = now.getDay() === 0 ? 6 : now.getDay() - 1;
   let total   = 0, done = 0;
   for (let h = START_H; h <= END_H; h++) {
-    const act = getAct(di, h);
-    if (act) { total++; if (act.done) done++; }
+    for (const m of [0, 30]) {
+      const act = getAct(di, h, m);
+      if (act) { total++; if (act.done) done++; }
+    }
   }
 
   const pct = total ? (done / total) * 100 : 0;
@@ -367,6 +484,7 @@ function updateTodayProgress() {
 // ── Grid ──────────────────────────────────────────────────────────────────────
 
 function buildGrid() {
+  seedRoutineIfEmpty();
   const grid = q('#week-grid');
   grid.innerHTML = '';
 
@@ -392,30 +510,33 @@ function buildGrid() {
     grid.appendChild(hdr);
   });
 
-  // Hour rows
+  // Hour rows (30-min slots)
   for (let h = START_H; h <= END_H; h++) {
-    const lbl = mk('div', 'g-time');
-    lbl.textContent = `${String(h).padStart(2,'0')}h`;
-    grid.appendChild(lbl);
+    for (const m of [0, 30]) {
+      const lbl = mk('div', m === 0 ? 'g-time' : 'g-time g-time-half');
+      lbl.textContent = m === 0 ? `${String(h).padStart(2,'0')}h` : ':30';
+      grid.appendChild(lbl);
 
-    DAYS.forEach((_, di) => {
-      const isToday = isThisWeek && di === todayDI;
-      const cell    = mk('div', `g-cell${isToday ? ' is-today-col' : ''}`);
-      cell.dataset.di   = di;
-      cell.dataset.hour = h;
+      DAYS.forEach((_, di) => {
+        const isToday = isThisWeek && di === todayDI;
+        const cell    = mk('div', `g-cell${isToday ? ' is-today-col' : ''}`);
+        cell.dataset.di   = di;
+        cell.dataset.hour = h;
+        cell.dataset.min  = m;
 
-      const act = getAct(di, h);
-      if (act) {
-        renderChip(cell, act);
-        cell.addEventListener('click', e => {
-          if (e.target.classList.contains('chip-edit')) return;
-          toggleDone(di, h, cell);
-        });
-      } else {
-        cell.addEventListener('click', () => openActModal(di, h));
-      }
-      grid.appendChild(cell);
-    });
+        const act = getAct(di, h, m);
+        if (act) {
+          renderChip(cell, act);
+          cell.addEventListener('click', e => {
+            if (e.target.classList.contains('chip-edit')) return;
+            toggleDone(di, h, m, cell);
+          });
+        } else {
+          cell.addEventListener('click', () => openActModal(di, h, m));
+        }
+        grid.appendChild(cell);
+      });
+    }
   }
 
   if (isThisWeek) placeTimeLine(todayDI, now);
@@ -431,42 +552,60 @@ function renderChip(cell, act) {
   chip.style.borderLeft  = `3px solid ${color}`;
 
   const chk  = mk('span', 'chip-check'); chk.textContent = '✓';
-  const txt  = mk('span', 'chip-text');  txt.textContent = act.text;
+
+  const body = mk('div', 'chip-body');
+  if (act.startTime) {
+    const tl = mk('span', 'chip-time');
+    tl.textContent = act.endTime ? `${act.startTime}–${act.endTime}` : act.startTime;
+    body.appendChild(tl);
+  }
+  const txt = mk('span', 'chip-text'); txt.textContent = act.text;
+  body.appendChild(txt);
+
   const edit = mk('button', 'chip-edit');
   edit.type = 'button';
   edit.textContent = '✎';
   edit.setAttribute('aria-label', 'Editar');
-  edit.addEventListener('click', e => { e.stopPropagation(); openActModal(Number(cell.dataset.di), Number(cell.dataset.hour), true); });
+  edit.addEventListener('click', e => {
+    e.stopPropagation();
+    openActModal(Number(cell.dataset.di), Number(cell.dataset.hour), Number(cell.dataset.min), true);
+  });
 
   chip.appendChild(chk);
-  chip.appendChild(txt);
+  chip.appendChild(body);
   chip.appendChild(edit);
   cell.appendChild(chip);
 }
 
 function placeTimeLine(di, now) {
-  const h   = now.getHours();
+  const h      = now.getHours();
+  const rawMin = now.getMinutes();
+  const m      = rawMin < 30 ? 0 : 30;
   if (h < START_H || h > END_H) return;
-  const cell = q(`.g-cell[data-di="${di}"][data-hour="${h}"]`);
+  const cell = q(`.g-cell[data-di="${di}"][data-hour="${h}"][data-min="${m}"]`);
   if (!cell) return;
   const line = mk('div', 'time-line');
-  line.style.top = `${(now.getMinutes() / 60) * 100}%`;
+  line.style.top = `${((rawMin % 30) / 30) * 100}%`;
   cell.appendChild(line);
 }
 
 // ── Activity modal ────────────────────────────────────────────────────────────
 
-function openActModal(di, h, editMode = false) {
-  editCell = { di, h };
-  const act = getAct(di, h);
+function openActModal(di, h, m = 0, editMode = false) {
+  editCell = { di, h, m };
+  const act = getAct(di, h, m);
 
   const date = new Date(weekStart);
   date.setDate(date.getDate() + di);
 
-  q('#act-label').textContent = `${DAYS[di]} ${date.getDate()}/${date.getMonth()+1} — ${String(h).padStart(2,'0')}h`;
+  q('#act-label').textContent = `${DAYS[di]} ${date.getDate()}/${date.getMonth()+1}`;
 
   const inp = q('#act-input');
   inp.value = act ? act.text : '';
+
+  const defaultStart = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  q('#act-start-time').value = act?.startTime || defaultStart;
+  q('#act-end-time').value   = act?.endTime || '';
 
   selCat = act ? act.category : null;
   refreshCatUI();
@@ -483,12 +622,29 @@ function closeActModal() {
 
 function saveAct() {
   if (!editCell) return;
-  const text = q('#act-input').value.trim();
-  const existing = getAct(editCell.di, editCell.h);
-  setAct(editCell.di, editCell.h, text ? {
+  const text      = q('#act-input').value.trim();
+  const startTime = q('#act-start-time').value;
+  const endTime   = q('#act-end-time').value;
+
+  // Determine target slot from start time input
+  let { di, h, m } = editCell;
+  if (startTime) {
+    const [sh, sm] = startTime.split(':').map(Number);
+    const newH = sh, newM = sm < 30 ? 0 : 30;
+    if (newH !== h || newM !== m) {
+      // Remove from old slot, place in new slot
+      setAct(di, h, m, null);
+      h = newH; m = newM;
+    }
+  }
+
+  const existing = getAct(di, h, m);
+  setAct(di, h, m, text ? {
     text,
     category: selCat || 'other',
     done: existing ? existing.done : false,
+    startTime: startTime || `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,
+    endTime:   endTime || null,
   } : null);
   closeActModal();
   buildGrid();
@@ -890,11 +1046,13 @@ function updateWeekLabel() {
 // ── Scroll to current time ────────────────────────────────────────────────────
 
 function scrollToCurrent() {
-  const h = new Date().getHours();
+  const now    = new Date();
+  const h      = now.getHours(), rawMin = now.getMinutes();
   if (h < START_H || h > END_H) return;
-  const wrapper = q('#grid-wrapper');
-  const ROW_H   = 64;
-  wrapper.scrollTop = Math.max(0, (h - START_H) * ROW_H - wrapper.clientHeight / 3);
+  const wrapper  = q('#grid-wrapper');
+  const ROW_H    = 22;
+  const slotIdx  = (h - START_H) * 2 + (rawMin >= 30 ? 1 : 0);
+  wrapper.scrollTop = Math.max(0, slotIdx * ROW_H - wrapper.clientHeight / 3);
 }
 
 // ── DOM helpers ───────────────────────────────────────────────────────────────
@@ -907,6 +1065,66 @@ function hexA(hex, a) {
   return `rgba(${r},${g},${b},${a})`;
 }
 
+// ── Notifications & reminders ─────────────────────────────────────────────────
+
+function requestNotifPermission(cb) {
+  if (!('Notification' in window)) { if (cb) cb(false); return; }
+  if (Notification.permission === 'granted') { if (cb) cb(true); return; }
+  if (Notification.permission === 'denied')  { if (cb) cb(false); return; }
+  Notification.requestPermission().then(p => { if (cb) cb(p === 'granted'); });
+}
+
+function showReminderToast(msg) {
+  q('#reminder-toast-msg').textContent = msg;
+  const t = q('#reminder-toast');
+  t.hidden = false;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.hidden = true; }, 6000);
+}
+
+function showNotif(title, body) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try { new Notification(title, { body }); } catch (_) {}
+  }
+  showReminderToast(body);
+}
+
+function checkScheduledReminders() {
+  if (!S.smoking) return;
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+  for (const rt of REMINDER_TIMES) {
+    if (h === rt.h && m === rt.m) {
+      const key = `${todayKey()}-${rt.h}`;
+      if (_lastReminderKey !== key) {
+        _lastReminderKey = key;
+        showNotif('Minha Rotina', rt.msg);
+      }
+      break;
+    }
+  }
+}
+
+function emergencyReminder() {
+  const msg = REMINDER_MSGS[Math.floor(Math.random() * REMINDER_MSGS.length)];
+  showNotif('Força! 💪', msg);
+}
+
+function updateNotifBtn() {
+  const btn = q('#btn-enable-notif');
+  if (!btn) return;
+  if (!('Notification' in window)) { btn.hidden = true; return; }
+  if (Notification.permission === 'granted') {
+    btn.textContent = '✓ Lembretes ativados';
+    btn.classList.add('primary');
+    btn.classList.remove('secondary');
+  } else if (Notification.permission === 'denied') {
+    btn.textContent = '🔕 Lembretes bloqueados';
+  } else {
+    btn.textContent = '🔔 Ativar lembretes';
+  }
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 function init() {
@@ -916,7 +1134,9 @@ function init() {
   refreshXPBar();
   refreshStreak();
   refreshSmokingStrip();
+  updateNotifBtn();
   setInterval(refreshSmokingStrip, 30000);
+  setInterval(checkScheduledReminders, 60000);
 
   // Week nav
   q('#btn-prev').addEventListener('click', () => shiftWeek(-1));
@@ -928,7 +1148,7 @@ function init() {
   q('#btn-save-act').addEventListener('click', saveAct);
   q('#btn-del-act').addEventListener('click', () => {
     if (!editCell) return;
-    setAct(editCell.di, editCell.h, null);
+    setAct(editCell.di, editCell.h, editCell.m, null);
     closeActModal();
     buildGrid();
   });
@@ -944,6 +1164,14 @@ function init() {
   q('#btn-smoke-setup').addEventListener('click', () => {
     q('#smoke-overlay').hidden = true;
     openSetup();
+  });
+  q('#btn-sos').addEventListener('click', emergencyReminder);
+  q('#btn-enable-notif').addEventListener('click', () => {
+    requestNotifPermission(granted => {
+      updateNotifBtn();
+      if (granted) showReminderToast('Lembretes ativados! Você receberá mensagens às 10h, 14h e 18h.');
+      else         showReminderToast('Permissão negada. Ative notificações nas configurações do navegador.');
+    });
   });
 
   // Setup modal
