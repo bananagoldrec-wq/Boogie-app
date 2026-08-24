@@ -26,11 +26,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-<<<<<<< HEAD
         with:
           ref: ${{ github.ref_name }}
-=======
->>>>>>> origin/main
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
