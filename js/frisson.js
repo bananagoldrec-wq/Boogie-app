@@ -738,25 +738,37 @@
     }
   }
 
-  function resizeImageFile(file, maxSize, quality) {
+  function fitDimensions(width, height, maxSize) {
+    if (width <= maxSize && height <= maxSize) return { width, height };
+    if (width > height) return { width: maxSize, height: Math.round(height * (maxSize / width)) };
+    return { width: Math.round(width * (maxSize / height)), height: maxSize };
+  }
+
+  /* Tenta a maior qualidade possível dentro do limite de tamanho do
+     Firestore (~1MB por documento): começa grande/nítido e só reduz
+     tamanho/qualidade até caber, em vez de sempre cortar forte. */
+  function resizeImageFile(file, maxBytes) {
     return new Promise((resolve, reject) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
       img.onload = () => {
         URL.revokeObjectURL(url);
-        let { width, height } = img;
-        if (width > height && width > maxSize) {
-          height = Math.round(height * (maxSize / width));
-          width = maxSize;
-        } else if (height > maxSize) {
-          width = Math.round(width * (maxSize / height));
-          height = maxSize;
+        const sizeSteps = [1600, 1200, 960, 720, 640];
+        const qualitySteps = [0.9, 0.8, 0.7, 0.6, 0.5];
+        let best = null;
+        for (const maxSize of sizeSteps) {
+          const { width, height } = fitDimensions(img.width, img.height, maxSize);
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+          for (const q of qualitySteps) {
+            best = canvas.toDataURL("image/jpeg", q);
+            if (best.length <= maxBytes) break;
+          }
+          if (best.length <= maxBytes) break;
         }
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", quality));
+        resolve(best);
       };
       img.onerror = () => {
         URL.revokeObjectURL(url);
@@ -782,7 +794,7 @@
       return;
     }
     try {
-      const dataUri = await resizeImageFile(file, 640, 0.75);
+      const dataUri = await resizeImageFile(file, 900000);
       renderPhotoPreview(dataUri);
       await setDoc(doc(artistsCol, name), { foto: dataUri }, { merge: true });
       showToast("Foto salva.");
