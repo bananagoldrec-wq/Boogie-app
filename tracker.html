@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Rotina" />
   <title>Minha Rotina</title>
-  <link rel="stylesheet" href="css/tracker.css" />
+  <link rel="stylesheet" href="css/tracker.css?v=3" />
 </head>
 <body>
 
@@ -57,6 +57,16 @@
       <input id="act-input" class="text-input" type="text"
              placeholder="Academia, Meditação, Almoço…" maxlength="50"
              autocomplete="off" autocorrect="off" />
+      <div class="time-row">
+        <div class="time-field">
+          <label class="field-label">Início</label>
+          <input id="act-start-time" class="text-input time-input" type="time" />
+        </div>
+        <div class="time-field">
+          <label class="field-label">Fim</label>
+          <input id="act-end-time" class="text-input time-input" type="time" />
+        </div>
+      </div>
       <div id="cat-grid" class="cat-grid" role="group" aria-label="Categorias"></div>
       <div class="sheet-footer">
         <button id="btn-save-act" class="btn primary">Salvar</button>
@@ -76,7 +86,9 @@
       <div id="smoke-stats-row" class="smoke-stats-row"></div>
       <div id="smoke-next"></div>
       <div id="smoke-timeline" class="smoke-timeline"></div>
-      <button id="btn-smoke-setup" class="btn secondary" style="margin-top:16px">Alterar data / configurações</button>
+      <button id="btn-sos" class="btn danger" style="margin-top:16px;width:100%">SOS — Preciso de força!</button>
+      <button id="btn-enable-notif" class="btn secondary" style="margin-top:8px;width:100%">🔔 Ativar lembretes</button>
+      <button id="btn-smoke-setup" class="btn secondary" style="margin-top:8px;width:100%">Alterar data / configurações</button>
     </div>
   </div>
 
@@ -147,9 +159,16 @@
     </div>
   </div>
 
+  <!-- Reminder toast -->
+  <div id="reminder-toast" class="reminder-toast" hidden>
+    <div class="rt-icon">💪</div>
+    <p id="reminder-toast-msg" class="rt-msg"></p>
+    <button class="rt-close" onclick="document.getElementById('reminder-toast').hidden=true">×</button>
+  </div>
+
   <!-- Confetti canvas -->
   <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
-  <script src="js/tracker.js"></script>
+  <script src="js/tracker.js?v=3"></script>
 </body>
 </html>
