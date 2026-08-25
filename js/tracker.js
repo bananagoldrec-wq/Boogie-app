@@ -8,7 +8,7 @@ const DAYS     = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 const DAY_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
 const START_H  = 6;
 const END_H    = 20;
-const ROUTINE_VERSION = 3;
+const ROUTINE_VERSION = 4;
 
 const CATS = [
   { id:'exercise', label:'Exercício',   color:'#A8C4A2' },
@@ -102,14 +102,14 @@ const REMINDER_MSGS = [
 
 // Weekly routine template — seeded into each new week automatically
 const ROUTINE = [
-  // Every day: Calistenia aquecimento 6:10–6:40
-  [0, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
-  [1, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
-  [2, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
-  [3, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
-  [4, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
-  [5, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
-  [6, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
+  // Every day: Meditação 6:10–6:40
+  [0, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
+  [1, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
+  [2, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
+  [3, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
+  [4, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
+  [5, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
+  [6, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
   // Monday: Yoga + Estúdio + Violão + Piano + Leitura + Aula de Yoga
   [0,  7,  0, 'Yoga',         'exercise', '07:00', '08:00'],
   [0, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
@@ -152,7 +152,7 @@ const ROUTINE = [
   [5, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
   [5, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
   [5, 20,  0, 'Bar',          'work',     '20:00', null],
-  // Sunday: descanso (só Calistenia acima)
+  // Sunday: descanso (só Meditação acima)
 ];
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -161,7 +161,9 @@ let S = loadState();
 let weekStart        = getMonday(new Date());
 let editCell         = null;
 let selCat           = null;
-let _lastReminderKey = null;
+let _lastReminderKey    = null;
+let _firedReminders     = new Set();
+let _firedRemindersDate = null;
 
 function loadState() {
   try {
@@ -1064,6 +1066,52 @@ function hexA(hex, a) {
 
 // ── Notifications & reminders ─────────────────────────────────────────────────
 
+function playChime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[523.25, 0], [659.25, 0.18], [783.99, 0.36]].forEach(([freq, delay]) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + delay;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.25, t + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+      osc.start(t);
+      osc.stop(t + 1.8);
+    });
+  } catch (_) {}
+}
+
+function checkActivityReminders() {
+  const now = new Date();
+  const dk  = todayKey();
+  if (_firedRemindersDate !== dk) { _firedReminders = new Set(); _firedRemindersDate = dk; }
+  const todayMonday = getMonday(now);
+  if (weekStart.getTime() !== todayMonday.getTime()) return;
+  const di = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  const h  = now.getHours(), m = now.getMinutes();
+  for (let sh = START_H; sh <= END_H; sh++) {
+    for (const sm of [0, 30]) {
+      const act = getAct(di, sh, sm);
+      if (!act || act.done || !act.startTime) continue;
+      const [ah, am] = act.startTime.split(':').map(Number);
+      if (ah !== h || am !== m) continue;
+      const key = `${dk}-${act.startTime}-${act.text}`;
+      if (_firedReminders.has(key)) continue;
+      _firedReminders.add(key);
+      if (Notification.permission === 'granted') {
+        try { new Notification(`⏰ ${act.text}`, { body: `Hora de começar! ${act.startTime}` }); } catch (_) {}
+      }
+      showReminderToast(`⏰ ${act.text} — hora de começar!`);
+      playChime();
+    }
+  }
+}
+
 function requestNotifPermission(cb) {
   if (!('Notification' in window)) { if (cb) cb(false); return; }
   if (Notification.permission === 'granted') { if (cb) cb(true); return; }
@@ -1133,7 +1181,11 @@ function init() {
   refreshSmokingStrip();
   updateNotifBtn();
   setInterval(refreshSmokingStrip, 30000);
-  setInterval(checkScheduledReminders, 60000);
+  setInterval(() => { checkScheduledReminders(); checkActivityReminders(); }, 60000);
+  checkActivityReminders();
+  if ('Notification' in window && Notification.permission === 'default') {
+    setTimeout(() => requestNotifPermission(updateNotifBtn), 3000);
+  }
 
   // Week nav
   q('#btn-prev').addEventListener('click', () => shiftWeek(-1));
