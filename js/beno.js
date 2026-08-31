@@ -191,8 +191,21 @@
 
   /* Passagens que o Beno já comprou. Mesmo esquema dos outros lotes:
      entra uma vez por aparelho, com id fixo pra não duplicar. */
-  const SEED_LOGISTICA_KEY = "beno_seed_logistica_v1";
   const AGENCIA = "Travel Blue Turismo · Alessandro (21) 98875-5873 · alessandro@travelblueturismo.com.br";
+  const SEED_LOGISTICA_LOTES = [
+    {
+      key: "beno_seed_logistica_v2",
+      itens: [
+        {
+          id: "seed-log-ib5532", tipo: "voo", companhia: "Iberia", numero: "IB5532", localizador: "",
+          origem: "BCN", destino: "ZRH", terminalOrigem: "", terminalDestino: "",
+          data: "2026-10-08", hora: "18:55", dataFim: "2026-10-08", horaFim: "20:50",
+          obs: "Operado pela Vueling. Economy, 1h55. Reserva ainda em processamento.",
+        },
+      ],
+    },
+  ];
+  const SEED_LOGISTICA_KEY = "beno_seed_logistica_v1";
   const SEED_LOGISTICA = [
     {
       id: "seed-log-tp74", tipo: "voo", companhia: "TAP", numero: "TP74", localizador: "C5ZJTY",
@@ -1128,15 +1141,22 @@
     return nome ? nome.split(" · ")[0] : (sigla || "").toUpperCase();
   }
 
+  /* Cada lote tem chave própria: um voo novo entra sem ressuscitar
+     passagem que ele já apagou de um lote anterior. */
   async function seedLogisticaOnce() {
-    try {
-      if (localStorage.getItem(SEED_LOGISTICA_KEY)) return;
-      localStorage.setItem(SEED_LOGISTICA_KEY, "1");
-    } catch (err) {
-      return;
+    let entrou = false;
+    const lotes = [{ key: SEED_LOGISTICA_KEY, itens: SEED_LOGISTICA }, ...SEED_LOGISTICA_LOTES];
+    for (const lote of lotes) {
+      try {
+        if (localStorage.getItem(lote.key)) continue;
+        localStorage.setItem(lote.key, "1");
+      } catch (err) {
+        return;
+      }
+      for (const item of lote.itens) await persistLog({ ...item, criadoEm: TODAY_KEY });
+      entrou = true;
     }
-    for (const item of SEED_LOGISTICA) await persistLog({ ...item, criadoEm: TODAY_KEY });
-    renderAll();
+    if (entrou) renderAll();
   }
 
   /* Só o que é logística — voo e hospedagem. Os shows ficam na agenda
