@@ -117,9 +117,13 @@ service cloud.firestore {
 }
 ```
 
-O aparelho que já tem dados os envia ao conectar, e o outro os recebe. Como os
-dois lados enviam, abrir primeiro o aparelho com o cadastro mais completo
-evita ficar com metade da lista em cada um.
+Ao conectar, cada aparelho envia o que só existe nele e fica com a união dos
+dois — então a ordem em que você abre não importa e nada se perde no primeiro
+encontro. Depois disso o par vira espelho, e aí **apagar num aparelho apaga em
+todos**, que é o comportamento esperado de sincronização.
+
+Config (nome artístico, links, mensagens padrão) não é unida: vale sempre a
+última gravação, porque é um documento só.
 
 > 🔁 **Ao mexer em `js/beno.js` ou `css/beno.css`, suba o `?v=` do
 > `beno.html`.** O GitHub Pages manda `max-age=600` nos arquivos e o
