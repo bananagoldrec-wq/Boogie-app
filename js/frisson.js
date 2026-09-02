@@ -714,6 +714,7 @@
   const fBankTitular = document.getElementById("f-bank-titular");
   const fBankDoc = document.getElementById("f-bank-doc");
   const fBankPix = document.getElementById("f-bank-pix");
+  const fBankPaypal = document.getElementById("f-bank-paypal");
   const fBankOutros = document.getElementById("f-bank-outros");
 
   const photoInput = document.getElementById("f-photo-input");
@@ -746,6 +747,7 @@
     fBankTitular.value = rec.titular || "";
     fBankDoc.value = rec.documento || "";
     fBankPix.value = rec.pix || "";
+    fBankPaypal.value = rec.paypal || "";
     fBankOutros.value = rec.outros || "";
     renderPhotoPreview(rec.foto || "");
   }
@@ -1147,6 +1149,7 @@
       titular: fBankTitular.value.trim(),
       documento: fBankDoc.value.trim(),
       pix: fBankPix.value.trim(),
+      paypal: fBankPaypal.value.trim(),
       outros: fBankOutros.value.trim(),
     };
     try {
@@ -1168,6 +1171,7 @@
     if (fBankTitular.value.trim()) lines.push(`Titular: ${fBankTitular.value.trim()}`);
     if (fBankDoc.value.trim()) lines.push(`CPF/CNPJ: ${fBankDoc.value.trim()}`);
     if (fBankPix.value.trim()) lines.push(`PIX: ${fBankPix.value.trim()}`);
+    if (fBankPaypal.value.trim()) lines.push(`PayPal: ${fBankPaypal.value.trim()}`);
     if (fBankOutros.value.trim()) lines.push(`Banco: ${fBankOutros.value.trim()}`);
     if (lines.length === 1) {
       showToast("Nenhum dado bancário preenchido ainda.");
