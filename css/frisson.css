@@ -179,6 +179,9 @@ input:focus, select:focus, textarea:focus {
   gap: 6px;
 }
 
+.cal-grid > .day-cell { grid-column: var(--wd, auto); grid-row: var(--wr, auto); }
+.cal-grid > .week-header { grid-row: var(--wr, auto); }
+
 .cal-weekdays {
   margin-bottom: 8px;
 }
@@ -587,6 +590,8 @@ input:focus, select:focus, textarea:focus {
   .cal-weekdays { display: none; }
 
   .cal-grid { grid-template-columns: 1fr; gap: 5px; }
+  .cal-grid > .day-cell { grid-column: auto; grid-row: auto; }
+  .cal-grid > .week-header { grid-row: auto; }
 
   .day-cell.is-blank { display: none; }
 
