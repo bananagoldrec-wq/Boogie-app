@@ -4,14 +4,29 @@
   "description": "Agenda de DJs e programação do bar Frisson, com geração automática de mensagens no WhatsApp.",
   "lang": "pt-BR",
   "start_url": "./frisson.html",
-  "scope": "./",
+  "scope": "./frisson.html",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#110c0b",
   "theme_color": "#110c0b",
   "icons": [
-    { "src": "icons/icon-frisson-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-frisson-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-frisson-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-frisson-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-frisson-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-frisson-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

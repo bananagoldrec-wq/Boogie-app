@@ -4,15 +4,33 @@
   "description": "An AI English coach you talk to. Real voice conversations, gentle corrections afterwards, and the words you actually need.",
   "lang": "en",
   "start_url": "./coach.html",
-  "scope": "./",
+  "scope": "./coach.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f6f4f0",
   "theme_color": "#f6f4f0",
-  "categories": ["education", "productivity"],
+  "categories": [
+    "education",
+    "productivity"
+  ],
   "icons": [
-    { "src": "icons/icon-coach-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-coach-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-coach-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-coach-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-coach-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-coach-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
