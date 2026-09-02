@@ -38,6 +38,8 @@
     lembrete: "Oi {artista}, passando pra lembrar do seu set aqui no Frisson dia {data} ({diaSemana})! Nos vemos lá 🎧",
     agradecimento: "Foi ótimo ter você no Frisson dia {data}, {artista}! Obrigado pelo set 🙏 Já quero marcar a próxima.",
     riderTecnico: "Oi {artista}! Segue nosso guia rápido com as informações técnicas do Frisson (equipamento, linha musical, horários e mais): {riderLink}",
+    pedirPix: "Oi {artista}! Pra fechar o pagamento do dia {data}, pode me mandar sua chave PIX (e o nome do titular, se for diferente do seu)?",
+    pedirFoto: "Oi {artista}! Podia me mandar uma foto sua em boa qualidade? É pra usar na divulgação do seu set aqui no Frisson 📸",
   };
 
   const TEMPLATE_LABELS = {
@@ -46,6 +48,8 @@
     lembrete: "Lembrete",
     agradecimento: "Agradecimento",
     riderTecnico: "Rider técnico",
+    pedirPix: "Pedir PIX",
+    pedirFoto: "Pedir foto",
   };
 
   /* ── seed: dados reais já lançados na planilha (ago/set 2026) ── */
@@ -1055,6 +1059,8 @@
     lembrete: document.getElementById("tpl-lembrete"),
     agradecimento: document.getElementById("tpl-agradecimento"),
     riderTecnico: document.getElementById("tpl-rider-tecnico"),
+    pedirPix: document.getElementById("tpl-pedir-pix"),
+    pedirFoto: document.getElementById("tpl-pedir-foto"),
   };
 
   function openTemplatesPanel() {
