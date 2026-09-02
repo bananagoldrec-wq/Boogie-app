@@ -722,8 +722,27 @@
   const sharePhotoBtn = document.getElementById("share-photo");
   const removePhotoBtn = document.getElementById("remove-photo");
 
+  /* Busca o registro do artista ignorando acento e maiúscula/minúscula —
+     "Antonio dal Bo" e "Antonio Dal Bó" apontam pro mesmo cadastro, mesmo
+     que tenham sido digitados de formas diferentes em dias diferentes. */
+  function normalizeArtistKey(name) {
+    return (name || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toLowerCase();
+  }
+
+  function findArtistRecord(name) {
+    if (artists[name]) return artists[name];
+    const target = normalizeArtistKey(name);
+    if (!target) return null;
+    const match = Object.keys(artists).find((k) => normalizeArtistKey(k) === target);
+    return match ? artists[match] : null;
+  }
+
   function populateBankFields(artistName) {
-    const rec = artists[artistName] || {};
+    const rec = findArtistRecord(artistName) || {};
     fBankTitular.value = rec.titular || "";
     fBankDoc.value = rec.documento || "";
     fBankPix.value = rec.pix || "";
@@ -828,7 +847,7 @@
 
   sharePhotoBtn.addEventListener("click", async () => {
     const name = fArtista.value.trim();
-    const foto = (artists[name] || {}).foto;
+    const foto = (findArtistRecord(name) || {}).foto;
     if (!foto) return;
     try {
       const blob = await (await fetch(foto)).blob();
@@ -985,7 +1004,7 @@
   // Ao escolher/confirmar um artista já conhecido, preenche contato e
   // dados bancários salvos dele — evita redigitar a cada nova data.
   function applyArtistMatch(name) {
-    const rec = artists[name];
+    const rec = findArtistRecord(name);
     if (rec) {
       if (!fTelefone.value && rec.telefone) fTelefone.value = rec.telefone;
       if (!fEmail.value && rec.email) fEmail.value = rec.email;
