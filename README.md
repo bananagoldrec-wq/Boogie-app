@@ -82,18 +82,48 @@ links do set e do Instagram. O ícone 📄 exporta tudo em CSV.
 
 Grava sempre no **próprio aparelho** (`localStorage`), então funciona offline e
 sem configuração nenhuma. Em paralelo tenta sincronizar no **Firestore**, nas
-coleções `beno_negociacoes`, `beno_contatos` e `beno_config` — separadas das da
-agenda do Frisson. Se o Firebase não responder ou as regras não liberarem essas
-coleções, o app segue rodando normalmente só no aparelho.
+coleções `beno_negociacoes`, `beno_contatos`, `beno_logistica` e `beno_config` —
+separadas das da agenda do Frisson. Se o Firebase não responder ou as regras não
+liberarem essas coleções, o app segue rodando normalmente só no aparelho.
 
-Pra ligar a sincronização entre celular e computador, libere as coleções nas
-regras do Firestore:
+### Ligar a sincronização entre aparelhos
+
+Os dois apps dividem o mesmo projeto Firebase (`frisson-agenda`), então as
+regras precisam cobrir os dois — publicar só as do Beno tira a agenda do
+Frisson do ar. No [console do Firebase](https://console.firebase.google.com),
+projeto **frisson-agenda**:
+
+1. **Criação → Authentication → Sign-in method**: o método **Anônimo** precisa
+   estar ativado. O app entra com `signInAnonymously`, e sem isso o
+   `request.auth` das regras nunca é preenchido.
+2. **Criação → Firestore Database → Regras**, e publique o conjunto inteiro:
 
 ```
-match /beno_negociacoes/{doc} { allow read, write: if request.auth != null; }
-match /beno_contatos/{doc}    { allow read, write: if request.auth != null; }
-match /beno_config/{doc}      { allow read, write: if request.auth != null; }
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // agenda do Frisson
+    match /bookings/{doc} { allow read, write: if request.auth != null; }
+    match /artists/{doc}  { allow read, write: if request.auth != null; }
+    match /settings/{doc} { allow read, write: if request.auth != null; }
+
+    // app do Beno
+    match /beno_negociacoes/{doc} { allow read, write: if request.auth != null; }
+    match /beno_contatos/{doc}    { allow read, write: if request.auth != null; }
+    match /beno_logistica/{doc}   { allow read, write: if request.auth != null; }
+    match /beno_config/{doc}      { allow read, write: if request.auth != null; }
+  }
+}
 ```
+
+Ao conectar, cada aparelho envia o que só existe nele e fica com a união dos
+dois — então a ordem em que você abre não importa e nada se perde no primeiro
+encontro. Depois disso o par vira espelho, e aí **apagar num aparelho apaga em
+todos**, que é o comportamento esperado de sincronização.
+
+Config (nome artístico, links, mensagens padrão) não é unida: vale sempre a
+última gravação, porque é um documento só.
 
 > 🔁 **Ao mexer em `js/beno.js` ou `css/beno.css`, suba o `?v=` do
 > `beno.html`.** O GitHub Pages manda `max-age=600` nos arquivos e o

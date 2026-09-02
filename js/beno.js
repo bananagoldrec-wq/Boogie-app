@@ -2966,4 +2966,13 @@
   } else {
     loginGate.hidden = false;
   }
+
+  /* Habilita instalar como app no Mac e no iPhone. O service worker é
+     network-first, então o app instalado não fica preso numa versão
+     antiga — mas o ?v= do beno.html continua valendo. */
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw-beno.js").catch(() => {});
+    });
+  }
 })();

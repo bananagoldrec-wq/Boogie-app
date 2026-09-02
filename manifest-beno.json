@@ -1,0 +1,32 @@
+{
+  "name": "Beno · Negociação de Shows",
+  "short_name": "Beno Negocia",
+  "description": "Agenda de shows, contatos de curadores e logística de viagem do DJ Beno, com mensagens prontas no WhatsApp.",
+  "lang": "pt-BR",
+  "start_url": "./beno.html",
+  "scope": "./beno.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d0b13",
+  "theme_color": "#0d0b13",
+  "icons": [
+    {
+      "src": "icons/icon-beno-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-beno-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-beno-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
