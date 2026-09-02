@@ -8,7 +8,7 @@ const DAYS     = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 const DAY_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
 const START_H  = 6;
 const END_H    = 20;
-const ROUTINE_VERSION = 3;
+const ROUTINE_VERSION = 4;
 
 const CATS = [
   { id:'exercise', label:'Exercício',   color:'#A8C4A2' },
@@ -102,14 +102,14 @@ const REMINDER_MSGS = [
 
 // Weekly routine template — seeded into each new week automatically
 const ROUTINE = [
-  // Every day: Calistenia aquecimento 6:10–6:40
-  [0, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
-  [1, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
-  [2, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
-  [3, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
-  [4, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
-  [5, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
-  [6, 6,  0, 'Calistenia',   'exercise', '06:10', '06:40'],
+  // Every day: Meditação 6:10–6:40
+  [0, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
+  [1, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
+  [2, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
+  [3, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
+  [4, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
+  [5, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
+  [6, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
   // Monday: Yoga + Estúdio + Violão + Piano + Leitura + Aula de Yoga
   [0,  7,  0, 'Yoga',         'exercise', '07:00', '08:00'],
   [0, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
@@ -152,7 +152,7 @@ const ROUTINE = [
   [5, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
   [5, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
   [5, 20,  0, 'Bar',          'work',     '20:00', null],
-  // Sunday: descanso (só Calistenia acima)
+  // Sunday: descanso (só Meditação acima)
 ];
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -161,7 +161,9 @@ let S = loadState();
 let weekStart        = getMonday(new Date());
 let editCell         = null;
 let selCat           = null;
-let _lastReminderKey = null;
+let _lastReminderKey    = null;
+let _firedReminders     = new Set();
+let _firedRemindersDate = null;
 
 function loadState() {
   try {
@@ -169,8 +171,6 @@ function loadState() {
     if (!raw) return defaultState();
     const state = JSON.parse(raw);
     if ((state.routineVersion || 0) < ROUTINE_VERSION) {
-      // Clear all activities and re-seed fresh with the full current routine
-      // (preserves XP, streak, achievements, and smoking data)
       state.activities = {};
       state.seededWeeks = [];
       state.routineVersion = ROUTINE_VERSION;
@@ -287,7 +287,6 @@ function aKey(di, h, m = 0) { return `${wk()}-${DAY_KEYS[di]}-${h}-${m}`; }
 function getAct(di, h, m = 0) {
   const newKey = aKey(di, h, m);
   if (S.activities[newKey] !== undefined) return S.activities[newKey] || null;
-  // backward compat: old keys had no minute part
   if (m === 0) return S.activities[`${wk()}-${DAY_KEYS[di]}-${h}`] || null;
   return null;
 }
@@ -422,7 +421,6 @@ function toggleDone(di, h, m, originEl) {
     checkAchievement('first', true);
     checkAchievement('acts50', S.totalDone >= 50);
 
-    // check if all today's activities are done
     const allDone = checkAllTodayDone();
     if (allDone) {
       addXP(75, originEl);
@@ -490,10 +488,8 @@ function buildGrid() {
   const isThisWeek  = weekStart.getTime() === todayMonday.getTime();
   const todayDI     = now.getDay() === 0 ? 6 : now.getDay() - 1;
 
-  // Corner
   grid.appendChild(mk('div', 'g-corner'));
 
-  // Day headers
   DAYS.forEach((name, i) => {
     const date    = new Date(weekStart);
     date.setDate(date.getDate() + i);
@@ -507,7 +503,6 @@ function buildGrid() {
     grid.appendChild(hdr);
   });
 
-  // Hour rows (30-min slots)
   for (let h = START_H; h <= END_H; h++) {
     for (const m of [0, 30]) {
       const lbl = mk('div', m === 0 ? 'g-time' : 'g-time g-time-half');
@@ -623,13 +618,11 @@ function saveAct() {
   const startTime = q('#act-start-time').value;
   const endTime   = q('#act-end-time').value;
 
-  // Determine target slot from start time input
   let { di, h, m } = editCell;
   if (startTime) {
     const [sh, sm] = startTime.split(':').map(Number);
     const newH = sh, newM = sm < 30 ? 0 : 30;
     if (newH !== h || newM !== m) {
-      // Remove from old slot, place in new slot
       setAct(di, h, m, null);
       h = newH; m = newM;
     }
@@ -714,7 +707,6 @@ function refreshSmokingStrip() {
     q('#ss-money').textContent = `R$ ${moneySaved.toFixed(0)} poupados`;
   }
 
-  // Achievements
   checkAchievement('smoke6h',  mins >= 360);
   checkAchievement('smoke12h', mins >= 720);
   checkAchievement('smoke1d',  mins >= 1440);
@@ -770,7 +762,6 @@ function renderSmokingDetail() {
     <div class="stat-card"><span class="stat-value">R$ ${money}</span><span class="stat-label">do maço</span></div>
   `;
 
-  // Next milestone card
   const nextM   = SMOKE_MILESTONES.find(m => mins < m.mins);
   const nextDiv = q('#smoke-next');
   nextDiv.innerHTML = '';
@@ -785,7 +776,6 @@ function renderSmokingDetail() {
     `;
   }
 
-  // Timeline
   const container = q('#smoke-timeline');
   container.innerHTML = '<h3 style="font-size:10px;color:var(--text3);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.8px">Recuperação do corpo</h3>';
 
@@ -827,7 +817,6 @@ function renderTaperDetail() {
   const count = getTodayCount();
   const done  = info.phaseIdx >= TAPER_PHASES.length - 1;
 
-  // Big counter
   if (done) {
     q('#smoke-big-counter').innerHTML = `
       <span class="bc-value" style="color:var(--success)">Livre!</span>
@@ -846,7 +835,6 @@ function renderTaperDetail() {
       <span class="bc-label">${sub}</span>`;
   }
 
-  // Stats
   const daysLeft  = done ? 0 : info.days - info.dayInPhase;
   const smokeFree = countSmokeFree();
   const savings   = smokeFree * 150;
@@ -859,7 +847,6 @@ function renderTaperDetail() {
     ${!done ? `<div class="stat-card"><span class="stat-value">Fase ${info.phaseIdx + 1}</span><span class="stat-label">${info.label}</span></div>
     <div class="stat-card"><span class="stat-value">${daysLeft}</span><span class="stat-label">dias na fase</span></div>` : ''}`;
 
-  // Log button / rest-day card
   const nextDiv = q('#smoke-next');
   nextDiv.innerHTML = '';
   if (!done) {
@@ -881,7 +868,6 @@ function renderTaperDetail() {
     }
   }
 
-  // Phase plan
   const container = q('#smoke-timeline');
   container.innerHTML = '<h3 class="tl-section-title">Plano de desmame</h3>';
   TAPER_PHASES.forEach((ph, i) => {
@@ -898,7 +884,6 @@ function renderTaperDetail() {
     container.appendChild(row);
   });
 
-  // 7-day history bars
   const taperLog  = S.smoking.taperLog || {};
   const maxBefore = S.smoking.cigarettesPerDay || 5;
   const DAY_ABB   = ['D','S','T','Q','Q','S','S'];
@@ -1064,6 +1049,52 @@ function hexA(hex, a) {
 
 // ── Notifications & reminders ─────────────────────────────────────────────────
 
+function playChime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[523.25, 0], [659.25, 0.18], [783.99, 0.36]].forEach(([freq, delay]) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + delay;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.25, t + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+      osc.start(t);
+      osc.stop(t + 1.8);
+    });
+  } catch (_) {}
+}
+
+function checkActivityReminders() {
+  const now = new Date();
+  const dk  = todayKey();
+  if (_firedRemindersDate !== dk) { _firedReminders = new Set(); _firedRemindersDate = dk; }
+  const todayMonday = getMonday(now);
+  if (weekStart.getTime() !== todayMonday.getTime()) return;
+  const di = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  const h  = now.getHours(), m = now.getMinutes();
+  for (let sh = START_H; sh <= END_H; sh++) {
+    for (const sm of [0, 30]) {
+      const act = getAct(di, sh, sm);
+      if (!act || act.done || !act.startTime) continue;
+      const [ah, am] = act.startTime.split(':').map(Number);
+      if (ah !== h || am !== m) continue;
+      const key = `${dk}-${act.startTime}-${act.text}`;
+      if (_firedReminders.has(key)) continue;
+      _firedReminders.add(key);
+      if (Notification.permission === 'granted') {
+        try { new Notification(`⏰ ${act.text}`, { body: `Hora de começar! ${act.startTime}` }); } catch (_) {}
+      }
+      showReminderToast(`⏰ ${act.text} — hora de começar!`);
+      playChime();
+    }
+  }
+}
+
 function requestNotifPermission(cb) {
   if (!('Notification' in window)) { if (cb) cb(false); return; }
   if (Notification.permission === 'granted') { if (cb) cb(true); return; }
@@ -1133,13 +1164,15 @@ function init() {
   refreshSmokingStrip();
   updateNotifBtn();
   setInterval(refreshSmokingStrip, 30000);
-  setInterval(checkScheduledReminders, 60000);
+  setInterval(() => { checkScheduledReminders(); checkActivityReminders(); }, 60000);
+  checkActivityReminders();
+  if ('Notification' in window && Notification.permission === 'default') {
+    setTimeout(() => requestNotifPermission(updateNotifBtn), 3000);
+  }
 
-  // Week nav
   q('#btn-prev').addEventListener('click', () => shiftWeek(-1));
   q('#btn-next').addEventListener('click', () => shiftWeek(1));
 
-  // Activity modal
   q('#act-overlay').addEventListener('click', e => { if (e.target.id === 'act-overlay') closeActModal(); });
   q('#btn-close-act').addEventListener('click', closeActModal);
   q('#btn-save-act').addEventListener('click', saveAct);
@@ -1151,7 +1184,6 @@ function init() {
   });
   q('#act-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveAct(); });
 
-  // Smoking strip → detail
   q('#smoke-strip').addEventListener('click', () => {
     renderSmokingDetail();
     q('#smoke-overlay').hidden = false;
@@ -1171,7 +1203,6 @@ function init() {
     });
   });
 
-  // Setup modal
   q('#btn-close-setup').addEventListener('click', () => { q('#setup-overlay').hidden = true; });
   q('#setup-overlay').addEventListener('click', e => { if (e.target.id === 'setup-overlay') q('#setup-overlay').hidden = true; });
   q('#btn-save-setup').addEventListener('click', () => {
@@ -1194,14 +1225,12 @@ function init() {
     q('#setup-overlay').hidden = true;
   });
 
-  // Achievements
   q('#btn-open-ach').addEventListener('click', () => {
     renderAchievements();
     q('#ach-overlay').hidden = false;
   });
   q('#btn-close-ach').addEventListener('click', () => { q('#ach-overlay').hidden = true; });
 
-  // Level up
   q('#btn-close-levelup').addEventListener('click', () => { q('#levelup-modal').hidden = true; });
 
   if (!S.smoking) {
@@ -1238,10 +1267,8 @@ function openSetup() {
   q('#setup-overlay').hidden = false;
 }
 
-// Setup shortcut when not configured
 document.addEventListener('DOMContentLoaded', () => {
   init();
-  // Intercept smoke-strip click to open setup if not configured
   const orig = q('#smoke-strip').onclick;
   if (!S.smoking) {
     q('#smoke-strip').addEventListener('click', () => {
