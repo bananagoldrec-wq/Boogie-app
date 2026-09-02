@@ -398,26 +398,31 @@
     monthLabel.textContent = `${MONTH_NAMES[view.month - 1]} ${view.year}`;
     calGrid.innerHTML = "";
 
-    const leading = firstWeekday(view.year, view.month);
-    for (let i = 0; i < leading; i++) {
-      const blank = document.createElement("div");
-      blank.className = "day-cell is-blank";
-      calGrid.appendChild(blank);
-    }
-
-    const total = daysInMonth(view.year, view.month);
     const ranges = weekRangesForMonth(view.year, view.month);
-    let rangeIdx = 0;
 
-    for (let day = 1; day <= total; day++) {
-      if (ranges[rangeIdx] && ranges[rangeIdx].startDay === day) {
-        calGrid.appendChild(buildWeekHeader(ranges[rangeIdx]));
-        rangeIdx++;
+    /* Cada cabeçalho de semana e cada dia recebe linha/coluna explícitas
+       (via --wr/--wd, consumidas só na grade de 7 colunas do computador)
+       em vez de depender do encaixe automático do grid — senão o
+       cabeçalho de semana empurra os dias da 1ª semana pra colunas
+       erradas quando o mês não começa num domingo. */
+    let row = 1;
+    ranges.forEach((range) => {
+      const header = buildWeekHeader(range);
+      header.style.setProperty("--wr", row);
+      calGrid.appendChild(header);
+      row++;
+
+      for (let day = range.startDay; day <= range.endDay; day++) {
+        const key = dateKey(view.year, view.month, day);
+        const entry = data[key];
+        const cell = buildDayCell(key, day, entry);
+        const weekday = new Date(view.year, view.month - 1, day).getDay();
+        cell.style.setProperty("--wr", row);
+        cell.style.setProperty("--wd", weekday + 1);
+        calGrid.appendChild(cell);
       }
-      const key = dateKey(view.year, view.month, day);
-      const entry = data[key];
-      calGrid.appendChild(buildDayCell(key, day, entry));
-    }
+      row++;
+    });
   }
 
   function buildDayCell(key, day, entry) {
