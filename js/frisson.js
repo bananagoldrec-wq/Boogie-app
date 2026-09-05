@@ -38,6 +38,8 @@
     lembrete: "Oi {artista}, passando pra lembrar do seu set aqui no Frisson dia {data} ({diaSemana})! Nos vemos lá 🎧",
     agradecimento: "Foi ótimo ter você no Frisson dia {data}, {artista}! Obrigado pelo set 🙏 Já quero marcar a próxima.",
     riderTecnico: "Oi {artista}! Segue nosso guia rápido com as informações técnicas do Frisson (equipamento, linha musical, horários e mais): {riderLink}",
+    pedirPix: "Oi {artista}! Pra fechar o pagamento do dia {data}, pode me mandar sua chave PIX (e o nome do titular, se for diferente do seu)?",
+    pedirFoto: "Oi {artista}! Podia me mandar uma foto sua em boa qualidade? É pra usar na divulgação do seu set aqui no Frisson 📸",
   };
 
   const TEMPLATE_LABELS = {
@@ -46,6 +48,8 @@
     lembrete: "Lembrete",
     agradecimento: "Agradecimento",
     riderTecnico: "Rider técnico",
+    pedirPix: "Pedir PIX",
+    pedirFoto: "Pedir foto",
   };
 
   /* ── seed: dados reais já lançados na planilha (ago/set 2026) ── */
@@ -710,6 +714,7 @@
   const fBankTitular = document.getElementById("f-bank-titular");
   const fBankDoc = document.getElementById("f-bank-doc");
   const fBankPix = document.getElementById("f-bank-pix");
+  const fBankPaypal = document.getElementById("f-bank-paypal");
   const fBankOutros = document.getElementById("f-bank-outros");
 
   const photoInput = document.getElementById("f-photo-input");
@@ -718,11 +723,31 @@
   const sharePhotoBtn = document.getElementById("share-photo");
   const removePhotoBtn = document.getElementById("remove-photo");
 
+  /* Busca o registro do artista ignorando acento e maiúscula/minúscula —
+     "Antonio dal Bo" e "Antonio Dal Bó" apontam pro mesmo cadastro, mesmo
+     que tenham sido digitados de formas diferentes em dias diferentes. */
+  function normalizeArtistKey(name) {
+    return (name || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toLowerCase();
+  }
+
+  function findArtistRecord(name) {
+    if (artists[name]) return artists[name];
+    const target = normalizeArtistKey(name);
+    if (!target) return null;
+    const match = Object.keys(artists).find((k) => normalizeArtistKey(k) === target);
+    return match ? artists[match] : null;
+  }
+
   function populateBankFields(artistName) {
-    const rec = artists[artistName] || {};
+    const rec = findArtistRecord(artistName) || {};
     fBankTitular.value = rec.titular || "";
     fBankDoc.value = rec.documento || "";
     fBankPix.value = rec.pix || "";
+    fBankPaypal.value = rec.paypal || "";
     fBankOutros.value = rec.outros || "";
     renderPhotoPreview(rec.foto || "");
   }
@@ -824,7 +849,7 @@
 
   sharePhotoBtn.addEventListener("click", async () => {
     const name = fArtista.value.trim();
-    const foto = (artists[name] || {}).foto;
+    const foto = (findArtistRecord(name) || {}).foto;
     if (!foto) return;
     try {
       const blob = await (await fetch(foto)).blob();
@@ -981,7 +1006,7 @@
   // Ao escolher/confirmar um artista já conhecido, preenche contato e
   // dados bancários salvos dele — evita redigitar a cada nova data.
   function applyArtistMatch(name) {
-    const rec = artists[name];
+    const rec = findArtistRecord(name);
     if (rec) {
       if (!fTelefone.value && rec.telefone) fTelefone.value = rec.telefone;
       if (!fEmail.value && rec.email) fEmail.value = rec.email;
@@ -1055,6 +1080,8 @@
     lembrete: document.getElementById("tpl-lembrete"),
     agradecimento: document.getElementById("tpl-agradecimento"),
     riderTecnico: document.getElementById("tpl-rider-tecnico"),
+    pedirPix: document.getElementById("tpl-pedir-pix"),
+    pedirFoto: document.getElementById("tpl-pedir-foto"),
   };
 
   function openTemplatesPanel() {
@@ -1122,6 +1149,7 @@
       titular: fBankTitular.value.trim(),
       documento: fBankDoc.value.trim(),
       pix: fBankPix.value.trim(),
+      paypal: fBankPaypal.value.trim(),
       outros: fBankOutros.value.trim(),
     };
     try {
@@ -1143,6 +1171,7 @@
     if (fBankTitular.value.trim()) lines.push(`Titular: ${fBankTitular.value.trim()}`);
     if (fBankDoc.value.trim()) lines.push(`CPF/CNPJ: ${fBankDoc.value.trim()}`);
     if (fBankPix.value.trim()) lines.push(`PIX: ${fBankPix.value.trim()}`);
+    if (fBankPaypal.value.trim()) lines.push(`PayPal: ${fBankPaypal.value.trim()}`);
     if (fBankOutros.value.trim()) lines.push(`Banco: ${fBankOutros.value.trim()}`);
     if (lines.length === 1) {
       showToast("Nenhum dado bancário preenchido ainda.");

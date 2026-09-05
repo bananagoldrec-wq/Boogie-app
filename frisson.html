@@ -183,6 +183,10 @@
           </div>
         </div>
         <div class="field">
+          <label for="f-bank-paypal">PayPal (artista estrangeiro, opcional)</label>
+          <input id="f-bank-paypal" type="text" placeholder="@usuário ou e-mail do PayPal" autocomplete="off" />
+        </div>
+        <div class="field">
           <label for="f-bank-outros">Banco / agência / conta (opcional)</label>
           <input id="f-bank-outros" type="text" placeholder="Ex.: Nubank, ag 0001, cc 12345-6" autocomplete="off" />
         </div>
@@ -226,6 +230,14 @@
         <label>Rider técnico</label>
         <textarea id="tpl-rider-tecnico" rows="4"></textarea>
       </div>
+      <div class="field tpl-field">
+        <label>Pedir PIX</label>
+        <textarea id="tpl-pedir-pix" rows="4"></textarea>
+      </div>
+      <div class="field tpl-field">
+        <label>Pedir foto</label>
+        <textarea id="tpl-pedir-foto" rows="4"></textarea>
+      </div>
 
       <div class="panel-actions">
         <button id="save-templates" class="btn btn-primary" type="button">Salvar</button>
@@ -251,6 +263,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/frisson.js?v=22"></script>
+  <script type="module" src="js/frisson.js?v=25"></script>
 </body>
 </html>
