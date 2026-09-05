@@ -194,6 +194,17 @@
   const AGENCIA = "Travel Blue Turismo · Alessandro (21) 98875-5873 · alessandro@travelblueturismo.com.br";
   const SEED_LOGISTICA_LOTES = [
     {
+      key: "beno_seed_logistica_v3",
+      itens: [
+        {
+          id: "seed-log-tp-lisbcn", tipo: "voo", companhia: "TAP", numero: "", localizador: "ARGNXL",
+          origem: "LIS", destino: "BCN", terminalOrigem: "", terminalDestino: "",
+          data: "2026-09-30", hora: "22:35", dataFim: "2026-10-01", horaFim: "01:30",
+          obs: "Reserva 542692357000, confirmada. Chega de madrugada, já no dia 1º.",
+        },
+      ],
+    },
+    {
       key: "beno_seed_logistica_v2",
       itens: [
         {
