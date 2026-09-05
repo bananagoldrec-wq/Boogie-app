@@ -197,10 +197,10 @@
       key: "beno_seed_logistica_v3",
       itens: [
         {
-          id: "seed-log-tp-lisbcn", tipo: "voo", companhia: "TAP", numero: "", localizador: "ARGNXL",
+          id: "seed-log-tp-lisbcn", tipo: "voo", companhia: "TAP", numero: "TP1040", localizador: "ARGNXL",
           origem: "LIS", destino: "BCN", terminalOrigem: "", terminalDestino: "",
           data: "2026-09-30", hora: "22:35", dataFim: "2026-10-01", horaFim: "01:30",
-          obs: "Reserva 542692357000, confirmada. Chega de madrugada, já no dia 1º.",
+          obs: "Direto, 1h55, Economy. Bagagem despachada inclusa. Reserva 542692357000, confirmada. Chega de madrugada, já no dia 1º.",
         },
       ],
     },
@@ -703,6 +703,34 @@
         if (info[campo] && !atualizado[campo]) { atualizado[campo] = info[campo]; alterou = true; }
       });
       if (alterou) { await persistContact(atualizado); mudou = true; }
+    }
+    if (mudou) renderAll();
+  }
+
+  /* Mesma ideia dos complementos de contato, pra logística: preenche
+     campo vazio de um voo que já entrou, sem tocar no que o Beno editou. */
+  const COMPLEMENTOS_LOG_KEY = "beno_complementos_log_v1";
+  const COMPLEMENTOS_LOG = [
+    { id: "seed-log-tp-lisbcn", numero: "TP1040" },
+  ];
+
+  async function completarLogisticaOnce() {
+    try {
+      if (localStorage.getItem(COMPLEMENTOS_LOG_KEY)) return;
+      localStorage.setItem(COMPLEMENTOS_LOG_KEY, "1");
+    } catch (err) {
+      return;
+    }
+    let mudou = false;
+    for (const info of COMPLEMENTOS_LOG) {
+      const item = logistica[info.id];
+      if (!item) continue;
+      const atualizado = { ...item };
+      let alterou = false;
+      ["numero", "localizador", "terminalOrigem", "terminalDestino", "obs"].forEach((campo) => {
+        if (info[campo] && !atualizado[campo]) { atualizado[campo] = info[campo]; alterou = true; }
+      });
+      if (alterou) { await persistLog(atualizado); mudou = true; }
     }
     if (mudou) renderAll();
   }
@@ -2969,7 +2997,8 @@
   switchView("agenda"); // a agenda é a tela do dia a dia
   renderAll();
   seedAgendaOnce().then(seedCuradoresOnce).then(seedLogisticaOnce)
-    .then(limparNegociacoesSemData).then(completarContatosOnce).then(removerContatosOnce).then(unificarCacheOnce);
+    .then(limparNegociacoesSemData).then(completarContatosOnce).then(completarLogisticaOnce)
+    .then(removerContatosOnce).then(unificarCacheOnce);
 
   if (isUnlocked()) {
     loginGate.hidden = true;
