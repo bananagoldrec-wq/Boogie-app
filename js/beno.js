@@ -1387,6 +1387,7 @@
     calGrid.innerHTML = "";
 
     const byDate = dealsByDate();
+    const viagens = viagensByDate();
     const leading = firstWeekday(view.year, view.month);
     for (let i = 0; i < leading; i++) {
       const blank = document.createElement("div");
@@ -1397,11 +1398,37 @@
     const total = daysInMonth(view.year, view.month);
     for (let day = 1; day <= total; day++) {
       const key = dateKey(view.year, view.month, day);
-      calGrid.appendChild(buildDayCell(key, day, byDate[key] || []));
+      calGrid.appendChild(buildDayCell(key, day, byDate[key] || [], viagens[key] || []));
     }
   }
 
-  function buildDayCell(key, day, dayDeals) {
+  /* Voo e hospedagem entram no calendário pelo dia em que começam, pra
+     ele bater o olho no mês e ver quando viaja sem trocar de aba. */
+  function viagensByDate() {
+    const mapa = {};
+    Object.values(logistica).forEach((item) => {
+      if (!item.data) return;
+      (mapa[item.data] = mapa[item.data] || []).push(item);
+    });
+    Object.values(mapa).forEach((lista) => lista.sort((a, b) => (a.hora || "99:99").localeCompare(b.hora || "99:99")));
+    return mapa;
+  }
+
+  function rotuloViagem(item) {
+    if (item.tipo === "voo") return `✈ ${cidadeDoAeroporto(item.destino)}`;
+    return `🛏 ${item.nome || cidadeDoAeroporto(item.destino) || "Hospedagem"}`;
+  }
+
+  function detalheViagem(item) {
+    if (item.tipo === "voo") {
+      const rota = `${cidadeDoAeroporto(item.origem)} → ${cidadeDoAeroporto(item.destino)}`;
+      const hora = [item.hora, item.horaFim].filter(Boolean).join(" → ");
+      return [rota, hora, [item.companhia, item.numero].filter(Boolean).join(" ")].filter(Boolean).join(" · ");
+    }
+    return [item.nome || "Hospedagem", item.endereco].filter(Boolean).join(" · ");
+  }
+
+  function buildDayCell(key, day, dayDeals, dayViagens = []) {
     const holidayName = getHoliday(key);
     const [y, m, d] = key.split("-").map(Number);
     const weekday = new Date(y, m - 1, d).getDay();
@@ -1428,7 +1455,7 @@
     meta.appendChild(wd);
     cell.appendChild(meta);
 
-    if (dayDeals.length || holidayName) {
+    if (dayDeals.length || dayViagens.length || holidayName) {
       const content = document.createElement("div");
       content.className = "day-content";
 
@@ -1453,10 +1480,21 @@
         content.appendChild(chip);
       });
 
-      if (dayDeals.length > 3) {
+      /* Viagem depois dos shows, em roxo: o show é o que ele marca, a
+         viagem é o que ela exige. Duas cabem sem estourar a célula. */
+      dayViagens.slice(0, 2).forEach((item) => {
+        const chip = document.createElement("span");
+        chip.className = "day-chip day-chip-viagem";
+        chip.textContent = rotuloViagem(item);
+        chip.title = detalheViagem(item);
+        content.appendChild(chip);
+      });
+
+      const escondidos = Math.max(0, dayDeals.length - 3) + Math.max(0, dayViagens.length - 2);
+      if (escondidos) {
         const more = document.createElement("span");
         more.className = "day-more";
-        more.textContent = `+${dayDeals.length - 3}`;
+        more.textContent = `+${escondidos}`;
         content.appendChild(more);
       }
 

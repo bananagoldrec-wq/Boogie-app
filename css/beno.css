@@ -18,6 +18,7 @@
   --acc-dim: rgba(201, 242, 77, 0.14);
   --acc-line: rgba(201, 242, 77, 0.26);
   --violet: #b98cff;
+  --viagem: #4dd9e8;
 
   --text: #f2eef8;
   --text-dim: #b7aecb;
@@ -560,6 +561,14 @@ input:focus, select:focus, textarea:focus {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Viagem em ciano: nenhuma etapa de show usa essa faixa do espectro, e
+   o roxo não servia — era a mesma cor de "conversando", então tarja de
+   voo e tarja de show ficariam indistinguíveis. */
+.day-chip-viagem {
+  background: var(--viagem);
+  color: #14121a;
 }
 
 .day-chip-feriado {
