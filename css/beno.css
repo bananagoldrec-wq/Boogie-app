@@ -563,6 +563,58 @@ input:focus, select:focus, textarea:focus {
   white-space: nowrap;
 }
 
+/* ── Buscar voos ────────────────────────────────────────── */
+
+.busca-titulo {
+  font-size: 0.9rem;
+  margin: 20px 0 2px;
+  color: var(--text);
+}
+
+.busca-nota {
+  margin: 0 0 10px;
+  font-size: 0.76rem;
+  color: var(--text-faint);
+  line-height: 1.45;
+}
+
+.hint-inline { color: var(--text-faint); font-weight: 400; }
+
+.busca-erro {
+  margin-top: 12px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(240, 192, 74, 0.12);
+  border: 1px solid rgba(240, 192, 74, 0.35);
+  color: var(--warn);
+  font-size: 0.8rem;
+}
+
+.busca-links { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.busca-link {
+  padding: 9px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--acc-line);
+  color: var(--acc);
+  text-decoration: none;
+  font-family: "Quicksand", sans-serif;
+  font-weight: 600;
+  font-size: 0.84rem;
+}
+
+.busca-link:hover { background: var(--acc-dim); }
+
+/* Sem rota válida o link não leva a lugar nenhum — fica apagado em vez
+   de abrir uma busca pela metade. */
+.busca-link.is-off {
+  color: var(--text-faint);
+  border-color: rgba(125, 115, 146, 0.4);
+  cursor: not-allowed;
+}
+
+.busca-link.is-off:hover { background: none; }
+
 /* Viagem em ciano: nenhuma etapa de show usa essa faixa do espectro, e
    o roxo não servia — era a mesma cor de "conversando", então tarja de
    voo e tarja de show ficariam indistinguíveis. */

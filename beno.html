@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-beno-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-beno-512.png" />
   <link rel="manifest" href="manifest-beno.json" />
-  <link rel="stylesheet" href="css/beno.css?v=30" />
+  <link rel="stylesheet" href="css/beno.css?v=31" />
 </head>
 <body>
 
@@ -95,7 +95,8 @@
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
         <input id="log-search" type="search" placeholder="Buscar voo, cidade, hotel..." autocomplete="off" />
       </div>
-      <button id="new-voo" class="btn btn-primary btn-compact" type="button">+ Voo</button>
+      <button id="buscar-voos" class="btn btn-primary btn-compact" type="button">🔎 Buscar voos</button>
+      <button id="new-voo" class="btn btn-ghost btn-compact" type="button">+ Voo</button>
       <button id="new-hosp" class="btn btn-ghost btn-compact" type="button">+ Hospedagem</button>
     </div>
     <div class="toolbar">
@@ -336,6 +337,51 @@
   </aside>
 
   <!-- ══════════ PANEL: LOGÍSTICA ══════════ -->
+  <!-- ══════════ PANEL: BUSCAR VOOS ══════════ -->
+  <aside id="busca-panel" class="side-panel" hidden aria-label="Buscar voos">
+    <div class="panel-head">
+      <div>
+        <h2>Buscar voos</h2>
+        <div class="panel-date">preenche uma vez, abre já pronto lá fora</div>
+      </div>
+      <button class="icon-btn-round" type="button" data-close-busca aria-label="Fechar">×</button>
+    </div>
+    <div class="panel-body">
+      <div class="field-row">
+        <div class="field">
+          <label for="b-origem">De</label>
+          <input id="b-origem" type="text" placeholder="LIS" autocomplete="off" maxlength="4" list="aeroportos" />
+        </div>
+        <div class="field">
+          <label for="b-destino">Para</label>
+          <input id="b-destino" type="text" placeholder="ZRH" autocomplete="off" maxlength="4" list="aeroportos" />
+        </div>
+      </div>
+      <datalist id="aeroportos"></datalist>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="b-ida">Ida</label>
+          <input id="b-ida" type="date" />
+        </div>
+        <div class="field">
+          <label for="b-volta">Volta <span class="hint-inline">(vazio = só ida)</span></label>
+          <input id="b-volta" type="date" />
+        </div>
+      </div>
+
+      <div id="b-erro" class="busca-erro" hidden></div>
+
+      <h3 class="busca-titulo">Comparar preços</h3>
+      <p class="busca-nota">Abrem com a rota e as datas já preenchidas.</p>
+      <div class="busca-links" data-busca-grupo="comparadores"></div>
+
+      <h3 class="busca-titulo">Ir direto na companhia</h3>
+      <p class="busca-nota">Depois de escolher o voo, comprar no site da companhia costuma evitar taxa de intermediário.</p>
+      <div class="busca-links" data-busca-grupo="companhias"></div>
+    </div>
+  </aside>
+
   <aside id="log-panel" class="side-panel" hidden aria-label="Editar logística">
     <div class="panel-head">
       <div>
@@ -599,6 +645,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/beno.js?v=30"></script>
+  <script type="module" src="js/beno.js?v=31"></script>
 </body>
 </html>

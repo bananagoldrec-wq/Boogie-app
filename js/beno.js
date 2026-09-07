@@ -735,6 +735,132 @@
     if (mudou) renderAll();
   }
 
+  /* ── Buscar voos ────────────────────────────────────────
+     Sem servidor não dá pra mostrar preço aqui dentro: as APIs de tarifa
+     são pagas e a chave ficaria à vista no código. O que dá, e resolve,
+     é preencher a rota uma vez e abrir a busca já pronta lá fora.
+
+     Comparador tem endereço estável e aceita a rota na URL. Companhia
+     não: cada uma muda o formato do seu buscador de tempos em tempos, e
+     link quebrado é pior que link genérico — por isso só as que eu tenho
+     confiança levam data; o resto abre a página de compra. */
+  const BUSCA_COMPARADORES = [
+    {
+      nome: "Google Flights",
+      url: (b) => "https://www.google.com/travel/flights?q=" + encodeURIComponent(
+        `Flights from ${b.origem} to ${b.destino} on ${b.ida}` + (b.volta ? ` through ${b.volta}` : " oneway")),
+    },
+    {
+      nome: "Skyscanner",
+      url: (b) => `https://www.skyscanner.com.br/transporte/passagens-aereas/${b.origem.toLowerCase()}/${b.destino.toLowerCase()}/${curta(b.ida)}${b.volta ? "/" + curta(b.volta) : ""}/`,
+    },
+    {
+      nome: "Kayak",
+      url: (b) => `https://www.kayak.com.br/flights/${b.origem}-${b.destino}/${b.ida}${b.volta ? "/" + b.volta : ""}`,
+    },
+  ];
+
+  const BUSCA_COMPANHIAS = [
+    {
+      nome: "Ryanair", comData: true,
+      url: (b) => `https://www.ryanair.com/pt/pt/trip/flights/select?adults=1&originIata=${b.origem}&destinationIata=${b.destino}&dateOut=${b.ida}` + (b.volta ? `&dateIn=${b.volta}&isReturn=true` : ""),
+    },
+    { nome: "TAP", url: () => "https://www.flytap.com/pt-br/" },
+    { nome: "Vueling", url: () => "https://www.vueling.com/pt" },
+    { nome: "Iberia", url: () => "https://www.iberia.com/pt/" },
+    { nome: "Swiss", url: () => "https://www.swiss.com/pt/pt" },
+    { nome: "Lufthansa", url: () => "https://www.lufthansa.com/pt/pt/homepage" },
+  ];
+
+  /* Skyscanner usa aammdd na URL, não o ISO dos outros. */
+  function curta(iso) {
+    const [a, m, d] = iso.split("-");
+    return a.slice(2) + m + d;
+  }
+
+  const buscaPanel = document.getElementById("busca-panel");
+  const bOrigem = document.getElementById("b-origem");
+  const bDestino = document.getElementById("b-destino");
+  const bIda = document.getElementById("b-ida");
+  const bVolta = document.getElementById("b-volta");
+  const bErro = document.getElementById("b-erro");
+
+  function preencherAeroportos() {
+    const lista = document.getElementById("aeroportos");
+    if (!lista || lista.children.length) return;
+    Object.entries(AEROPORTOS).forEach(([sigla, nome]) => {
+      const opt = document.createElement("option");
+      opt.value = sigla;
+      opt.label = `${sigla} — ${nome}`;
+      lista.appendChild(opt);
+    });
+  }
+
+  /* Sugere a origem: o destino do último voo já marcado é onde ele fica
+     ao fim do que está cadastrado. É palpite, não regra — ele troca num
+     toque, e a lista de aeroportos ajuda. */
+  function ultimoDestino() {
+    const voos = Object.values(logistica)
+      .filter((l) => l.tipo === "voo" && l.data && l.data >= TODAY_KEY)
+      .sort((a, b) => a.data.localeCompare(b.data));
+    return voos.length ? voos[voos.length - 1].destino : "";
+  }
+
+  function abrirBusca() {
+    preencherAeroportos();
+    if (!bOrigem.value) bOrigem.value = ultimoDestino();
+    if (!bIda.value) bIda.value = TODAY_KEY;
+    renderBuscaLinks();
+    closeAllPanels();
+    buscaPanel.hidden = false;
+    backdrop.hidden = false;
+    bDestino.focus();
+  }
+
+  function dadosBusca() {
+    const origem = (bOrigem.value || "").trim().toUpperCase();
+    const destino = (bDestino.value || "").trim().toUpperCase();
+    const ida = bIda.value;
+    const volta = bVolta.value;
+    if (!origem || !destino) return { erro: "Preencha de onde e para onde." };
+    if (origem === destino) return { erro: "Origem e destino são o mesmo aeroporto." };
+    if (!ida) return { erro: "Escolha a data de ida." };
+    if (volta && volta < ida) return { erro: "A volta está antes da ida." };
+    return { origem, destino, ida, volta };
+  }
+
+  function renderBuscaLinks() {
+    const b = dadosBusca();
+    bErro.textContent = b.erro || "";
+    bErro.hidden = !b.erro;
+
+    document.querySelectorAll("[data-busca-grupo]").forEach((box) => {
+      const comparador = box.dataset.buscaGrupo === "comparadores";
+      const fontes = comparador ? BUSCA_COMPARADORES : BUSCA_COMPANHIAS;
+      box.innerHTML = "";
+      fontes.forEach((f) => {
+        const precisaRota = comparador || f.comData;
+        const a = document.createElement("a");
+        a.className = "busca-link" + (precisaRota && b.erro ? " is-off" : "");
+        a.textContent = f.nome;
+        if (precisaRota && b.erro) {
+          a.removeAttribute("href");
+          a.title = b.erro;
+        } else {
+          a.href = f.url(b);
+          a.target = "_blank";
+          a.rel = "noopener";
+          a.title = precisaRota ? `${b.origem} → ${b.destino} · ${b.ida}` : "Abre o site da companhia";
+        }
+        box.appendChild(a);
+      });
+    });
+  }
+
+  document.getElementById("buscar-voos").addEventListener("click", abrirBusca);
+  document.querySelector("[data-close-busca]").addEventListener("click", closeAllPanels);
+  [bOrigem, bDestino, bIda, bVolta].forEach((el) => el.addEventListener("input", renderBuscaLinks));
+
   /* ── Cidade a partir do telefone ────────────────────────
      No Brasil o DDD entrega a cidade. Fora, não: celular de Portugal
      e da França começa com prefixo de operadora, não de região — por
@@ -1560,6 +1686,7 @@
     templatesPanel.hidden = true;
     importPanel.hidden = true;
     logPanel.hidden = true;
+    buscaPanel.hidden = true;
     backdrop.hidden = true;
     activeDealId = null;
     activeContactId = null;
