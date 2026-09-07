@@ -850,28 +850,119 @@
     return a.slice(2) + m + d;
   }
 
-  /* ── Estimativa de época cara ───────────────────────────
-     Isto NÃO é preço: é o padrão de calendário que encarece passagem,
-     e o app não tem como saber a tarifa real (ver o comentário do
-     buscador). O que entra aqui é o que de fato mexe no preço:
+  /* ── Estimativa de época cheia ──────────────────────────
+     Isto NÃO é preço — o app não tem como saber a tarifa (ver o
+     comentário do buscador). É o padrão de calendário que encarece
+     passagem, que é conhecido e dá pra modelar.
 
-     - Alta temporada europeia (julho e agosto), Natal/Ano Novo, Páscoa
-       e Carnaval — os períodos em que todo mundo voa.
-     - Dia da semana: sexta e domingo são os dias de pico; terça e
-       quarta, os mais vazios.
-     - Véspera e volta de feriado.
-     - Comprar em cima da data.
+     O que muda de verdade o preço, na ordem em que pesa:
 
-     Some tudo e caia em três faixas. É palpite informado, e a tela diz
-     isso — verde não promete barato, só que o dia costuma ser calmo. */
-  function pontosDaData(key) {
+     1. Temporada, e ela depende do destino. Fevereiro em Zurique é
+        pico de esqui; fevereiro em Lisboa é o mês mais morto do ano.
+        Tratar "Europa" como um bloco só apagaria justamente a variação
+        que o Beno quer enxergar — por isso cada região tem seu perfil.
+     2. Dia da semana. Sexta e domingo são os dias de pico do lazer;
+        segunda cedo, dos negócios. Terça e quarta são os mais vazios,
+        e sábado costuma ser barato porque não serve nem a um nem a
+        outro.
+     3. Feriado e emenda.
+
+     Cinco níveis em vez de três, porque com três quase tudo caía no
+     meio e ele não via variação nenhuma. */
+
+  const PERFIS_TEMPORADA = {
+    /* Alpes: o inverno é que é caro — esqui. Verão é média estação e a
+       entressafra (abril-maio, outubro-novembro) é quando esvazia. */
+    alpes: (mes, dia) => {
+      if (mes === 12 && dia >= 18) return [3, "festas e esqui"];
+      if (mes === 1 && dia <= 6) return [3, "festas e esqui"];
+      if (mes === 1 || mes === 2) return [2, "temporada de esqui"];
+      if (mes === 3 && dia <= 15) return [1.5, "fim da temporada de esqui"];
+      if (mes === 7 || mes === 8) return [1, "verão alpino"];
+      if (mes === 4 || mes === 5) return [-1.5, "entressafra nos Alpes"];
+      if (mes === 10 || mes === 11) return [-2, "entressafra nos Alpes"];
+      return [0, ""];
+    },
+    /* Mediterrâneo: o oposto. Verão lotado, inverno vazio. */
+    mediterraneo: (mes, dia) => {
+      if (mes === 7) return [2.5, "pico do verão"];
+      if (mes === 8 && dia <= 25) return [2.5, "pico do verão"];
+      if (mes === 8) return [1.5, "fim do verão"];
+      if (mes === 6) return [1.5, "começo do verão"];
+      if (mes === 9 && dia <= 15) return [1, "veranico de setembro"];
+      if (mes === 12 && dia >= 18) return [2, "festas de fim de ano"];
+      if (mes === 1 && dia <= 6) return [2, "festas de fim de ano"];
+      if (mes === 11 || (mes === 1 && dia > 6) || mes === 2) return [-2, "baixa temporada"];
+      return [0, ""];
+    },
+    /* Norte e centro da Europa: verão e festas cheios, novembro e
+       fevereiro mortos. */
+    europa: (mes, dia) => {
+      if (mes === 7 || (mes === 8 && dia <= 25)) return [2, "alta temporada europeia"];
+      if (mes === 8 || mes === 6) return [1, "verão europeu"];
+      if (mes === 12 && dia >= 18) return [2.5, "festas de fim de ano"];
+      if (mes === 1 && dia <= 6) return [2.5, "festas de fim de ano"];
+      if (mes === 11 || (mes === 1 && dia > 6) || mes === 2) return [-2, "baixa temporada"];
+      if (mes === 3 || mes === 10) return [-1, "entressafra"];
+      return [0, ""];
+    },
+    /* Brasil: férias de verão e de julho, e o Carnaval entra pelo
+       feriado móvel mais abaixo. */
+    brasil: (mes, dia) => {
+      if (mes === 12 && dia >= 15) return [2.5, "férias de verão"];
+      if (mes === 1) return [2, "férias de verão"];
+      if (mes === 7) return [2, "férias de julho"];
+      if (mes === 2 && dia > 20) return [-1, "depois do Carnaval"];
+      if (mes >= 3 && mes <= 6) return [-1.5, "baixa temporada"];
+      if (mes === 8 || mes === 9 || mes === 11) return [-1, "baixa temporada"];
+      return [0, ""];
+    },
+  };
+
+  const PAIS_PERFIL = {
+    "Suíça": "alpes", "Áustria": "alpes",
+    "Portugal": "mediterraneo", "Espanha": "mediterraneo", "Itália": "mediterraneo",
+    "Grécia": "mediterraneo", "Malta": "mediterraneo", "Croácia": "mediterraneo",
+    "Marrocos": "mediterraneo", "Turquia": "mediterraneo", "Israel": "mediterraneo",
+    "Brasil": "brasil",
+  };
+
+  function perfilDoDestino(sigla) {
+    const txt = AEROPORTOS[(sigla || "").toUpperCase()];
+    if (!txt) return null;
+    const pais = txt.split(" | ")[1] || "";
+    return PERFIS_TEMPORADA[PAIS_PERFIL[pais] || "europa"];
+  }
+
+  /* Sábado é barato de propósito: não serve nem ao fim de semana longo
+     nem à viagem de trabalho, então sobra assento. */
+  const PESO_SEMANA = [
+    [1.5, "domingo é dia de pico"],
+    [0.5, "segunda enche de trabalho"],
+    [-1.5, "terça é dos dias mais vazios"],
+    [-1.5, "quarta é dos dias mais vazios"],
+    [-0.5, "quinta ainda é tranquila"],
+    [1.5, "sexta é dia de pico"],
+    [-1, "sábado costuma sobrar assento"],
+  ];
+
+  const NIVEIS = [
+    { id: "muito-barato", ate: -2.5, texto: "bem mais calmo" },
+    { id: "barato", ate: -0.75, texto: "mais calmo" },
+    { id: "medio", ate: 1, texto: "movimento médio" },
+    { id: "caro", ate: 2.5, texto: "cheio" },
+    { id: "muito-caro", ate: Infinity, texto: "bem cheio" },
+  ];
+
+  function pontosDaData(key, destino) {
     const [ano, mes, dia] = key.split("-").map(Number);
     const d = new Date(ano, mes - 1, dia);
     let pontos = 0;
     const porques = [];
 
-    if (mes === 7 || mes === 8) { pontos += 2; porques.push("alta temporada na Europa"); }
-    if ((mes === 12 && dia >= 18) || (mes === 1 && dia <= 5)) { pontos += 3; porques.push("Natal e Ano Novo"); }
+    const perfil = perfilDoDestino(destino) || PERFIS_TEMPORADA.europa;
+    const [pTemporada, rotulo] = perfil(mes, dia);
+    if (pTemporada) { pontos += pTemporada; porques.push(rotulo); }
 
     const feriado = getHoliday(key);
     const vespera = getHoliday(keyFromDate(addDays(d, 1)));
@@ -879,16 +970,16 @@
     if (feriado) { pontos += 2; porques.push(feriado); }
     else if (vespera || depois) { pontos += 1; porques.push("emenda de feriado"); }
 
-    const semana = d.getDay();
-    if (semana === 5 || semana === 0) { pontos += 1; porques.push("sexta e domingo enchem"); }
-    else if (semana === 2 || semana === 3) { pontos -= 1; porques.push("meio de semana é mais vazio"); }
+    const [pSemana, rotuloSemana] = PESO_SEMANA[d.getDay()];
+    pontos += pSemana;
+    porques.push(rotuloSemana);
 
     /* Antecedência de propósito fica de fora: ela é quase igual em todos
        os dias da faixa, então só empurraria todo mundo pra vermelho e
        apagaria a diferença entre um dia e outro — que é o que a faixa
        existe pra mostrar. Ela vira um aviso à parte. */
-    const faixa = pontos >= 3 ? "caro" : pontos >= 1 ? "medio" : "barato";
-    return { pontos, faixa, porques };
+    const nivel = NIVEIS.find((n) => pontos <= n.ate);
+    return { pontos, faixa: nivel.id, texto: nivel.texto, porques: porques.filter(Boolean) };
   }
 
   function diasAte(key) {
@@ -896,8 +987,6 @@
     const [a2, m2, d2] = key.split("-").map(Number);
     return Math.round((new Date(a2, m2 - 1, d2) - new Date(a1, m1 - 1, d1)) / 86400000);
   }
-
-  const FAIXA_TEXTO = { barato: "costuma ser mais calmo", medio: "movimento médio", caro: "época cheia" };
 
   const buscaPanel = document.getElementById("busca-panel");
   const bOrigem = document.getElementById("b-origem");
@@ -1011,28 +1100,41 @@
     if (!tira) return;
     const base = bIda.value || TODAY_KEY;
     const [a, m, d] = base.split("-").map(Number);
+    const destino = (bDestino.value || "").trim().toUpperCase();
     tira.innerHTML = "";
-    for (let i = -7; i <= 14; i++) {
+
+    /* Cinco semanas em vez de três: com o destino entrando na conta, a
+       diferença entre uma semana e outra fica visível, e é isso que dá
+       noção de variação. */
+    const dias = [];
+    for (let i = -7; i <= 28; i++) {
       const key = keyFromDate(addDays(new Date(a, m - 1, d), i));
       if (diasAte(key) < 0) continue;      // data passada não serve
-      const { faixa, porques } = pontosDaData(key);
+      dias.push({ key, ...pontosDaData(key, destino) });
+    }
+    const minimo = Math.min(...dias.map((x) => x.pontos));
+
+    dias.forEach(({ key, faixa, texto, porques, pontos }) => {
       const [, mesK, diaK] = key.split("-").map(Number);
       const dow = new Date(key.split("-")[0], mesK - 1, diaK).getDay();
 
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = `tira-dia is-${faixa}` + (key === bIda.value ? " is-escolhido" : "");
+      btn.className = `tira-dia is-${faixa}`
+        + (key === bIda.value ? " is-escolhido" : "")
+        + (pontos === minimo ? " is-melhor" : "");
       btn.innerHTML = `<span class="tira-dow">${WEEKDAY_NAMES[dow].slice(0, 3)}</span>`
         + `<span class="tira-num">${diaK}</span>`
         + `<span class="tira-mes">${MONTH_NAMES[mesK - 1].slice(0, 3)}</span>`;
-      btn.title = `${FAIXA_TEXTO[faixa]}${porques.length ? " — " + porques.join(", ") : ""}`;
+      btn.title = `${texto}${porques.length ? " — " + porques.join(", ") : ""}`;
       btn.addEventListener("click", () => {
         bIda.value = key;
         if (bVolta.value && bVolta.value < key) bVolta.value = "";
         renderBuscaLinks();
       });
       tira.appendChild(btn);
-    }
+    });
+
     const escolhido = tira.querySelector(".is-escolhido");
     if (escolhido) escolhido.scrollIntoView({ block: "nearest", inline: "center" });
 

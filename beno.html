@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-beno-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-beno-512.png" />
   <link rel="manifest" href="manifest-beno.json" />
-  <link rel="stylesheet" href="css/beno.css?v=34" />
+  <link rel="stylesheet" href="css/beno.css?v=35" />
 </head>
 <body>
 
@@ -373,15 +373,19 @@
 
       <h3 class="busca-titulo">Datas por volta da ida</h3>
       <p class="busca-nota">
-        <strong>Não é preço</strong> — é estimativa de movimento, por alta temporada,
-        feriado e dia da semana. Toque num dia pra usá-lo como ida.
+        <strong>Não é preço</strong> — é estimativa de movimento, e ela muda com o
+        destino: fevereiro em Zurique é pico de esqui, em Lisboa é o mês mais vazio.
+        Entram temporada, feriado e dia da semana. Toque num dia pra usá-lo como ida.
       </p>
       <div id="b-tira" class="tira-datas"></div>
       <p id="b-antecedencia" class="busca-aviso" hidden></p>
       <div class="tira-legenda">
-        <span><i class="tira-cor is-barato"></i>mais calmo</span>
+        <span><i class="tira-cor is-muito-barato"></i>bem calmo</span>
+        <span><i class="tira-cor is-barato"></i>calmo</span>
         <span><i class="tira-cor is-medio"></i>médio</span>
-        <span><i class="tira-cor is-caro"></i>época cheia</span>
+        <span><i class="tira-cor is-caro"></i>cheio</span>
+        <span><i class="tira-cor is-muito-caro"></i>bem cheio</span>
+        <span>• = o mais calmo da faixa</span>
       </div>
 
       <h3 class="busca-titulo">Comparar preços</h3>
@@ -657,6 +661,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/beno.js?v=34"></script>
+  <script type="module" src="js/beno.js?v=35"></script>
 </body>
 </html>
