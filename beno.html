@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-beno-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-beno-512.png" />
   <link rel="manifest" href="manifest-beno.json" />
-  <link rel="stylesheet" href="css/beno.css?v=32" />
+  <link rel="stylesheet" href="css/beno.css?v=33" />
 </head>
 <body>
 
@@ -347,17 +347,16 @@
       <button class="icon-btn-round" type="button" data-close-busca aria-label="Fechar">×</button>
     </div>
     <div class="panel-body">
-      <div class="field-row">
-        <div class="field">
-          <label for="b-origem">De</label>
-          <input id="b-origem" type="text" placeholder="LIS" autocomplete="off" maxlength="4" list="aeroportos" />
-        </div>
-        <div class="field">
-          <label for="b-destino">Para</label>
-          <input id="b-destino" type="text" placeholder="ZRH" autocomplete="off" maxlength="4" list="aeroportos" />
-        </div>
+      <div class="field">
+        <label for="b-origem">De</label>
+        <input id="b-origem" type="text" placeholder="Cidade ou sigla — ex.: Lisboa, LIS" autocomplete="off" />
+        <div id="b-origem-sug" class="suggestions" hidden></div>
       </div>
-      <datalist id="aeroportos"></datalist>
+      <div class="field">
+        <label for="b-destino">Para</label>
+        <input id="b-destino" type="text" placeholder="Cidade ou sigla — ex.: Zurique, ZRH" autocomplete="off" />
+        <div id="b-destino-sug" class="suggestions" hidden></div>
+      </div>
 
       <div class="field-row">
         <div class="field">
@@ -645,6 +644,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/beno.js?v=32"></script>
+  <script type="module" src="js/beno.js?v=33"></script>
 </body>
 </html>

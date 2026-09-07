@@ -756,6 +756,23 @@ input:focus, select:focus, textarea:focus {
 .suggestion-item:not(:last-child) { border-bottom: 1px solid rgba(201, 242, 77, 0.08); }
 .suggestion-sub { display: block; font-size: 0.74rem; color: var(--text-faint); }
 
+/* Sugestão de aeroporto: é <button>, então precisa de largura e
+   alinhamento próprios — o item de contato acima é <div>. */
+.suggestion {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 12px;
+  font-size: 0.88rem;
+  text-align: left;
+}
+
+.suggestion:hover, .suggestion.is-marked { background: var(--acc-dim); }
+.suggestion:not(:last-child) { border-bottom: 1px solid rgba(201, 242, 77, 0.08); }
+.suggestion strong { color: var(--acc); font-family: "Quicksand", sans-serif; }
+.suggestion-pais { margin-left: auto; font-size: 0.72rem; color: var(--text-faint); white-space: nowrap; }
+
 .panel-actions { display: flex; gap: 10px; margin-top: 6px; }
 
 .btn {

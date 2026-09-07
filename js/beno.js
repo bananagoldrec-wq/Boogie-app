@@ -179,15 +179,79 @@
 
   /* Aeroportos que aparecem nas viagens do Beno — só pra mostrar a
      cidade junto da sigla. Sigla desconhecida aparece como está. */
+  /* "Cidade · Aeroporto | País". A cidade vem primeiro porque é o que
+     aparece no título do voo; o país entra na busca, pra "Suíça" achar
+     Zurique e Genebra. Cidade com mais de um aeroporto tem uma linha por
+     aeroporto — é justamente o caso em que ele precisa escolher. */
   const AEROPORTOS = {
-    GIG: "Rio de Janeiro · Galeão", SDU: "Rio de Janeiro · Santos Dumont",
-    GRU: "São Paulo · Guarulhos", CGH: "São Paulo · Congonhas",
-    LIS: "Lisboa · Portela", OPO: "Porto", FAO: "Faro",
-    TLS: "Toulouse · Blagnac", CDG: "Paris · Charles de Gaulle", ORY: "Paris · Orly",
-    VIE: "Viena", BTS: "Bratislava", ZRH: "Zurique", GVA: "Genebra",
-    LUX: "Luxemburgo", BCN: "Barcelona", MAD: "Madri", BRU: "Bruxelas",
-    AMS: "Amsterdã", BER: "Berlim", MXP: "Milão · Malpensa", LHR: "Londres · Heathrow",
+    // Brasil
+    GIG: "Rio de Janeiro · Galeão | Brasil", SDU: "Rio de Janeiro · Santos Dumont | Brasil",
+    GRU: "São Paulo · Guarulhos | Brasil", CGH: "São Paulo · Congonhas | Brasil",
+    VCP: "Campinas · Viracopos | Brasil", BSB: "Brasília | Brasil",
+    CNF: "Belo Horizonte · Confins | Brasil", SSA: "Salvador | Brasil",
+    REC: "Recife | Brasil", FOR: "Fortaleza | Brasil", POA: "Porto Alegre | Brasil",
+    CWB: "Curitiba | Brasil", FLN: "Florianópolis | Brasil", NAT: "Natal | Brasil",
+    MCZ: "Maceió | Brasil", BEL: "Belém | Brasil", MAO: "Manaus | Brasil",
+    // Portugal e Espanha
+    LIS: "Lisboa · Portela | Portugal", OPO: "Porto | Portugal", FAO: "Faro | Portugal",
+    FNC: "Funchal · Madeira | Portugal", PDL: "Ponta Delgada · Açores | Portugal",
+    MAD: "Madri · Barajas | Espanha", BCN: "Barcelona · El Prat | Espanha",
+    AGP: "Málaga | Espanha", VLC: "Valência | Espanha", SVQ: "Sevilha | Espanha",
+    BIO: "Bilbao | Espanha", IBZ: "Ibiza | Espanha", PMI: "Palma de Maiorca | Espanha",
+    // França, Bélgica, Holanda
+    CDG: "Paris · Charles de Gaulle | França", ORY: "Paris · Orly | França",
+    BVA: "Paris · Beauvais | França", TLS: "Toulouse · Blagnac | França",
+    NCE: "Nice | França", LYS: "Lyon | França", MRS: "Marselha | França",
+    BOD: "Bordeaux | França", NTE: "Nantes | França",
+    BRU: "Bruxelas | Bélgica", CRL: "Bruxelas · Charleroi | Bélgica",
+    AMS: "Amsterdã · Schiphol | Holanda", EIN: "Eindhoven | Holanda",
+    // Reino Unido e Irlanda
+    LHR: "Londres · Heathrow | Reino Unido", LGW: "Londres · Gatwick | Reino Unido",
+    STN: "Londres · Stansted | Reino Unido", LTN: "Londres · Luton | Reino Unido",
+    MAN: "Manchester | Reino Unido", EDI: "Edimburgo | Reino Unido",
+    BRS: "Bristol | Reino Unido", DUB: "Dublin | Irlanda",
+    // Alemanha, Áustria, Suíça
+    BER: "Berlim · Brandenburg | Alemanha", MUC: "Munique | Alemanha",
+    FRA: "Frankfurt | Alemanha", DUS: "Düsseldorf | Alemanha",
+    HAM: "Hamburgo | Alemanha", CGN: "Colônia | Alemanha", STR: "Stuttgart | Alemanha",
+    VIE: "Viena | Áustria", SZG: "Salzburgo | Áustria",
+    ZRH: "Zurique | Suíça", GVA: "Genebra | Suíça", BSL: "Basileia | Suíça",
+    // Itália
+    MXP: "Milão · Malpensa | Itália", LIN: "Milão · Linate | Itália",
+    BGY: "Milão · Bérgamo | Itália", FCO: "Roma · Fiumicino | Itália",
+    CIA: "Roma · Ciampino | Itália", NAP: "Nápoles | Itália",
+    VCE: "Veneza | Itália", TRV: "Treviso | Itália", BLQ: "Bolonha | Itália",
+    FLR: "Florença | Itália", TRN: "Turim | Itália", PMO: "Palermo | Itália",
+    CTA: "Catânia | Itália",
+    // Leste e Norte europeu
+    BTS: "Bratislava | Eslováquia", PRG: "Praga | Chéquia",
+    BUD: "Budapeste | Hungria", WAW: "Varsóvia | Polônia", KRK: "Cracóvia | Polônia",
+    OTP: "Bucareste | Romênia", SOF: "Sofia | Bulgária", BEG: "Belgrado | Sérvia",
+    ZAG: "Zagreb | Croácia", LJU: "Liubliana | Eslovênia", TLL: "Tallinn | Estônia",
+    RIX: "Riga | Letônia", VNO: "Vilnius | Lituânia",
+    CPH: "Copenhague | Dinamarca", ARN: "Estocolmo · Arlanda | Suécia",
+    OSL: "Oslo | Noruega", HEL: "Helsinque | Finlândia", KEF: "Reykjavík | Islândia",
+    // Sul e Mediterrâneo
+    ATH: "Atenas | Grécia", JMK: "Míconos | Grécia", JTR: "Santorini | Grécia",
+    IST: "Istambul | Turquia", TLV: "Tel Aviv | Israel",
+    LUX: "Luxemburgo | Luxemburgo", MLA: "Malta | Malta",
+    // África e Américas
+    CMN: "Casablanca | Marrocos", RAK: "Marrakech | Marrocos",
+    LAD: "Luanda | Angola", MPM: "Maputo | Moçambique", CPT: "Cidade do Cabo | África do Sul",
+    JFK: "Nova York · JFK | Estados Unidos", EWR: "Nova York · Newark | Estados Unidos",
+    LAX: "Los Angeles | Estados Unidos", MIA: "Miami | Estados Unidos",
+    MEX: "Cidade do México | México", EZE: "Buenos Aires · Ezeiza | Argentina",
+    AEP: "Buenos Aires · Aeroparque | Argentina", SCL: "Santiago | Chile",
+    MVD: "Montevidéu | Uruguai", BOG: "Bogotá | Colômbia", LIM: "Lima | Peru",
   };
+
+  /* Índice de busca: sigla, cidade, aeroporto e país, sem acento, pra
+     "sao paulo" achar São Paulo e "suica" achar Zurique. */
+  const AEROPORTOS_BUSCA = Object.entries(AEROPORTOS).map(([sigla, txt]) => {
+    const [cidadeAero, pais = ""] = txt.split(" | ");
+    const cidade = cidadeAero.split(" · ")[0];
+    return { sigla, cidade, pais, rotulo: cidadeAero, busca: normalizeName(`${sigla} ${cidadeAero} ${pais}`) };
+  });
 
   /* Passagens que o Beno já comprou. Mesmo esquema dos outros lotes:
      entra uma vez por aparelho, com id fixo pra não duplicar. */
@@ -793,14 +857,68 @@
   const bVolta = document.getElementById("b-volta");
   const bErro = document.getElementById("b-erro");
 
-  function preencherAeroportos() {
-    const lista = document.getElementById("aeroportos");
-    if (!lista || lista.children.length) return;
-    Object.entries(AEROPORTOS).forEach(([sigla, nome]) => {
-      const opt = document.createElement("option");
-      opt.value = sigla;
-      opt.label = `${sigla} — ${nome}`;
-      lista.appendChild(opt);
+  /* Busca por cidade, país ou sigla. O datalist do HTML não servia: o
+     Safari do iPhone praticamente o ignora, e onde funciona ele casa só
+     pelo value — ou seja, pela sigla, que é justamente o que o Beno não
+     sabe de cor. Aqui ele digita "Zurique" e escolhe o aeroporto. */
+  function buscarAeroportos(termo) {
+    const t = normalizeName(termo);
+    if (!t) return [];
+    const comeca = [], contem = [];
+    for (const a of AEROPORTOS_BUSCA) {
+      const i = a.busca.indexOf(t);
+      if (i === 0 || normalizeName(a.cidade).startsWith(t)) comeca.push(a);
+      else if (i > 0) contem.push(a);
+    }
+    /* Quem começa com o termo vem antes: digitando "BER", Berlim ganha
+       de Bérgamo. Dentro de cada grupo, ordem alfabética de cidade. */
+    const porCidade = (x, y) => x.cidade.localeCompare(y.cidade, "pt-BR");
+    return [...comeca.sort(porCidade), ...contem.sort(porCidade)].slice(0, 8);
+  }
+
+  function ligarAutocomplete(input, caixa) {
+    let marcado = -1;
+
+    const fechar = () => { caixa.hidden = true; caixa.innerHTML = ""; marcado = -1; };
+
+    const escolher = (a) => {
+      input.value = a.sigla;
+      input.dataset.rotulo = a.rotulo;
+      fechar();
+      renderBuscaLinks();
+    };
+
+    function abrir() {
+      const achados = buscarAeroportos(input.value);
+      caixa.innerHTML = "";
+      if (!achados.length) { fechar(); return; }
+      achados.forEach((a, i) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "suggestion" + (i === marcado ? " is-marked" : "");
+        item.innerHTML = `<strong>${a.sigla}</strong> ${a.rotulo}<span class="suggestion-pais">${a.pais}</span>`;
+        item.addEventListener("mousedown", (e) => { e.preventDefault(); escolher(a); });
+        caixa.appendChild(item);
+      });
+      caixa.hidden = false;
+    }
+
+    input.addEventListener("input", () => { marcado = -1; abrir(); });
+    input.addEventListener("focus", () => { if (input.value) abrir(); });
+    input.addEventListener("blur", () => setTimeout(fechar, 120));
+    input.addEventListener("keydown", (e) => {
+      const itens = [...caixa.querySelectorAll(".suggestion")];
+      if (!itens.length) return;
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        marcado = (marcado + (e.key === "ArrowDown" ? 1 : -1) + itens.length) % itens.length;
+        itens.forEach((el, i) => el.classList.toggle("is-marked", i === marcado));
+      } else if (e.key === "Enter" && marcado >= 0) {
+        e.preventDefault();
+        itens[marcado].dispatchEvent(new MouseEvent("mousedown"));
+      } else if (e.key === "Escape") {
+        fechar();
+      }
     });
   }
 
@@ -815,7 +933,6 @@
   }
 
   function abrirBusca() {
-    preencherAeroportos();
     if (!bOrigem.value) bOrigem.value = ultimoDestino();
     if (!bIda.value) bIda.value = TODAY_KEY;
     renderBuscaLinks();
@@ -865,6 +982,8 @@
     });
   }
 
+  ligarAutocomplete(bOrigem, document.getElementById("b-origem-sug"));
+  ligarAutocomplete(bDestino, document.getElementById("b-destino-sug"));
   document.getElementById("buscar-voos").addEventListener("click", abrirBusca);
   document.querySelector("[data-close-busca]").addEventListener("click", closeAllPanels);
   [bOrigem, bDestino, bIda, bVolta].forEach((el) => el.addEventListener("input", renderBuscaLinks));
@@ -1311,7 +1430,8 @@
 
   function cidadeDoAeroporto(sigla) {
     const nome = AEROPORTOS[(sigla || "").toUpperCase()];
-    return nome ? nome.split(" · ")[0] : (sigla || "").toUpperCase();
+    if (!nome) return (sigla || "").toUpperCase();
+    return nome.split(" | ")[0].split(" · ")[0];
   }
 
   /* Cada lote tem chave própria: um voo novo entra sem ressuscitar
