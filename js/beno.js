@@ -927,11 +927,28 @@
     "Brasil": "brasil",
   };
 
-  function perfilDoDestino(sigla) {
+  function perfilDoAeroporto(sigla) {
     const txt = AEROPORTOS[(sigla || "").toUpperCase()];
     if (!txt) return null;
     const pais = txt.split(" | ")[1] || "";
     return PERFIS_TEMPORADA[PAIS_PERFIL[pais] || "europa"];
+  }
+
+  /* Vale a ponta mais cheia das duas, não só o destino: sair do Rio em
+     janeiro é caro mesmo indo pra Lisboa em baixa temporada, porque quem
+     lota o avião é o brasileiro de férias. Um voo encarece se qualquer
+     um dos dois lados estiver em alta. */
+  function temporadaDaRota(key, pontas) {
+    const [, mes, dia] = key.split("-").map(Number);
+    let melhor = [0, ""];
+    (pontas || []).forEach((sigla) => {
+      const perfil = perfilDoAeroporto(sigla);
+      if (!perfil) return;
+      const r = perfil(mes, dia);
+      if (r[0] > melhor[0]) melhor = r;
+      else if (!melhor[1] && r[1]) melhor = r;   // guarda o rótulo da baixa
+    });
+    return melhor;
   }
 
   /* Sábado é barato de propósito: não serve nem ao fim de semana longo
@@ -954,14 +971,13 @@
     { id: "muito-caro", ate: Infinity, texto: "bem cheio" },
   ];
 
-  function pontosDaData(key, destino) {
+  function pontosDaData(key, pontas) {
     const [ano, mes, dia] = key.split("-").map(Number);
     const d = new Date(ano, mes - 1, dia);
     let pontos = 0;
     const porques = [];
 
-    const perfil = perfilDoDestino(destino) || PERFIS_TEMPORADA.europa;
-    const [pTemporada, rotulo] = perfil(mes, dia);
+    const [pTemporada, rotulo] = temporadaDaRota(key, pontas);
     if (pTemporada) { pontos += pTemporada; porques.push(rotulo); }
 
     const feriado = getHoliday(key);
@@ -1092,27 +1108,29 @@
     return { origem, destino, ida, volta };
   }
 
-  /* Uma semana antes e duas depois da ida: o suficiente pra ele ver que
-     adiantar dois dias cai numa terça, sem virar um calendário inteiro
-     dentro do painel. */
-  function renderTiraDatas() {
-    const tira = document.getElementById("b-tira");
+  /* Uma faixa por campo: a da ida ancora na ida, a da volta na volta.
+     As duas usam as mesmas duas pontas da rota, então a temporada é a
+     mesma — o que muda de uma pra outra é o dia da semana e o feriado
+     que calha em cada data. */
+  function renderTiraDatas(tira, campo, minimo) {
     if (!tira) return;
-    const base = bIda.value || TODAY_KEY;
+    const base = campo.value || minimo || TODAY_KEY;
     const [a, m, d] = base.split("-").map(Number);
-    const destino = (bDestino.value || "").trim().toUpperCase();
+    const pontas = [(bOrigem.value || "").trim().toUpperCase(), (bDestino.value || "").trim().toUpperCase()];
     tira.innerHTML = "";
 
-    /* Cinco semanas em vez de três: com o destino entrando na conta, a
-       diferença entre uma semana e outra fica visível, e é isso que dá
-       noção de variação. */
+    /* Cinco semanas: com a temporada entrando na conta, a diferença
+       entre uma semana e outra fica visível, e é isso que dá noção de
+       variação. */
     const dias = [];
     for (let i = -7; i <= 28; i++) {
       const key = keyFromDate(addDays(new Date(a, m - 1, d), i));
-      if (diasAte(key) < 0) continue;      // data passada não serve
-      dias.push({ key, ...pontosDaData(key, destino) });
+      if (diasAte(key) < 0) continue;              // data passada não serve
+      if (minimo && key < minimo) continue;        // volta não pode ser antes da ida
+      dias.push({ key, ...pontosDaData(key, pontas) });
     }
-    const minimo = Math.min(...dias.map((x) => x.pontos));
+    if (!dias.length) return;
+    const maisCalmo = Math.min(...dias.map((x) => x.pontos));
 
     dias.forEach(({ key, faixa, texto, porques, pontos }) => {
       const [, mesK, diaK] = key.split("-").map(Number);
@@ -1121,15 +1139,14 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = `tira-dia is-${faixa}`
-        + (key === bIda.value ? " is-escolhido" : "")
-        + (pontos === minimo ? " is-melhor" : "");
+        + (key === campo.value ? " is-escolhido" : "")
+        + (pontos === maisCalmo ? " is-melhor" : "");
       btn.innerHTML = `<span class="tira-dow">${WEEKDAY_NAMES[dow].slice(0, 3)}</span>`
         + `<span class="tira-num">${diaK}</span>`
         + `<span class="tira-mes">${MONTH_NAMES[mesK - 1].slice(0, 3)}</span>`;
       btn.title = `${texto}${porques.length ? " — " + porques.join(", ") : ""}`;
       btn.addEventListener("click", () => {
-        bIda.value = key;
-        if (bVolta.value && bVolta.value < key) bVolta.value = "";
+        campo.value = key;
         renderBuscaLinks();
       });
       tira.appendChild(btn);
@@ -1137,6 +1154,20 @@
 
     const escolhido = tira.querySelector(".is-escolhido");
     if (escolhido) escolhido.scrollIntoView({ block: "nearest", inline: "center" });
+  }
+
+  function renderTiras() {
+    /* Adiar a ida pode deixar a volta pra trás. Fica aqui, e não no
+       clique da faixa, pra valer também quando ele digita a data no
+       campo — uma volta antes da ida não quer dizer nada. */
+    if (bIda.value && bVolta.value && bVolta.value < bIda.value) bVolta.value = "";
+
+    renderTiraDatas(document.getElementById("b-tira"), bIda);
+    /* A faixa da volta só faz sentido depois da ida escolhida, e nunca
+       mostra dia anterior a ela. */
+    const boxVolta = document.getElementById("b-tira-volta-box");
+    if (boxVolta) boxVolta.hidden = !bIda.value;
+    renderTiraDatas(document.getElementById("b-tira-volta"), bVolta, bIda.value);
 
     /* Antecedência não entra na cor, mas é o fator que ele mais controla
        — então vira aviso quando a data está chegando. */
@@ -1151,7 +1182,7 @@
   }
 
   function renderBuscaLinks() {
-    renderTiraDatas();
+    renderTiras();
     const b = dadosBusca();
     bErro.textContent = b.erro || "";
     bErro.hidden = !b.erro;

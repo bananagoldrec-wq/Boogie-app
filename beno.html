@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-beno-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-beno-512.png" />
   <link rel="manifest" href="manifest-beno.json" />
-  <link rel="stylesheet" href="css/beno.css?v=35" />
+  <link rel="stylesheet" href="css/beno.css?v=36" />
 </head>
 <body>
 
@@ -373,11 +373,18 @@
 
       <h3 class="busca-titulo">Datas por volta da ida</h3>
       <p class="busca-nota">
-        <strong>Não é preço</strong> — é estimativa de movimento, e ela muda com o
-        destino: fevereiro em Zurique é pico de esqui, em Lisboa é o mês mais vazio.
-        Entram temporada, feriado e dia da semana. Toque num dia pra usá-lo como ida.
+        <strong>Não é preço</strong> — é estimativa de movimento, e ela muda com a rota:
+        fevereiro em Zurique é pico de esqui, em Lisboa é o mês mais vazio. Vale a ponta
+        mais cheia das duas. Entram temporada, feriado e dia da semana. Toque num dia
+        pra usá-lo como data.
       </p>
       <div id="b-tira" class="tira-datas"></div>
+
+      <div id="b-tira-volta-box" hidden>
+        <h3 class="busca-titulo">Datas por volta da volta</h3>
+        <div id="b-tira-volta" class="tira-datas"></div>
+      </div>
+
       <p id="b-antecedencia" class="busca-aviso" hidden></p>
       <div class="tira-legenda">
         <span><i class="tira-cor is-muito-barato"></i>bem calmo</span>
@@ -661,6 +668,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/beno.js?v=35"></script>
+  <script type="module" src="js/beno.js?v=36"></script>
 </body>
 </html>
