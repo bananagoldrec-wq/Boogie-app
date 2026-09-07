@@ -758,6 +758,14 @@
       nome: "Kayak",
       url: (b) => `https://www.kayak.com.br/flights/${b.origem}-${b.destino}/${b.ida}${b.volta ? "/" + b.volta : ""}`,
     },
+    {
+      /* Decolar separa ida e volta no caminho, e sempre pede a contagem
+         de passageiros no fim: adultos/crianças/bebês. */
+      nome: "Decolar",
+      url: (b) => b.volta
+        ? `https://www.decolar.com/shop/flights/results/roundtrip/${b.origem}/${b.destino}/${b.ida}/${b.volta}/1/0/0`
+        : `https://www.decolar.com/shop/flights/results/oneway/${b.origem}/${b.destino}/${b.ida}/1/0/0`,
+    },
   ];
 
   const BUSCA_COMPANHIAS = [
