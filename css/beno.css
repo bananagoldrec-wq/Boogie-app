@@ -590,6 +590,69 @@ input:focus, select:focus, textarea:focus {
   font-size: 0.8rem;
 }
 
+/* Faixa de datas: rola na horizontal pra caber no celular sem espremer
+   o dia a ponto de não dar pra tocar. */
+.tira-datas {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  /* O painel é flex em coluna, e um container com overflow tem altura
+     mínima automática zero — sem isto o flex esmaga a faixa até sumir. */
+  flex: 0 0 auto;
+}
+
+.tira-dia {
+  flex: 0 0 auto;
+  width: 52px;
+  padding: 7px 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.1;
+}
+
+.tira-dow, .tira-mes { font-size: 0.6rem; text-transform: uppercase; opacity: 0.75; }
+.tira-num { font-family: "Quicksand", sans-serif; font-weight: 700; font-size: 1rem; }
+
+/* Verde, laranja e vermelho vivem só aqui — nenhuma etapa de show usa
+   laranja, e o vermelho de recusado não aparece no mesmo lugar. */
+.tira-dia.is-barato { background: rgba(127, 220, 154, 0.16); color: #9ce8b4; }
+.tira-dia.is-medio  { background: rgba(240, 160, 74, 0.16); color: #f0a84a; }
+.tira-dia.is-caro   { background: rgba(255, 107, 94, 0.16); color: #ff8f85; }
+.tira-dia:hover { filter: brightness(1.35); }
+.tira-dia.is-escolhido { border-color: var(--acc); }
+
+.busca-aviso {
+  margin: 8px 0 0;
+  padding: 8px 11px;
+  border-radius: var(--radius-sm);
+  background: rgba(240, 192, 74, 0.1);
+  border: 1px solid rgba(240, 192, 74, 0.28);
+  color: var(--warn);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.tira-legenda {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 8px 0 4px;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+
+.tira-legenda span { display: flex; align-items: center; gap: 5px; }
+.tira-cor { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.tira-cor.is-barato { background: #9ce8b4; }
+.tira-cor.is-medio { background: #f0a84a; }
+.tira-cor.is-caro { background: #ff8f85; }
+
 .busca-links { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .busca-link {

@@ -850,6 +850,55 @@
     return a.slice(2) + m + d;
   }
 
+  /* ── Estimativa de época cara ───────────────────────────
+     Isto NÃO é preço: é o padrão de calendário que encarece passagem,
+     e o app não tem como saber a tarifa real (ver o comentário do
+     buscador). O que entra aqui é o que de fato mexe no preço:
+
+     - Alta temporada europeia (julho e agosto), Natal/Ano Novo, Páscoa
+       e Carnaval — os períodos em que todo mundo voa.
+     - Dia da semana: sexta e domingo são os dias de pico; terça e
+       quarta, os mais vazios.
+     - Véspera e volta de feriado.
+     - Comprar em cima da data.
+
+     Some tudo e caia em três faixas. É palpite informado, e a tela diz
+     isso — verde não promete barato, só que o dia costuma ser calmo. */
+  function pontosDaData(key) {
+    const [ano, mes, dia] = key.split("-").map(Number);
+    const d = new Date(ano, mes - 1, dia);
+    let pontos = 0;
+    const porques = [];
+
+    if (mes === 7 || mes === 8) { pontos += 2; porques.push("alta temporada na Europa"); }
+    if ((mes === 12 && dia >= 18) || (mes === 1 && dia <= 5)) { pontos += 3; porques.push("Natal e Ano Novo"); }
+
+    const feriado = getHoliday(key);
+    const vespera = getHoliday(keyFromDate(addDays(d, 1)));
+    const depois = getHoliday(keyFromDate(addDays(d, -1)));
+    if (feriado) { pontos += 2; porques.push(feriado); }
+    else if (vespera || depois) { pontos += 1; porques.push("emenda de feriado"); }
+
+    const semana = d.getDay();
+    if (semana === 5 || semana === 0) { pontos += 1; porques.push("sexta e domingo enchem"); }
+    else if (semana === 2 || semana === 3) { pontos -= 1; porques.push("meio de semana é mais vazio"); }
+
+    /* Antecedência de propósito fica de fora: ela é quase igual em todos
+       os dias da faixa, então só empurraria todo mundo pra vermelho e
+       apagaria a diferença entre um dia e outro — que é o que a faixa
+       existe pra mostrar. Ela vira um aviso à parte. */
+    const faixa = pontos >= 3 ? "caro" : pontos >= 1 ? "medio" : "barato";
+    return { pontos, faixa, porques };
+  }
+
+  function diasAte(key) {
+    const [a1, m1, d1] = TODAY_KEY.split("-").map(Number);
+    const [a2, m2, d2] = key.split("-").map(Number);
+    return Math.round((new Date(a2, m2 - 1, d2) - new Date(a1, m1 - 1, d1)) / 86400000);
+  }
+
+  const FAIXA_TEXTO = { barato: "costuma ser mais calmo", medio: "movimento médio", caro: "época cheia" };
+
   const buscaPanel = document.getElementById("busca-panel");
   const bOrigem = document.getElementById("b-origem");
   const bDestino = document.getElementById("b-destino");
@@ -954,7 +1003,53 @@
     return { origem, destino, ida, volta };
   }
 
+  /* Uma semana antes e duas depois da ida: o suficiente pra ele ver que
+     adiantar dois dias cai numa terça, sem virar um calendário inteiro
+     dentro do painel. */
+  function renderTiraDatas() {
+    const tira = document.getElementById("b-tira");
+    if (!tira) return;
+    const base = bIda.value || TODAY_KEY;
+    const [a, m, d] = base.split("-").map(Number);
+    tira.innerHTML = "";
+    for (let i = -7; i <= 14; i++) {
+      const key = keyFromDate(addDays(new Date(a, m - 1, d), i));
+      if (diasAte(key) < 0) continue;      // data passada não serve
+      const { faixa, porques } = pontosDaData(key);
+      const [, mesK, diaK] = key.split("-").map(Number);
+      const dow = new Date(key.split("-")[0], mesK - 1, diaK).getDay();
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `tira-dia is-${faixa}` + (key === bIda.value ? " is-escolhido" : "");
+      btn.innerHTML = `<span class="tira-dow">${WEEKDAY_NAMES[dow].slice(0, 3)}</span>`
+        + `<span class="tira-num">${diaK}</span>`
+        + `<span class="tira-mes">${MONTH_NAMES[mesK - 1].slice(0, 3)}</span>`;
+      btn.title = `${FAIXA_TEXTO[faixa]}${porques.length ? " — " + porques.join(", ") : ""}`;
+      btn.addEventListener("click", () => {
+        bIda.value = key;
+        if (bVolta.value && bVolta.value < key) bVolta.value = "";
+        renderBuscaLinks();
+      });
+      tira.appendChild(btn);
+    }
+    const escolhido = tira.querySelector(".is-escolhido");
+    if (escolhido) escolhido.scrollIntoView({ block: "nearest", inline: "center" });
+
+    /* Antecedência não entra na cor, mas é o fator que ele mais controla
+       — então vira aviso quando a data está chegando. */
+    const aviso = document.getElementById("b-antecedencia");
+    if (!aviso) return;
+    const faltam = bIda.value ? diasAte(bIda.value) : null;
+    if (faltam === null || faltam > 21) { aviso.hidden = true; return; }
+    aviso.hidden = false;
+    aviso.textContent = faltam <= 7
+      ? `Faltam ${faltam} dia${faltam === 1 ? "" : "s"} — comprar em cima da data costuma sair bem mais caro, em qualquer dia da semana.`
+      : `Faltam ${faltam} dias — a partir de umas três semanas antes a tarifa já começa a subir.`;
+  }
+
   function renderBuscaLinks() {
+    renderTiraDatas();
     const b = dadosBusca();
     bErro.textContent = b.erro || "";
     bErro.hidden = !b.erro;

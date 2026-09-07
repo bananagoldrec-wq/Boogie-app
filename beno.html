@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-beno-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-beno-512.png" />
   <link rel="manifest" href="manifest-beno.json" />
-  <link rel="stylesheet" href="css/beno.css?v=33" />
+  <link rel="stylesheet" href="css/beno.css?v=34" />
 </head>
 <body>
 
@@ -371,6 +371,19 @@
 
       <div id="b-erro" class="busca-erro" hidden></div>
 
+      <h3 class="busca-titulo">Datas por volta da ida</h3>
+      <p class="busca-nota">
+        <strong>Não é preço</strong> — é estimativa de movimento, por alta temporada,
+        feriado e dia da semana. Toque num dia pra usá-lo como ida.
+      </p>
+      <div id="b-tira" class="tira-datas"></div>
+      <p id="b-antecedencia" class="busca-aviso" hidden></p>
+      <div class="tira-legenda">
+        <span><i class="tira-cor is-barato"></i>mais calmo</span>
+        <span><i class="tira-cor is-medio"></i>médio</span>
+        <span><i class="tira-cor is-caro"></i>época cheia</span>
+      </div>
+
       <h3 class="busca-titulo">Comparar preços</h3>
       <p class="busca-nota">Abrem com a rota e as datas já preenchidas.</p>
       <div class="busca-links" data-busca-grupo="comparadores"></div>
@@ -644,6 +657,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/beno.js?v=33"></script>
+  <script type="module" src="js/beno.js?v=34"></script>
 </body>
 </html>
