@@ -1184,6 +1184,15 @@ const TECHNIQUES = [
       { label: 'Exercício 3', src: 'audio/kria-ex3.m4a', emoji: '🍃' },
       { label: 'Exercício 4', src: 'audio/kria-ex4.m4a', emoji: '✨', loops: 3 },
     ]
+  },
+  {
+    id:    'pranayama',
+    name:  'Pranayama',
+    emoji: '🫁',
+    desc:  'Respiração pranayama — 10 repetições do exercício base',
+    exercises: [
+      { label: 'Respiração', src: 'audio/kria-ex1.m4a', emoji: '🌬️', loops: 10 },
+    ]
   }
 ];
 
