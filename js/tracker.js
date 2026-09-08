@@ -8,7 +8,7 @@ const DAYS     = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 const DAY_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
 const START_H  = 6;
 const END_H    = 20;
-const ROUTINE_VERSION = 4;
+const ROUTINE_VERSION = 5;
 
 const CATS = [
   { id:'exercise', label:'Exercício',   color:'#A8C4A2' },
@@ -100,60 +100,8 @@ const REMINDER_MSGS = [
   'Diz não pra fissura. Diz sim pra você mesmo.',
 ];
 
-// Weekly routine template — seeded into each new week automatically
-const ROUTINE = [
-  // Every day: Meditação 6:10–6:40
-  [0, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
-  [1, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
-  [2, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
-  [3, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
-  [4, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
-  [5, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
-  [6, 6,  0, 'Meditação',    'exercise', '06:10', '06:40'],
-  // Monday: Yoga + Estúdio + Violão + Piano + Leitura + Aula de Yoga
-  [0,  7,  0, 'Yoga',         'exercise', '07:00', '08:00'],
-  [0, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
-  [0, 14,  0, 'Violão',       'goal',     '14:00', '15:00'],
-  [0, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
-  [0, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
-  [0, 17, 30, 'Aula de Yoga', 'exercise', '17:30', '19:00'],
-  // Tuesday: Academia + Yoga + Estúdio + Violão + Piano + Leitura + Aula de Yoga
-  [1,  7,  0, 'Musculação',   'exercise', '07:00', '08:30'],
-  [1,  8, 30, 'Yoga',         'exercise', '08:30', '10:00'],
-  [1, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
-  [1, 14,  0, 'Violão',       'goal',     '14:00', '15:00'],
-  [1, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
-  [1, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
-  [1, 17, 30, 'Aula de Yoga', 'exercise', '17:30', '19:00'],
-  // Wednesday: Yoga + Estúdio + Violão + Piano + Leitura + Bar
-  [2,  7,  0, 'Yoga',         'exercise', '07:00', '08:00'],
-  [2, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
-  [2, 14,  0, 'Violão',       'goal',     '14:00', '15:00'],
-  [2, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
-  [2, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
-  [2, 20,  0, 'Bar',          'work',     '20:00', null],
-  // Thursday: Academia + Yoga + Estúdio + Violão + Piano + Leitura + Bar
-  [3,  7,  0, 'Musculação',   'exercise', '07:00', '08:30'],
-  [3,  8, 30, 'Yoga',         'exercise', '08:30', '10:00'],
-  [3, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
-  [3, 14,  0, 'Violão',       'goal',     '14:00', '15:00'],
-  [3, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
-  [3, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
-  [3, 20,  0, 'Bar',          'work',     '20:00', null],
-  // Friday: Estúdio + Violão + Piano + Leitura + Bar
-  [4, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
-  [4, 14,  0, 'Violão',       'goal',     '14:00', '15:00'],
-  [4, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
-  [4, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
-  [4, 20,  0, 'Bar',          'work',     '20:00', null],
-  // Saturday: Estúdio + Violão + Piano + Leitura + Bar
-  [5, 10,  0, 'Estúdio',      'goal',     '10:00', '14:00'],
-  [5, 14,  0, 'Violão',       'goal',     '14:00', '15:00'],
-  [5, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
-  [5, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
-  [5, 20,  0, 'Bar',          'work',     '20:00', null],
-  // Sunday: descanso (só Calistenia acima)
-];
+// Weekly routine template — empty, user fills in their own activities
+const ROUTINE = [];
 
 // ── State ────────────────────────────────────────────────────────────────────
 
