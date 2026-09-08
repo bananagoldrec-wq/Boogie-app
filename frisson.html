@@ -156,11 +156,16 @@
         <div class="field">
           <textarea id="wa-preview" class="wa-preview" rows="5"></textarea>
         </div>
+        <div class="panel-actions">
+          <button id="share-wa-message" class="btn btn-ghost" type="button">Encaminhar mensagem</button>
+        </div>
+        <p class="wa-hint">Abre o menu de compartilhar do aparelho — escolhe o WhatsApp e manda pra vários contatos de uma vez, igual encaminhar o guia técnico.</p>
+
         <div id="wa-warning" class="no-phone-hint" hidden>Cadastre o WhatsApp do artista pra poder enviar.</div>
         <div class="panel-actions">
-          <button id="send-whatsapp" class="btn btn-primary" type="button">Abrir no WhatsApp</button>
+          <button id="send-whatsapp" class="btn btn-primary" type="button">Abrir no WhatsApp (só este artista)</button>
         </div>
-        <p class="wa-hint">A mensagem abre pronta no WhatsApp — você confere e clica em enviar por lá.</p>
+        <p class="wa-hint">A mensagem abre pronta no WhatsApp já com o número deste artista — você confere e clica em enviar por lá.</p>
       </div>
 
       <div class="divider"></div>
@@ -263,6 +268,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/frisson.js?v=26"></script>
+  <script type="module" src="js/frisson.js?v=27"></script>
 </body>
 </html>
