@@ -1067,6 +1067,29 @@
     openWhatsApp(waPreview.value);
   });
 
+  /* Abre o menu de compartilhar do aparelho com o texto da mensagem —
+     no WhatsApp isso deixa escolher vários contatos de uma vez e mandar
+     pra todos, em vez de abrir uma conversa por vez com um número fixo. */
+  document.getElementById("share-wa-message").addEventListener("click", async () => {
+    const text = waPreview.value.trim();
+    if (!text) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast("Mensagem copiada — cole no WhatsApp.");
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra compartilhar. Copia o texto manualmente.");
+    }
+  });
+
   function openWhatsApp(text) {
     const phone = normalizePhone(fTelefone.value);
     if (!phone) {
