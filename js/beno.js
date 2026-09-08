@@ -179,20 +179,95 @@
 
   /* Aeroportos que aparecem nas viagens do Beno — só pra mostrar a
      cidade junto da sigla. Sigla desconhecida aparece como está. */
+  /* "Cidade · Aeroporto | País". A cidade vem primeiro porque é o que
+     aparece no título do voo; o país entra na busca, pra "Suíça" achar
+     Zurique e Genebra. Cidade com mais de um aeroporto tem uma linha por
+     aeroporto — é justamente o caso em que ele precisa escolher. */
   const AEROPORTOS = {
-    GIG: "Rio de Janeiro · Galeão", SDU: "Rio de Janeiro · Santos Dumont",
-    GRU: "São Paulo · Guarulhos", CGH: "São Paulo · Congonhas",
-    LIS: "Lisboa · Portela", OPO: "Porto", FAO: "Faro",
-    TLS: "Toulouse · Blagnac", CDG: "Paris · Charles de Gaulle", ORY: "Paris · Orly",
-    VIE: "Viena", BTS: "Bratislava", ZRH: "Zurique", GVA: "Genebra",
-    LUX: "Luxemburgo", BCN: "Barcelona", MAD: "Madri", BRU: "Bruxelas",
-    AMS: "Amsterdã", BER: "Berlim", MXP: "Milão · Malpensa", LHR: "Londres · Heathrow",
+    // Brasil
+    GIG: "Rio de Janeiro · Galeão | Brasil", SDU: "Rio de Janeiro · Santos Dumont | Brasil",
+    GRU: "São Paulo · Guarulhos | Brasil", CGH: "São Paulo · Congonhas | Brasil",
+    VCP: "Campinas · Viracopos | Brasil", BSB: "Brasília | Brasil",
+    CNF: "Belo Horizonte · Confins | Brasil", SSA: "Salvador | Brasil",
+    REC: "Recife | Brasil", FOR: "Fortaleza | Brasil", POA: "Porto Alegre | Brasil",
+    CWB: "Curitiba | Brasil", FLN: "Florianópolis | Brasil", NAT: "Natal | Brasil",
+    MCZ: "Maceió | Brasil", BEL: "Belém | Brasil", MAO: "Manaus | Brasil",
+    // Portugal e Espanha
+    LIS: "Lisboa · Portela | Portugal", OPO: "Porto | Portugal", FAO: "Faro | Portugal",
+    FNC: "Funchal · Madeira | Portugal", PDL: "Ponta Delgada · Açores | Portugal",
+    MAD: "Madri · Barajas | Espanha", BCN: "Barcelona · El Prat | Espanha",
+    AGP: "Málaga | Espanha", VLC: "Valência | Espanha", SVQ: "Sevilha | Espanha",
+    BIO: "Bilbao | Espanha", IBZ: "Ibiza | Espanha", PMI: "Palma de Maiorca | Espanha",
+    // França, Bélgica, Holanda
+    CDG: "Paris · Charles de Gaulle | França", ORY: "Paris · Orly | França",
+    BVA: "Paris · Beauvais | França", TLS: "Toulouse · Blagnac | França",
+    NCE: "Nice | França", LYS: "Lyon | França", MRS: "Marselha | França",
+    BOD: "Bordeaux | França", NTE: "Nantes | França",
+    BRU: "Bruxelas | Bélgica", CRL: "Bruxelas · Charleroi | Bélgica",
+    AMS: "Amsterdã · Schiphol | Holanda", EIN: "Eindhoven | Holanda",
+    // Reino Unido e Irlanda
+    LHR: "Londres · Heathrow | Reino Unido", LGW: "Londres · Gatwick | Reino Unido",
+    STN: "Londres · Stansted | Reino Unido", LTN: "Londres · Luton | Reino Unido",
+    MAN: "Manchester | Reino Unido", EDI: "Edimburgo | Reino Unido",
+    BRS: "Bristol | Reino Unido", DUB: "Dublin | Irlanda",
+    // Alemanha, Áustria, Suíça
+    BER: "Berlim · Brandenburg | Alemanha", MUC: "Munique | Alemanha",
+    FRA: "Frankfurt | Alemanha", DUS: "Düsseldorf | Alemanha",
+    HAM: "Hamburgo | Alemanha", CGN: "Colônia | Alemanha", STR: "Stuttgart | Alemanha",
+    VIE: "Viena | Áustria", SZG: "Salzburgo | Áustria",
+    ZRH: "Zurique | Suíça", GVA: "Genebra | Suíça", BSL: "Basileia | Suíça",
+    // Itália
+    MXP: "Milão · Malpensa | Itália", LIN: "Milão · Linate | Itália",
+    BGY: "Milão · Bérgamo | Itália", FCO: "Roma · Fiumicino | Itália",
+    CIA: "Roma · Ciampino | Itália", NAP: "Nápoles | Itália",
+    VCE: "Veneza | Itália", TRV: "Treviso | Itália", BLQ: "Bolonha | Itália",
+    FLR: "Florença | Itália", TRN: "Turim | Itália", PMO: "Palermo | Itália",
+    CTA: "Catânia | Itália",
+    // Leste e Norte europeu
+    BTS: "Bratislava | Eslováquia", PRG: "Praga | Chéquia",
+    BUD: "Budapeste | Hungria", WAW: "Varsóvia | Polônia", KRK: "Cracóvia | Polônia",
+    OTP: "Bucareste | Romênia", SOF: "Sofia | Bulgária", BEG: "Belgrado | Sérvia",
+    ZAG: "Zagreb | Croácia", LJU: "Liubliana | Eslovênia", TLL: "Tallinn | Estônia",
+    RIX: "Riga | Letônia", VNO: "Vilnius | Lituânia",
+    CPH: "Copenhague | Dinamarca", ARN: "Estocolmo · Arlanda | Suécia",
+    OSL: "Oslo | Noruega", HEL: "Helsinque | Finlândia", KEF: "Reykjavík | Islândia",
+    // Sul e Mediterrâneo
+    ATH: "Atenas | Grécia", JMK: "Míconos | Grécia", JTR: "Santorini | Grécia",
+    IST: "Istambul | Turquia", TLV: "Tel Aviv | Israel",
+    LUX: "Luxemburgo | Luxemburgo", MLA: "Malta | Malta",
+    // África e Américas
+    CMN: "Casablanca | Marrocos", RAK: "Marrakech | Marrocos",
+    LAD: "Luanda | Angola", MPM: "Maputo | Moçambique", CPT: "Cidade do Cabo | África do Sul",
+    JFK: "Nova York · JFK | Estados Unidos", EWR: "Nova York · Newark | Estados Unidos",
+    LAX: "Los Angeles | Estados Unidos", MIA: "Miami | Estados Unidos",
+    MEX: "Cidade do México | México", EZE: "Buenos Aires · Ezeiza | Argentina",
+    AEP: "Buenos Aires · Aeroparque | Argentina", SCL: "Santiago | Chile",
+    MVD: "Montevidéu | Uruguai", BOG: "Bogotá | Colômbia", LIM: "Lima | Peru",
   };
+
+  /* Índice de busca: sigla, cidade, aeroporto e país, sem acento, pra
+     "sao paulo" achar São Paulo e "suica" achar Zurique. */
+  const AEROPORTOS_BUSCA = Object.entries(AEROPORTOS).map(([sigla, txt]) => {
+    const [cidadeAero, pais = ""] = txt.split(" | ");
+    const cidade = cidadeAero.split(" · ")[0];
+    return { sigla, cidade, pais, rotulo: cidadeAero, busca: normalizeName(`${sigla} ${cidadeAero} ${pais}`) };
+  });
 
   /* Passagens que o Beno já comprou. Mesmo esquema dos outros lotes:
      entra uma vez por aparelho, com id fixo pra não duplicar. */
   const AGENCIA = "Travel Blue Turismo · Alessandro (21) 98875-5873 · alessandro@travelblueturismo.com.br";
   const SEED_LOGISTICA_LOTES = [
+    {
+      key: "beno_seed_logistica_v3",
+      itens: [
+        {
+          id: "seed-log-tp-lisbcn", tipo: "voo", companhia: "TAP", numero: "TP1040", localizador: "ARGNXL",
+          origem: "LIS", destino: "BCN", terminalOrigem: "", terminalDestino: "",
+          data: "2026-09-30", hora: "22:35", dataFim: "2026-10-01", horaFim: "01:30",
+          obs: "Direto, 1h55, Economy. Bagagem despachada inclusa. Reserva 542692357000, confirmada. Chega de madrugada, já no dia 1º.",
+        },
+      ],
+    },
     {
       key: "beno_seed_logistica_v2",
       itens: [
@@ -696,6 +771,451 @@
     if (mudou) renderAll();
   }
 
+  /* Mesma ideia dos complementos de contato, pra logística: preenche
+     campo vazio de um voo que já entrou, sem tocar no que o Beno editou. */
+  const COMPLEMENTOS_LOG_KEY = "beno_complementos_log_v1";
+  const COMPLEMENTOS_LOG = [
+    { id: "seed-log-tp-lisbcn", numero: "TP1040" },
+  ];
+
+  async function completarLogisticaOnce() {
+    try {
+      if (localStorage.getItem(COMPLEMENTOS_LOG_KEY)) return;
+      localStorage.setItem(COMPLEMENTOS_LOG_KEY, "1");
+    } catch (err) {
+      return;
+    }
+    let mudou = false;
+    for (const info of COMPLEMENTOS_LOG) {
+      const item = logistica[info.id];
+      if (!item) continue;
+      const atualizado = { ...item };
+      let alterou = false;
+      ["numero", "localizador", "terminalOrigem", "terminalDestino", "obs"].forEach((campo) => {
+        if (info[campo] && !atualizado[campo]) { atualizado[campo] = info[campo]; alterou = true; }
+      });
+      if (alterou) { await persistLog(atualizado); mudou = true; }
+    }
+    if (mudou) renderAll();
+  }
+
+  /* ── Buscar voos ────────────────────────────────────────
+     Sem servidor não dá pra mostrar preço aqui dentro: as APIs de tarifa
+     são pagas e a chave ficaria à vista no código. O que dá, e resolve,
+     é preencher a rota uma vez e abrir a busca já pronta lá fora.
+
+     Comparador tem endereço estável e aceita a rota na URL. Companhia
+     não: cada uma muda o formato do seu buscador de tempos em tempos, e
+     link quebrado é pior que link genérico — por isso só as que eu tenho
+     confiança levam data; o resto abre a página de compra. */
+  const BUSCA_COMPARADORES = [
+    {
+      nome: "Google Flights",
+      url: (b) => "https://www.google.com/travel/flights?q=" + encodeURIComponent(
+        `Flights from ${b.origem} to ${b.destino} on ${b.ida}` + (b.volta ? ` through ${b.volta}` : " oneway")),
+    },
+    {
+      nome: "Skyscanner",
+      url: (b) => `https://www.skyscanner.com.br/transporte/passagens-aereas/${b.origem.toLowerCase()}/${b.destino.toLowerCase()}/${curta(b.ida)}${b.volta ? "/" + curta(b.volta) : ""}/`,
+    },
+    {
+      nome: "Kayak",
+      url: (b) => `https://www.kayak.com.br/flights/${b.origem}-${b.destino}/${b.ida}${b.volta ? "/" + b.volta : ""}`,
+    },
+    {
+      /* Decolar separa ida e volta no caminho, e sempre pede a contagem
+         de passageiros no fim: adultos/crianças/bebês. */
+      nome: "Decolar",
+      url: (b) => b.volta
+        ? `https://www.decolar.com/shop/flights/results/roundtrip/${b.origem}/${b.destino}/${b.ida}/${b.volta}/1/0/0`
+        : `https://www.decolar.com/shop/flights/results/oneway/${b.origem}/${b.destino}/${b.ida}/1/0/0`,
+    },
+  ];
+
+  const BUSCA_COMPANHIAS = [
+    {
+      nome: "Ryanair", comData: true,
+      url: (b) => `https://www.ryanair.com/pt/pt/trip/flights/select?adults=1&originIata=${b.origem}&destinationIata=${b.destino}&dateOut=${b.ida}` + (b.volta ? `&dateIn=${b.volta}&isReturn=true` : ""),
+    },
+    { nome: "TAP", url: () => "https://www.flytap.com/pt-br/" },
+    { nome: "Vueling", url: () => "https://www.vueling.com/pt" },
+    { nome: "Iberia", url: () => "https://www.iberia.com/pt/" },
+    { nome: "Swiss", url: () => "https://www.swiss.com/pt/pt" },
+    { nome: "Lufthansa", url: () => "https://www.lufthansa.com/pt/pt/homepage" },
+  ];
+
+  /* Skyscanner usa aammdd na URL, não o ISO dos outros. */
+  function curta(iso) {
+    const [a, m, d] = iso.split("-");
+    return a.slice(2) + m + d;
+  }
+
+  /* ── Estimativa de época cheia ──────────────────────────
+     Isto NÃO é preço — o app não tem como saber a tarifa (ver o
+     comentário do buscador). É o padrão de calendário que encarece
+     passagem, que é conhecido e dá pra modelar.
+
+     O que muda de verdade o preço, na ordem em que pesa:
+
+     1. Temporada, e ela depende do destino. Fevereiro em Zurique é
+        pico de esqui; fevereiro em Lisboa é o mês mais morto do ano.
+        Tratar "Europa" como um bloco só apagaria justamente a variação
+        que o Beno quer enxergar — por isso cada região tem seu perfil.
+     2. Dia da semana. Sexta e domingo são os dias de pico do lazer;
+        segunda cedo, dos negócios. Terça e quarta são os mais vazios,
+        e sábado costuma ser barato porque não serve nem a um nem a
+        outro.
+     3. Feriado e emenda.
+
+     Cinco níveis em vez de três, porque com três quase tudo caía no
+     meio e ele não via variação nenhuma. */
+
+  const PERFIS_TEMPORADA = {
+    /* Alpes: o inverno é que é caro — esqui. Verão é média estação e a
+       entressafra (abril-maio, outubro-novembro) é quando esvazia. */
+    alpes: (mes, dia) => {
+      if (mes === 12 && dia >= 18) return [3, "festas e esqui"];
+      if (mes === 1 && dia <= 6) return [3, "festas e esqui"];
+      if (mes === 1 || mes === 2) return [2, "temporada de esqui"];
+      if (mes === 3 && dia <= 15) return [1.5, "fim da temporada de esqui"];
+      if (mes === 7 || mes === 8) return [1, "verão alpino"];
+      if (mes === 4 || mes === 5) return [-1.5, "entressafra nos Alpes"];
+      if (mes === 10 || mes === 11) return [-2, "entressafra nos Alpes"];
+      return [0, ""];
+    },
+    /* Mediterrâneo: o oposto. Verão lotado, inverno vazio. */
+    mediterraneo: (mes, dia) => {
+      if (mes === 7) return [2.5, "pico do verão"];
+      if (mes === 8 && dia <= 25) return [2.5, "pico do verão"];
+      if (mes === 8) return [1.5, "fim do verão"];
+      if (mes === 6) return [1.5, "começo do verão"];
+      if (mes === 9 && dia <= 15) return [1, "veranico de setembro"];
+      if (mes === 12 && dia >= 18) return [2, "festas de fim de ano"];
+      if (mes === 1 && dia <= 6) return [2, "festas de fim de ano"];
+      if (mes === 11 || (mes === 1 && dia > 6) || mes === 2) return [-2, "baixa temporada"];
+      return [0, ""];
+    },
+    /* Norte e centro da Europa: verão e festas cheios, novembro e
+       fevereiro mortos. */
+    europa: (mes, dia) => {
+      if (mes === 7 || (mes === 8 && dia <= 25)) return [2, "alta temporada europeia"];
+      if (mes === 8 || mes === 6) return [1, "verão europeu"];
+      if (mes === 12 && dia >= 18) return [2.5, "festas de fim de ano"];
+      if (mes === 1 && dia <= 6) return [2.5, "festas de fim de ano"];
+      if (mes === 11 || (mes === 1 && dia > 6) || mes === 2) return [-2, "baixa temporada"];
+      if (mes === 3 || mes === 10) return [-1, "entressafra"];
+      return [0, ""];
+    },
+    /* Brasil: férias de verão e de julho, e o Carnaval entra pelo
+       feriado móvel mais abaixo. */
+    brasil: (mes, dia) => {
+      if (mes === 12 && dia >= 15) return [2.5, "férias de verão"];
+      if (mes === 1) return [2, "férias de verão"];
+      if (mes === 7) return [2, "férias de julho"];
+      if (mes === 2 && dia > 20) return [-1, "depois do Carnaval"];
+      if (mes >= 3 && mes <= 6) return [-1.5, "baixa temporada"];
+      if (mes === 8 || mes === 9 || mes === 11) return [-1, "baixa temporada"];
+      return [0, ""];
+    },
+  };
+
+  const PAIS_PERFIL = {
+    "Suíça": "alpes", "Áustria": "alpes",
+    "Portugal": "mediterraneo", "Espanha": "mediterraneo", "Itália": "mediterraneo",
+    "Grécia": "mediterraneo", "Malta": "mediterraneo", "Croácia": "mediterraneo",
+    "Marrocos": "mediterraneo", "Turquia": "mediterraneo", "Israel": "mediterraneo",
+    "Brasil": "brasil",
+  };
+
+  function perfilDoAeroporto(sigla) {
+    const txt = AEROPORTOS[(sigla || "").toUpperCase()];
+    if (!txt) return null;
+    const pais = txt.split(" | ")[1] || "";
+    return PERFIS_TEMPORADA[PAIS_PERFIL[pais] || "europa"];
+  }
+
+  /* Vale a ponta mais cheia das duas, não só o destino: sair do Rio em
+     janeiro é caro mesmo indo pra Lisboa em baixa temporada, porque quem
+     lota o avião é o brasileiro de férias. Um voo encarece se qualquer
+     um dos dois lados estiver em alta. */
+  function temporadaDaRota(key, pontas) {
+    const [, mes, dia] = key.split("-").map(Number);
+    let melhor = [0, ""];
+    (pontas || []).forEach((sigla) => {
+      const perfil = perfilDoAeroporto(sigla);
+      if (!perfil) return;
+      const r = perfil(mes, dia);
+      if (r[0] > melhor[0]) melhor = r;
+      else if (!melhor[1] && r[1]) melhor = r;   // guarda o rótulo da baixa
+    });
+    return melhor;
+  }
+
+  /* Sábado é barato de propósito: não serve nem ao fim de semana longo
+     nem à viagem de trabalho, então sobra assento. */
+  const PESO_SEMANA = [
+    [1.5, "domingo é dia de pico"],
+    [0.5, "segunda enche de trabalho"],
+    [-1.5, "terça é dos dias mais vazios"],
+    [-1.5, "quarta é dos dias mais vazios"],
+    [-0.5, "quinta ainda é tranquila"],
+    [1.5, "sexta é dia de pico"],
+    [-1, "sábado costuma sobrar assento"],
+  ];
+
+  const NIVEIS = [
+    { id: "muito-barato", ate: -2.5, texto: "bem mais calmo" },
+    { id: "barato", ate: -0.75, texto: "mais calmo" },
+    { id: "medio", ate: 1, texto: "movimento médio" },
+    { id: "caro", ate: 2.5, texto: "cheio" },
+    { id: "muito-caro", ate: Infinity, texto: "bem cheio" },
+  ];
+
+  function pontosDaData(key, pontas) {
+    const [ano, mes, dia] = key.split("-").map(Number);
+    const d = new Date(ano, mes - 1, dia);
+    let pontos = 0;
+    const porques = [];
+
+    const [pTemporada, rotulo] = temporadaDaRota(key, pontas);
+    if (pTemporada) { pontos += pTemporada; porques.push(rotulo); }
+
+    const feriado = getHoliday(key);
+    const vespera = getHoliday(keyFromDate(addDays(d, 1)));
+    const depois = getHoliday(keyFromDate(addDays(d, -1)));
+    if (feriado) { pontos += 2; porques.push(feriado); }
+    else if (vespera || depois) { pontos += 1; porques.push("emenda de feriado"); }
+
+    const [pSemana, rotuloSemana] = PESO_SEMANA[d.getDay()];
+    pontos += pSemana;
+    porques.push(rotuloSemana);
+
+    /* Antecedência de propósito fica de fora: ela é quase igual em todos
+       os dias da faixa, então só empurraria todo mundo pra vermelho e
+       apagaria a diferença entre um dia e outro — que é o que a faixa
+       existe pra mostrar. Ela vira um aviso à parte. */
+    const nivel = NIVEIS.find((n) => pontos <= n.ate);
+    return { pontos, faixa: nivel.id, texto: nivel.texto, porques: porques.filter(Boolean) };
+  }
+
+  function diasAte(key) {
+    const [a1, m1, d1] = TODAY_KEY.split("-").map(Number);
+    const [a2, m2, d2] = key.split("-").map(Number);
+    return Math.round((new Date(a2, m2 - 1, d2) - new Date(a1, m1 - 1, d1)) / 86400000);
+  }
+
+  const buscaPanel = document.getElementById("busca-panel");
+  const bOrigem = document.getElementById("b-origem");
+  const bDestino = document.getElementById("b-destino");
+  const bIda = document.getElementById("b-ida");
+  const bVolta = document.getElementById("b-volta");
+  const bErro = document.getElementById("b-erro");
+
+  /* Busca por cidade, país ou sigla. O datalist do HTML não servia: o
+     Safari do iPhone praticamente o ignora, e onde funciona ele casa só
+     pelo value — ou seja, pela sigla, que é justamente o que o Beno não
+     sabe de cor. Aqui ele digita "Zurique" e escolhe o aeroporto. */
+  function buscarAeroportos(termo) {
+    const t = normalizeName(termo);
+    if (!t) return [];
+    const comeca = [], contem = [];
+    for (const a of AEROPORTOS_BUSCA) {
+      const i = a.busca.indexOf(t);
+      if (i === 0 || normalizeName(a.cidade).startsWith(t)) comeca.push(a);
+      else if (i > 0) contem.push(a);
+    }
+    /* Quem começa com o termo vem antes: digitando "BER", Berlim ganha
+       de Bérgamo. Dentro de cada grupo, ordem alfabética de cidade. */
+    const porCidade = (x, y) => x.cidade.localeCompare(y.cidade, "pt-BR");
+    return [...comeca.sort(porCidade), ...contem.sort(porCidade)].slice(0, 8);
+  }
+
+  function ligarAutocomplete(input, caixa) {
+    let marcado = -1;
+
+    const fechar = () => { caixa.hidden = true; caixa.innerHTML = ""; marcado = -1; };
+
+    const escolher = (a) => {
+      input.value = a.sigla;
+      input.dataset.rotulo = a.rotulo;
+      fechar();
+      renderBuscaLinks();
+    };
+
+    function abrir() {
+      const achados = buscarAeroportos(input.value);
+      caixa.innerHTML = "";
+      if (!achados.length) { fechar(); return; }
+      achados.forEach((a, i) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "suggestion" + (i === marcado ? " is-marked" : "");
+        item.innerHTML = `<strong>${a.sigla}</strong> ${a.rotulo}<span class="suggestion-pais">${a.pais}</span>`;
+        item.addEventListener("mousedown", (e) => { e.preventDefault(); escolher(a); });
+        caixa.appendChild(item);
+      });
+      caixa.hidden = false;
+    }
+
+    input.addEventListener("input", () => { marcado = -1; abrir(); });
+    input.addEventListener("focus", () => { if (input.value) abrir(); });
+    input.addEventListener("blur", () => setTimeout(fechar, 120));
+    input.addEventListener("keydown", (e) => {
+      const itens = [...caixa.querySelectorAll(".suggestion")];
+      if (!itens.length) return;
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        marcado = (marcado + (e.key === "ArrowDown" ? 1 : -1) + itens.length) % itens.length;
+        itens.forEach((el, i) => el.classList.toggle("is-marked", i === marcado));
+      } else if (e.key === "Enter" && marcado >= 0) {
+        e.preventDefault();
+        itens[marcado].dispatchEvent(new MouseEvent("mousedown"));
+      } else if (e.key === "Escape") {
+        fechar();
+      }
+    });
+  }
+
+  /* Sugere a origem: o destino do último voo já marcado é onde ele fica
+     ao fim do que está cadastrado. É palpite, não regra — ele troca num
+     toque, e a lista de aeroportos ajuda. */
+  function ultimoDestino() {
+    const voos = Object.values(logistica)
+      .filter((l) => l.tipo === "voo" && l.data && l.data >= TODAY_KEY)
+      .sort((a, b) => a.data.localeCompare(b.data));
+    return voos.length ? voos[voos.length - 1].destino : "";
+  }
+
+  function abrirBusca() {
+    if (!bOrigem.value) bOrigem.value = ultimoDestino();
+    if (!bIda.value) bIda.value = TODAY_KEY;
+    renderBuscaLinks();
+    closeAllPanels();
+    buscaPanel.hidden = false;
+    backdrop.hidden = false;
+    bDestino.focus();
+  }
+
+  function dadosBusca() {
+    const origem = (bOrigem.value || "").trim().toUpperCase();
+    const destino = (bDestino.value || "").trim().toUpperCase();
+    const ida = bIda.value;
+    const volta = bVolta.value;
+    if (!origem || !destino) return { erro: "Preencha de onde e para onde." };
+    if (origem === destino) return { erro: "Origem e destino são o mesmo aeroporto." };
+    if (!ida) return { erro: "Escolha a data de ida." };
+    if (volta && volta < ida) return { erro: "A volta está antes da ida." };
+    return { origem, destino, ida, volta };
+  }
+
+  /* Uma faixa por campo: a da ida ancora na ida, a da volta na volta.
+     As duas usam as mesmas duas pontas da rota, então a temporada é a
+     mesma — o que muda de uma pra outra é o dia da semana e o feriado
+     que calha em cada data. */
+  function renderTiraDatas(tira, campo, minimo) {
+    if (!tira) return;
+    const base = campo.value || minimo || TODAY_KEY;
+    const [a, m, d] = base.split("-").map(Number);
+    const pontas = [(bOrigem.value || "").trim().toUpperCase(), (bDestino.value || "").trim().toUpperCase()];
+    tira.innerHTML = "";
+
+    /* Cinco semanas: com a temporada entrando na conta, a diferença
+       entre uma semana e outra fica visível, e é isso que dá noção de
+       variação. */
+    const dias = [];
+    for (let i = -7; i <= 28; i++) {
+      const key = keyFromDate(addDays(new Date(a, m - 1, d), i));
+      if (diasAte(key) < 0) continue;              // data passada não serve
+      if (minimo && key < minimo) continue;        // volta não pode ser antes da ida
+      dias.push({ key, ...pontosDaData(key, pontas) });
+    }
+    if (!dias.length) return;
+    const maisCalmo = Math.min(...dias.map((x) => x.pontos));
+
+    dias.forEach(({ key, faixa, texto, porques, pontos }) => {
+      const [, mesK, diaK] = key.split("-").map(Number);
+      const dow = new Date(key.split("-")[0], mesK - 1, diaK).getDay();
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `tira-dia is-${faixa}`
+        + (key === campo.value ? " is-escolhido" : "")
+        + (pontos === maisCalmo ? " is-melhor" : "");
+      btn.innerHTML = `<span class="tira-dow">${WEEKDAY_NAMES[dow].slice(0, 3)}</span>`
+        + `<span class="tira-num">${diaK}</span>`
+        + `<span class="tira-mes">${MONTH_NAMES[mesK - 1].slice(0, 3)}</span>`;
+      btn.title = `${texto}${porques.length ? " — " + porques.join(", ") : ""}`;
+      btn.addEventListener("click", () => {
+        campo.value = key;
+        renderBuscaLinks();
+      });
+      tira.appendChild(btn);
+    });
+
+    const escolhido = tira.querySelector(".is-escolhido");
+    if (escolhido) escolhido.scrollIntoView({ block: "nearest", inline: "center" });
+  }
+
+  function renderTiras() {
+    /* Adiar a ida pode deixar a volta pra trás. Fica aqui, e não no
+       clique da faixa, pra valer também quando ele digita a data no
+       campo — uma volta antes da ida não quer dizer nada. */
+    if (bIda.value && bVolta.value && bVolta.value < bIda.value) bVolta.value = "";
+
+    renderTiraDatas(document.getElementById("b-tira"), bIda);
+    /* A faixa da volta só faz sentido depois da ida escolhida, e nunca
+       mostra dia anterior a ela. */
+    const boxVolta = document.getElementById("b-tira-volta-box");
+    if (boxVolta) boxVolta.hidden = !bIda.value;
+    renderTiraDatas(document.getElementById("b-tira-volta"), bVolta, bIda.value);
+
+    /* Antecedência não entra na cor, mas é o fator que ele mais controla
+       — então vira aviso quando a data está chegando. */
+    const aviso = document.getElementById("b-antecedencia");
+    if (!aviso) return;
+    const faltam = bIda.value ? diasAte(bIda.value) : null;
+    if (faltam === null || faltam > 21) { aviso.hidden = true; return; }
+    aviso.hidden = false;
+    aviso.textContent = faltam <= 7
+      ? `Faltam ${faltam} dia${faltam === 1 ? "" : "s"} — comprar em cima da data costuma sair bem mais caro, em qualquer dia da semana.`
+      : `Faltam ${faltam} dias — a partir de umas três semanas antes a tarifa já começa a subir.`;
+  }
+
+  function renderBuscaLinks() {
+    renderTiras();
+    const b = dadosBusca();
+    bErro.textContent = b.erro || "";
+    bErro.hidden = !b.erro;
+
+    document.querySelectorAll("[data-busca-grupo]").forEach((box) => {
+      const comparador = box.dataset.buscaGrupo === "comparadores";
+      const fontes = comparador ? BUSCA_COMPARADORES : BUSCA_COMPANHIAS;
+      box.innerHTML = "";
+      fontes.forEach((f) => {
+        const precisaRota = comparador || f.comData;
+        const a = document.createElement("a");
+        a.className = "busca-link" + (precisaRota && b.erro ? " is-off" : "");
+        a.textContent = f.nome;
+        if (precisaRota && b.erro) {
+          a.removeAttribute("href");
+          a.title = b.erro;
+        } else {
+          a.href = f.url(b);
+          a.target = "_blank";
+          a.rel = "noopener";
+          a.title = precisaRota ? `${b.origem} → ${b.destino} · ${b.ida}` : "Abre o site da companhia";
+        }
+        box.appendChild(a);
+      });
+    });
+  }
+
+  ligarAutocomplete(bOrigem, document.getElementById("b-origem-sug"));
+  ligarAutocomplete(bDestino, document.getElementById("b-destino-sug"));
+  document.getElementById("buscar-voos").addEventListener("click", abrirBusca);
+  document.querySelector("[data-close-busca]").addEventListener("click", closeAllPanels);
+  [bOrigem, bDestino, bIda, bVolta].forEach((el) => el.addEventListener("input", renderBuscaLinks));
+
   /* ── Cidade a partir do telefone ────────────────────────
      No Brasil o DDD entrega a cidade. Fora, não: celular de Portugal
      e da França começa com prefixo de operadora, não de região — por
@@ -1138,7 +1658,8 @@
 
   function cidadeDoAeroporto(sigla) {
     const nome = AEROPORTOS[(sigla || "").toUpperCase()];
-    return nome ? nome.split(" · ")[0] : (sigla || "").toUpperCase();
+    if (!nome) return (sigla || "").toUpperCase();
+    return nome.split(" | ")[0].split(" · ")[0];
   }
 
   /* Cada lote tem chave própria: um voo novo entra sem ressuscitar
@@ -1348,6 +1869,7 @@
     calGrid.innerHTML = "";
 
     const byDate = dealsByDate();
+    const viagens = viagensByDate();
     const leading = firstWeekday(view.year, view.month);
     for (let i = 0; i < leading; i++) {
       const blank = document.createElement("div");
@@ -1358,11 +1880,37 @@
     const total = daysInMonth(view.year, view.month);
     for (let day = 1; day <= total; day++) {
       const key = dateKey(view.year, view.month, day);
-      calGrid.appendChild(buildDayCell(key, day, byDate[key] || []));
+      calGrid.appendChild(buildDayCell(key, day, byDate[key] || [], viagens[key] || []));
     }
   }
 
-  function buildDayCell(key, day, dayDeals) {
+  /* Voo e hospedagem entram no calendário pelo dia em que começam, pra
+     ele bater o olho no mês e ver quando viaja sem trocar de aba. */
+  function viagensByDate() {
+    const mapa = {};
+    Object.values(logistica).forEach((item) => {
+      if (!item.data) return;
+      (mapa[item.data] = mapa[item.data] || []).push(item);
+    });
+    Object.values(mapa).forEach((lista) => lista.sort((a, b) => (a.hora || "99:99").localeCompare(b.hora || "99:99")));
+    return mapa;
+  }
+
+  function rotuloViagem(item) {
+    if (item.tipo === "voo") return `✈ ${cidadeDoAeroporto(item.destino)}`;
+    return `🛏 ${item.nome || cidadeDoAeroporto(item.destino) || "Hospedagem"}`;
+  }
+
+  function detalheViagem(item) {
+    if (item.tipo === "voo") {
+      const rota = `${cidadeDoAeroporto(item.origem)} → ${cidadeDoAeroporto(item.destino)}`;
+      const hora = [item.hora, item.horaFim].filter(Boolean).join(" → ");
+      return [rota, hora, [item.companhia, item.numero].filter(Boolean).join(" ")].filter(Boolean).join(" · ");
+    }
+    return [item.nome || "Hospedagem", item.endereco].filter(Boolean).join(" · ");
+  }
+
+  function buildDayCell(key, day, dayDeals, dayViagens = []) {
     const holidayName = getHoliday(key);
     const [y, m, d] = key.split("-").map(Number);
     const weekday = new Date(y, m - 1, d).getDay();
@@ -1389,7 +1937,7 @@
     meta.appendChild(wd);
     cell.appendChild(meta);
 
-    if (dayDeals.length || holidayName) {
+    if (dayDeals.length || dayViagens.length || holidayName) {
       const content = document.createElement("div");
       content.className = "day-content";
 
@@ -1414,10 +1962,21 @@
         content.appendChild(chip);
       });
 
-      if (dayDeals.length > 3) {
+      /* Viagem depois dos shows, em roxo: o show é o que ele marca, a
+         viagem é o que ela exige. Duas cabem sem estourar a célula. */
+      dayViagens.slice(0, 2).forEach((item) => {
+        const chip = document.createElement("span");
+        chip.className = "day-chip day-chip-viagem";
+        chip.textContent = rotuloViagem(item);
+        chip.title = detalheViagem(item);
+        content.appendChild(chip);
+      });
+
+      const escondidos = Math.max(0, dayDeals.length - 3) + Math.max(0, dayViagens.length - 2);
+      if (escondidos) {
         const more = document.createElement("span");
         more.className = "day-more";
-        more.textContent = `+${dayDeals.length - 3}`;
+        more.textContent = `+${escondidos}`;
         content.appendChild(more);
       }
 
@@ -1483,6 +2042,7 @@
     templatesPanel.hidden = true;
     importPanel.hidden = true;
     logPanel.hidden = true;
+    buscaPanel.hidden = true;
     backdrop.hidden = true;
     activeDealId = null;
     activeContactId = null;
@@ -2958,7 +3518,8 @@
   switchView("agenda"); // a agenda é a tela do dia a dia
   renderAll();
   seedAgendaOnce().then(seedCuradoresOnce).then(seedLogisticaOnce)
-    .then(limparNegociacoesSemData).then(completarContatosOnce).then(removerContatosOnce).then(unificarCacheOnce);
+    .then(limparNegociacoesSemData).then(completarContatosOnce).then(completarLogisticaOnce)
+    .then(removerContatosOnce).then(unificarCacheOnce);
 
   if (isUnlocked()) {
     loginGate.hidden = true;

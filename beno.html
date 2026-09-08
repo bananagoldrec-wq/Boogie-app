@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-beno-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-beno-512.png" />
   <link rel="manifest" href="manifest-beno.json" />
-  <link rel="stylesheet" href="css/beno.css?v=27" />
+  <link rel="stylesheet" href="css/beno.css?v=36" />
 </head>
 <body>
 
@@ -82,6 +82,7 @@
       <span><i style="background:var(--st-proposta)"></i>Proposta enviada</span>
       <span><i style="background:var(--st-conversando)"></i>Conversando</span>
       <span><i style="background:var(--st-tocou)"></i>Já tocou</span>
+      <span><i style="background:var(--viagem)"></i>Viagem</span>
       <span><i class="legend-swatch" style="background:var(--card-holiday)"></i>Feriado</span>
       <span class="tagline">clique num dia pra ver ou marcar ✎</span>
     </div>
@@ -94,7 +95,8 @@
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
         <input id="log-search" type="search" placeholder="Buscar voo, cidade, hotel..." autocomplete="off" />
       </div>
-      <button id="new-voo" class="btn btn-primary btn-compact" type="button">+ Voo</button>
+      <button id="buscar-voos" class="btn btn-primary btn-compact" type="button">🔎 Buscar voos</button>
+      <button id="new-voo" class="btn btn-ghost btn-compact" type="button">+ Voo</button>
       <button id="new-hosp" class="btn btn-ghost btn-compact" type="button">+ Hospedagem</button>
     </div>
     <div class="toolbar">
@@ -335,6 +337,74 @@
   </aside>
 
   <!-- ══════════ PANEL: LOGÍSTICA ══════════ -->
+  <!-- ══════════ PANEL: BUSCAR VOOS ══════════ -->
+  <aside id="busca-panel" class="side-panel" hidden aria-label="Buscar voos">
+    <div class="panel-head">
+      <div>
+        <h2>Buscar voos</h2>
+        <div class="panel-date">preenche uma vez, abre já pronto lá fora</div>
+      </div>
+      <button class="icon-btn-round" type="button" data-close-busca aria-label="Fechar">×</button>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <label for="b-origem">De</label>
+        <input id="b-origem" type="text" placeholder="Cidade ou sigla — ex.: Lisboa, LIS" autocomplete="off" />
+        <div id="b-origem-sug" class="suggestions" hidden></div>
+      </div>
+      <div class="field">
+        <label for="b-destino">Para</label>
+        <input id="b-destino" type="text" placeholder="Cidade ou sigla — ex.: Zurique, ZRH" autocomplete="off" />
+        <div id="b-destino-sug" class="suggestions" hidden></div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="b-ida">Ida</label>
+          <input id="b-ida" type="date" />
+        </div>
+        <div class="field">
+          <label for="b-volta">Volta <span class="hint-inline">(vazio = só ida)</span></label>
+          <input id="b-volta" type="date" />
+        </div>
+      </div>
+
+      <div id="b-erro" class="busca-erro" hidden></div>
+
+      <h3 class="busca-titulo">Datas por volta da ida</h3>
+      <p class="busca-nota">
+        <strong>Não é preço</strong> — é estimativa de movimento, e ela muda com a rota:
+        fevereiro em Zurique é pico de esqui, em Lisboa é o mês mais vazio. Vale a ponta
+        mais cheia das duas. Entram temporada, feriado e dia da semana. Toque num dia
+        pra usá-lo como data.
+      </p>
+      <div id="b-tira" class="tira-datas"></div>
+
+      <div id="b-tira-volta-box" hidden>
+        <h3 class="busca-titulo">Datas por volta da volta</h3>
+        <div id="b-tira-volta" class="tira-datas"></div>
+      </div>
+
+      <p id="b-antecedencia" class="busca-aviso" hidden></p>
+      <div class="tira-legenda">
+        <span><i class="tira-cor is-muito-barato"></i>bem calmo</span>
+        <span><i class="tira-cor is-barato"></i>calmo</span>
+        <span><i class="tira-cor is-medio"></i>médio</span>
+        <span><i class="tira-cor is-caro"></i>cheio</span>
+        <span><i class="tira-cor is-muito-caro"></i>bem cheio</span>
+        <span>• = o mais calmo da faixa</span>
+      </div>
+
+      <h3 class="busca-titulo">Comparar preços</h3>
+      <p class="busca-nota">Abrem com a rota e as datas já preenchidas.</p>
+      <div class="busca-links" data-busca-grupo="comparadores"></div>
+
+      <h3 class="busca-titulo">Ir direto na companhia</h3>
+      <p class="busca-nota">Depois de escolher o voo, comprar no site da companhia costuma evitar taxa de intermediário.</p>
+      <div class="busca-links" data-busca-grupo="companhias"></div>
+    </div>
+  </aside>
+
   <aside id="log-panel" class="side-panel" hidden aria-label="Editar logística">
     <div class="panel-head">
       <div>
@@ -598,6 +668,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/beno.js?v=27"></script>
+  <script type="module" src="js/beno.js?v=36"></script>
 </body>
 </html>

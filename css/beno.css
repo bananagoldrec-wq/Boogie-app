@@ -18,6 +18,7 @@
   --acc-dim: rgba(201, 242, 77, 0.14);
   --acc-line: rgba(201, 242, 77, 0.26);
   --violet: #b98cff;
+  --viagem: #4dd9e8;
 
   --text: #f2eef8;
   --text-dim: #b7aecb;
@@ -562,6 +563,148 @@ input:focus, select:focus, textarea:focus {
   white-space: nowrap;
 }
 
+/* ── Buscar voos ────────────────────────────────────────── */
+
+.busca-titulo {
+  font-size: 0.9rem;
+  margin: 20px 0 2px;
+  color: var(--text);
+}
+
+.busca-nota {
+  margin: 0 0 10px;
+  font-size: 0.76rem;
+  color: var(--text-faint);
+  line-height: 1.45;
+}
+
+.hint-inline { color: var(--text-faint); font-weight: 400; }
+
+.busca-erro {
+  margin-top: 12px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(240, 192, 74, 0.12);
+  border: 1px solid rgba(240, 192, 74, 0.35);
+  color: var(--warn);
+  font-size: 0.8rem;
+}
+
+/* Faixa de datas: rola na horizontal pra caber no celular sem espremer
+   o dia a ponto de não dar pra tocar. */
+.tira-datas {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  /* O painel é flex em coluna, e um container com overflow tem altura
+     mínima automática zero — sem isto o flex esmaga a faixa até sumir. */
+  flex: 0 0 auto;
+}
+
+.tira-dia {
+  flex: 0 0 auto;
+  width: 52px;
+  padding: 7px 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.1;
+}
+
+.tira-dow, .tira-mes { font-size: 0.6rem; text-transform: uppercase; opacity: 0.75; }
+.tira-num { font-family: "Quicksand", sans-serif; font-weight: 700; font-size: 1rem; }
+
+/* Cinco degraus do verde ao vermelho. Com três, quase tudo caía no
+   meio e não dava pra ver variação nenhuma. */
+.tira-dia.is-muito-barato { background: rgba(127, 220, 154, 0.3);  color: #b6f0c8; }
+.tira-dia.is-barato       { background: rgba(127, 220, 154, 0.14); color: #9ce8b4; }
+.tira-dia.is-medio        { background: rgba(240, 192, 74, 0.14);  color: #e8ca7a; }
+.tira-dia.is-caro         { background: rgba(240, 140, 74, 0.18);  color: #f0a055; }
+.tira-dia.is-muito-caro   { background: rgba(255, 107, 94, 0.26);  color: #ff9b91; }
+.tira-dia:hover { filter: brightness(1.35); }
+.tira-dia.is-escolhido { border-color: var(--acc); }
+
+/* O dia mais calmo da faixa ganha um ponto embaixo — atalho pra "se eu
+   pudesse escolher, seria esse". */
+.tira-dia.is-melhor { position: relative; }
+.tira-dia.is-melhor::after {
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.busca-aviso {
+  margin: 8px 0 0;
+  padding: 8px 11px;
+  border-radius: var(--radius-sm);
+  background: rgba(240, 192, 74, 0.1);
+  border: 1px solid rgba(240, 192, 74, 0.28);
+  color: var(--warn);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.tira-legenda {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 8px 0 4px;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+
+.tira-legenda span { display: flex; align-items: center; gap: 5px; }
+.tira-cor { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.tira-cor.is-muito-barato { background: #b6f0c8; }
+.tira-cor.is-barato { background: #9ce8b4; }
+.tira-cor.is-medio { background: #e8ca7a; }
+.tira-cor.is-caro { background: #f0a055; }
+.tira-cor.is-muito-caro { background: #ff9b91; }
+
+.busca-links { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.busca-link {
+  padding: 9px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--acc-line);
+  color: var(--acc);
+  text-decoration: none;
+  font-family: "Quicksand", sans-serif;
+  font-weight: 600;
+  font-size: 0.84rem;
+}
+
+.busca-link:hover { background: var(--acc-dim); }
+
+/* Sem rota válida o link não leva a lugar nenhum — fica apagado em vez
+   de abrir uma busca pela metade. */
+.busca-link.is-off {
+  color: var(--text-faint);
+  border-color: rgba(125, 115, 146, 0.4);
+  cursor: not-allowed;
+}
+
+.busca-link.is-off:hover { background: none; }
+
+/* Viagem em ciano: nenhuma etapa de show usa essa faixa do espectro, e
+   o roxo não servia — era a mesma cor de "conversando", então tarja de
+   voo e tarja de show ficariam indistinguíveis. */
+.day-chip-viagem {
+  background: var(--viagem);
+  color: #14121a;
+}
+
 .day-chip-feriado {
   background: transparent;
   color: var(--warn);
@@ -694,6 +837,23 @@ input:focus, select:focus, textarea:focus {
 .suggestion-item:hover { background: var(--acc-dim); }
 .suggestion-item:not(:last-child) { border-bottom: 1px solid rgba(201, 242, 77, 0.08); }
 .suggestion-sub { display: block; font-size: 0.74rem; color: var(--text-faint); }
+
+/* Sugestão de aeroporto: é <button>, então precisa de largura e
+   alinhamento próprios — o item de contato acima é <div>. */
+.suggestion {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 12px;
+  font-size: 0.88rem;
+  text-align: left;
+}
+
+.suggestion:hover, .suggestion.is-marked { background: var(--acc-dim); }
+.suggestion:not(:last-child) { border-bottom: 1px solid rgba(201, 242, 77, 0.08); }
+.suggestion strong { color: var(--acc); font-family: "Quicksand", sans-serif; }
+.suggestion-pais { margin-left: auto; font-size: 0.72rem; color: var(--text-faint); white-space: nowrap; }
 
 .panel-actions { display: flex; gap: 10px; margin-top: 6px; }
 

@@ -1107,3 +1107,235 @@ body {
   z-index: 300;
   width: 100%; height: 100%;
 }
+
+/* ── Meditation Center ───────────────────────────────────────── */
+
+.med-fab {
+  position: fixed;
+  bottom: calc(24px + var(--safe-bottom));
+  right: 16px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #9B8FD4);
+  color: white;
+  font-size: 24px;
+  border: none;
+  box-shadow: 0 4px 18px rgba(139,124,200,0.38);
+  cursor: pointer;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+}
+.med-fab:active { transform: scale(0.92); }
+
+.med-full { z-index: 200; }
+
+.med-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+.med-screen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.med-body {
+  flex: 1;
+  padding: 20px 16px;
+  overflow-y: auto;
+}
+
+/* Technique list */
+
+.tech-list { display: flex; flex-direction: column; gap: 10px; }
+
+.tech-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.tech-card:active { background: var(--surface); }
+.tech-card-info { flex: 1; }
+.tech-card-name { font-weight: 700; font-size: 18px; color: var(--accent); }
+.tech-card-desc { font-size: 13px; color: var(--text2); margin-top: 3px; line-height: 1.4; }
+.tech-card-arrow { color: var(--text3); font-size: 22px; padding-left: 8px; }
+
+/* Player */
+
+.med-player { display: flex; flex-direction: column; gap: 16px; }
+
+.med-back {
+  display: flex; align-items: center; gap: 4px;
+  color: var(--accent); font-size: 14px; font-weight: 600;
+  cursor: pointer; background: none; border: none; padding: 0;
+  font-family: inherit;
+}
+
+.med-player-title { font-size: 24px; font-weight: 700; color: var(--text); }
+.med-player-subtitle { font-size: 14px; color: var(--text2); line-height: 1.4; }
+
+/* Exercise dots */
+
+.med-dots {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.med-dot {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.med-dot.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+.med-dot.done {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+/* Exercise card */
+
+.med-ex-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px 20px;
+  text-align: center;
+}
+.med-ex-num {
+  font-size: 11px; font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.med-ex-label { font-size: 21px; font-weight: 700; margin-top: 4px; }
+.med-ex-visual { margin: 18px 0 4px; font-size: 52px; line-height: 1; }
+
+/* Progress bar */
+
+.med-progress-wrap { padding: 0 2px; }
+.med-progress-bar-track {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 7px;
+}
+.med-progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.5s linear;
+}
+.med-progress-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Controls */
+
+.med-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.med-btn-prev, .med-btn-next {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 18px;
+  color: var(--text2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+.med-btn-prev:active, .med-btn-next:active { background: var(--border); }
+.med-btn-prev:disabled, .med-btn-next:disabled { opacity: 0.3; cursor: default; }
+
+.med-btn-play {
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  font-size: 28px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 18px rgba(139,124,200,0.38);
+  transition: transform 0.15s;
+  font-family: inherit;
+}
+.med-btn-play:active { transform: scale(0.92); }
+
+/* Done card */
+
+.med-done-card {
+  background: linear-gradient(135deg, #6BC8A4, #5AB896);
+  border-radius: 18px;
+  padding: 28px 20px 20px;
+  text-align: center;
+  color: white;
+}
+.med-done-icon { font-size: 52px; line-height: 1; margin-bottom: 12px; }
+.med-done-title { font-size: 22px; font-weight: 800; }
+.med-done-desc { font-size: 14px; opacity: 0.88; margin-top: 6px; line-height: 1.4; }
+
+.med-restart-btn {
+  margin-top: 18px;
+  background: white;
+  color: var(--success);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
