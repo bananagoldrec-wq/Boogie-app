@@ -73,7 +73,7 @@
     "2026-09-03": { artista: "Thales", tipo: "DJ", estilo: "", status: "confirmado" },
     "2026-09-04": { artista: "Lets Gabz", tipo: "DJ", estilo: "", status: "confirmado" },
     "2026-09-10": { artista: "Thales", tipo: "DJ", estilo: "", status: "confirmado" },
-    "2026-09-11": { artista: "David Talipba", tipo: "DJ", estilo: "", status: "confirmado" },
+    "2026-09-11": { artista: "David Tabalipa", tipo: "DJ", estilo: "", status: "confirmado" },
     "2026-09-17": { artista: "Yas", tipo: "DJ", estilo: "", status: "confirmado" },
     "2026-09-18": { artista: "Leo Janeiro", tipo: "DJ", estilo: "", status: "confirmado" },
     "2026-09-24": { artista: "Lets Gabs", tipo: "DJ", estilo: "", status: "confirmado" },
