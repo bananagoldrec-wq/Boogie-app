@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Rotina" />
   <title>Minha Rotina</title>
-  <link rel="stylesheet" href="css/tracker.css?v=3" />
+  <link rel="stylesheet" href="css/tracker.css?v=4" />
 </head>
 <body>
 
@@ -166,9 +166,23 @@
     <button class="rt-close" onclick="document.getElementById('reminder-toast').hidden=true">×</button>
   </div>
 
+  <!-- Meditation Center -->
+  <div id="med-overlay" class="overlay med-full" hidden>
+    <div class="med-screen" role="dialog" aria-modal="true">
+      <div class="med-screen-header">
+        <span>Centro de Meditação</span>
+        <button id="btn-close-med" class="close-btn">×</button>
+      </div>
+      <div id="med-body" class="med-body"></div>
+    </div>
+  </div>
+
+  <!-- Floating meditation button -->
+  <button class="med-fab" id="btn-open-med" aria-label="Centro de Meditação">🧘</button>
+
   <!-- Confetti canvas -->
   <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
-  <script src="js/tracker.js?v=3"></script>
+  <script src="js/tracker.js?v=4"></script>
 </body>
 </html>
