@@ -152,7 +152,7 @@ const ROUTINE = [
   [5, 15,  0, 'Piano',        'goal',     '15:00', '16:00'],
   [5, 16,  0, 'Leitura',      'study',    '16:00', '17:00'],
   [5, 20,  0, 'Bar',          'work',     '20:00', null],
-  // Sunday: descanso (só Meditação acima)
+  // Sunday: descanso (só Calistenia acima)
 ];
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -171,6 +171,8 @@ function loadState() {
     if (!raw) return defaultState();
     const state = JSON.parse(raw);
     if ((state.routineVersion || 0) < ROUTINE_VERSION) {
+      // Clear all activities and re-seed fresh with the full current routine
+      // (preserves XP, streak, achievements, and smoking data)
       state.activities = {};
       state.seededWeeks = [];
       state.routineVersion = ROUTINE_VERSION;
@@ -287,6 +289,7 @@ function aKey(di, h, m = 0) { return `${wk()}-${DAY_KEYS[di]}-${h}-${m}`; }
 function getAct(di, h, m = 0) {
   const newKey = aKey(di, h, m);
   if (S.activities[newKey] !== undefined) return S.activities[newKey] || null;
+  // backward compat: old keys had no minute part
   if (m === 0) return S.activities[`${wk()}-${DAY_KEYS[di]}-${h}`] || null;
   return null;
 }
@@ -421,6 +424,7 @@ function toggleDone(di, h, m, originEl) {
     checkAchievement('first', true);
     checkAchievement('acts50', S.totalDone >= 50);
 
+    // check if all today's activities are done
     const allDone = checkAllTodayDone();
     if (allDone) {
       addXP(75, originEl);
@@ -488,8 +492,10 @@ function buildGrid() {
   const isThisWeek  = weekStart.getTime() === todayMonday.getTime();
   const todayDI     = now.getDay() === 0 ? 6 : now.getDay() - 1;
 
+  // Corner
   grid.appendChild(mk('div', 'g-corner'));
 
+  // Day headers
   DAYS.forEach((name, i) => {
     const date    = new Date(weekStart);
     date.setDate(date.getDate() + i);
@@ -503,6 +509,7 @@ function buildGrid() {
     grid.appendChild(hdr);
   });
 
+  // Hour rows (30-min slots)
   for (let h = START_H; h <= END_H; h++) {
     for (const m of [0, 30]) {
       const lbl = mk('div', m === 0 ? 'g-time' : 'g-time g-time-half');
@@ -618,11 +625,13 @@ function saveAct() {
   const startTime = q('#act-start-time').value;
   const endTime   = q('#act-end-time').value;
 
+  // Determine target slot from start time input
   let { di, h, m } = editCell;
   if (startTime) {
     const [sh, sm] = startTime.split(':').map(Number);
     const newH = sh, newM = sm < 30 ? 0 : 30;
     if (newH !== h || newM !== m) {
+      // Remove from old slot, place in new slot
       setAct(di, h, m, null);
       h = newH; m = newM;
     }
@@ -707,6 +716,7 @@ function refreshSmokingStrip() {
     q('#ss-money').textContent = `R$ ${moneySaved.toFixed(0)} poupados`;
   }
 
+  // Achievements
   checkAchievement('smoke6h',  mins >= 360);
   checkAchievement('smoke12h', mins >= 720);
   checkAchievement('smoke1d',  mins >= 1440);
@@ -762,6 +772,7 @@ function renderSmokingDetail() {
     <div class="stat-card"><span class="stat-value">R$ ${money}</span><span class="stat-label">do maço</span></div>
   `;
 
+  // Next milestone card
   const nextM   = SMOKE_MILESTONES.find(m => mins < m.mins);
   const nextDiv = q('#smoke-next');
   nextDiv.innerHTML = '';
@@ -776,6 +787,7 @@ function renderSmokingDetail() {
     `;
   }
 
+  // Timeline
   const container = q('#smoke-timeline');
   container.innerHTML = '<h3 style="font-size:10px;color:var(--text3);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.8px">Recuperação do corpo</h3>';
 
@@ -817,6 +829,7 @@ function renderTaperDetail() {
   const count = getTodayCount();
   const done  = info.phaseIdx >= TAPER_PHASES.length - 1;
 
+  // Big counter
   if (done) {
     q('#smoke-big-counter').innerHTML = `
       <span class="bc-value" style="color:var(--success)">Livre!</span>
@@ -835,6 +848,7 @@ function renderTaperDetail() {
       <span class="bc-label">${sub}</span>`;
   }
 
+  // Stats
   const daysLeft  = done ? 0 : info.days - info.dayInPhase;
   const smokeFree = countSmokeFree();
   const savings   = smokeFree * 150;
@@ -847,6 +861,7 @@ function renderTaperDetail() {
     ${!done ? `<div class="stat-card"><span class="stat-value">Fase ${info.phaseIdx + 1}</span><span class="stat-label">${info.label}</span></div>
     <div class="stat-card"><span class="stat-value">${daysLeft}</span><span class="stat-label">dias na fase</span></div>` : ''}`;
 
+  // Log button / rest-day card
   const nextDiv = q('#smoke-next');
   nextDiv.innerHTML = '';
   if (!done) {
@@ -868,6 +883,7 @@ function renderTaperDetail() {
     }
   }
 
+  // Phase plan
   const container = q('#smoke-timeline');
   container.innerHTML = '<h3 class="tl-section-title">Plano de desmame</h3>';
   TAPER_PHASES.forEach((ph, i) => {
@@ -884,6 +900,7 @@ function renderTaperDetail() {
     container.appendChild(row);
   });
 
+  // 7-day history bars
   const taperLog  = S.smoking.taperLog || {};
   const maxBefore = S.smoking.cigarettesPerDay || 5;
   const DAY_ABB   = ['D','S','T','Q','Q','S','S'];
@@ -1153,6 +1170,243 @@ function updateNotifBtn() {
   }
 }
 
+// ── Meditation Center ─────────────────────────────────────────────────────────
+
+const TECHNIQUES = [
+  {
+    id:    'kria',
+    name:  'KRIA',
+    emoji: '🌬️',
+    desc:  'Técnica de respiração yóguica — 4 exercícios em sequência',
+    exercises: [
+      { label: 'Exercício 1', src: 'audio/kria-ex1.m4a', emoji: '🌱' },
+      { label: 'Exercício 2', src: 'audio/kria-ex2.m4a', emoji: '🌿' },
+      { label: 'Exercício 3', src: 'audio/kria-ex3.m4a', emoji: '🍃' },
+      { label: 'Exercício 4', src: 'audio/kria-ex4.m4a', emoji: '✨' },
+    ]
+  }
+];
+
+let _medAudio         = null;
+let _medTechIdx       = null;
+let _medExIdx         = 0;
+let _medPlaying       = false;
+let _medDone          = false;
+let _medProgressTimer = null;
+
+function openMeditation() {
+  renderMedBody();
+  q('#med-overlay').hidden = false;
+}
+
+function closeMeditation() {
+  q('#med-overlay').hidden = true;
+  medStop();
+}
+
+function medStop() {
+  clearInterval(_medProgressTimer);
+  if (_medAudio) {
+    _medAudio.pause();
+    _medAudio.src = '';
+    _medAudio = null;
+  }
+  _medPlaying = false;
+}
+
+function renderMedBody() {
+  const body = q('#med-body');
+  body.innerHTML = '';
+
+  if (_medTechIdx === null) {
+    const intro = mk('p');
+    intro.textContent = 'Escolha uma técnica:';
+    intro.style.cssText = 'color:var(--text2);font-size:14px;margin-bottom:12px';
+    body.appendChild(intro);
+
+    const list = mk('div', 'tech-list');
+    TECHNIQUES.forEach((tech, i) => {
+      const card = mk('div', 'tech-card');
+      card.innerHTML = `
+        <div class="tech-card-info">
+          <div class="tech-card-name">${tech.emoji} ${tech.name}</div>
+          <div class="tech-card-desc">${tech.desc}</div>
+        </div>
+        <span class="tech-card-arrow">›</span>
+      `;
+      card.addEventListener('click', () => {
+        _medTechIdx = i;
+        _medExIdx   = 0;
+        _medDone    = false;
+        renderMedBody();
+      });
+      list.appendChild(card);
+    });
+    body.appendChild(list);
+    return;
+  }
+
+  const tech   = TECHNIQUES[_medTechIdx];
+  const player = mk('div', 'med-player');
+
+  // Back button
+  const back = mk('button', 'med-back');
+  back.innerHTML = '‹ Técnicas';
+  back.addEventListener('click', () => { medStop(); _medTechIdx = null; _medExIdx = 0; _medDone = false; renderMedBody(); });
+  player.appendChild(back);
+
+  // Title
+  const titleEl = mk('div', 'med-player-title');
+  titleEl.textContent = `${tech.emoji} ${tech.name}`;
+  const subEl = mk('div', 'med-player-subtitle');
+  subEl.textContent = tech.desc;
+  player.appendChild(titleEl);
+  player.appendChild(subEl);
+
+  if (_medDone) {
+    const done = mk('div', 'med-done-card');
+    const restart = mk('button', 'med-restart-btn');
+    restart.textContent = '↺ Repetir';
+    restart.addEventListener('click', () => { _medExIdx = 0; _medDone = false; renderMedBody(); });
+    done.innerHTML = `
+      <div class="med-done-icon">🌟</div>
+      <div class="med-done-title">Sequência completa!</div>
+      <div class="med-done-desc">Você completou todos os ${tech.exercises.length} exercícios de ${tech.name}. Muito bem!</div>
+    `;
+    done.appendChild(restart);
+    player.appendChild(done);
+    body.appendChild(player);
+    return;
+  }
+
+  // Exercise dots
+  const dots = mk('div', 'med-dots');
+  tech.exercises.forEach((_, i) => {
+    const dot = mk('div', 'med-dot');
+    dot.textContent = String(i + 1);
+    if (i < _medExIdx)  dot.classList.add('done');
+    if (i === _medExIdx) dot.classList.add('active');
+    dot.addEventListener('click', () => { medStop(); _medExIdx = i; _medPlaying = false; renderMedBody(); });
+    dots.appendChild(dot);
+  });
+  player.appendChild(dots);
+
+  // Current exercise card
+  const ex     = tech.exercises[_medExIdx];
+  const exCard = mk('div', 'med-ex-card');
+  exCard.innerHTML = `
+    <div class="med-ex-num">Exercício ${_medExIdx + 1} de ${tech.exercises.length}</div>
+    <div class="med-ex-label">${ex.label}</div>
+    <div class="med-ex-visual">${ex.emoji}</div>
+  `;
+  player.appendChild(exCard);
+
+  // Progress bar
+  const prog = mk('div', 'med-progress-wrap');
+  prog.innerHTML = `
+    <div class="med-progress-bar-track">
+      <div class="med-progress-bar-fill" id="med-prog-fill"></div>
+    </div>
+    <div class="med-progress-times">
+      <span id="med-time-cur">0:00</span>
+      <span id="med-time-tot">–:––</span>
+    </div>
+  `;
+  player.appendChild(prog);
+
+  // Controls
+  const ctrl    = mk('div', 'med-controls');
+  const prevBtn = mk('button', 'med-btn-prev');
+  prevBtn.textContent = '⟨⟨';
+  prevBtn.disabled    = _medExIdx === 0;
+  prevBtn.addEventListener('click', () => { medStop(); if (_medExIdx > 0) _medExIdx--; renderMedBody(); });
+
+  const playBtn = mk('button', 'med-btn-play');
+  playBtn.id          = 'med-btn-play';
+  playBtn.textContent = _medPlaying ? '⏸' : '▶';
+  playBtn.addEventListener('click', medTogglePlay);
+
+  const nextBtn = mk('button', 'med-btn-next');
+  nextBtn.textContent = '⟩⟩';
+  nextBtn.addEventListener('click', () => {
+    medStop();
+    if (_medExIdx < tech.exercises.length - 1) { _medExIdx++; } else { _medDone = true; }
+    renderMedBody();
+  });
+
+  ctrl.appendChild(prevBtn);
+  ctrl.appendChild(playBtn);
+  ctrl.appendChild(nextBtn);
+  player.appendChild(ctrl);
+
+  body.appendChild(player);
+
+  if (_medPlaying) medLoadAndPlay();
+}
+
+function medTogglePlay() {
+  if (_medPlaying) {
+    _medAudio?.pause();
+    _medPlaying = false;
+    clearInterval(_medProgressTimer);
+    const btn = q('#med-btn-play');
+    if (btn) btn.textContent = '▶';
+  } else {
+    medLoadAndPlay();
+  }
+}
+
+function medLoadAndPlay() {
+  const tech = TECHNIQUES[_medTechIdx];
+  if (!_medAudio || _medAudio._exIdx !== _medExIdx) {
+    if (_medAudio) { _medAudio.pause(); _medAudio.src = ''; }
+    _medAudio        = new Audio(tech.exercises[_medExIdx].src);
+    _medAudio._exIdx = _medExIdx;
+    _medAudio.addEventListener('ended', medOnEnded);
+    _medAudio.addEventListener('loadedmetadata', medUpdateProgress);
+  }
+  _medAudio.play().catch(() => {});
+  _medPlaying = true;
+  const btn = q('#med-btn-play');
+  if (btn) btn.textContent = '⏸';
+  clearInterval(_medProgressTimer);
+  _medProgressTimer = setInterval(medUpdateProgress, 500);
+}
+
+function medOnEnded() {
+  _medPlaying = false;
+  clearInterval(_medProgressTimer);
+  const tech = TECHNIQUES[_medTechIdx];
+  if (_medExIdx < tech.exercises.length - 1) {
+    _medExIdx++;
+    renderMedBody();
+    medLoadAndPlay();
+  } else {
+    _medDone = true;
+    renderMedBody();
+  }
+}
+
+function medUpdateProgress() {
+  const a = _medAudio;
+  if (!a) return;
+  const fill = q('#med-prog-fill');
+  const cur  = q('#med-time-cur');
+  const tot  = q('#med-time-tot');
+  if (!fill) return;
+  const pct = a.duration ? (a.currentTime / a.duration) * 100 : 0;
+  fill.style.width   = `${pct}%`;
+  if (cur) cur.textContent = fmtMedTime(a.currentTime);
+  if (tot) tot.textContent = a.duration ? fmtMedTime(a.duration) : '–:––';
+}
+
+function fmtMedTime(secs) {
+  if (!secs || isNaN(secs)) return '0:00';
+  const m = Math.floor(secs / 60);
+  const s = Math.floor(secs % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 function init() {
@@ -1170,9 +1424,11 @@ function init() {
     setTimeout(() => requestNotifPermission(updateNotifBtn), 3000);
   }
 
+  // Week nav
   q('#btn-prev').addEventListener('click', () => shiftWeek(-1));
   q('#btn-next').addEventListener('click', () => shiftWeek(1));
 
+  // Activity modal
   q('#act-overlay').addEventListener('click', e => { if (e.target.id === 'act-overlay') closeActModal(); });
   q('#btn-close-act').addEventListener('click', closeActModal);
   q('#btn-save-act').addEventListener('click', saveAct);
@@ -1184,6 +1440,7 @@ function init() {
   });
   q('#act-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveAct(); });
 
+  // Smoking strip → detail
   q('#smoke-strip').addEventListener('click', () => {
     renderSmokingDetail();
     q('#smoke-overlay').hidden = false;
@@ -1203,6 +1460,7 @@ function init() {
     });
   });
 
+  // Setup modal
   q('#btn-close-setup').addEventListener('click', () => { q('#setup-overlay').hidden = true; });
   q('#setup-overlay').addEventListener('click', e => { if (e.target.id === 'setup-overlay') q('#setup-overlay').hidden = true; });
   q('#btn-save-setup').addEventListener('click', () => {
@@ -1225,12 +1483,19 @@ function init() {
     q('#setup-overlay').hidden = true;
   });
 
+  // Meditation Center
+  q('#btn-open-med').addEventListener('click', openMeditation);
+  q('#btn-close-med').addEventListener('click', closeMeditation);
+  q('#med-overlay').addEventListener('click', e => { if (e.target.id === 'med-overlay') closeMeditation(); });
+
+  // Achievements
   q('#btn-open-ach').addEventListener('click', () => {
     renderAchievements();
     q('#ach-overlay').hidden = false;
   });
   q('#btn-close-ach').addEventListener('click', () => { q('#ach-overlay').hidden = true; });
 
+  // Level up
   q('#btn-close-levelup').addEventListener('click', () => { q('#levelup-modal').hidden = true; });
 
   if (!S.smoking) {
@@ -1267,8 +1532,10 @@ function openSetup() {
   q('#setup-overlay').hidden = false;
 }
 
+// Setup shortcut when not configured
 document.addEventListener('DOMContentLoaded', () => {
   init();
+  // Intercept smoke-strip click to open setup if not configured
   const orig = q('#smoke-strip').onclick;
   if (!S.smoking) {
     q('#smoke-strip').addEventListener('click', () => {
