@@ -972,6 +972,7 @@
         activeTemplateKey = key;
         renderWaTemplateChips();
         updateWaPreview();
+        openWhatsApp(waPreview.value);
       });
       waTemplatesEl.appendChild(chip);
     });
@@ -1063,15 +1064,18 @@
   }
 
   document.getElementById("send-whatsapp").addEventListener("click", () => {
+    openWhatsApp(waPreview.value);
+  });
+
+  function openWhatsApp(text) {
     const phone = normalizePhone(fTelefone.value);
     if (!phone) {
       showToast("Cadastre o WhatsApp do artista primeiro.");
       waWarning.hidden = false;
       return;
     }
-    const text = encodeURIComponent(waPreview.value);
-    window.open(`https://wa.me/${phone}?text=${text}`, "_blank", "noopener");
-  });
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+  }
 
   /* ── templates settings panel ──────────────────────────── */
   const tplFields = {
