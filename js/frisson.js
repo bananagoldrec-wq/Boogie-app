@@ -972,6 +972,7 @@
         activeTemplateKey = key;
         renderWaTemplateChips();
         updateWaPreview();
+        openWhatsApp(waPreview.value);
       });
       waTemplatesEl.appendChild(chip);
     });
