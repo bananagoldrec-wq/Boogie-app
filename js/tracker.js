@@ -1182,7 +1182,7 @@ const TECHNIQUES = [
       { label: 'Exercício 1', src: 'audio/kria-ex1.m4a', emoji: '🌱' },
       { label: 'Exercício 2', src: 'audio/kria-ex2.m4a', emoji: '🌿' },
       { label: 'Exercício 3', src: 'audio/kria-ex3.m4a', emoji: '🍃' },
-      { label: 'Exercício 4', src: 'audio/kria-ex4.m4a', emoji: '✨' },
+      { label: 'Exercício 4', src: 'audio/kria-ex4.m4a', emoji: '✨', loops: 3 },
     ]
   }
 ];
@@ -1190,6 +1190,7 @@ const TECHNIQUES = [
 let _medAudio         = null;
 let _medTechIdx       = null;
 let _medExIdx         = 0;
+let _medExLoop        = 0;
 let _medPlaying       = false;
 let _medDone          = false;
 let _medProgressTimer = null;
@@ -1237,6 +1238,7 @@ function renderMedBody() {
       card.addEventListener('click', () => {
         _medTechIdx = i;
         _medExIdx   = 0;
+        _medExLoop  = 0;
         _medDone    = false;
         renderMedBody();
       });
@@ -1252,7 +1254,7 @@ function renderMedBody() {
   // Back button
   const back = mk('button', 'med-back');
   back.innerHTML = '‹ Técnicas';
-  back.addEventListener('click', () => { medStop(); _medTechIdx = null; _medExIdx = 0; _medDone = false; renderMedBody(); });
+  back.addEventListener('click', () => { medStop(); _medTechIdx = null; _medExIdx = 0; _medExLoop = 0; _medDone = false; renderMedBody(); });
   player.appendChild(back);
 
   // Title
@@ -1267,7 +1269,7 @@ function renderMedBody() {
     const done = mk('div', 'med-done-card');
     const restart = mk('button', 'med-restart-btn');
     restart.textContent = '↺ Repetir';
-    restart.addEventListener('click', () => { _medExIdx = 0; _medDone = false; renderMedBody(); });
+    restart.addEventListener('click', () => { _medExIdx = 0; _medExLoop = 0; _medDone = false; renderMedBody(); });
     done.innerHTML = `
       <div class="med-done-icon">🌟</div>
       <div class="med-done-title">Sequência completa!</div>
@@ -1286,16 +1288,18 @@ function renderMedBody() {
     dot.textContent = String(i + 1);
     if (i < _medExIdx)  dot.classList.add('done');
     if (i === _medExIdx) dot.classList.add('active');
-    dot.addEventListener('click', () => { medStop(); _medExIdx = i; _medPlaying = false; renderMedBody(); });
+    dot.addEventListener('click', () => { medStop(); _medExIdx = i; _medExLoop = 0; _medPlaying = false; renderMedBody(); });
     dots.appendChild(dot);
   });
   player.appendChild(dots);
 
   // Current exercise card
   const ex     = tech.exercises[_medExIdx];
+  const loops  = ex.loops || 1;
+  const loopTxt = loops > 1 ? ` · repetição ${_medExLoop + 1}/${loops}` : '';
   const exCard = mk('div', 'med-ex-card');
   exCard.innerHTML = `
-    <div class="med-ex-num">Exercício ${_medExIdx + 1} de ${tech.exercises.length}</div>
+    <div class="med-ex-num">Exercício ${_medExIdx + 1} de ${tech.exercises.length}${loopTxt}</div>
     <div class="med-ex-label">${ex.label}</div>
     <div class="med-ex-visual">${ex.emoji}</div>
   `;
@@ -1319,7 +1323,7 @@ function renderMedBody() {
   const prevBtn = mk('button', 'med-btn-prev');
   prevBtn.textContent = '⟨⟨';
   prevBtn.disabled    = _medExIdx === 0;
-  prevBtn.addEventListener('click', () => { medStop(); if (_medExIdx > 0) _medExIdx--; renderMedBody(); });
+  prevBtn.addEventListener('click', () => { medStop(); if (_medExIdx > 0) _medExIdx--; _medExLoop = 0; renderMedBody(); });
 
   const playBtn = mk('button', 'med-btn-play');
   playBtn.id          = 'med-btn-play';
@@ -1331,6 +1335,7 @@ function renderMedBody() {
   nextBtn.addEventListener('click', () => {
     medStop();
     if (_medExIdx < tech.exercises.length - 1) { _medExIdx++; } else { _medDone = true; }
+    _medExLoop = 0;
     renderMedBody();
   });
 
@@ -1364,6 +1369,8 @@ function medLoadAndPlay() {
     _medAudio._exIdx = _medExIdx;
     _medAudio.addEventListener('ended', medOnEnded);
     _medAudio.addEventListener('loadedmetadata', medUpdateProgress);
+  } else {
+    _medAudio.currentTime = 0; // restart same track for loop
   }
   _medAudio.play().catch(() => {});
   _medPlaying = true;
@@ -1376,8 +1383,17 @@ function medLoadAndPlay() {
 function medOnEnded() {
   _medPlaying = false;
   clearInterval(_medProgressTimer);
-  const tech = TECHNIQUES[_medTechIdx];
-  if (_medExIdx < tech.exercises.length - 1) {
+  const tech  = TECHNIQUES[_medTechIdx];
+  const ex    = tech.exercises[_medExIdx];
+  const loops = ex.loops || 1;
+
+  if (_medExLoop < loops - 1) {
+    // More loops of this same exercise
+    _medExLoop++;
+    renderMedBody();
+    medLoadAndPlay();
+  } else if (_medExIdx < tech.exercises.length - 1) {
+    _medExLoop = 0;
     _medExIdx++;
     renderMedBody();
     medLoadAndPlay();
