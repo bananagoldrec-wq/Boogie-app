@@ -1141,6 +1141,15 @@ const TECHNIQUES = [
     exercises: [
       { label: 'Respiração', src: 'audio/kria-ex1.m4a', emoji: '🌬️', loops: 10 },
     ]
+  },
+  {
+    id:    'pos-cafe',
+    name:  'Pós Café',
+    emoji: '☕',
+    desc:  'Exercício de respiração para fazer depois do café',
+    exercises: [
+      { label: 'Pós Café', src: 'audio/pos-cafe.mp3', emoji: '☕' },
+    ]
   }
 ];
 
