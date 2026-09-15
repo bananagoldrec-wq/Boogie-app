@@ -250,6 +250,20 @@
   }
 </style>
 
+<style>
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--hair-strong); border: 1px solid var(--hair-strong); }
+  .side { background: var(--ground-2); padding: var(--s4); display: flex; flex-direction: column; gap: var(--s3); }
+  .side-head { display: flex; flex-direction: column; gap: var(--s1); }
+  .side-head h3 { font-size: 22px; }
+  .side-kind { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brick); }
+  .side p { font-size: 15px; color: var(--ink-2); }
+  .side dl { margin: 0; display: flex; flex-direction: column; gap: var(--s2); padding-top: var(--s2); border-top: 1px solid var(--hair); }
+  .side .pair { display: flex; justify-content: space-between; gap: var(--s3); font-size: 14px; }
+  .side dt { color: var(--muted); }
+  .side dd { margin: 0; text-align: right; font-weight: 600; }
+  @media (max-width: 760px) { .split { grid-template-columns: 1fr; } }
+</style>
+
 <header class="cover">
   <div class="wrap cover-inner">
     <span class="stamp">Revised proposal &middot; September 2026</span>
@@ -257,7 +271,7 @@
       <p class="eyebrow">Santa Teresa, Rio de Janeiro</p>
       <h1>CASA <span class="it">de</span> TERESA</h1>
     </div>
-    <p class="lede">Two floors, two companies, one house. A partnership structure with almost no fixed cost, where your capital comes back before anyone splits a profit.</p>
+    <p class="lede">A partnership downstairs and a booking operation upstairs. Two businesses that share a building and almost nothing else, with your capital returning before anyone splits a profit.</p>
     <div class="byline">
       <div>
         <p class="eyebrow">For</p>
@@ -265,7 +279,7 @@
       </div>
       <div>
         <p class="eyebrow">From</p>
-        <p>Bernardo Ibeas &middot; Bernardo Perp&eacute;tuo &middot; Lysia Vani<br>Gaspar Muniz &middot; Raphael Beranger &middot; Bernardo Campos<br>Rodrigo Tavares &middot; Eduardo Senna</p>
+        <p>Bernardo Ibeas Moreira de Souza &middot; Gaspar Muniz<br>Bernardo Perp&eacute;tuo &middot; Lysia Vani<br>Bernardo Campos &middot; Raphael Beranger</p>
       </div>
       <div>
         <p class="eyebrow">Replaces</p>
@@ -280,7 +294,7 @@
     <div class="head">
       <p class="eyebrow">Starting over</p>
       <h2>What we got wrong <span class="it">the first time.</span></h2>
-      <p class="lede">The last proposal asked you to hire a team. You told us you wanted partners. This one is built the way you asked for it.</p>
+      <p class="lede">The last proposal asked you to hire a team and guarantee it a fee every month. You told us you wanted partners. This one is built the way you asked for it.</p>
     </div>
 
     <div class="compare-scroll">
@@ -290,19 +304,19 @@
         </thead>
         <tbody>
           <tr>
-            <th scope="row">Monthly cost of the founding team</th>
-            <td class="was num">R$ 120,000 fee</td>
-            <td class="now"><b class="num">R$ 12,000</b> pr&oacute;-labore, two people</td>
+            <th scope="row">Fee to the founding team</th>
+            <td class="was num">R$ 120,000 every month</td>
+            <td class="now"><b>None.</b> There is no fee and no service contract</td>
           </tr>
           <tr>
-            <th scope="row">Relationship</th>
-            <td class="was">Service contract plus a minority stake</td>
-            <td class="now">Partnership. Equal shares, no service contract</td>
+            <th scope="row">How we are paid</th>
+            <td class="was">Guaranteed fee, plus a minority stake</td>
+            <td class="now">A working partner's draw inside the payroll, plus profit share</td>
           </tr>
           <tr>
-            <th scope="row">Your position in the bar</th>
+            <th scope="row">Your position downstairs</th>
             <td class="was">70% owner paying a team every month</td>
-            <td class="now">Equal partner paying no team fee</td>
+            <td class="now">Equal partner, paying no team fee at all</td>
           </tr>
           <tr>
             <th scope="row">Your capital</th>
@@ -310,21 +324,17 @@
             <td class="now">Returned <b>in full</b> before any partner splits profit</td>
           </tr>
           <tr>
-            <th scope="row">A month that loses money</th>
-            <td class="was">Fee still due</td>
-            <td class="now">Nobody on the founding side is paid</td>
+            <th scope="row">Upstairs</th>
+            <td class="was">Folded into the same deal</td>
+            <td class="now">A different business entirely, on commission, no equity</td>
           </tr>
           <tr>
             <th scope="row">Who is at the table</th>
             <td class="was">Four founders</td>
-            <td class="now">A new composition, built around both floors</td>
+            <td class="now">A new composition, one team per floor</td>
           </tr>
         </tbody>
       </table>
-    </div>
-
-    <div class="callout" style="margin-top: var(--s5);">
-      <p class="big">The founding side creates exactly one fixed obligation in the bar: R$ 12,000 a month. Everything else we earn, we earn out of profit that does not exist until the house is already paid for.</p>
     </div>
   </div>
 </section>
@@ -333,55 +343,45 @@
   <div class="wrap">
     <div class="head">
       <p class="eyebrow">The house</p>
-      <h2>One building. <span class="it">Two businesses.</span></h2>
-      <p class="lede">The two floors want different things, different money and different risk. Keeping them in separate companies means a bad night upstairs can never reach the bar downstairs, and you hold a seat in both.</p>
+      <h2>One building. <span class="it">Two different deals.</span></h2>
+      <p class="lede">The floors want different money and carry different risk, so they are not the same kind of agreement. Downstairs is a company you own a share of. Upstairs is a room you programme through people paid on what they sell.</p>
     </div>
 
-    <div class="house">
-      <div class="floor">
-        <div class="floor-id">
-          <p class="eyebrow">Second floor</p>
-          <h3>The Room</h3>
-          <p class="fine">5 partners &middot; 20% each</p>
-        </div>
-        <div class="floor-body">
-          <p>A ticketed listening room for renowned jazz and Brazilian instrumental acts. Seated, fewer nights, high ticket price. The show is the product, the way Manouche works inside Casa Camolese in Jardim Bot&acirc;nico. Every show carries its own budget and is only confirmed if that budget closes.</p>
-          <div class="chips">
-            <span class="chip uwe">Uwe Fabich</span>
-            <span class="chip">Eduardo Senna</span>
-            <span class="chip">Rodrigo Tavares</span>
-            <span class="chip">Bernardo Ibeas</span>
-            <span class="chip">Bernardo Perp&eacute;tuo</span>
-          </div>
-          <p class="fine">Keeps ticketing and show sponsorship. Fixed monthly cost: R$ 16,000.</p>
-        </div>
-      </div>
-
-      <div class="floor">
-        <div class="floor-id">
+    <div class="split">
+      <div class="side">
+        <div class="side-head">
           <p class="eyebrow">First floor</p>
+          <span class="side-kind">Partnership</span>
           <h3>The Bar</h3>
-          <p class="fine">7 partners &middot; 14.29% each</p>
         </div>
-        <div class="floor-body">
-          <p>A bar with live music &mdash; jazz, choro and forr&oacute; &mdash; and DJs. Open on a regular weekly rhythm, built on drinks and repeat crowd rather than on ticket sales. This is the engine of the house and the room upstairs feeds it.</p>
-          <div class="chips">
-            <span class="chip uwe">Uwe Fabich</span>
-            <span class="chip">Raphael Beranger</span>
-            <span class="chip">Bernardo Ibeas</span>
-            <span class="chip">Gaspar Muniz</span>
-            <span class="chip">Lysia Vani</span>
-            <span class="chip">Bernardo Campos</span>
-            <span class="chip">Bernardo Perp&eacute;tuo</span>
-          </div>
-          <p class="fine">Runs all beverage service in the house, both floors, and keeps that revenue. Fixed monthly cost: R$ 12,000.</p>
-        </div>
+        <p>A bar with live music &mdash; jazz, choro and forr&oacute; &mdash; and DJs, on a regular weekly rhythm. Built on drinks and a returning crowd, not on ticket sales. This is the business. It is where the risk sits, where the capital goes and where the shares are.</p>
+        <dl>
+          <div class="pair"><dt>Structure</dt><dd>Operating company</dd></div>
+          <div class="pair"><dt>Partners</dt><dd>You + 6 Banana Gold</dd></div>
+          <div class="pair"><dt>Each share</dt><dd class="num">14.29%</dd></div>
+          <div class="pair"><dt>Revenue</dt><dd>All beverage, house-wide</dd></div>
+        </dl>
       </div>
 
-      <div class="ground-line">
-        <span>The building &mdash; 100% Uwe Fabich, in both scenarios, always</span>
-        <span>No rent charged to either company</span>
+      <div class="side">
+        <div class="side-head">
+          <p class="eyebrow">Second floor</p>
+          <span class="side-kind">Commission, not equity</span>
+          <h3>The Room</h3>
+        </div>
+        <p>A ticketed listening room for renowned jazz and Brazilian instrumental acts, the way Manouche works inside Casa Camolese. Eduardo Senna and Rodrigo Tavares bring and sell the shows. They are paid per show on what they deliver. No shares, no monthly retainer, no seat at the partnership table.</p>
+        <dl>
+          <div class="pair"><dt>Structure</dt><dd>Booking agreement</dd></div>
+          <div class="pair"><dt>Bookers</dt><dd>Senna &amp; Tavares</dd></div>
+          <div class="pair"><dt>Equity granted</dt><dd class="num">0%</dd></div>
+          <div class="pair"><dt>Revenue</dt><dd>Ticketing, to the house</dd></div>
+        </dl>
       </div>
+    </div>
+
+    <div class="ground-line">
+      <span>The building &mdash; 100% Uwe Fabich, in both cases, always</span>
+      <span>No rent charged to the operation</span>
     </div>
   </div>
 </section>
@@ -389,7 +389,7 @@
 <section>
   <div class="wrap">
     <div class="head">
-      <p class="eyebrow">First floor &middot; the bar</p>
+      <p class="eyebrow">First floor &middot; the deal</p>
       <h2>Seven partners, <span class="it">one share each.</span></h2>
       <p class="lede">You bring the building, the build-out and the opening cash. Six people bring the thing a building cannot buy: a programme, a crowd, a name and the hours to run it.</p>
     </div>
@@ -398,7 +398,7 @@
       <div class="row">
         <div class="row-term">
           <h3>Ownership</h3>
-          <p>Seven equal partners in the operating company. No preferred class, no founder class, one vote each. The building stays entirely yours and is not contributed to the company.</p>
+          <p>Seven equal partners in the operating company. No preferred class, no founder class, one vote each. The building stays entirely yours and is never contributed to the company.</p>
         </div>
         <p class="row-when">From signing</p>
         <div class="row-val"><b class="num">14.29%</b><span>each, all seven</span></div>
@@ -407,7 +407,7 @@
       <div class="row">
         <div class="row-term">
           <h3>Your contribution</h3>
-          <p>Build-out capex and opening working capital, plus finance, legal and compliance. The building is lent to the company free of rent, which is why nothing is charged back against its value.</p>
+          <p>Build-out capex and opening working capital, plus finance, legal and compliance. The building is lent to the company free of rent, which is why nothing is ever charged back against its value.</p>
         </div>
         <p class="row-when">Pre-opening</p>
         <div class="row-val"><b>Capital</b><span>budgeted before signing</span></div>
@@ -416,28 +416,10 @@
       <div class="row">
         <div class="row-term">
           <h3>Our contribution</h3>
-          <p>Concept, music programming, brand, audience, supplier network and day-to-day operation. Unpaid through construction and pre-opening.</p>
+          <p>Concept, music programming, brand, audience, supplier network and the daily running of the house. Unpaid through construction and pre-opening &mdash; nothing is drawn until the doors open.</p>
         </div>
         <p class="row-when">Pre-opening</p>
         <div class="row-val"><b class="num">R$ 0</b><span>until the doors open</span></div>
-      </div>
-
-      <div class="row">
-        <div class="row-term">
-          <h3>Pr&oacute;-labore</h3>
-          <p>Two contracted functions the venue would otherwise buy on the open market: music programming and live sound (Bernardo Ibeas), design and brand production (Bernardo Perp&eacute;tuo). Both below market rate. Starts the month the bar opens to the public.</p>
-        </div>
-        <p class="row-when">Monthly, from opening</p>
-        <div class="row-val"><b class="num">R$ 12,000</b><span>R$ 6,000 each, two people</span></div>
-      </div>
-
-      <div class="row">
-        <div class="row-term">
-          <h3>Everyone else on the founding side</h3>
-          <p>Gaspar Muniz, Lysia Vani and Bernardo Campos take no fixed payment of any kind. They are paid only out of their profit share. Raphael Beranger runs operations as a full-time salaried position inside the operating payroll, at market rate &mdash; paid as staff, like any other manager, not as an owner.</p>
-        </div>
-        <p class="row-when">&mdash;</p>
-        <div class="row-val"><b class="num">R$ 0</b><span>fixed, outside payroll</span></div>
       </div>
 
       <div class="row">
@@ -447,6 +429,15 @@
         </div>
         <p class="row-when">Until repaid in full</p>
         <div class="row-val"><b class="num">50%</b><span>of profit, to Uwe, first</span></div>
+      </div>
+
+      <div class="row">
+        <div class="row-term">
+          <h3>No cash calls</h3>
+          <p>No partner is ever obliged to put in additional capital. If the company needs working capital beyond its own cash flow, that is a decision for the partners, not an obligation, and whoever funds it does so as a loan repaid ahead of any profit distribution. Losses stay inside the company and carry forward against future profits.</p>
+        </div>
+        <p class="row-when">Always</p>
+        <div class="row-val"><b>None</b><span>on any partner</span></div>
       </div>
 
       <div class="row">
@@ -464,25 +455,45 @@
 <section>
   <div class="wrap">
     <div class="head">
+      <p class="eyebrow">First floor &middot; the team</p>
+      <h2>Six functions, <span class="it">no overlap.</span></h2>
+      <p class="lede">Every job a bar of this kind normally outsources is held by a partner who has already done it somewhere else. Each of them is a working partner and draws a pró-labore for the function they hold, set in the budget alongside the rest of the payroll.</p>
+    </div>
+
+    <div class="people">
+      <div class="person"><b>Raphael Beranger</b><span>Bar operations and administration</span><em>Full time, in the house daily</em></div>
+      <div class="person"><b>Bernardo Ibeas Moreira de Souza</b><span>Curation and public relations</span><em>Full time</em></div>
+      <div class="person"><b>Gaspar Muniz</b><span>Curation and public relations</span><em>Programme and room</em></div>
+      <div class="person"><b>Bernardo Perp&eacute;tuo</b><span>Creative direction</span><em>Full time</em></div>
+      <div class="person"><b>Lysia Vani</b><span>Design</span><em>Identity and campaigns</em></div>
+      <div class="person"><b>Bernardo Campos</b><span>Social media</span><em>Channels and audience</em></div>
+      <div class="person"><b>Uwe Fabich</b><span>Property, capital, finance and legal</span><em>Partner, no operating role</em></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="head">
       <p class="eyebrow">Before anything else</p>
       <h2>The operation costs money. <span class="it">It gets paid first.</span></h2>
-      <p class="lede">We want this on the table in writing, because it was the part the last proposal buried. None of the lines below are covered by the pró-labore. They are the cost of running the bar, they come out of revenue, and nobody &mdash; you or us &mdash; sees a cent until they are all settled.</p>
+      <p class="lede">We want this on the table in writing, because it was the part the last proposal buried. Everything below comes out of revenue before a single cent reaches you or us. None of it is optional and none of it is covered by anything else in this document.</p>
     </div>
 
     <div class="costs">
-      <div class="cost"><b>Payroll and charges</b><span>Operations manager, bartenders, barbacks, kitchen, door, security, cleaning &mdash; including Raphael</span></div>
+      <div class="cost"><b>Payroll and charges</b><span>Bartenders, barbacks, kitchen, waiters, door, security, cleaning, plus the partners' pró-labore</span></div>
       <div class="cost"><b>Cost of goods</b><span>Beverage, ice, kitchen inputs, packaging, losses</span></div>
-      <div class="cost"><b>Programming</b><span>Musician and DJ fees, backline and instrument rental, rehearsal</span></div>
-      <div class="cost"><b>Occupancy</b><span>Electricity, water, gas, internet, insurance, maintenance, upkeep of a listed old house</span></div>
-      <div class="cost"><b>Systems and compliance</b><span>POS, accounting, annual licence and permit renewals, ECAD, software</span></div>
+      <div class="cost"><b>Programming</b><span>Musician and DJ fees, backline and instrument rental, sound technicians</span></div>
+      <div class="cost"><b>Occupancy</b><span>Electricity, water, gas, internet, insurance, maintenance, upkeep of an old house</span></div>
+      <div class="cost"><b>Systems and compliance</b><span>POS, accounting, annual licence and permit renewals, ECAD, card fees, software</span></div>
       <div class="cost"><b>Marketing</b><span>Paid media, content production, photography, print</span></div>
-      <div class="cost"><b>Taxes on revenue</b><span>Under the tax regime the accountant sets at incorporation</span></div>
+      <div class="cost"><b>Taxes on revenue</b><span>Under the regime the accountant sets at incorporation</span></div>
       <div class="cost"><b>Cash reserve</b><span>10% of net profit retained until the company holds two months of fixed costs in the bank</span></div>
     </div>
 
     <div class="callout" style="margin-top: var(--s5);">
-      <p class="big">A bar that does not turn a profit in a given month pays no pró-labore beyond the R$ 12,000 and distributes nothing. There is no floor, no guarantee and no minimum owed to the founding side.</p>
-      <p class="fine">Losses stay inside the company and carry forward against future profits. No partner &mdash; including you &mdash; is ever obliged to put in additional capital. If the company needs working capital beyond its own cash flow, that is a decision for the partners, not an obligation, and whoever funds it does so as a loan repaid ahead of any profit distribution.</p>
+      <p class="big">Partners' pró-labore is a payroll line like any other, not a fee on top of the business. The minimum is R$ 2,000 a month per working partner, more for the functions with fixed daily hours, all of it set inside the approved budget.</p>
+      <p class="fine">Indicative total for all six, to be fixed in the budget: around R$ 24,000 a month, starting the month the bar opens to the public and nothing before. That figure is the entire cost of the founding side. There is no fee above it, no guaranteed minimum, and no distribution at all in a month that does not produce a profit.</p>
     </div>
   </div>
 </section>
@@ -492,137 +503,112 @@
     <div class="head">
       <p class="eyebrow">How the money moves</p>
       <h2>The order of the accounts, <span class="it">every month.</span></h2>
-      <p class="lede">The figures below are invented round numbers chosen to make the sequence legible. They are not a forecast, and no revenue projection is being claimed here &mdash; that belongs in the budget, built with your finance team.</p>
+      <p class="lede">The figures below are invented round numbers chosen to make the sequence legible. They are not a forecast and no revenue is being projected here &mdash; that belongs in the budget, built with your finance team.</p>
     </div>
 
     <div class="fall">
       <div class="step">
         <span class="step-n">&mdash;</span>
-        <div class="step-t"><b>Net revenue</b><span>Bar, kitchen, door on DJ nights, after taxes on sales</span></div>
+        <div class="step-t"><b>Net revenue</b><span>Bar, kitchen and door on DJ nights, after taxes on sales</span></div>
         <span class="step-v num">R$ 200,000</span>
       </div>
       <div class="step out">
         <span class="step-n">1</span>
-        <div class="step-t"><b>Operating costs</b><span>Every line on the list above</span></div>
-        <span class="step-v num">&minus; R$ 155,000</span>
+        <div class="step-t"><b>Operating costs</b><span>Every line on the list above, pró-labore included</span></div>
+        <span class="step-v num">&minus; R$ 179,000</span>
       </div>
       <div class="step out">
         <span class="step-n">2</span>
-        <div class="step-t"><b>Pr&oacute;-labore</b><span>R$ 6,000 &times; 2</span></div>
-        <span class="step-v num">&minus; R$ 12,000</span>
-      </div>
-      <div class="step out">
-        <span class="step-n">3</span>
         <div class="step-t"><b>Cash reserve</b><span>10% of profit, until two months of fixed costs are banked</span></div>
-        <span class="step-v num">&minus; R$ 3,300</span>
+        <span class="step-v num">&minus; R$ 2,100</span>
       </div>
       <div class="step">
-        <span class="step-n">4</span>
+        <span class="step-n">3</span>
         <div class="step-t"><b>Distributable profit</b></div>
-        <span class="step-v num">R$ 29,700</span>
+        <span class="step-v num">R$ 18,900</span>
       </div>
       <div class="step out">
-        <span class="step-n">5</span>
+        <span class="step-n">4</span>
         <div class="step-t"><b>Capital recovery to Uwe</b><span>50%, until the investment is fully returned</span></div>
-        <span class="step-v num">&minus; R$ 14,850</span>
+        <span class="step-v num">&minus; R$ 9,450</span>
       </div>
       <div class="step">
-        <span class="step-n">6</span>
-        <div class="step-t"><b>Split seven ways</b><span>R$ 14,850 &divide; 7</span></div>
-        <span class="step-v num">R$ 2,121 each</span>
+        <span class="step-n">5</span>
+        <div class="step-t"><b>Split seven ways</b><span>R$ 9,450 &divide; 7</span></div>
+        <span class="step-v num">R$ 1,350 each</span>
       </div>
       <div class="step rest">
         <span class="step-n">&mdash;</span>
         <div class="step-t"><b>Uwe, this month</b><span>Capital recovery plus one equal share</span></div>
-        <span class="step-v num">R$ 16,971</span>
+        <span class="step-v num">R$ 10,800</span>
       </div>
     </div>
 
-    <p class="read fine" style="margin-top: var(--s4);">Once your capital is fully recovered, step 5 disappears and the whole R$ 29,700 splits seven ways &mdash; R$ 4,243 each. Until that day, you take roughly eight times what any other partner takes home.</p>
+    <p class="read fine" style="margin-top: var(--s4);">Two things this example is meant to show. While your capital is being repaid you take roughly eight times what any other partner takes home. And at a modest revenue level the profit share is small for everyone &mdash; the founding side lives on the pró-labore, and the share is upside that only grows as the house does. Once your capital is fully recovered, step 4 disappears and the whole R$ 18,900 splits seven ways.</p>
   </div>
 </section>
 
 <section>
   <div class="wrap">
     <div class="head">
-      <p class="eyebrow">First floor &middot; the team</p>
-      <h2>Who does what <span class="it">downstairs.</span></h2>
-      <p class="lede">Six people, six jobs, no overlap. Every function a bar of this kind normally outsources is held by a partner who has already done it somewhere else.</p>
-    </div>
-
-    <div class="people">
-      <div class="person"><b>Uwe Fabich</b><span>Property, capital, finance and legal</span><em>Partner &middot; no operating role</em></div>
-      <div class="person"><b>Raphael Beranger</b><span>Operations &mdash; team, suppliers, service, floor, daily numbers</span><em>Partner &middot; salaried manager</em></div>
-      <div class="person"><b>Bernardo Ibeas</b><span>Live music curation and sound engineering</span><em>Partner &middot; pr&oacute;-labore</em></div>
-      <div class="person"><b>Bernardo Perp&eacute;tuo</b><span>Design and sound engineering</span><em>Partner &middot; pr&oacute;-labore</em></div>
-      <div class="person"><b>Gaspar Muniz</b><span>DJ curation and public relations</span><em>Partner &middot; profit share only</em></div>
-      <div class="person"><b>Bernardo Campos</b><span>National DJ curation</span><em>Partner &middot; profit share only</em></div>
-      <div class="person"><b>Lysia Vani</b><span>Design, social media, party label booking</span><em>Partner &middot; profit share only</em></div>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <div class="head">
-      <p class="eyebrow">Second floor &middot; the room</p>
-      <h2>Where the expensive <span class="it">shows go.</span></h2>
-      <p class="lede">A separate company with five partners, because the risk profile is completely different. One bad booking upstairs must never be able to take the bar down with it &mdash; and it cannot, if the companies are separate.</p>
+      <p class="eyebrow">Second floor &middot; the deal</p>
+      <h2>Upstairs is not <span class="it">a partnership.</span></h2>
+      <p class="lede">Expensive shows are a different trade with a different rhythm, and folding them into the company would blur both. So the room is programmed by two people who are paid for what they sell, and who own nothing.</p>
     </div>
 
     <div class="ledger">
       <div class="row">
         <div class="row-term">
-          <h3>Ownership</h3>
-          <p>Five equal partners: you, Eduardo Senna, Rodrigo Tavares, Bernardo Ibeas and Bernardo Perp&eacute;tuo. Same principle as downstairs &mdash; equal shares, one vote each.</p>
-        </div>
-        <p class="row-when">From signing</p>
-        <div class="row-val"><b class="num">20%</b><span>each, all five</span></div>
-      </div>
-
-      <div class="row">
-        <div class="row-term">
-          <h3>Pr&oacute;-labore</h3>
-          <p>Eduardo Senna manages artists and opens the doors to touring acts. Rodrigo Tavares books the calendar. Both do continuous relationship work that happens whether or not a show is on the books, which is why it cannot be paid per event.</p>
-        </div>
-        <p class="row-when">Monthly, from opening</p>
-        <div class="row-val"><b class="num">R$ 16,000</b><span>R$ 8,000 each, two people</span></div>
-      </div>
-
-      <div class="row">
-        <div class="row-term">
-          <h3>Pr&oacute;-labore step-up</h3>
-          <p>Rises to R$ 10,000 each only once the room sustains an agreed number of shows per month across a full quarter. The increase is earned by the calendar, not granted at signing.</p>
-        </div>
-        <p class="row-when">On agreed volume</p>
-        <div class="row-val"><b class="num">R$ 20,000</b><span>combined, when triggered</span></div>
-      </div>
-
-      <div class="row">
-        <div class="row-term">
-          <h3>Sound and production</h3>
-          <p>Bernardo Ibeas and Bernardo Perp&eacute;tuo take no fixed payment upstairs. They are paid a fee per show, inside that show's production budget, so the cost only exists on nights that also produce ticket revenue.</p>
+          <h3>Who</h3>
+          <p>Eduardo Senna manages artists and opens the doors to touring acts. Rodrigo Tavares books the calendar. They work as contracted bookers for the room, not as partners in anything.</p>
         </div>
         <p class="row-when">Per show</p>
-        <div class="row-val"><b class="num">R$ 0</b><span>fixed</span></div>
+        <div class="row-val"><b class="num">0%</b><span>equity, no retainer</span></div>
       </div>
 
       <div class="row">
         <div class="row-term">
-          <h3>Show budgets</h3>
-          <p>Artist fee, production, sound, marketing and projected ticketing, approved before a show is confirmed. No show is booked on a budget that does not close. A show that loses money is the room's loss, never the bar's.</p>
+          <h3>Booking fee</h3>
+          <p>A fixed fee for every confirmed show, paid whether or not the room fills. It buys the work of finding, negotiating and delivering the act. Indicative figure &mdash; the number gets fixed once the room's capacity and ticket price are known.</p>
+        </div>
+        <p class="row-when">On the show date</p>
+        <div class="row-val"><b class="num">R$ 2,000</b><span>per confirmed show</span></div>
+      </div>
+
+      <div class="row">
+        <div class="row-term">
+          <h3>Commission on sales</h3>
+          <p>A percentage of that show's net box office, paid on settlement. This is the part that rewards selling rather than merely booking, and it is where their real money is. Also indicative and open to discussion.</p>
+        </div>
+        <p class="row-when">On settlement</p>
+        <div class="row-val"><b class="num">15%</b><span>of net box office</span></div>
+      </div>
+
+      <div class="row">
+        <div class="row-term">
+          <h3>Approval before booking</h3>
+          <p>No show is confirmed without a budget approved by the house: artist fee, production, sound, marketing and projected ticketing. A cap on the artist fee is set annually, and anything above it needs a second signature. This is the gate that keeps an ambitious booking from becoming the house's problem.</p>
         </div>
         <p class="row-when">Before each booking</p>
-        <div class="row-val"><b>Per show</b><span>approved in advance</span></div>
+        <div class="row-val"><b>House approves</b><span>every show, in advance</span></div>
       </div>
 
       <div class="row">
         <div class="row-term">
-          <h3>Capital recovery</h3>
-          <p>Same mechanism as downstairs, on whatever you invest in fitting out the room: 50% of distributable profit to you until the investment is fully returned.</p>
+          <h3>Who carries a show that fails</h3>
+          <p>The house does, which is exactly why the approval gate above is not a formality. The bookers lose their commission on a show that does not sell, but they keep the fee. Say this plainly to yourselves before signing: the commission model buys simplicity and costs risk transfer.</p>
         </div>
-        <p class="row-when">Until repaid in full</p>
-        <div class="row-val"><b class="num">50%</b><span>of profit, to Uwe, first</span></div>
+        <p class="row-when">Per show</p>
+        <div class="row-val"><b>The house</b><span>budget gate is the control</span></div>
+      </div>
+
+      <div class="row">
+        <div class="row-term">
+          <h3>Term</h3>
+          <p>A rolling agreement with an agreed notice period on both sides and an exclusivity that runs only while the calendar is actually being filled. No equity means no vesting, no buy-back and nothing to unwind if it ends.</p>
+        </div>
+        <p class="row-when">Rolling</p>
+        <div class="row-val"><b>Notice</b><span>either side</span></div>
       </div>
     </div>
   </div>
@@ -632,42 +618,42 @@
   <div class="wrap">
     <div class="head">
       <p class="eyebrow">Between the floors</p>
-      <h2>Why the room <span class="it">pays the bar.</span></h2>
-      <p class="lede">The two companies are separate but they are not indifferent to each other. The rules below are the whole interface, and they are deliberately short.</p>
+      <h2>Why the room <span class="it">feeds the bar.</span></h2>
+      <p class="lede">The two businesses are separate but they are not indifferent to each other. These four rules are the whole interface, and they are deliberately short.</p>
     </div>
 
     <div class="ledger">
       <div class="row">
         <div class="row-term">
           <h3>Beverage, everywhere in the house</h3>
-          <p>The bar company runs every drink served in the building, on both floors, including during shows upstairs. All of that revenue is the bar's. A sold-out show upstairs is the best sales night the bar has all month.</p>
+          <p>The bar company runs every drink served in the building, on both floors, including during shows upstairs. All of that revenue is the bar's. A sold-out show upstairs is the best sales night the bar has all month, and that is the real reason the room exists.</p>
         </div>
         <p class="row-when">Always</p>
-        <div class="row-val"><b>100%</b><span>to the bar company</span></div>
+        <div class="row-val"><b class="num">100%</b><span>to the bar company</span></div>
       </div>
 
       <div class="row">
         <div class="row-term">
           <h3>Ticketing</h3>
-          <p>Ticket revenue and show sponsorship belong entirely to the room. The bar takes no cut and carries no share of a show's loss.</p>
+          <p>Ticket revenue and show sponsorship belong to the house, not to the bookers. The bookers are paid out of it by fee and commission, as above.</p>
         </div>
-        <p class="row-when">Always</p>
-        <div class="row-val"><b>100%</b><span>to the room company</span></div>
+        <p class="row-when">Per show</p>
+        <div class="row-val"><b class="num">100%</b><span>to the house</span></div>
       </div>
 
       <div class="row">
         <div class="row-term">
-          <h3>Extra staffing on show nights</h3>
-          <p>When a show needs bar staff beyond a normal night, the room pays the bar for those hours at cost. It appears as a line in that show's budget.</p>
+          <h3>Two sets of books</h3>
+          <p>The bar and the room are reported as separate results even where they share a company, so it is always visible which floor is carrying which. A room that consistently loses money can be stopped without touching the bar.</p>
         </div>
-        <p class="row-when">Per show</p>
-        <div class="row-val"><b>At cost</b><span>room pays bar</span></div>
+        <p class="row-when">Monthly</p>
+        <div class="row-val"><b>Separate P&amp;L</b><span>one per floor</span></div>
       </div>
 
       <div class="row">
         <div class="row-term">
           <h3>Shared infrastructure</h3>
-          <p>Kitchen, storage, utilities and the house sound system are shared on a fixed cost-sharing key, agreed once a year alongside the budgets and not renegotiated mid-year.</p>
+          <p>Kitchen, storage, utilities, staffing on show nights and the house sound system are shared on a fixed cost-sharing key, agreed once a year with the budget and not renegotiated mid-year.</p>
         </div>
         <p class="row-when">Set annually</p>
         <div class="row-val"><b>Fixed key</b><span>agreed with the budget</span></div>
@@ -691,28 +677,28 @@
           <p>Inside the approved annual budget, operations decides alone and does not ask. Outside it, operations asks.</p>
         </div>
         <p class="row-when">Continuous</p>
-        <div class="row-val"><b>Raphael</b><span>operations</span></div>
+        <div class="row-val"><b>Beranger</b><span>operations</span></div>
       </div>
       <div class="row">
         <div class="row-term">
           <h3>Programming</h3>
-          <p>Who plays and who spins is settled by the three people who book music, within the programming budget.</p>
+          <p>Who plays and who spins downstairs is settled by the two curators, within the programming budget.</p>
         </div>
         <p class="row-when">Weekly</p>
-        <div class="row-val"><b>Ibeas, Gaspar, Campos</b><span>music</span></div>
+        <div class="row-val"><b>Ibeas, Gaspar</b><span>curation</span></div>
       </div>
       <div class="row">
         <div class="row-term">
           <h3>Brand and communication</h3>
-          <p>Identity, social, campaigns and the look of the house.</p>
+          <p>Identity, campaigns, channels and the look of the house.</p>
         </div>
         <p class="row-when">Continuous</p>
-        <div class="row-val"><b>Lysia, Perp&eacute;tuo</b><span>creative</span></div>
+        <div class="row-val"><b>Perp&eacute;tuo, Lysia, Campos</b><span>creative</span></div>
       </div>
       <div class="row">
         <div class="row-term">
           <h3>Finance and reporting</h3>
-          <p>You hold finance. A closed profit and loss statement reaches every partner by the 10th of the following month &mdash; that reporting duty is written into the partnership agreement, not left to good will.</p>
+          <p>You hold finance. A closed profit and loss statement for each floor reaches every partner by the 10th of the following month. That reporting duty is written into the partnership agreement, not left to good will.</p>
         </div>
         <p class="row-when">Monthly, by the 10th</p>
         <div class="row-val"><b>Uwe</b><span>finance</span></div>
@@ -750,28 +736,28 @@
     <div class="head">
       <p class="eyebrow">What happens next</p>
       <h2>Four steps, <span class="it">in this order.</span></h2>
-      <p class="lede">Nothing here is binding. What we are asking for today is agreement in principle on the shape &mdash; the numbers get built properly, with your people, right after.</p>
+      <p class="lede">Nothing here is binding. What we are asking for today is agreement in principle on the shape. The numbers get built properly, with your people, right after.</p>
     </div>
 
     <div class="next">
       <div class="next-item">
         <span class="step-n">1</span>
-        <div><b>Agreement in principle</b><p>On the structure: two companies, equal shares, R$ 12,000 and R$ 16,000 of fixed cost, capital back first.</p></div>
+        <div><b>Agreement in principle</b><p>On the shape: a partnership with equal shares downstairs, a commission agreement upstairs, your capital back before any split.</p></div>
         <span class="next-when">A conversation</span>
       </div>
       <div class="next-item">
         <span class="step-n">2</span>
-        <div><b>The real budget</b><p>Build-out capex, opening working capital, the fixed cost base and a revenue model, prepared by operations together with your finance team. This is where actual numbers replace the illustrative ones in this document.</p></div>
+        <div><b>The real budget</b><p>Build-out capex, opening working capital, the full fixed cost base including every pr&oacute;-labore, and a revenue model. Prepared by operations with your finance team. This is where actual numbers replace the illustrative ones in this document.</p></div>
         <span class="next-when">3 weeks</span>
       </div>
       <div class="next-item">
         <span class="step-n">3</span>
-        <div><b>Incorporation and partnership agreement</b><p>Contrato social and acordo de s&oacute;cios for both companies, drafted by a lawyer of your choosing, at the company's cost. Vesting, reserved matters, your veto and the 24-month review all go in writing.</p></div>
+        <div><b>Documents</b><p>Contrato social and acordo de s&oacute;cios for the operating company, drafted by a lawyer of your choosing at the company's cost, plus a short booking agreement for the room. Vesting, reserved matters, your veto and the 24-month review all go in writing.</p></div>
         <span class="next-when">After the budget</span>
       </div>
       <div class="next-item">
         <span class="step-n">4</span>
-        <div><b>Works and opening calendar</b><p>Bar first, room second. The bar builds the crowd and the cash flow that the room upstairs needs in order to sell an expensive ticket.</p></div>
+        <div><b>Works and opening calendar</b><p>Bar first, room second. The bar builds the crowd and the cash flow the room upstairs needs before anyone can sell an expensive ticket.</p></div>
         <span class="next-when">Set at signing</span>
       </div>
     </div>
@@ -780,6 +766,6 @@
 
 <footer>
   <div class="wrap">
-    <p class="fine">Non-binding proposal, September 2026. Subject to a full budget, due diligence and final documentation. All figures in the monthly example are invented round numbers used to show the order in which accounts are settled; they are not a revenue projection and nothing in this document should be read as one. Percentages, the pró-labore amounts, the capital recovery rate and the review period are all open to discussion &mdash; the structure is what we are asking you to agree with.</p>
+    <p class="fine">Non-binding proposal, September 2026. Subject to a full budget, due diligence and final documentation. All figures in the monthly example are invented round numbers used to show the order in which accounts are settled; they are not a revenue projection and nothing here should be read as one. The pr&oacute;-labore amounts, the booking fee, the commission rate, the capital recovery rate and the review period are all open &mdash; the structure is what we are asking you to agree with.</p>
   </div>
 </footer>
