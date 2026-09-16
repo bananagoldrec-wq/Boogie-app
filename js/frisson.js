@@ -170,12 +170,14 @@
      vez de deixar a tela em branco. Edições nesse modo não sincronizam. */
   let connected = false;
 
+  /* Nunca mostra a agenda de exemplo (SEED_DATA) como se fosse a real —
+     isso já confundiu quem usa o app, parecendo que nomes "trocaram de
+     lugar" quando na verdade era só a versão de demonstração aparecendo
+     por causa de uma conexão lenta. Se a nuvem não responde, é melhor
+     mostrar a tela vazia com um aviso claro do que dado antigo/fictício. */
   function useOfflineFallback() {
     if (connected || Object.keys(data).length) return;
-    data = { ...SEED_DATA };
-    renderCalendar();
-    refreshArtistNames();
-    showToast("Sem conexão com a nuvem — mostrando agenda salva.");
+    showToast("Sem conexão com a nuvem — não deu pra carregar a agenda. Verifica sua internet e recarrega a página.");
   }
 
   /* Lista de nomes já usados (diretório de artistas + escalas), pro
@@ -244,7 +246,7 @@
     } catch (err) {}
     hideLoginGate();
     connectFirebase();
-    setTimeout(useOfflineFallback, 6000);
+    setTimeout(useOfflineFallback, 15000);
   }
 
   /* ── date helpers ──────────────────────────────────────── */
@@ -334,15 +336,20 @@
     if (!sourceEntry) return;
     const targetEntry = data[targetKey];
     try {
+      /* writeBatch garante que as duas escritas aconteçam juntas ou
+         nenhuma aconteça — antes eram chamadas separadas, e uma queda de
+         rede no meio do caminho podia deixar uma data duplicada e a
+         outra perdida (parecia "nome sumiu"/"nome trocou de lugar"). */
+      const batch = writeBatch(db);
       if (targetEntry) {
-        await Promise.all([
-          setDoc(doc(bookingsCol, targetKey), sourceEntry),
-          setDoc(doc(bookingsCol, sourceKey), targetEntry),
-        ]);
+        batch.set(doc(bookingsCol, targetKey), sourceEntry);
+        batch.set(doc(bookingsCol, sourceKey), targetEntry);
+        await batch.commit();
         showToast("Datas trocadas.");
       } else {
-        await setDoc(doc(bookingsCol, targetKey), sourceEntry);
-        await deleteDoc(doc(bookingsCol, sourceKey));
+        batch.set(doc(bookingsCol, targetKey), sourceEntry);
+        batch.delete(doc(bookingsCol, sourceKey));
+        await batch.commit();
         showToast("Escala movida.");
       }
     } catch (err) {
@@ -691,7 +698,7 @@
 
   if (isUnlocked()) {
     connectFirebase();
-    setTimeout(useOfflineFallback, 6000);
+    setTimeout(useOfflineFallback, 15000);
   } else {
     showLoginGate();
   }
