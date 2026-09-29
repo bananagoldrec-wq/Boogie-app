@@ -4689,6 +4689,15 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "ABBA",
+        "artist": "ABBA",
+        "year": 1988,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Polar)",
+        "label": "Polar"
       }
     ]
   },
