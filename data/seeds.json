@@ -4689,6 +4689,42 @@
         "spotify_embed": null,
         "youtube_id": null,
         "source": "MusicBrainz (auto)"
+      },
+      {
+        "title": "ABBA",
+        "artist": "ABBA",
+        "year": 1988,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Polar)",
+        "label": "Polar"
+      },
+      {
+        "title": "Eyes of a Woman",
+        "artist": "Agnetha Fältskog",
+        "year": 1985,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Polar)",
+        "label": "Polar"
+      },
+      {
+        "title": "Wrap Your Arms Around Me",
+        "artist": "Agnetha Fältskog",
+        "year": 1983,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Polar)",
+        "label": "Polar"
+      },
+      {
+        "title": "Det spelar ingen roll rock'n'roll",
+        "artist": "Stilmord",
+        "year": 1982,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Polar)",
+        "label": "Polar"
       }
     ]
   },
@@ -4956,6 +4992,15 @@
         "youtube_id": null,
         "source": "MusicBrainz (selo: Oasis Records)",
         "label": "Oasis Records"
+      },
+      {
+        "title": "부활 Vol.1",
+        "artist": "부활",
+        "year": 1986,
+        "spotify_embed": null,
+        "youtube_id": null,
+        "source": "MusicBrainz (selo: Seoul Records)",
+        "label": "Seoul Records"
       }
     ]
   },

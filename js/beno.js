@@ -258,6 +258,33 @@
   const AGENCIA = "Travel Blue Turismo · Alessandro (21) 98875-5873 · alessandro@travelblueturismo.com.br";
   const SEED_LOGISTICA_LOTES = [
     {
+      /* Zurique → Varsóvia → Amsterdã → Lisboa: o pedaço que faltava entre
+         o show de Zurique (10/10) e a volta pro Rio (18/10). Duas reservas
+         separadas, as duas ainda RESERVADAS e não emitidas quando entraram
+         aqui — por isso o prazo está na observação de cada uma. */
+      key: "beno_seed_logistica_v4",
+      itens: [
+        {
+          id: "seed-log-lx1348", tipo: "voo", companhia: "Swiss", numero: "LX1348", localizador: "D19A99",
+          origem: "ZRH", destino: "WAW", terminalOrigem: "", terminalDestino: "",
+          data: "2026-10-11", hora: "12:10", dataFim: "2026-10-11", horaFim: "14:05",
+          obs: `Operado pela Air Baltic, não pela Swiss — procurar o balcão da Air Baltic no check-in. Airbus A220-300, 1h55, Economy Comfort. 1 bagagem despachada de 23kg. Localizador na cia: A5KVVC. CHF 160,00 (R$ 1.584,19). Reservado, ainda NÃO emitido — prazo de emissão 17/09 23:59. ${AGENCIA}`,
+        },
+        {
+          id: "seed-log-kl1314", tipo: "voo", companhia: "KLM", numero: "KL1314", localizador: "A5IAAM",
+          origem: "WAW", destino: "AMS", terminalOrigem: "", terminalDestino: "",
+          data: "2026-10-14", hora: "12:25", dataFim: "2026-10-14", horaFim: "14:30",
+          obs: `Direto, 2h05, Economy. 1 bagagem despachada. Localizador na cia: YB452K. Mesma reserva do AMS→LIS: R$ 2.760,25 pelos dois trechos. Reservado, ainda NÃO emitido — prazo de emissão 20/09 18:00. ${AGENCIA}`,
+        },
+        {
+          id: "seed-log-kl1583", tipo: "voo", companhia: "KLM", numero: "KL1583", localizador: "A5IAAM",
+          origem: "AMS", destino: "LIS", terminalOrigem: "", terminalDestino: "1",
+          data: "2026-10-17", hora: "12:30", dataFim: "2026-10-17", horaFim: "14:35",
+          obs: "Direto, 3h05, Economy. 1 bagagem despachada. Localizador na cia: YB452K. Chega em Lisboa no Terminal 1 — mesmo terminal de onde sai a volta pro Rio no dia seguinte. Reservado, ainda NÃO emitido — prazo de emissão 20/09 18:00.",
+        },
+      ],
+    },
+    {
       key: "beno_seed_logistica_v3",
       itens: [
         {
