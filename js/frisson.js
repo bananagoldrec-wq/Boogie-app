@@ -30,7 +30,7 @@
   const WEEKDAY_NAMES = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
   const MONTH_NAMES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 
-  const RIDER_URL = "https://bananagoldrec-wq.github.io/Boogie-app/frisson-informacoes-tecnicas.pdf?v=2";
+  const RIDER_URL = "https://bananagoldrec-wq.github.io/Boogie-app/frisson-informacoes-tecnicas.pdf?v=3";
 
   const DEFAULT_TEMPLATES = {
     convite: "Oi {artista}! Aqui é do Frisson 🎶 Queria te chamar pra tocar no dia {data} ({diaSemana}), set de {estilo}. Topa?",
