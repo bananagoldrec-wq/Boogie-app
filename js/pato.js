@@ -48,7 +48,7 @@
   ];
   const UNIT_BY_ID = Object.fromEntries(UNITS.map((u) => [u.id, u]));
 
-  const CARTA_URL = "https://bananagoldrec-wq.github.io/Boogie-app/pato-carta-dj.pdf?v=2";
+  const CARTA_URL = "https://bananagoldrec-wq.github.io/Boogie-app/pato-carta-dj.pdf?v=3";
 
   const DEFAULT_TEMPLATES = {
     convite: "Oi {artista}! Aqui é do Pato com Laranja 🦆🍊 Queria te chamar pra tocar no Pato {unidade} dia {data} ({diaSemana}){horarioTxt}, set de {estilo}. Topa?",
