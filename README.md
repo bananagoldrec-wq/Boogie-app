@@ -223,16 +223,21 @@ desatualizado. Sinta-se à vontade para completar mais `youtube_id` /
 Agenda de DJs/música ao vivo das unidades do **Pato com Laranja** — mesma base
 da agenda do Frisson, com a identidade dos posts do Pato. Abre em `pato.html`.
 
-- **Unidades** no topo: São Conrado, Leblon Praia, Leblon Dias Ferreira, Barra
-  Praia, Barra Pepê e São Paulo. **Todas** mostra cada dia com a sigla da
-  unidade; escolher uma unidade filtra o calendário e libera o arrastar pra
-  trocar de data. A lista fica em `UNITS`, no topo de `js/pato.js`.
+- **Um seletor de unidade** no topo (São Conrado, Leblon Praia, Leblon Dias
+  Ferreira, Barra Praia, Barra Pepê, São Paulo). Calendário, escala do dia,
+  mensagens, arte e CSV seguem a unidade escolhida. Lista em `UNITS`, no topo de
+  `js/pato.js`.
+- **Calendário comum** (grade dom–sáb, igual em todas as unidades e no
+  celular). Tocar no nome do mês abre os 12 meses do ano, com quantas escalas
+  cada mês tem.
 - Cada escala é `data + unidade` (doc `AAAA-MM-DD_unidade` em `pato_bookings`),
   com horário, programação (DJ / ao vivo), status e contato.
-- Mensagens prontas no WhatsApp com `{unidade}`, `{endereco}`, `{horario}` e
-  `{mapa}` (link do Google Maps da unidade).
-- Compartilhar mês/semana gera a arte no padrão dos stories ("AGENDA / PATO
-  RJ E SP / datas"), e o ícone 📍 gera o card "VEM PRO PATO!" com os endereços.
+- **Carta do DJ** (`pato-carta-dj.pdf`, botão 📄): tipo de som, equipamento,
+  informações práticas. Fonte em `tools/pato-carta-dj.html`; pra regerar,
+  `node tools/make_pato_carta.mjs` e suba o `?v=` do `CARTA_URL`.
+- Mensagens prontas no WhatsApp com `{unidade}`, `{endereco}`, `{horario}`,
+  `{mapa}` e `{cartaLink}`.
+- Compartilhar gera a arte do mês no padrão dos stories do Pato.
 - Feriados: nacionais + municipais do Rio (unidades RJ) ou de São Paulo.
 
 Grava na nuvem (coleções `pato_*`, mesmo projeto Firebase — publique as regras

@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&family=Montserrat:ital,wght@1,500;1,600;1,700;1,800&display=swap" />
-  <link rel="stylesheet" href="css/pato.css?v=1" />
+  <link rel="stylesheet" href="css/pato.css?v=2" />
 </head>
 <body>
 
@@ -28,19 +28,19 @@
     <img class="logo-badge" src="icons/pato-logo.png" alt="Pato com Laranja" />
     <div class="brand-block">
       <span class="brand-name">AGENDA</span>
-      <span id="brand-sub" class="brand-sub">Pato com Laranja · RJ e SP</span>
+      <span id="brand-sub" class="brand-sub"></span>
     </div>
 
     <div class="topbar-spacer"></div>
 
     <div class="month-nav">
       <button id="prev-month" type="button" aria-label="Mês anterior">‹</button>
-      <span id="month-label">—</span>
+      <button id="month-label" type="button" aria-label="Escolher mês" title="Ver os 12 meses">—</button>
       <button id="next-month" type="button" aria-label="Próximo mês">›</button>
     </div>
 
-    <button id="share-addresses" class="icon-btn-round" type="button" aria-label="Compartilhar endereços das unidades" title="Vem pro Pato! (endereços)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+    <button id="carta-dj" class="icon-btn-round" type="button" aria-label="Compartilhar carta do DJ (PDF)" title="Carta do DJ (PDF)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9.5 13.5h5M9.5 16.5h5"/></svg>
     </button>
     <button id="open-templates" class="icon-btn-round" type="button" aria-label="Mensagens padrão" title="Mensagens padrão">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H7l-3 3z"/></svg>
@@ -55,7 +55,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5M20 12H9M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/></svg>
     </button>
   </header>
-  <nav id="unit-bar" class="unit-bar" aria-label="Unidades"></nav>
+  <div class="unit-row">
+    <label for="unit-select" class="unit-label">Unidade</label>
+    <select id="unit-select" class="unit-select"></select>
+  </div>
   </div>
 
   <section class="cal-wrap">
@@ -72,9 +75,21 @@
     <span><i style="background:#e2685a"></i>Cancelado</span>
     <span><i class="legend-swatch" style="background:var(--card-weekend)"></i>Sex–dom</span>
     <span><i class="legend-swatch" style="background:var(--card-holiday)"></i>Feriado</span>
-    <span class="tagline">toque pra editar · segure e arraste pra trocar de data (dentro da unidade)</span>
+    <span class="tagline">toque no dia pra editar · toque no mês pra ver o ano · segure e arraste pra trocar de data</span>
   </div>
-  <div id="unit-legend" class="legend unit-legend" hidden></div>
+
+  <!-- Os 12 meses do ano -->
+  <div id="year-picker" class="year-picker" hidden>
+    <div class="year-card" role="dialog" aria-label="Escolher mês">
+      <div class="year-head">
+        <button id="prev-year" type="button" aria-label="Ano anterior">‹</button>
+        <span id="year-label"></span>
+        <button id="next-year" type="button" aria-label="Próximo ano">›</button>
+        <button id="close-year" class="icon-btn-round" type="button" aria-label="Fechar">×</button>
+      </div>
+      <div id="year-grid" class="year-grid"></div>
+    </div>
+  </div>
 
   <!-- Backdrop -->
   <div id="backdrop" class="panel-backdrop" hidden></div>
@@ -89,12 +104,6 @@
       <button class="icon-btn-round" type="button" data-close-panel aria-label="Fechar">×</button>
     </div>
     <div class="panel-body">
-      <div class="field">
-        <label for="f-unidade">Unidade</label>
-        <select id="f-unidade"></select>
-      </div>
-      <div id="other-units" class="other-units" hidden></div>
-
       <div class="field">
         <label for="f-artista">Artista</label>
         <input id="f-artista" type="text" placeholder="Nome do DJ ou artista" autocomplete="off" />
@@ -226,7 +235,7 @@
     </div>
     <div class="panel-body">
       <div class="tpl-vars">
-        Use: <b>{artista}</b> <b>{data}</b> <b>{diaSemana}</b> <b>{horario}</b> <b>{horarioTxt}</b> <b>{unidade}</b> <b>{endereco}</b> <b>{mapa}</b> <b>{evento}</b> <b>{estilo}</b> <b>{tipo}</b>
+        Use: <b>{artista}</b> <b>{data}</b> <b>{diaSemana}</b> <b>{horario}</b> <b>{horarioTxt}</b> <b>{unidade}</b> <b>{endereco}</b> <b>{mapa}</b> <b>{cartaLink}</b> <b>{evento}</b> <b>{estilo}</b> <b>{tipo}</b>
       </div>
 
       <div class="field tpl-field">
@@ -250,6 +259,10 @@
         <textarea id="tpl-como-chegar" rows="4"></textarea>
       </div>
       <div class="field tpl-field">
+        <label>Carta do DJ</label>
+        <textarea id="tpl-carta-dj" rows="4"></textarea>
+      </div>
+      <div class="field tpl-field">
         <label>Pedir PIX</label>
         <textarea id="tpl-pedir-pix" rows="4"></textarea>
       </div>
@@ -270,7 +283,7 @@
     <form id="login-form" class="login-card">
       <img class="logo-badge login-logo" src="icons/pato-logo.png" alt="" />
       <div class="login-title">AGENDA</div>
-      <div class="login-sub">PATO RJ E SP</div>
+      <div class="login-sub">PATO COM LARANJA</div>
       <h2 class="sr-only">Acesso restrito</h2>
       <p class="wa-hint">Digite a senha da agenda pra continuar.</p>
       <div class="field">
@@ -284,6 +297,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/pato.js?v=1"></script>
+  <script type="module" src="js/pato.js?v=2"></script>
 </body>
 </html>

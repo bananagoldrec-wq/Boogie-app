@@ -47,7 +47,8 @@
     { id: "sao-paulo", nome: "São Paulo", sigla: "SP", endereco: "Parque Villa Lobos, Portão 5", cidade: "SP", cor: "#e7a0c2" },
   ];
   const UNIT_BY_ID = Object.fromEntries(UNITS.map((u) => [u.id, u]));
-  const ALL = "todas";
+
+  const CARTA_URL = "https://bananagoldrec-wq.github.io/Boogie-app/pato-carta-dj.pdf?v=1";
 
   const DEFAULT_TEMPLATES = {
     convite: "Oi {artista}! Aqui é do Pato com Laranja 🦆🍊 Queria te chamar pra tocar no Pato {unidade} dia {data} ({diaSemana}){horarioTxt}, set de {estilo}. Topa?",
@@ -55,6 +56,7 @@
     lembrete: "Oi {artista}, passando pra lembrar do seu set no Pato {unidade} dia {data} ({diaSemana}){horarioTxt}! Nos vemos lá 🎧",
     agradecimento: "Foi ótimo ter você no Pato {unidade} dia {data}, {artista}! Obrigado pelo som 🙏 Já quero marcar a próxima.",
     comoChegar: "Oi {artista}! Seu set é no Pato {unidade} — {endereco}. Mapa: {mapa}",
+    cartaDj: "Oi {artista}! Segue a carta do DJ do Pato com Laranja, com a linha de som, o equipamento e as informações práticas: {cartaLink}",
     pedirPix: "Oi {artista}! Pra fechar o pagamento do dia {data} no Pato {unidade}, pode me mandar sua chave PIX (e o nome do titular, se for diferente do seu)?",
     pedirFoto: "Oi {artista}! Podia me mandar uma foto sua em boa qualidade? É pra divulgação do seu set no Pato {unidade} 📸",
   };
@@ -65,6 +67,7 @@
     lembrete: "Lembrete",
     agradecimento: "Agradecimento",
     comoChegar: "Como chegar",
+    cartaDj: "Carta do DJ",
     pedirPix: "Pedir PIX",
     pedirFoto: "Pedir foto",
   };
@@ -79,7 +82,6 @@
   let artists = {};
   let currentUnit = loadUnitPref();
   let activeDateKey = null;
-  let activeUnit = null;
   let activeTemplateKey = "convite";
 
   function bookingId(key, unitId) { return `${key}_${unitId}`; }
@@ -88,9 +90,9 @@
   function loadUnitPref() {
     try {
       const saved = localStorage.getItem(UNIT_PREF_KEY);
-      if (saved === ALL || UNIT_BY_ID[saved]) return saved;
+      if (UNIT_BY_ID[saved]) return saved;
     } catch (err) {}
-    return ALL;
+    return UNITS[0].id;
   }
 
   /* ── armazenamento: nuvem com reserva no aparelho ───────────
@@ -403,21 +405,12 @@
     return map;
   }
 
-  /* Na visão "Todas", feriado de uma cidade só aparece com a sigla. */
   function getHoliday(key, unitId) {
-    const year = Number(key.slice(0, 4));
-    if (unitId !== ALL) return holidaysForYear(year, UNIT_BY_ID[unitId].cidade)[key];
-    const rj = holidaysForYear(year, "RJ")[key];
-    const sp = holidaysForYear(year, "SP")[key];
-    if (rj && sp) return rj;
-    if (rj) return `${rj} (RJ)`;
-    if (sp) return `${sp} (SP)`;
-    return undefined;
+    return holidaysForYear(Number(key.slice(0, 4)), UNIT_BY_ID[unitId].cidade)[key];
   }
 
   /* ── arrastar para mover/trocar a data (dentro da mesma unidade) ── */
   async function moveBooking(sourceKey, targetKey) {
-    if (currentUnit === ALL) return;
     if (!sourceKey || !targetKey || sourceKey === targetKey) return;
     const sourceId = bookingId(sourceKey, currentUnit);
     const targetId = bookingId(targetKey, currentUnit);
@@ -436,50 +429,33 @@
     }
   }
 
-  /* ── unidades (abas) ───────────────────────────────────── */
-  const unitBar = document.getElementById("unit-bar");
+  /* ── unidade: um seletor só, no topo. Tudo (calendário, escala do
+     dia, mensagens, arte, CSV) segue a unidade escolhida aqui. ── */
+  const unitSelect = document.getElementById("unit-select");
   const brandSub = document.getElementById("brand-sub");
-  const unitLegend = document.getElementById("unit-legend");
 
-  function renderUnitBar() {
-    unitBar.innerHTML = "";
-    const options = [{ id: ALL, nome: "Todas" }, ...UNITS];
-    options.forEach((u) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "unit-chip" + (u.id === currentUnit ? " active" : "");
-      btn.setAttribute("aria-pressed", u.id === currentUnit ? "true" : "false");
-      if (u.cor) {
-        const dot = document.createElement("i");
-        dot.style.background = u.cor;
-        btn.appendChild(dot);
-      }
-      btn.appendChild(document.createTextNode(u.nome));
-      btn.addEventListener("click", () => setUnit(u.id));
-      unitBar.appendChild(btn);
-    });
-    const active = unitBar.querySelector(".active");
-    if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest", inline: "nearest" });
+  UNITS.forEach((u) => {
+    const opt = document.createElement("option");
+    opt.value = u.id;
+    opt.textContent = `Pato ${u.nome}`;
+    unitSelect.appendChild(opt);
+  });
 
-    brandSub.textContent = currentUnit === ALL ? "Pato com Laranja · RJ e SP" : `Pato ${UNIT_BY_ID[currentUnit].nome} · ${UNIT_BY_ID[currentUnit].endereco}`;
-
-    unitLegend.innerHTML = "";
-    unitLegend.hidden = currentUnit !== ALL;
-    UNITS.forEach((u) => {
-      const s = document.createElement("span");
-      s.innerHTML = `<i style="background:${u.cor}"></i><b>${u.sigla}</b> ${u.nome}`;
-      unitLegend.appendChild(s);
-    });
+  function renderUnit() {
+    const u = UNIT_BY_ID[currentUnit];
+    unitSelect.value = currentUnit;
+    brandSub.textContent = u.endereco;
   }
 
-  function setUnit(id) {
-    currentUnit = id;
+  unitSelect.addEventListener("change", () => {
+    currentUnit = unitSelect.value;
     try {
-      localStorage.setItem(UNIT_PREF_KEY, id);
+      localStorage.setItem(UNIT_PREF_KEY, currentUnit);
     } catch (err) {}
-    renderUnitBar();
+    renderUnit();
     renderCalendar();
-  }
+    if (!yearPicker.hidden) renderYearPicker();
+  });
 
   /* ── render: calendar ──────────────────────────────────── */
   const calGrid = document.getElementById("cal-grid");
@@ -487,68 +463,28 @@
 
   const WEEKEND_DAYS = [0, 5, 6]; // sexta a domingo: dias mais cheios na praia
 
-  /* Semanas de calendário (dom–sáb) dentro do mês em exibição, pra
-     agrupar visualmente e permitir compartilhar semana a semana. */
-  function weekRangesForMonth(year, month) {
-    const total = daysInMonth(year, month);
-    const leading = firstWeekday(year, month);
-    const ranges = [];
-    for (let day = 1; day <= total; day++) {
-      const w = Math.floor((day - 1 + leading) / 7);
-      if (!ranges[w]) ranges[w] = { week: w + 1, startDay: day, endDay: day };
-      else ranges[w].endDay = day;
-    }
-    return ranges;
-  }
-
-  function buildWeekHeader(range) {
-    const header = document.createElement("div");
-    header.className = "week-header";
-
-    const label = document.createElement("span");
-    label.textContent = `Semana ${range.week} · ${pad2(range.startDay)}/${pad2(view.month)} – ${pad2(range.endDay)}/${pad2(view.month)}`;
-    header.appendChild(label);
-
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "week-share-btn";
-    btn.setAttribute("aria-label", `Compartilhar semana ${range.week}`);
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.3 10.5l7.4-4.1M8.3 13.5l7.4 4.1"/></svg>';
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      shareWeek(range);
-    });
-    header.appendChild(btn);
-
-    return header;
-  }
-
+  /* Calendário comum: grade dom–sáb, com os dias do mês anterior/seguinte
+     como espaço vazio pra semana sempre começar no domingo. */
   function renderCalendar() {
     monthLabel.textContent = `${MONTH_NAMES[view.month - 1]} ${view.year}`;
     calGrid.innerHTML = "";
-    calGrid.classList.toggle("is-all", currentUnit === ALL);
 
-    const ranges = weekRangesForMonth(view.year, view.month);
+    const leading = firstWeekday(view.year, view.month);
+    const total = daysInMonth(view.year, view.month);
+    for (let i = 0; i < leading; i++) calGrid.appendChild(blankCell());
+    for (let day = 1; day <= total; day++) {
+      const key = dateKey(view.year, view.month, day);
+      calGrid.appendChild(buildDayCell(key, day, bookingFor(key, currentUnit)));
+    }
+    const trailing = (7 - ((leading + total) % 7)) % 7;
+    for (let i = 0; i < trailing; i++) calGrid.appendChild(blankCell());
+  }
 
-    /* Cada cabeçalho de semana e cada dia recebe linha/coluna explícitas
-       (via --wr/--wd, consumidas só na grade de 7 colunas do computador)
-       em vez de depender do encaixe automático do grid. */
-    let row = 1;
-    ranges.forEach((range) => {
-      const header = buildWeekHeader(range);
-      header.style.setProperty("--wr", row);
-      calGrid.appendChild(header);
-      row++;
-
-      for (let day = range.startDay; day <= range.endDay; day++) {
-        const key = dateKey(view.year, view.month, day);
-        const cell = currentUnit === ALL ? buildAllUnitsCell(key, day) : buildDayCell(key, day, bookingFor(key, currentUnit));
-        cell.style.setProperty("--wr", row);
-        cell.style.setProperty("--wd", weekdayIndex(key) + 1);
-        calGrid.appendChild(cell);
-      }
-      row++;
-    });
+  function blankCell() {
+    const el = document.createElement("div");
+    el.className = "day-cell is-blank";
+    el.setAttribute("aria-hidden", "true");
+    return el;
   }
 
   function baseCell(key, day, holidayName) {
@@ -627,56 +563,12 @@
 
     cell.addEventListener("click", () => {
       if (suppressNextClick) { suppressNextClick = false; return; }
-      openDayPanel(key, currentUnit);
+      openDayPanel(key);
     });
 
     attachDropTarget(cell, key);
     if (entry && entry.artista) attachDragSource(cell, key);
 
-    return cell;
-  }
-
-  /* Visão "Todas": uma linha por unidade com escala no dia. Sem arrastar
-     aqui — mover entre datas é sempre dentro de uma unidade só. */
-  function buildAllUnitsCell(key, day) {
-    const holidayName = getHoliday(key, ALL);
-    const cell = baseCell(key, day, holidayName);
-    const booked = UNITS.map((u) => ({ u, e: bookingFor(key, u.id) })).filter((x) => x.e && x.e.artista);
-
-    if (booked.length || holidayName) {
-      const content = document.createElement("div");
-      content.className = "day-content";
-      booked.forEach(({ u, e }) => {
-        const line = document.createElement("div");
-        line.className = "day-unit-line" + (e.status === "cancelado" ? " is-cancelled" : "");
-        const badge = document.createElement("span");
-        badge.className = "unit-badge";
-        badge.style.setProperty("--unit", u.cor);
-        badge.textContent = u.sigla;
-        const name = document.createElement("span");
-        name.className = "day-unit-artist";
-        name.textContent = e.artista;
-        line.appendChild(badge);
-        line.appendChild(name);
-        if (e.status) {
-          const dot = document.createElement("span");
-          dot.className = `mini-dot status-${e.status}`;
-          line.appendChild(dot);
-        }
-        content.appendChild(line);
-      });
-      if (holidayName) {
-        const tags = document.createElement("div");
-        tags.className = "day-tags";
-        tags.appendChild(holidayTag(holidayName));
-        content.appendChild(tags);
-      }
-      cell.appendChild(content);
-    }
-
-    cell.addEventListener("click", () => {
-      openDayPanel(key, booked.length ? booked[0].u.id : UNITS[0].id);
-    });
     return cell;
   }
 
@@ -771,7 +663,7 @@
     touchDrag.ghost.hidden = true;
     const el = document.elementFromPoint(x, y);
     touchDrag.ghost.hidden = false;
-    const targetCell = el && el.closest ? el.closest(".day-cell") : null;
+    const targetCell = el && el.closest ? el.closest(".day-cell:not(.is-blank)") : null;
     if (touchDrag.currentTarget && touchDrag.currentTarget !== targetCell) {
       touchDrag.currentTarget.classList.remove("drag-over");
     }
@@ -808,6 +700,53 @@
     if (view.month > 12) { view.month = 1; view.year++; }
     renderCalendar();
   }
+
+  /* ── os 12 meses do ano: toca no nome do mês pra pular direto ── */
+  const yearPicker = document.getElementById("year-picker");
+  const yearLabel = document.getElementById("year-label");
+  const yearGrid = document.getElementById("year-grid");
+  let pickerYear = view.year;
+
+  function countMonth(year, month) {
+    let n = 0;
+    for (let day = 1; day <= daysInMonth(year, month); day++) {
+      const e = bookingFor(dateKey(year, month, day), currentUnit);
+      if (e && e.artista) n++;
+    }
+    return n;
+  }
+
+  function renderYearPicker() {
+    yearLabel.textContent = `${pickerYear} · Pato ${UNIT_BY_ID[currentUnit].nome}`;
+    yearGrid.innerHTML = "";
+    MONTH_NAMES.forEach((name, i) => {
+      const month = i + 1;
+      const n = countMonth(pickerYear, month);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "year-month"
+        + (pickerYear === view.year && month === view.month ? " active" : "")
+        + (pickerYear === today.getFullYear() && month === today.getMonth() + 1 ? " is-now" : "");
+      btn.innerHTML = `<span class="ym-name"></span><span class="ym-count">${n ? `${n} escala${n > 1 ? "s" : ""}` : "—"}</span>`;
+      btn.querySelector(".ym-name").textContent = name;
+      btn.addEventListener("click", () => {
+        view = { year: pickerYear, month };
+        yearPicker.hidden = true;
+        renderCalendar();
+      });
+      yearGrid.appendChild(btn);
+    });
+  }
+
+  monthLabel.addEventListener("click", () => {
+    pickerYear = view.year;
+    renderYearPicker();
+    yearPicker.hidden = false;
+  });
+  document.getElementById("prev-year").addEventListener("click", () => { pickerYear--; renderYearPicker(); });
+  document.getElementById("next-year").addEventListener("click", () => { pickerYear++; renderYearPicker(); });
+  document.getElementById("close-year").addEventListener("click", () => { yearPicker.hidden = true; });
+  yearPicker.addEventListener("click", (e) => { if (e.target === yearPicker) yearPicker.hidden = true; });
 
   document.getElementById("prev-month").addEventListener("click", goToPrevMonth);
   document.getElementById("next-month").addEventListener("click", goToNextMonth);
@@ -871,8 +810,6 @@
   const dayPanel = document.getElementById("day-panel");
   const templatesPanel = document.getElementById("templates-panel");
   const panelDate = document.getElementById("panel-date");
-  const fUnidade = document.getElementById("f-unidade");
-  const otherUnitsEl = document.getElementById("other-units");
 
   const fArtista = document.getElementById("f-artista");
   const fTipo = document.getElementById("f-tipo");
@@ -894,13 +831,6 @@
   const pickPhotoBtn = document.getElementById("pick-photo");
   const sharePhotoBtn = document.getElementById("share-photo");
   const removePhotoBtn = document.getElementById("remove-photo");
-
-  UNITS.forEach((u) => {
-    const opt = document.createElement("option");
-    opt.value = u.id;
-    opt.textContent = `${u.nome} — ${u.endereco}`;
-    fUnidade.appendChild(opt);
-  });
 
   /* Busca o registro do artista ignorando acento e maiúscula/minúscula —
      "Antonio dal Bo" e "Antonio Dal Bó" apontam pro mesmo cadastro. */
@@ -1041,8 +971,7 @@
   });
 
   function fillDayForm() {
-    const entry = bookingFor(activeDateKey, activeUnit) || {};
-    fUnidade.value = activeUnit;
+    const entry = bookingFor(activeDateKey, currentUnit) || {};
     fArtista.value = entry.artista || "";
     fTipo.value = entry.tipo || "DJ";
     fStatus.value = entry.status || "pendente";
@@ -1053,38 +982,12 @@
     fEmail.value = entry.email || "";
     fObs.value = entry.obs || "";
     populateBankFields(entry.artista || "");
-    renderOtherUnits();
     updateWaPreview();
   }
 
-  /* Atalho pras outras unidades com escala nesse mesmo dia. */
-  function renderOtherUnits() {
-    otherUnitsEl.innerHTML = "";
-    const others = UNITS.filter((u) => u.id !== activeUnit && bookingFor(activeDateKey, u.id) && bookingFor(activeDateKey, u.id).artista);
-    otherUnitsEl.hidden = !others.length;
-    if (!others.length) return;
-    const label = document.createElement("span");
-    label.className = "wa-hint";
-    label.textContent = "Nesse dia também:";
-    otherUnitsEl.appendChild(label);
-    others.forEach((u) => {
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "other-unit-chip";
-      chip.innerHTML = `<span class="unit-badge" style="--unit:${u.cor}">${u.sigla}</span>`;
-      chip.appendChild(document.createTextNode(bookingFor(activeDateKey, u.id).artista));
-      chip.addEventListener("click", () => {
-        activeUnit = u.id;
-        fillDayForm();
-      });
-      otherUnitsEl.appendChild(chip);
-    });
-  }
-
-  function openDayPanel(key, unitId) {
+  function openDayPanel(key) {
     activeDateKey = key;
-    activeUnit = unitId;
-    panelDate.textContent = `${formatBrDate(key)} — ${weekdayNameFromKey(key)}`;
+    panelDate.textContent = `Pato ${UNIT_BY_ID[currentUnit].nome} · ${formatBrDate(key)} — ${weekdayNameFromKey(key)}`;
     activeTemplateKey = "convite";
     renderWaTemplateChips();
     fillDayForm();
@@ -1094,22 +997,16 @@
     dayPanel.hidden = false;
   }
 
-  fUnidade.addEventListener("change", () => {
-    activeUnit = fUnidade.value;
-    fillDayForm();
-  });
-
   function closeDayPanel() {
     dayPanel.hidden = true;
     if (templatesPanel.hidden) backdrop.hidden = true;
     activeDateKey = null;
-    activeUnit = null;
   }
 
   function readDayForm() {
     return {
       data: activeDateKey,
-      unidade: activeUnit,
+      unidade: currentUnit,
       artista: fArtista.value.trim(),
       tipo: fTipo.value,
       status: fStatus.value,
@@ -1130,9 +1027,8 @@
       return;
     }
     try {
-      const mode = await writeBookings({ [bookingId(activeDateKey, activeUnit)]: entry });
-      if (mode !== "local-warned") showToast(`Escala salva — Pato ${UNIT_BY_ID[activeUnit].nome}.`);
-      renderOtherUnits();
+      const mode = await writeBookings({ [bookingId(activeDateKey, currentUnit)]: entry });
+      if (mode !== "local-warned") showToast(`Escala salva — Pato ${UNIT_BY_ID[currentUnit].nome}.`);
       const contactPatch = {};
       if (entry.telefone) contactPatch.telefone = entry.telefone;
       if (entry.email) contactPatch.email = entry.email;
@@ -1148,7 +1044,7 @@
   document.getElementById("delete-day").addEventListener("click", async () => {
     if (!activeDateKey) return;
     try {
-      await writeBookings({ [bookingId(activeDateKey, activeUnit)]: null });
+      await writeBookings({ [bookingId(activeDateKey, currentUnit)]: null });
       closeDayPanel();
       showToast("Dia limpo.");
     } catch (err) {
@@ -1201,13 +1097,14 @@
       .replaceAll("{tipo}", entry.tipo === "AOVIVO" ? "ao vivo" : "de DJ")
       .replaceAll("{unidade}", unit.nome)
       .replaceAll("{endereco}", unit.endereco)
-      .replaceAll("{mapa}", mapsUrl(unit));
+      .replaceAll("{mapa}", mapsUrl(unit))
+      .replaceAll("{cartaLink}", CARTA_URL);
   }
 
   function updateWaPreview() {
     if (!activeDateKey) return;
     const entry = readDayForm();
-    waPreview.value = buildMessage(activeTemplateKey, entry, activeDateKey, activeUnit);
+    waPreview.value = buildMessage(activeTemplateKey, entry, activeDateKey, currentUnit);
     waWarning.hidden = !!normalizePhone(entry.telefone);
   }
 
@@ -1323,6 +1220,7 @@
     lembrete: document.getElementById("tpl-lembrete"),
     agradecimento: document.getElementById("tpl-agradecimento"),
     comoChegar: document.getElementById("tpl-como-chegar"),
+    cartaDj: document.getElementById("tpl-carta-dj"),
     pedirPix: document.getElementById("tpl-pedir-pix"),
     pedirFoto: document.getElementById("tpl-pedir-foto"),
   };
@@ -1400,7 +1298,7 @@
       return;
     }
     const lines = [`Artista: ${name}`];
-    if (activeDateKey) lines.push(`Data: ${formatBrDate(activeDateKey)} — Pato ${UNIT_BY_ID[activeUnit].nome}`);
+    if (activeDateKey) lines.push(`Data: ${formatBrDate(activeDateKey)} — Pato ${UNIT_BY_ID[currentUnit].nome}`);
     if (fBankTitular.value.trim()) lines.push(`Titular: ${fBankTitular.value.trim()}`);
     if (fBankDoc.value.trim()) lines.push(`CPF/CNPJ: ${fBankDoc.value.trim()}`);
     if (fBankPix.value.trim()) lines.push(`PIX: ${fBankPix.value.trim()}`);
@@ -1556,7 +1454,7 @@
 
     const W = 1080;
     const padX = 84;
-    const showUnit = currentUnit === ALL;
+    const showUnit = false;
     const units = [...new Set(rows.map((r) => r.unit.id))].map((id) => UNIT_BY_ID[id]);
 
     // agrupa por dia: data à esquerda, um ou mais nomes à direita
@@ -1667,47 +1565,6 @@
     return canvas;
   }
 
-  /* Arte avulsa com todos os endereços — igual ao card "VEM PRO PATO!". */
-  async function buildAddressesCanvas() {
-    await ensureShareFonts();
-    const logo = await loadLogo();
-    const W = 1080;
-    const H = 1350;
-    const { canvas, ctx } = canvasBase(W, H);
-    ctx.textBaseline = "middle";
-
-    ctx.fillStyle = BRAND.orange;
-    ctx.font = `italic 600 78px ${FONT_SLANT}`;
-    ctx.textAlign = "center";
-    ctx.fillText("VEM PRO PATO!", W / 2, 400);
-    ctx.textAlign = "left";
-
-    ctx.fillStyle = BRAND.white;
-    let y = 540;
-    UNITS.forEach((u) => {
-      const line = `${u.nome.toUpperCase()}  |  ${u.endereco.toUpperCase()}`;
-      const s = fitFont(ctx, line, "300", 24, FONT_WIDE, W - 140, 4);
-      ctx.font = `300 ${s}px ${FONT_WIDE}`;
-      spacedText(ctx, line, W / 2, y, 4, "center");
-      y += 66;
-    });
-
-    ctx.fillStyle = BRAND.orange;
-    ctx.font = `italic 800 52px ${FONT_SLANT}`;
-    ctx.textAlign = "right";
-    ctx.fillText("PAT", W / 2 + 22, H - 140);
-    ctx.textAlign = "left";
-    if (logo) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(W / 2 + 50, H - 142, 27, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.drawImage(logo, W / 2 + 23, H - 169, 54, 54);
-      ctx.restore();
-    }
-    return canvas;
-  }
-
   function shareOrDownloadCanvas(canvas, fileName, shareTitle) {
     canvas.toBlob(async (blob) => {
       if (!blob) return;
@@ -1737,7 +1594,7 @@
   /* Escalas pra arte: tira as canceladas (é material de divulgação). */
   function bookingsInRange(startDay, endDay) {
     const rows = [];
-    const units = currentUnit === ALL ? UNITS : [UNIT_BY_ID[currentUnit]];
+    const units = [UNIT_BY_ID[currentUnit]];
     for (let day = startDay; day <= endDay; day++) {
       const key = dateKey(view.year, view.month, day);
       units.forEach((unit) => {
@@ -1749,11 +1606,11 @@
   }
 
   function shareSubtitle() {
-    return currentUnit === ALL ? "PATO RJ E SP" : `PATO ${UNIT_BY_ID[currentUnit].nome.toUpperCase()}`;
+    return `PATO ${UNIT_BY_ID[currentUnit].nome.toUpperCase()}`;
   }
 
   function slug() {
-    return currentUnit === ALL ? "todas" : currentUnit;
+    return currentUnit;
   }
 
   async function shareRange(rows, fileSuffix) {
@@ -1773,24 +1630,40 @@
     shareRange(rows, `${view.year}-${pad2(view.month)}`);
   });
 
-  function shareWeek(range) {
-    const rows = bookingsInRange(range.startDay, range.endDay);
-    if (!rows.length) {
-      showToast("Nenhuma escala nessa semana ainda.");
-      return;
+  /* ── carta do DJ (PDF): mesmo esquema do guia técnico do Frisson —
+     manda o arquivo pelo menu de compartilhar, com o link de reserva. ── */
+  document.getElementById("carta-dj").addEventListener("click", async () => {
+    try {
+      const blob = await (await fetch(CARTA_URL)).blob();
+      const file = new File([blob], "pato-carta-dj.pdf", { type: "application/pdf" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Carta do DJ — Pato com Laranja" });
+        return;
+      }
+    } catch (err) {
+      if (err && err.name === "AbortError") return;
+      console.error(err);
     }
-    shareRange(rows, `semana-${range.week}-${view.year}-${pad2(view.month)}`);
-  }
-
-  document.getElementById("share-addresses").addEventListener("click", async () => {
-    const canvas = await buildAddressesCanvas();
-    shareOrDownloadCanvas(canvas, "vem-pro-pato.png", "Vem pro Pato!");
+    if (navigator.share) {
+      try {
+        await navigator.share({ url: CARTA_URL, title: "Carta do DJ — Pato com Laranja" });
+        return;
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(CARTA_URL);
+      showToast("Link da carta copiado — cole no WhatsApp.");
+    } catch (err) {
+      window.open(CARTA_URL, "_blank", "noopener");
+    }
   });
 
   /* ── csv export ────────────────────────────────────────── */
   document.getElementById("export-csv").addEventListener("click", () => {
     const total = daysInMonth(view.year, view.month);
-    const units = currentUnit === ALL ? UNITS : [UNIT_BY_ID[currentUnit]];
+    const units = [UNIT_BY_ID[currentUnit]];
     const rows = [["Data", "Dia da Semana", "Unidade", "Horário", "Artista", "Evento", "Email", "Telefone", "Programação", "Estilo Musical", "Status"]];
     for (let day = 1; day <= total; day++) {
       const key = dateKey(view.year, view.month, day);
@@ -1849,7 +1722,7 @@
   }
 
   /* ── init ──────────────────────────────────────────────── */
-  renderUnitBar();
+  renderUnit();
   renderCalendar();
   if (isUnlocked()) startApp();
   else showLoginGate();

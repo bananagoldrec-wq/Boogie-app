@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<!-- Fonte da carta do DJ do Pato com Laranja (pato-carta-dj.pdf).
+     Edite aqui e rode: node tools/make_pato_carta.mjs
+     Trechos com class="tbd" ainda precisam da informação real da casa. -->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Pato com Laranja — Carta do DJ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500&family=Montserrat:ital,wght@1,600;1,700;1,800&display=swap" />
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Lexend", sans-serif;
+    font-weight: 300;
+    color: #f3f1ec;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page {
+    width: 210mm;
+    height: 297mm;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    padding: 22mm 22mm 20mm;
+    background:
+      radial-gradient(ellipse 85% 32% at 50% 108%, rgba(242,165,65,0.38), rgba(242,165,65,0) 70%),
+      #1b1b1b;
+    display: flex;
+    flex-direction: column;
+  }
+  .page:last-child { page-break-after: auto; }
+  .logo { width: 30mm; height: 30mm; border-radius: 50%; display: block; margin: 0 auto; }
+  .rings { display: flex; align-items: center; justify-content: center; gap: 12mm; margin-top: 16mm; }
+  .ring { width: 26mm; height: 10mm; position: relative; }
+  .ring::before, .ring::after {
+    content: ""; position: absolute; left: 0; right: 0; height: 7mm;
+    border: 0.35mm solid rgba(243,241,236,0.75); border-radius: 50%;
+  }
+  .ring::before { top: 0; } .ring::after { bottom: 0; }
+  .wide { font-weight: 400; letter-spacing: 0.32em; text-transform: uppercase; }
+  .title { font-size: 40pt; padding-left: 0.32em; }
+  .slant { font-family: "Montserrat", sans-serif; font-style: italic; font-weight: 600; color: #f2a541; }
+  .sub { text-align: center; font-size: 24pt; margin-top: 4mm; }
+  .tagline { text-align: center; font-size: 9pt; color: #bdb8af; margin-top: 7mm; }
+  .letter { margin-top: 16mm; font-size: 11.2pt; line-height: 1.62; color: #e9e5dd; }
+  .letter p { margin: 0 0 5mm; }
+  .sign { text-align: center; font-size: 15pt; margin-top: 6mm; }
+  .footer {
+    margin-top: auto; text-align: center; font-size: 8.5pt; letter-spacing: 0.4em;
+    display: flex; align-items: center; justify-content: center; gap: 10mm;
+  }
+  .footer i { font-style: normal; font-size: 12pt; }
+  h2 { font-size: 22pt; text-align: center; margin: 4mm 0 2mm; }
+  .page2-sub { text-align: center; font-size: 8.5pt; color: #bdb8af; margin-bottom: 9mm; }
+  h3 {
+    font-family: "Montserrat", sans-serif; font-style: italic; font-weight: 700;
+    color: #f2a541; font-size: 12.5pt; margin: 7mm 0 2.5mm; text-transform: uppercase;
+  }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { font-size: 10.4pt; line-height: 1.5; padding-left: 6mm; position: relative; margin-bottom: 1.6mm; color: #e9e5dd; }
+  li::before { content: "—"; position: absolute; left: 0; color: #f2a541; }
+  b { font-weight: 500; color: #f3f1ec; }
+  .tbd { color: #f2a541; border-bottom: 0.3mm dashed #f2a541; }
+  .closing { text-align: center; font-size: 12pt; margin: 9mm 0 8mm; }
+</style>
+</head>
+<body>
+
+<section class="page">
+  <img class="logo" src="../icons/pato-logo.png" alt="" />
+  <div class="rings">
+    <span class="ring"></span>
+    <span class="wide title">Carta</span>
+    <span class="ring"></span>
+  </div>
+  <div class="slant sub">DO DJ · PATO COM LARANJA</div>
+  <div class="wide tagline">Rio de Janeiro &amp; São Paulo</div>
+
+  <div class="letter">
+    <p>Bem-vindo(a) ao Pato! Que bom ter você com a gente — é o seu som que dá o clima da casa,
+      e a ideia é que você fique à vontade pra construir isso do seu jeito.</p>
+    <p>A gente gosta de pensar o set como uma curva. Funciona bem começar num volume mais ambiente,
+      só um pouco acima da playlist que já estava tocando, pra que as pessoas ainda consigam
+      conversar enquanto a casa vai enchendo.</p>
+    <p>Conforme o clima esquenta, vale ir subindo aos poucos, sempre buscando o equilíbrio entre
+      música e conversa. Se o público responder, fique à vontade pra deixar mais animado —
+      ninguém sente esse fluxo melhor do que quem está tocando.</p>
+    <p>Você está construindo a trilha do dia, não uma pista obrigatória. E a equipe pode,
+      eventualmente, sugerir algum ajuste no volume — é só pra cuidar da experiência de todo mundo.</p>
+  </div>
+  <div class="slant sign">bom som!</div>
+
+  <div class="footer"><i>✦</i><span>PATO COM LARANJA</span><i>✦</i></div>
+</section>
+
+<section class="page">
+  <img class="logo" src="../icons/pato-logo.png" alt="" style="width:18mm;height:18mm" />
+  <h2 class="wide">Informações técnicas</h2>
+  <div class="wide page2-sub">guia rápido para djs</div>
+
+  <h3>Tipo de som</h3>
+  <ul>
+    <li>Clima de pé na areia e fim de tarde: groove, disco, house, soul e brasilidades.</li>
+    <li>Sem necessidade de pesquisa obscura ou lado B: toque o que faz sentido pra você e pro público.</li>
+    <li>Pense num warm up de uma festa que você curte — animado, mas sem atropelar a conversa.</li>
+    <li>Traga sua essência pra seleção: curadoria com identidade é o que mais valorizamos.</li>
+  </ul>
+
+  <h3>Equipamento</h3>
+  <ul>
+    <li><b>Mixer:</b> <span class="tbd">a confirmar</span></li>
+    <li><b>Players:</b> <span class="tbd">a confirmar</span></li>
+    <li><b>Formato:</b> <span class="tbd">a confirmar (pendrive / vinil / controladora)</span></li>
+    <li><b>Som:</b> <span class="tbd">a confirmar</span></li>
+  </ul>
+
+  <h3>Informações práticas</h3>
+  <ul>
+    <li><b>Horário:</b> combinado com a equipe para cada data — chegue 30 min antes pra montar.</li>
+    <li><b>Volume:</b> respeite o limite da unidade (muitas são ao ar livre, com vizinhança).</li>
+    <li><b>Traga:</b> seus fones, pendrives/cabos e o que mais precisar pro seu set.</li>
+    <li><b>Consumação:</b> <span class="tbd">a confirmar</span></li>
+  </ul>
+
+  <h3>Boas práticas</h3>
+  <ul>
+    <li>Evitar bebidas ou objetos apoiados sobre o equipamento.</li>
+    <li>Proteger o equipamento de sol, areia e chuva — avise a equipe se precisar.</li>
+    <li>Avisar com antecedência sobre qualquer necessidade especial.</li>
+  </ul>
+
+  <h3>Dúvidas</h3>
+  <ul>
+    <li>Fale com a equipe que te convidou pelo WhatsApp.</li>
+  </ul>
+
+  <div class="slant closing">Será um prazer ter você no Pato!</div>
+  <div class="footer"><i>✦</i><span>PATO COM LARANJA</span><i>✦</i></div>
+</section>
+
+</body>
+</html>
