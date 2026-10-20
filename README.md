@@ -113,6 +113,11 @@ service cloud.firestore {
     match /beno_contatos/{doc}    { allow read, write: if request.auth != null; }
     match /beno_logistica/{doc}   { allow read, write: if request.auth != null; }
     match /beno_config/{doc}      { allow read, write: if request.auth != null; }
+
+    // agenda do Pato com Laranja
+    match /pato_bookings/{doc} { allow read, write: if request.auth != null; }
+    match /pato_artists/{doc}  { allow read, write: if request.auth != null; }
+    match /pato_settings/{doc} { allow read, write: if request.auth != null; }
   }
 }
 ```
@@ -210,3 +215,27 @@ oferece botões de busca no YouTube e no Spotify como *fallback*, então a
 reprodução funciona mesmo quando um ID específico não está presente ou ficou
 desatualizado. Sinta-se à vontade para completar mais `youtube_id` /
 `spotify_embed` no JSON.
+
+---
+
+# 🦆🍊 pato com laranja · agenda de música
+
+Agenda de DJs/música ao vivo das unidades do **Pato com Laranja** — mesma base
+da agenda do Frisson, com a identidade dos posts do Pato. Abre em `pato.html`.
+
+- **Unidades** no topo: São Conrado, Leblon Praia, Leblon Dias Ferreira, Barra
+  Praia, Barra Pepê e São Paulo. **Todas** mostra cada dia com a sigla da
+  unidade; escolher uma unidade filtra o calendário e libera o arrastar pra
+  trocar de data. A lista fica em `UNITS`, no topo de `js/pato.js`.
+- Cada escala é `data + unidade` (doc `AAAA-MM-DD_unidade` em `pato_bookings`),
+  com horário, programação (DJ / ao vivo), status e contato.
+- Mensagens prontas no WhatsApp com `{unidade}`, `{endereco}`, `{horario}` e
+  `{mapa}` (link do Google Maps da unidade).
+- Compartilhar mês/semana gera a arte no padrão dos stories ("AGENDA / PATO
+  RJ E SP / datas"), e o ícone 📍 gera o card "VEM PRO PATO!" com os endereços.
+- Feriados: nacionais + municipais do Rio (unidades RJ) ou de São Paulo.
+
+Grava na nuvem (coleções `pato_*`, mesmo projeto Firebase — publique as regras
+acima). Se a nuvem não responder ou as regras ainda não liberarem as coleções,
+segue salvando no aparelho e sobe o que ficou pendente quando conectar.
+Ao mexer em `js/pato.js`/`css/pato.css`, suba o `?v=` do `pato.html`.

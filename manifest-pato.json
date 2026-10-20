@@ -1,0 +1,32 @@
+{
+  "name": "Pato com Laranja · Agenda",
+  "short_name": "Pato Agenda",
+  "description": "Agenda de música das unidades Pato com Laranja (RJ e SP), com mensagens prontas no WhatsApp.",
+  "lang": "pt-BR",
+  "start_url": "./pato.html",
+  "scope": "./pato.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1b1b1b",
+  "theme_color": "#1b1b1b",
+  "icons": [
+    {
+      "src": "icons/icon-pato-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-pato-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-pato-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
