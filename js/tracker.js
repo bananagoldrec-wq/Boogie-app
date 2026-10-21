@@ -1028,23 +1028,32 @@ function hexA(hex, a) {
 
 // ── Notifications & reminders ─────────────────────────────────────────────────
 
-function playChime() {
+function playBirds() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [[523.25, 0], [659.25, 0.18], [783.99, 0.36]].forEach(([freq, delay]) => {
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+    function chirp(t0, f0, f1, dur, vol) {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
       osc.type = 'sine';
-      osc.frequency.value = freq;
-      const t = ctx.currentTime + delay;
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.25, t + 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
-      osc.start(t);
-      osc.stop(t + 1.8);
-    });
+      osc.frequency.setValueAtTime(f0, t0);
+      osc.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(vol, t0 + 0.015);
+      gain.gain.setValueAtTime(vol, t0 + dur - 0.04);
+      gain.gain.linearRampToValueAtTime(0, t0 + dur);
+      osc.start(t0); osc.stop(t0 + dur + 0.01);
+    }
+    const t = ctx.currentTime;
+    // Primeiro pássaro — 3 gorjeios ascendentes
+    chirp(t,       2800, 3400, 0.11, 0.18);
+    chirp(t+0.16,  3000, 3700, 0.10, 0.18);
+    chirp(t+0.30,  2600, 3100, 0.13, 0.15);
+    // Segundo pássaro — duplet rápido
+    chirp(t+0.75,  4200, 4800, 0.07, 0.14);
+    chirp(t+0.86,  4500, 5200, 0.07, 0.14);
+    // Terceiro pássaro — suave e distante
+    chirp(t+1.40,  2100, 2600, 0.16, 0.09);
+    chirp(t+1.62,  2300, 2800, 0.14, 0.09);
   } catch (_) {}
 }
 
@@ -1066,10 +1075,10 @@ function checkActivityReminders() {
       if (_firedReminders.has(key)) continue;
       _firedReminders.add(key);
       if (Notification.permission === 'granted') {
-        try { new Notification(`⏰ ${act.text}`, { body: `Hora de começar! ${act.startTime}` }); } catch (_) {}
+        showNotif(`⏰ ${act.text}`, `Hora de começar! ${act.startTime}`, `act-${act.startTime}`);
       }
       showReminderToast(`⏰ ${act.text} — hora de começar!`);
-      playChime();
+      playBirds();
     }
   }
 }
@@ -1089,9 +1098,12 @@ function showReminderToast(msg) {
   t._timer = setTimeout(() => { t.hidden = true; }, 6000);
 }
 
-function showNotif(title, body) {
-  if ('Notification' in window && Notification.permission === 'granted') {
-    try { new Notification(title, { body }); } catch (_) {}
+function showNotif(title, body, tag) {
+  const sw = 'serviceWorker' in navigator && navigator.serviceWorker.controller;
+  if (sw) {
+    navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag });
+  } else if ('Notification' in window && Notification.permission === 'granted') {
+    try { new Notification(title, { body, tag }); } catch (_) {}
   }
   showReminderToast(body);
 }
