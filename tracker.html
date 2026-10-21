@@ -184,5 +184,10 @@
   <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
   <script src="js/tracker.js?v=5"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
 </body>
 </html>
