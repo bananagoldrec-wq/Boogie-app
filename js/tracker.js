@@ -123,6 +123,7 @@ let S = loadState();
 let weekStart        = getMonday(new Date());
 let editCell         = null;
 let selCat           = null;
+let _pinActive          = false;
 let _lastReminderKey    = null;
 let _firedReminders     = new Set();
 let _firedRemindersDate = null;
@@ -151,6 +152,10 @@ function defaultState() {
     lastActiveDate: null,
     achievements: {},
     totalDone: 0,
+    seededWeeks: [],
+    routineVersion: ROUTINE_VERSION,
+    pinnedTemplate: [],
+    notifLeadMins: 0,
   };
 }
 
@@ -267,18 +272,18 @@ function setAct(di, h, m = 0, act) {
 
 function seedRoutineIfEmpty() {
   if (!S.seededWeeks) S.seededWeeks = [];
+  if (!S.pinnedTemplate) S.pinnedTemplate = [];
   const wkKey = wk();
   if (S.seededWeeks.includes(wkKey)) return;
   const hasActivity = Object.keys(S.activities).some(k => k.startsWith(wkKey));
-  if (hasActivity) {
-    S.seededWeeks.push(wkKey); save(); return;
+  if (!hasActivity && S.pinnedTemplate.length > 0) {
+    S.pinnedTemplate.forEach(({ di, h, m, text, category, startTime, endTime }) => {
+      S.activities[aKey(di, h, m)] = { text, category, done: false, startTime, endTime, pin: true };
+    });
+    setTimeout(() => showReminderToast('Rotina da semana carregada! 📅'), 500);
   }
-  ROUTINE.forEach(([di, h, m, text, category, startTime, endTime]) => {
-    S.activities[aKey(di, h, m)] = { text, category, done: false, startTime, endTime };
-  });
   S.seededWeeks.push(wkKey);
   save();
-  setTimeout(() => showReminderToast('Rotina da semana carregada! 📅'), 500);
 }
 
 // ── XP & Level engine ─────────────────────────────────────────────────────────
@@ -563,7 +568,8 @@ function renderChip(cell, act, span = 1) {
     tl.textContent = showEnd ? `${act.startTime}–${act.endTime}` : act.startTime;
     body.appendChild(tl);
   }
-  const txt = mk('span', 'chip-text'); txt.textContent = act.text;
+  const txt = mk('span', 'chip-text');
+  txt.textContent = (act.pin ? '📌 ' : '') + act.text;
   body.appendChild(txt);
 
   const edit = mk('button', 'chip-edit');
@@ -624,6 +630,9 @@ function openActModal(di, h, m = 0, editMode = false) {
   selCat = act ? act.category : null;
   refreshCatUI();
 
+  _pinActive = act ? !!act.pin : false;
+  refreshPinBtn();
+
   q('#btn-del-act').hidden = !act;
   q('#act-overlay').hidden = false;
   if (editMode || !act) setTimeout(() => inp.focus(), 100);
@@ -653,13 +662,28 @@ function saveAct() {
   }
 
   const existing = getAct(di, h, m);
-  setAct(di, h, m, text ? {
+  if (!S.pinnedTemplate) S.pinnedTemplate = [];
+  const actObj = text ? {
     text,
     category: selCat || 'other',
     done: existing ? existing.done : false,
     startTime: startTime || `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,
     endTime:   endTime || null,
-  } : null);
+    pin: _pinActive || undefined,
+  } : null;
+
+  // Sync pinnedTemplate
+  const tplIdx = S.pinnedTemplate.findIndex(p => p.di === di && p.h === h && p.m === m);
+  if (_pinActive && actObj) {
+    const entry = { di, h, m, text: actObj.text, category: actObj.category, startTime: actObj.startTime, endTime: actObj.endTime };
+    if (tplIdx >= 0) S.pinnedTemplate[tplIdx] = entry;
+    else             S.pinnedTemplate.push(entry);
+  } else if (!_pinActive && tplIdx >= 0) {
+    S.pinnedTemplate.splice(tplIdx, 1);
+  }
+
+  setAct(di, h, m, actObj);
+  save();
   closeActModal();
   buildGrid();
 }
@@ -692,6 +716,13 @@ function refreshCatUI() {
     btn.style.borderColor = active && cat ? cat.color : '';
     btn.style.background  = active && cat ? hexA(cat.color, 0.15) : '';
   });
+}
+
+function refreshPinBtn() {
+  const btn = q('#btn-pin-act');
+  if (!btn) return;
+  btn.classList.toggle('active', _pinActive);
+  btn.textContent = _pinActive ? '📌 Fixado toda semana' : '📌 Fixar toda semana';
 }
 
 // ── Smoking tracker ───────────────────────────────────────────────────────────
@@ -1111,26 +1142,29 @@ function playBirds() {
 }
 
 function checkActivityReminders() {
-  const now = new Date();
-  const dk  = todayKey();
+  const now  = new Date();
+  const dk   = todayKey();
   if (_firedRemindersDate !== dk) { _firedReminders = new Set(); _firedRemindersDate = dk; }
   const todayMonday = getMonday(now);
   if (weekStart.getTime() !== todayMonday.getTime()) return;
-  const di = now.getDay() === 0 ? 6 : now.getDay() - 1;
-  const h  = now.getHours(), m = now.getMinutes();
+  const di       = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  const nowMins  = now.getHours() * 60 + now.getMinutes();
+  const lead     = S.notifLeadMins || 0;
   for (let sh = START_H; sh <= END_H; sh++) {
     for (const sm of [0, 30]) {
       const act = getAct(di, sh, sm);
       if (!act || act.done || !act.startTime) continue;
       const [ah, am] = act.startTime.split(':').map(Number);
-      if (ah !== h || am !== m) continue;
+      const fireMins = ah * 60 + am - lead;
+      if (fireMins !== nowMins) continue;
       const key = `${dk}-${act.startTime}-${act.text}`;
       if (_firedReminders.has(key)) continue;
       _firedReminders.add(key);
+      const msg = lead > 0 ? `Em ${lead} min: ${act.text} (${act.startTime})` : `Hora de começar! ${act.startTime}`;
       if (Notification.permission === 'granted') {
-        showNotif(`⏰ ${act.text}`, `Hora de começar! ${act.startTime}`, `act-${act.startTime}`);
+        showNotif(`⏰ ${act.text}`, msg, `act-${act.startTime}`);
       }
-      showReminderToast(`⏰ ${act.text} — hora de começar!`);
+      showReminderToast(`⏰ ${act.text} — ${msg}`);
       playBirds();
     }
   }
@@ -1495,11 +1529,29 @@ function init() {
   q('#btn-save-act').addEventListener('click', saveAct);
   q('#btn-del-act').addEventListener('click', () => {
     if (!editCell) return;
-    setAct(editCell.di, editCell.h, editCell.m, null);
+    const { di, h, m } = editCell;
+    setAct(di, h, m, null);
+    if (!S.pinnedTemplate) S.pinnedTemplate = [];
+    const tplIdx = S.pinnedTemplate.findIndex(p => p.di === di && p.h === h && p.m === m);
+    if (tplIdx >= 0) S.pinnedTemplate.splice(tplIdx, 1);
+    save();
     closeActModal();
     buildGrid();
   });
   q('#act-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveAct(); });
+  q('#btn-pin-act').addEventListener('click', () => { _pinActive = !_pinActive; refreshPinBtn(); });
+
+  // Settings
+  q('#btn-open-settings').addEventListener('click', openSettings);
+  q('#btn-close-settings').addEventListener('click', () => { q('#settings-overlay').hidden = true; });
+  q('#settings-overlay').addEventListener('click', e => { if (e.target.id === 'settings-overlay') q('#settings-overlay').hidden = true; });
+  q('#lead-options').addEventListener('click', e => {
+    const btn = e.target.closest('.lead-btn');
+    if (!btn) return;
+    S.notifLeadMins = Number(btn.dataset.mins);
+    save();
+    refreshLeadUI();
+  });
 
   // Smoking strip → detail
   q('#smoke-strip').addEventListener('click', () => {
@@ -1565,6 +1617,16 @@ function init() {
   }
 
   requestAnimationFrame(() => setTimeout(scrollToCurrent, 60));
+}
+
+function openSettings() {
+  refreshLeadUI();
+  q('#settings-overlay').hidden = false;
+}
+
+function refreshLeadUI() {
+  const cur = S.notifLeadMins || 0;
+  qAll('.lead-btn').forEach(btn => btn.classList.toggle('active', Number(btn.dataset.mins) === cur));
 }
 
 function setSetupMode(mode) {

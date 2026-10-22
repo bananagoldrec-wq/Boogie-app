@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Rotina" />
   <title>Minha Rotina</title>
-  <link rel="stylesheet" href="css/tracker.css?v=6" />
+  <link rel="stylesheet" href="css/tracker.css?v=7" />
 </head>
 <body>
 
@@ -26,6 +26,7 @@
       </div>
     </div>
     <button id="btn-next" class="nav-arrow">&#8250;</button>
+    <button id="btn-open-settings" class="nav-arrow" aria-label="Configurações" style="font-size:14px">⚙</button>
     <button id="smoke-strip" class="smoke-mini" aria-label="Ver progresso sem cigarro">
       <span id="ss-time" class="ss-time">SF</span>
       <span id="ss-money" class="ss-money" hidden></span>
@@ -68,6 +69,9 @@
         </div>
       </div>
       <div id="cat-grid" class="cat-grid" role="group" aria-label="Categorias"></div>
+      <div class="pin-row">
+        <button id="btn-pin-act" class="btn pin-btn" type="button">📌 Fixar toda semana</button>
+      </div>
       <div class="sheet-footer">
         <button id="btn-save-act" class="btn primary">Salvar</button>
         <button id="btn-del-act"  class="btn danger"  hidden>Remover</button>
@@ -177,13 +181,32 @@
     </div>
   </div>
 
+  <!-- Settings overlay -->
+  <div id="settings-overlay" class="overlay" hidden>
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="sheet-header">
+        <span class="sheet-title">Configurações</span>
+        <button id="btn-close-settings" class="close-btn">×</button>
+      </div>
+      <label class="field-label">Alarme — avisar com antecedência</label>
+      <div class="lead-options" id="lead-options">
+        <button class="lead-btn" data-mins="0">Na hora</button>
+        <button class="lead-btn" data-mins="5">5 min antes</button>
+        <button class="lead-btn" data-mins="10">10 min antes</button>
+        <button class="lead-btn" data-mins="15">15 min antes</button>
+        <button class="lead-btn" data-mins="20">20 min antes</button>
+        <button class="lead-btn" data-mins="30">30 min antes</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Floating meditation button -->
   <button class="med-fab" id="btn-open-med" aria-label="Centro de Meditação">🧘</button>
 
   <!-- Confetti canvas -->
   <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
-  <script src="js/tracker.js?v=6"></script>
+  <script src="js/tracker.js?v=7"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
