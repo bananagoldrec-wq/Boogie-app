@@ -8,7 +8,7 @@ const DAYS     = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 const DAY_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
 const START_H  = 6;
 const END_H    = 20;
-const ROUTINE_VERSION = 5;
+const ROUTINE_VERSION = 6;
 
 const CATS = [
   { id:'exercise', label:'Exercício',   color:'#A8C4A2' },
@@ -114,8 +114,20 @@ const REMINDER_MSGS = [
   'Diz não pra fissura. Diz sim pra você mesmo.',
 ];
 
-// Weekly routine template — empty, user fills in their own activities
-const ROUTINE = [];
+// Weekly routine merged once into pinnedTemplate (di: 0=Seg … 6=Dom)
+const ROUTINE = [
+  { di:0, h:7,  m:0, text:'Malhação', category:'exercise', startTime:'07:00', endTime:null    },
+  { di:0, h:9,  m:0, text:'KNN',      category:'study',    startTime:'09:00', endTime:'11:00' },
+  { di:0, h:19, m:0, text:'Yoga',     category:'exercise', startTime:'19:00', endTime:null    },
+  { di:1, h:7,  m:0, text:'Malhação', category:'exercise', startTime:'07:00', endTime:null    },
+  { di:1, h:8,  m:0, text:'Yoga',     category:'exercise', startTime:'08:00', endTime:null    },
+  { di:1, h:19, m:0, text:'IBEU',     category:'study',    startTime:'19:00', endTime:null    },
+  { di:2, h:7,  m:0, text:'Yoga',     category:'exercise', startTime:'07:00', endTime:null    },
+  { di:3, h:7,  m:0, text:'Malhação', category:'exercise', startTime:'07:00', endTime:null    },
+  { di:3, h:19, m:0, text:'IBEU',     category:'study',    startTime:'19:00', endTime:null    },
+  { di:4, h:7,  m:0, text:'Malhação', category:'exercise', startTime:'07:00', endTime:null    },
+  { di:4, h:9,  m:0, text:'KNN',      category:'study',    startTime:'09:00', endTime:'11:00' },
+];
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -273,6 +285,17 @@ function setAct(di, h, m = 0, act) {
 function seedRoutineIfEmpty() {
   if (!S.seededWeeks) S.seededWeeks = [];
   if (!S.pinnedTemplate) S.pinnedTemplate = [];
+  if (S.routineApplied !== ROUTINE_VERSION) {
+    // Merge ROUTINE into the template and the current week, keeping user edits
+    ROUTINE.forEach(r => {
+      if (!S.pinnedTemplate.some(p => p.di === r.di && p.h === r.h && p.m === r.m)) S.pinnedTemplate.push({ ...r });
+      const cur = getAct(r.di, r.h, r.m);
+      if (cur) { cur.pin = true; S.activities[aKey(r.di, r.h, r.m)] = cur; }
+      else S.activities[aKey(r.di, r.h, r.m)] = { text:r.text, category:r.category, done:false, startTime:r.startTime, endTime:r.endTime, pin:true };
+    });
+    S.routineApplied = ROUTINE_VERSION;
+    save();
+  }
   const wkKey = wk();
   if (S.seededWeeks.includes(wkKey)) return;
   const hasActivity = Object.keys(S.activities).some(k => k.startsWith(wkKey));
