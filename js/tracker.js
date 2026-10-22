@@ -444,6 +444,13 @@ function updateTodayProgress() {
 
 // ── Grid ──────────────────────────────────────────────────────────────────────
 
+function calcSpan(act) {
+  if (!act.endTime || !act.startTime) return 1;
+  const [sh, sm] = act.startTime.split(':').map(Number);
+  const [eh, em] = act.endTime.split(':').map(Number);
+  return Math.max(1, Math.ceil(((eh * 60 + em) - (sh * 60 + sm)) / 30));
+}
+
 function buildGrid() {
   seedRoutineIfEmpty();
   const grid = q('#week-grid');
@@ -455,7 +462,9 @@ function buildGrid() {
   const todayDI     = now.getDay() === 0 ? 6 : now.getDay() - 1;
 
   // Corner
-  grid.appendChild(mk('div', 'g-corner'));
+  const corner = mk('div', 'g-corner');
+  corner.style.gridRow = '1'; corner.style.gridColumn = '1';
+  grid.appendChild(corner);
 
   // Day headers
   DAYS.forEach((name, i) => {
@@ -464,6 +473,7 @@ function buildGrid() {
     const isToday = isThisWeek && i === todayDI;
 
     const hdr   = mk('div', `g-day${isToday ? ' is-today' : ''}`);
+    hdr.style.gridRow = '1'; hdr.style.gridColumn = String(i + 2);
     const dname = mk('span', 'dh-name'); dname.textContent = name;
     const ddate = mk('span', 'dh-date'); ddate.textContent = date.getDate();
     hdr.appendChild(dname);
@@ -471,23 +481,54 @@ function buildGrid() {
     grid.appendChild(hdr);
   });
 
-  // Hour rows (30-min slots)
+  // Pre-scan: mark slots absorbed by a spanning activity
+  const covered = new Set();
+  for (let h = START_H; h <= END_H; h++) {
+    for (const m of [0, 30]) {
+      for (let di = 0; di < 7; di++) {
+        const act = getAct(di, h, m);
+        if (!act) continue;
+        const span = calcSpan(act);
+        let ch = h, cm = m;
+        for (let s = 1; s < span; s++) {
+          cm += 30;
+          if (cm >= 60) { cm -= 60; ch++; }
+          if (ch > END_H) break;
+          covered.add(`${di}-${ch}-${cm}`);
+        }
+      }
+    }
+  }
+
+  // Hour rows (30-min slots) with explicit grid placement
+  let rowIdx = 2;
   for (let h = START_H; h <= END_H; h++) {
     for (const m of [0, 30]) {
       const lbl = mk('div', m === 0 ? 'g-time' : 'g-time g-time-half');
       lbl.textContent = m === 0 ? `${String(h).padStart(2,'0')}h` : ':30';
+      lbl.style.gridRow = String(rowIdx); lbl.style.gridColumn = '1';
       grid.appendChild(lbl);
 
       DAYS.forEach((_, di) => {
+        if (covered.has(`${di}-${h}-${m}`)) return;
+
         const isToday = isThisWeek && di === todayDI;
         const cell    = mk('div', `g-cell${isToday ? ' is-today-col' : ''}`);
         cell.dataset.di   = di;
         cell.dataset.hour = h;
         cell.dataset.min  = m;
+        cell.style.gridRow    = String(rowIdx);
+        cell.style.gridColumn = String(di + 2);
 
         const act = getAct(di, h, m);
         if (act) {
-          renderChip(cell, act);
+          const span = calcSpan(act);
+          if (span > 1) {
+            cell.style.gridRow = `${rowIdx} / span ${span}`;
+            cell.style.height  = 'auto';
+            cell.classList.add('is-span');
+          }
+          renderChip(cell, act, span);
           cell.addEventListener('click', e => {
             if (e.target.classList.contains('chip-edit')) return;
             toggleDone(di, h, m, cell);
@@ -497,6 +538,8 @@ function buildGrid() {
         }
         grid.appendChild(cell);
       });
+
+      rowIdx++;
     }
   }
 
@@ -504,11 +547,11 @@ function buildGrid() {
   updateTodayProgress();
 }
 
-function renderChip(cell, act) {
+function renderChip(cell, act, span = 1) {
   const cat   = CATS.find(c => c.id === act.category);
   const color = cat ? cat.color : '#8E8E93';
 
-  const chip  = mk('div', `chip${act.done ? ' is-done' : ''}`);
+  const chip  = mk('div', `chip${act.done ? ' is-done' : ''}${span > 1 ? ' is-tall' : ''}`);
   chip.style.background  = hexA(color, 0.14);
   chip.style.borderLeft  = `3px solid ${color}`;
 
@@ -539,15 +582,25 @@ function renderChip(cell, act) {
 }
 
 function placeTimeLine(di, now) {
-  const h      = now.getHours();
-  const rawMin = now.getMinutes();
-  const m      = rawMin < 30 ? 0 : 30;
+  const h = now.getHours(), rawMin = now.getMinutes();
   if (h < START_H || h > END_H) return;
-  const cell = q(`.g-cell[data-di="${di}"][data-hour="${h}"][data-min="${m}"]`);
-  if (!cell) return;
-  const line = mk('div', 'time-line');
-  line.style.top = `${((rawMin % 30) / 30) * 100}%`;
-  cell.appendChild(line);
+  const nowTotalMin = h * 60 + rawMin;
+
+  // Find the rendered cell that contains current time (may be a spanning cell)
+  const cells = document.querySelectorAll(`.g-cell[data-di="${di}"]`);
+  for (const c of cells) {
+    const ch = Number(c.dataset.hour), cm = Number(c.dataset.min);
+    const act = getAct(di, ch, cm);
+    const span = act ? calcSpan(act) : 1;
+    const startMin = ch * 60 + cm;
+    const endMin   = startMin + span * 30;
+    if (nowTotalMin >= startMin && nowTotalMin < endMin) {
+      const line = mk('div', 'time-line');
+      line.style.top = `${((nowTotalMin - startMin) / (span * 30)) * 100}%`;
+      c.appendChild(line);
+      return;
+    }
+  }
 }
 
 // ── Activity modal ────────────────────────────────────────────────────────────
