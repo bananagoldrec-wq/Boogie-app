@@ -133,9 +133,7 @@ function loadState() {
     if (!raw) return defaultState();
     const state = JSON.parse(raw);
     if ((state.routineVersion || 0) < ROUTINE_VERSION) {
-      // Clear all activities and re-seed fresh with the full current routine
-      // (preserves XP, streak, achievements, and smoking data)
-      state.activities = {};
+      // Only clear seeded weeks marker — preserve all user-added activities
       state.seededWeeks = [];
       state.routineVersion = ROUTINE_VERSION;
       localStorage.setItem(SK, JSON.stringify(state));
