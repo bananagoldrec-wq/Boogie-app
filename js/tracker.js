@@ -1199,10 +1199,43 @@ function checkActivityReminders() {
       _firedReminders.add(key);
       const msg = lead > 0 ? `Em ${lead} min: ${act.text} (${act.startTime})` : `Hora de começar! ${act.startTime}`;
       showNotif(`⏰ ${act.text}`, msg, `act-${act.startTime}`);
-      playBirds();
-      if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+      startAlarm(act.text, msg);
     }
   }
+}
+
+// ── Ringing alarm (1 min, until dismissed) ────────────────────────────────────
+
+const ALARM_MS = 60000;
+let _alarmTimer = null, _alarmStop = null, _alarmTick = null;
+
+function startAlarm(title, msg) {
+  stopAlarm();
+  q('#alarm-title').textContent = title;
+  q('#alarm-msg').textContent   = msg;
+  q('#alarm-overlay').hidden = false;
+  const started = Date.now();
+  const ring = () => {
+    playBirds();
+    if (navigator.vibrate) navigator.vibrate([600, 300, 600, 300, 600]);
+    const left = Math.max(0, Math.ceil((ALARM_MS - (Date.now() - started)) / 1000));
+    q('#alarm-countdown').textContent = `Tocando… ${left}s`;
+  };
+  ring();
+  _alarmTimer = setInterval(ring, 2500);
+  _alarmTick  = setInterval(() => {
+    const left = Math.max(0, Math.ceil((ALARM_MS - (Date.now() - started)) / 1000));
+    q('#alarm-countdown').textContent = `Tocando… ${left}s`;
+  }, 1000);
+  _alarmStop = setTimeout(stopAlarm, ALARM_MS);
+}
+
+function stopAlarm() {
+  clearInterval(_alarmTimer); clearInterval(_alarmTick); clearTimeout(_alarmStop);
+  _alarmTimer = _alarmTick = _alarmStop = null;
+  if (navigator.vibrate) navigator.vibrate(0);
+  const ov = q('#alarm-overlay');
+  if (ov) ov.hidden = true;
 }
 
 // ── Google Agenda ─────────────────────────────────────────────────────────────
@@ -1649,11 +1682,12 @@ function init() {
   q('#btn-open-settings').addEventListener('click', openSettings);
   q('#btn-test-alarm').addEventListener('click', () => {
     requestNotifPermission(() => {
-      playBirds();
-      if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+      q('#settings-overlay').hidden = true;
       showNotif('⏰ Teste de alarme', 'Se você ouviu os pássaros, o alarme está funcionando.', 'test');
+      startAlarm('Teste de alarme', 'Se você ouviu os pássaros, o alarme está funcionando.');
     });
   });
+  q('#btn-alarm-off').addEventListener('click', stopAlarm);
   q('#btn-close-settings').addEventListener('click', () => { q('#settings-overlay').hidden = true; });
   q('#settings-overlay').addEventListener('click', e => { if (e.target.id === 'settings-overlay') q('#settings-overlay').hidden = true; });
   q('#lead-options').addEventListener('click', e => {

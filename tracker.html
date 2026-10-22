@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Rotina" />
   <title>Minha Rotina</title>
-  <link rel="stylesheet" href="css/tracker.css?v=10" />
+  <link rel="stylesheet" href="css/tracker.css?v=11" />
 </head>
 <body>
 
@@ -204,13 +204,24 @@
     </div>
   </div>
 
+  <!-- Ringing alarm -->
+  <div id="alarm-overlay" class="alarm-overlay" hidden>
+    <div class="alarm-card" role="alertdialog" aria-modal="true">
+      <div class="alarm-bell">⏰</div>
+      <p id="alarm-title" class="alarm-title"></p>
+      <p id="alarm-msg" class="alarm-msg"></p>
+      <p id="alarm-countdown" class="alarm-countdown"></p>
+      <button id="btn-alarm-off" class="btn alarm-off" type="button">Desligar</button>
+    </div>
+  </div>
+
   <!-- Floating meditation button -->
   <button class="med-fab" id="btn-open-med" aria-label="Centro de Meditação">🧘</button>
 
   <!-- Confetti canvas -->
   <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
-  <script src="js/tracker.js?v=10"></script>
+  <script src="js/tracker.js?v=11"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
