@@ -1135,9 +1135,19 @@ function hexA(hex, a) {
 
 // ── Notifications & reminders ─────────────────────────────────────────────────
 
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+// iOS only allows audio from a context created/resumed during a user tap
+['touchstart', 'click'].forEach(ev =>
+  document.addEventListener(ev, () => { try { getAudioCtx(); } catch (_) {} }, { once: true, passive: true }));
+
 function playBirds() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getAudioCtx();
     function chirp(t0, f0, f1, dur, vol) {
       const osc = ctx.createOscillator(), gain = ctx.createGain();
       osc.connect(gain); gain.connect(ctx.destination);
@@ -1168,29 +1178,95 @@ function checkActivityReminders() {
   const now  = new Date();
   const dk   = todayKey();
   if (_firedRemindersDate !== dk) { _firedReminders = new Set(); _firedRemindersDate = dk; }
-  const todayMonday = getMonday(now);
-  if (weekStart.getTime() !== todayMonday.getTime()) return;
+  // Always look at today's real week, even if the user is browsing another week
+  const wkToday  = getMonday(now).toISOString().slice(0,10);
   const di       = now.getDay() === 0 ? 6 : now.getDay() - 1;
   const nowMins  = now.getHours() * 60 + now.getMinutes();
   const lead     = S.notifLeadMins || 0;
-  for (let sh = START_H; sh <= END_H; sh++) {
+  for (let sh = 0; sh < 24; sh++) {
     for (const sm of [0, 30]) {
-      const act = getAct(di, sh, sm);
+      const act = S.activities[`${wkToday}-${DAY_KEYS[di]}-${sh}-${sm}`]
+               || (sm === 0 ? S.activities[`${wkToday}-${DAY_KEYS[di]}-${sh}`] : null);
       if (!act || act.done || !act.startTime) continue;
       const [ah, am] = act.startTime.split(':').map(Number);
       const fireMins = ah * 60 + am - lead;
-      if (fireMins !== nowMins) continue;
+      // 5-min window: timers get throttled/delayed, an exact-minute match gets missed
+      if (nowMins < fireMins || nowMins > fireMins + 5) continue;
       const key = `${dk}-${act.startTime}-${act.text}`;
       if (_firedReminders.has(key)) continue;
       _firedReminders.add(key);
       const msg = lead > 0 ? `Em ${lead} min: ${act.text} (${act.startTime})` : `Hora de começar! ${act.startTime}`;
-      if (Notification.permission === 'granted') {
-        showNotif(`⏰ ${act.text}`, msg, `act-${act.startTime}`);
-      }
-      showReminderToast(`⏰ ${act.text} — ${msg}`);
+      showNotif(`⏰ ${act.text}`, msg, `act-${act.startTime}`);
       playBirds();
+      if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
     }
   }
+}
+
+// ── Google Agenda ─────────────────────────────────────────────────────────────
+
+const GCAL_DAYS = ['MO','TU','WE','TH','FR','SA','SU'];
+
+function gcalLink(group) {
+  const first = group.items[0];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayDi = today.getDay() === 0 ? 6 : today.getDay() - 1;
+  // First occurrence: next matching weekday from today
+  let offset = 7;
+  group.items.forEach(it => { const d = (it.di - todayDi + 7) % 7; if (d < offset) offset = d; });
+  const d = new Date(today); d.setDate(d.getDate() + offset);
+  const ymd = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  const [sh, sm] = first.startTime.split(':').map(Number);
+  let endMins = sh * 60 + sm + 60;
+  if (first.endTime) {
+    const [eh, em] = first.endTime.split(':').map(Number);
+    if (eh * 60 + em > sh * 60 + sm) endMins = eh * 60 + em;
+  }
+  const hhmm = mins => `${String(Math.floor(mins/60)).padStart(2,'0')}${String(mins%60).padStart(2,'0')}00`;
+  const days = [...new Set(group.items.map(it => GCAL_DAYS[it.di]))].join(',');
+  const params = new URLSearchParams({
+    action:  'TEMPLATE',
+    text:    first.text,
+    dates:   `${ymd}T${hhmm(sh*60+sm)}/${ymd}T${hhmm(endMins)}`,
+    recur:   `RRULE:FREQ=WEEKLY;BYDAY=${days}`,
+    details: 'Rotina — Minha Rotina',
+  });
+  return `https://calendar.google.com/calendar/render?${params}`;
+}
+
+function renderGcalList() {
+  const list = q('#gcal-list');
+  if (!list) return;
+  list.innerHTML = '';
+  const groups = {};
+  (S.pinnedTemplate || []).forEach(it => {
+    const k = `${it.text}|${it.startTime}|${it.endTime || ''}`;
+    (groups[k] ||= { items: [] }).items.push(it);
+  });
+  const arr = Object.values(groups);
+  if (!arr.length) {
+    const p = mk('p', 'gcal-empty');
+    p.textContent = 'Fixe atividades com 📌 para enviá-las ao Google Agenda.';
+    list.appendChild(p);
+    return;
+  }
+  arr.sort((a, b) => a.items[0].startTime.localeCompare(b.items[0].startTime));
+  arr.forEach(g => {
+    const it = g.items[0];
+    const a = mk('a', 'gcal-item');
+    a.href = gcalLink(g);
+    a.target = '_blank';
+    a.rel = 'noopener';
+    const days = g.items.map(x => DAYS[x.di]).join(', ');
+    const time = it.endTime && it.endTime !== it.startTime ? `${it.startTime}–${it.endTime}` : it.startTime;
+    const info = mk('span', 'gcal-info');
+    const t = mk('strong'); t.textContent = it.text;
+    const s = mk('span'); s.textContent = `${days} · ${time}`;
+    info.appendChild(t); info.appendChild(s);
+    const plus = mk('span', 'gcal-plus'); plus.textContent = '+ Agenda';
+    a.appendChild(info); a.appendChild(plus);
+    list.appendChild(a);
+  });
 }
 
 function requestNotifPermission(cb) {
@@ -1209,7 +1285,8 @@ function showReminderToast(msg) {
 }
 
 function showNotif(title, body, tag) {
-  const sw = 'serviceWorker' in navigator && navigator.serviceWorker.controller;
+  const granted = 'Notification' in window && Notification.permission === 'granted';
+  const sw = granted && 'serviceWorker' in navigator && navigator.serviceWorker.controller;
   if (sw) {
     navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag });
   } else if ('Notification' in window && Notification.permission === 'granted') {
@@ -1536,8 +1613,10 @@ function init() {
   refreshSmokingStrip();
   updateNotifBtn();
   setInterval(refreshSmokingStrip, 30000);
-  setInterval(() => { checkScheduledReminders(); checkActivityReminders(); }, 60000);
+  setInterval(checkScheduledReminders, 60000);
+  setInterval(checkActivityReminders, 20000);
   checkActivityReminders();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkActivityReminders(); });
   if ('Notification' in window && Notification.permission === 'default') {
     setTimeout(() => requestNotifPermission(updateNotifBtn), 3000);
   }
@@ -1566,6 +1645,13 @@ function init() {
 
   // Settings
   q('#btn-open-settings').addEventListener('click', openSettings);
+  q('#btn-test-alarm').addEventListener('click', () => {
+    requestNotifPermission(() => {
+      playBirds();
+      if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+      showNotif('⏰ Teste de alarme', 'Se você ouviu os pássaros, o alarme está funcionando.', 'test');
+    });
+  });
   q('#btn-close-settings').addEventListener('click', () => { q('#settings-overlay').hidden = true; });
   q('#settings-overlay').addEventListener('click', e => { if (e.target.id === 'settings-overlay') q('#settings-overlay').hidden = true; });
   q('#lead-options').addEventListener('click', e => {
@@ -1644,6 +1730,7 @@ function init() {
 
 function openSettings() {
   refreshLeadUI();
+  renderGcalList();
   q('#settings-overlay').hidden = false;
 }
 
