@@ -8,7 +8,7 @@ const DAYS     = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 const DAY_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
 const START_H  = 6;
 const END_H    = 20;
-const ROUTINE_VERSION = 6;
+const ROUTINE_VERSION = 7;
 
 const CATS = [
   { id:'exercise', label:'Exercício',   color:'#A8C4A2' },
@@ -127,6 +127,7 @@ const ROUTINE = [
   { di:3, h:19, m:0, text:'IBEU',     category:'study',    startTime:'19:00', endTime:null    },
   { di:4, h:7,  m:0, text:'Malhação', category:'exercise', startTime:'07:00', endTime:null    },
   { di:4, h:9,  m:0, text:'KNN',      category:'study',    startTime:'09:00', endTime:'11:00' },
+  ...[0,1,2,3,4].map(di => ({ di, h:12, m:0, text:'Estúdio', category:'work', startTime:'12:00', endTime:'18:00', v:7 })),
 ];
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -287,7 +288,8 @@ function seedRoutineIfEmpty() {
   if (!S.pinnedTemplate) S.pinnedTemplate = [];
   if (S.routineApplied !== ROUTINE_VERSION) {
     // Merge ROUTINE into the template and the current week, keeping user edits
-    ROUTINE.forEach(r => {
+    // Only apply entries added after the last applied version, so deleted items don't come back
+    ROUTINE.filter(r => (r.v || 6) > (S.routineApplied || 0)).forEach(r => {
       if (!S.pinnedTemplate.some(p => p.di === r.di && p.h === r.h && p.m === r.m)) S.pinnedTemplate.push({ ...r });
       const cur = getAct(r.di, r.h, r.m);
       if (cur) { cur.pin = true; S.activities[aKey(r.di, r.h, r.m)] = cur; }
