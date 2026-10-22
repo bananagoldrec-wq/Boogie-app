@@ -446,7 +446,8 @@ function calcSpan(act) {
   if (!act.endTime || !act.startTime) return 1;
   const [sh, sm] = act.startTime.split(':').map(Number);
   const [eh, em] = act.endTime.split(':').map(Number);
-  return Math.max(1, Math.ceil(((eh * 60 + em) - (sh * 60 + sm)) / 30));
+  const diff = (eh * 60 + em) - (sh * 60 + sm);
+  return diff > 0 ? Math.ceil(diff / 30) : 1;
 }
 
 function buildGrid() {
@@ -558,7 +559,8 @@ function renderChip(cell, act, span = 1) {
   const body = mk('div', 'chip-body');
   if (act.startTime) {
     const tl = mk('span', 'chip-time');
-    tl.textContent = act.endTime ? `${act.startTime}–${act.endTime}` : act.startTime;
+    const showEnd = act.endTime && act.endTime !== act.startTime;
+    tl.textContent = showEnd ? `${act.startTime}–${act.endTime}` : act.startTime;
     body.appendChild(tl);
   }
   const txt = mk('span', 'chip-text'); txt.textContent = act.text;
