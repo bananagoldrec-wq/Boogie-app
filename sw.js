@@ -31,6 +31,8 @@ self.addEventListener("message", (e) => {
       badge: "/Boogie-app/icons/icon-192.png",
       tag:   e.data.tag || "rotina",
       renotify: true,
+      requireInteraction: true,
+      vibrate: [600, 300, 600, 300, 600, 300, 600],
     })
   );
 });

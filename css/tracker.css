@@ -1461,3 +1461,55 @@ body {
 }
 
 .gcal-empty { font-size: 13px; color: var(--text3); }
+
+/* ── Ringing alarm ─────────────────────────────────────────────── */
+
+.alarm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(42, 40, 37, 0.72);
+}
+.alarm-overlay[hidden] { display: none; }
+
+.alarm-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--card);
+  border-radius: 24px;
+  padding: 32px 20px 20px;
+  text-align: center;
+}
+
+.alarm-bell {
+  font-size: 64px;
+  line-height: 1;
+  animation: alarm-shake 0.5s ease-in-out infinite;
+}
+@keyframes alarm-shake {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-14deg); }
+  75% { transform: rotate(14deg); }
+}
+
+.alarm-title { font-size: 24px; font-weight: 800; margin-top: 16px; color: var(--text); }
+.alarm-msg { font-size: 15px; color: var(--text2); margin-top: 6px; }
+.alarm-countdown { font-size: 13px; color: var(--text3); margin-top: 12px; }
+
+.alarm-off {
+  width: 100%;
+  margin-top: 20px;
+  padding: 18px;
+  font-size: 18px;
+  font-weight: 800;
+  border: none;
+  border-radius: 16px;
+  background: var(--danger);
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+}
