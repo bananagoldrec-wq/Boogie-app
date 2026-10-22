@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Rotina" />
   <title>Minha Rotina</title>
-  <link rel="stylesheet" href="css/tracker.css?v=8" />
+  <link rel="stylesheet" href="css/tracker.css?v=9" />
 </head>
 <body>
 
@@ -197,6 +197,10 @@
         <button class="lead-btn" data-mins="20">20 min antes</button>
         <button class="lead-btn" data-mins="30">30 min antes</button>
       </div>
+      <button id="btn-test-alarm" class="btn secondary" type="button" style="width:100%;margin-top:12px">🐦 Testar alarme</button>
+      <p class="settings-note">O alarme do app só toca com o app aberto na tela — o iPhone pausa apps da web em segundo plano. Para alarme garantido, adicione a rotina ao Google Agenda:</p>
+      <label class="field-label">Google Agenda</label>
+      <div id="gcal-list" class="gcal-list"></div>
     </div>
   </div>
 
@@ -206,7 +210,7 @@
   <!-- Confetti canvas -->
   <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
-  <script src="js/tracker.js?v=8"></script>
+  <script src="js/tracker.js?v=9"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
