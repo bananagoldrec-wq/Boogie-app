@@ -487,7 +487,7 @@ button.row:hover, .row .row-main:hover b { text-decoration: underline; }
   .row-side { flex-direction: row; flex-wrap: wrap; align-items: center; width: 100%; justify-content: flex-start; gap: 8px; }
   .task-row .row-side { margin-left: 30px; width: calc(100% - 30px); }
   .topbar { gap: 6px; }
-  .brand-logo { height: 17px; }
+  .brand-logo { height: 14px; }
   .icon-btn { width: 34px; height: 34px; }
   .icon-btn svg { width: 17px; height: 17px; }
 }
@@ -572,3 +572,4 @@ button.row:hover, .row .row-main:hover b { text-decoration: underline; }
 .sq-agendado { background: #ff8a3d; }
 .sq-producao { background: rgba(0, 0, 0, 0.2); }
 .sq-planejado { border-style: dashed; }
+a.icon-btn { color: var(--ink); text-decoration: none; }

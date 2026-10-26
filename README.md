@@ -289,6 +289,13 @@ Além das séries, o `CATALOGO` traz os outros lançamentos do selo (singles,
 EPs de artistas, remixes) — aparecem numa lista no fim da aba Séries e no
 calendário, sem volume.
 
+As datas de 2026 vêm da planilha da equipe
+([Calendário de Lançamentos - BANANA GOLD 2026](https://docs.google.com/spreadsheets/d/1qE7TOlo3JiCqXyudmGMj1B8K-ZEnsTCD70dvbSWvLYY/edit)),
+copiada em `PLANILHA` no `js/bananagold.js` com plataforma, sub label,
+responsável pela capa e contrato. Onde a página do Bandcamp mostra outro dia,
+vale o do Bandcamp e a ficha do lançamento avisa a diferença. O ícone de
+planilha no topo do app abre a planilha.
+
 Grava na nuvem nas coleções `bg_releases` e `bg_events` (mesmo projeto
 Firebase — publique as regras acima). Sem nuvem, segue salvando no aparelho e
 sobe o pendente quando conectar. Senha da equipe: `APP_PASSWORD` no topo de
