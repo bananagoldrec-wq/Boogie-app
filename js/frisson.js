@@ -1044,8 +1044,13 @@
     updateWaPreview();
   }
 
+  // Também reage a cada tecla digitada (não só ao perder o foco) — em
+  // alguns celulares/PWAs instalados o evento "change" não dispara de
+  // forma confiável quando se toca direto no botão Salvar depois de
+  // digitar, o que fazia o preenchimento automático parecer que tinha
+  // sumido.
   fArtista.addEventListener("change", () => applyArtistMatch(fArtista.value.trim()));
-  fArtista.addEventListener("input", updateRenameButtonVisibility);
+  fArtista.addEventListener("input", () => applyArtistMatch(fArtista.value.trim()));
 
   /* Mostra "Corrigir nome" só quando o nome editado é realmente
      diferente do que estava salvo nesta data ao abrir o painel. */
