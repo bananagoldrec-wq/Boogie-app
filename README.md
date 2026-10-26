@@ -118,6 +118,10 @@ service cloud.firestore {
     match /pato_bookings/{doc} { allow read, write: if request.auth != null; }
     match /pato_artists/{doc}  { allow read, write: if request.auth != null; }
     match /pato_settings/{doc} { allow read, write: if request.auth != null; }
+
+    // Banana Gold Records · lançamentos
+    match /bg_releases/{doc} { allow read, write: if request.auth != null; }
+    match /bg_events/{doc}   { allow read, write: if request.auth != null; }
   }
 }
 ```
@@ -244,3 +248,47 @@ Grava na nuvem (coleções `pato_*`, mesmo projeto Firebase — publique as regr
 acima). Se a nuvem não responder ou as regras ainda não liberarem as coleções,
 segue salvando no aparelho e sobe o que ficou pendente quando conectar.
 Ao mexer em `js/pato.js`/`css/pato.css`, suba o `?v=` do `pato.html`.
+
+---
+
+# 🍌 banana gold records · séries e lançamentos
+
+App da equipe do selo pra organizar as **séries institucionais** (EPs e LPs que
+o próprio selo produz) e o **calendário de lançamentos**. Abre em
+`bananagold.html`. Mesma base das agendas do Frisson e do Pato, com a
+identidade do selo (verde-banana + preto).
+
+**Três abas:**
+
+- **Séries** — Groovy Tools, Carna Tools, Jacuzzi Edits, Gangue do Sorriso,
+  Baile Tools, Selector Tools e Tributes (um artista homenageado por volume), cada uma com seus volumes. Cada volume tem
+  status (planejado → em produção → agendado → lançado), data, responsável,
+  links do Bandcamp/SoundCloud, faixas e um checklist (master, arte,
+  metadados/ISRC, upload, distribuidora, press release, posts). `+ Vol.` cria o
+  próximo volume da série.
+- **Calendário** — mês a mês com os lançamentos (cor da série) e as tarefas da
+  equipe. Sextas e feriados destacados. Toque num dia pra marcar uma tarefa
+  (com responsável e lançamento ligado) ou criar um lançamento naquele dia.
+  Lançamentos com só o mês confirmado aparecem numa faixa acima da grade.
+- **Próximos** — o que vem pela frente com contagem de dias, e a lista de
+  tarefas filtrável por responsável (atrasadas em vermelho).
+
+**Gerar cronograma**: no lançamento com data exata, cria 7 tarefas contando
+pra trás (master −28 dias, arte −21, metadados −18, upload −14, press −10,
+teaser −7, posts no dia). Gerar de novo depois de mudar a data atualiza as
+tarefas em vez de duplicar.
+
+O ícone 📅 exporta tudo em `.ics` (importa no Google Agenda) e o ⤓ exporta o
+catálogo em CSV.
+
+**Catálogo inicial** (`SEED_LIST` em `js/bananagold.js`), levantado no
+Bandcamp do selo em out/2026. Data com dia = confirmada na página do
+lançamento; "dia a confirmar" = a discografia do Bandcamp só mostrava mês/ano.
+Volumes sem data são os previstos na série que ainda não estavam no Bandcamp.
+
+Grava na nuvem nas coleções `bg_releases` e `bg_events` (mesmo projeto
+Firebase — publique as regras acima). Sem nuvem, segue salvando no aparelho e
+sobe o pendente quando conectar. Senha da equipe: `APP_PASSWORD` no topo de
+`js/bananagold.js` (mesmo aviso: trava visitante casual, não é segurança de
+verdade). Ao mexer em `js/bananagold.js`/`css/bananagold.css`, suba o `?v=` do
+`bananagold.html`.
