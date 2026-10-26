@@ -126,6 +126,7 @@
 
     seed("jacuzzi", 1, {
       titulo: "Jacuzzi Edits (EP)", status: "lancado", data: "2025-05-09",
+      faixas: "Tudo O Que Você Podia Ser (BENO & Gaspar Muniz Edit)\nDeixe O Amor Passar (Gaspar Muniz Edit)\nSpooky (BENO Edit)\nHealing Feeling (Lysia Edit)",
       bandcamp: `${BANDCAMP}/album/jacuzzi-edits-ep`, soundcloud: `${SOUNDCLOUD}/sets/jacuzzi-edits`, checklist: ALL_DONE,
       fonte: "Bandcamp: released May 9, 2025.",
     }),
@@ -135,6 +136,7 @@
       titulo: "Gangue do Sorriso", formato: "Compilação", status: "lancado", data: "2023-03-24",
       artistas: "Bernardo Pinheiro, Lipelis, Tom Noble, Golden Kong, Gaspar Muniz e outros",
       bandcamp: `${BANDCAMP}/album/gangue-do-sorriso`, checklist: ALL_DONE,
+      faixas: "Bernardo Pinheiro - Elementos\nLipelis - Money Back\nÉrica Alves ft. Banana Gold - Owner of a Lonely Heart\nMangodjs & Eduardo Chermont - Simonal\nDJ FlavYa - Odara\nCamões - Senha do Ghetto\nGolden Kong & Gaspar Muniz - Vem Dançar\nTom Noble - You Can Drive\nCESRV - Becos e Vielas\nCapetini - O Último Baile",
       obs: "Primeiro lançamento do selo. 10 faixas: Miami bass, electro, house, italo e baile funk.",
       fonte: "Bandcamp: released March 24, 2023.",
     }),
@@ -350,9 +352,14 @@
   const today = new Date();
   const todayKey = keyFromDate(today);
   let view = { year: today.getFullYear(), month: today.getMonth() + 1 };
-  let stored = { releases: {}, events: {} };   // o que está na nuvem/aparelho
-  let pending = { releases: {}, events: {} };  // gravado sem nuvem, a subir
-  let releases = {};                           // efetivo = base + stored
+  /* tracks = faixas e demos. Uma faixa com releaseId está no set list
+     daquele lançamento; sem releaseId é uma demo na fila. */
+  const COLS = ["releases", "events", "tracks"];
+  const emptyCols = () => ({ releases: {}, events: {}, tracks: {} });
+  let stored = emptyCols();   // o que está na nuvem/aparelho
+  let pending = emptyCols();  // gravado sem nuvem, a subir
+  let releases = {};          // efetivo = base + stored
+  let tracks = {};            // efetivo = faixas da base + stored
   let activeReleaseId = null;
   let activeDayKey = null;
   let activeTaskId = null;
@@ -365,6 +372,23 @@
       else next[id] = { ...(next[id] || {}), ...r };
     });
     releases = next;
+    rebuildTracks();
+  }
+
+  /* As faixas da base saem do campo `faixas` de cada lançamento, com id
+     fixo (lançamento--posição), então editar/mover vira um doc por cima. */
+  function rebuildTracks() {
+    const next = {};
+    Object.entries(releases).forEach(([rid, r]) => {
+      String(r.faixas || "").split("\n").map((t) => t.trim()).filter(Boolean).forEach((titulo, i) => {
+        next[`${rid}--${i + 1}`] = { titulo, artista: "", releaseId: rid, ordem: i + 1, link: "", obs: "", base: true };
+      });
+    });
+    Object.entries(stored.tracks).forEach(([id, t]) => {
+      if (!t || t.deleted) delete next[id];
+      else next[id] = { ...(next[id] || {}), ...t };
+    });
+    tracks = next;
   }
 
   /* ── armazenamento: nuvem com reserva no aparelho ───────── */
@@ -376,8 +400,8 @@
     try {
       const raw = JSON.parse(localStorage.getItem(LOCAL_KEY) || "null");
       if (!raw) return;
-      stored = { releases: {}, events: {}, ...(raw.stored || {}) };
-      pending = { releases: {}, events: {}, ...(raw.pending || {}) };
+      stored = { ...emptyCols(), ...(raw.stored || {}) };
+      pending = { ...emptyCols(), ...(raw.pending || {}) };
     } catch (err) {}
   }
 
@@ -388,7 +412,7 @@
   }
 
   function hasPending() {
-    return Object.keys(pending.releases).length || Object.keys(pending.events).length;
+    return COLS.some((c) => Object.keys(pending[c]).length);
   }
 
   /* changes: { releases?: {id: doc|null}, events?: {id: doc|null} } —
@@ -433,8 +457,8 @@
     });
     try {
       await batch.commit();
-      const n = Object.keys(pending.releases).length + Object.keys(pending.events).length;
-      pending = { releases: {}, events: {} };
+      const n = COLS.reduce((sum, c) => sum + Object.keys(pending[c]).length, 0);
+      pending = emptyCols();
       saveLocal();
       showToast(`${n} alteração(ões) feitas offline enviadas pra nuvem.`);
     } catch (err) {
@@ -453,7 +477,7 @@
 
   function startSync() {
     let firstSnaps = 0;
-    ["releases", "events"].forEach((col) => {
+    COLS.forEach((col) => {
       let first = true;
       onSnapshot(cols[col], (snap) => {
         const next = {};
@@ -466,7 +490,7 @@
         stored[col] = next;
         if (first) {
           first = false;
-          if (++firstSnaps === 2) {
+          if (++firstSnaps === COLS.length) {
             cloudReady = true;
             flushPending();
           }
@@ -497,6 +521,7 @@
       cols = {
         releases: fsMod.collection(db, "bg_releases"),
         events: fsMod.collection(db, "bg_events"),
+        tracks: fsMod.collection(db, "bg_tracks"),
       };
 
       authMod.signInAnonymously(auth).catch((err) => goLocal(err && err.code));
@@ -614,6 +639,7 @@
       if (r.capa) set.add(r.capa.trim());
     });
     Object.values(stored.events).forEach((e) => e && e.responsavel && set.add(e.responsavel.trim()));
+    Object.values(tracks).forEach((t) => t.artista && !t.releaseId && set.add(t.artista.trim()));
     return [...set].sort((a, b) => a.localeCompare(b, "pt-BR"));
   }
 
@@ -840,55 +866,13 @@
     if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5) shiftMonth(dx < 0 ? 1 : -1);
   }, { passive: true });
 
-  /* ── render: próximos ──────────────────────────────────── */
-  const nextReleasesEl = document.getElementById("next-releases");
-  const nextTasksEl = document.getElementById("next-tasks");
-  const onlyOpen = document.getElementById("only-open");
-  const filterOwner = document.getElementById("filter-owner");
-
+  /* ── tarefas (lista do painel do dia) ──────────────────── */
   function countdown(key) {
     const n = daysBetween(todayKey, key);
     if (n === 0) return "hoje";
     if (n === 1) return "amanhã";
     if (n > 0) return `em ${n} dias`;
     return `${-n} dias atrás`;
-  }
-
-  function renderUpcoming() {
-    const list = Object.entries(releases)
-      .filter(([, r]) => r.status !== "lancado" || (r.data && r.data >= todayKey))
-      .sort((a, b) => {
-        const da = a[1].data || "9999", dbb = b[1].data || "9999";
-        return da.localeCompare(dbb) || a[1].serie.localeCompare(b[1].serie) || a[1].vol - b[1].vol;
-      });
-    nextReleasesEl.innerHTML = list.map(([id, r]) => {
-      const done = checklistDone(r);
-      const late = r.data && !r.dataMes && r.data < todayKey && r.status !== "lancado";
-      return `
-        <button class="row" type="button" data-release="${esc(id)}" style="--serie:${seriesColor(r.serie)}">
-          <span class="row-bar"></span>
-          <span class="row-main">
-            <b>${esc(releaseLabel(r))}</b>
-            <span>${esc((isGeral(r) ? r.artistas : r.titulo) || "título a definir")}${r.responsavel ? ` · ${esc(r.responsavel)}` : ""}</span>
-          </span>
-          <span class="row-side">
-            <span class="chip chip-${r.status}">${STATUS_NAME[r.status]}</span>
-            <span class="${late ? "late" : ""}">${r.data ? esc(r.dataMes ? formatRelease(r) : `${formatBr(r.data)} · ${countdown(r.data)}`) : "sem data"}</span>
-            <span class="muted">checklist ${done}/${CHECKLIST.length}</span>
-          </span>
-        </button>`;
-    }).join("") || `<p class="empty">Nada pela frente. Abre uma série e marca a data do próximo volume.</p>`;
-
-    const owners = people();
-    const current = filterOwner.value;
-    filterOwner.innerHTML = `<option value="">Todo mundo</option>` + owners.map((p) => `<option${p === current ? " selected" : ""}>${esc(p)}</option>`).join("");
-    document.getElementById("people").innerHTML = owners.map((p) => `<option value="${esc(p)}"></option>`).join("");
-
-    const tasks = Object.entries(stored.events)
-      .filter(([, e]) => e && (!onlyOpen.checked || !e.feito) && (!filterOwner.value || (e.responsavel || "").trim() === filterOwner.value))
-      .sort((a, b) => (a[1].data || "").localeCompare(b[1].data || ""));
-    nextTasksEl.innerHTML = tasks.map(([id, e]) => taskRow(id, e)).join("") ||
-      `<p class="empty">Nenhuma tarefa${onlyOpen.checked ? " em aberto" : ""}. Toque num dia do calendário pra marcar uma.</p>`;
   }
 
   function taskRow(id, e) {
@@ -904,9 +888,6 @@
         <span class="row-side"><span class="${late ? "late" : ""}">${e.data ? `${formatBr(e.data)} · ${countdown(e.data)}` : ""}</span></span>
       </div>`;
   }
-
-  onlyOpen.addEventListener("change", renderUpcoming);
-  filterOwner.addEventListener("change", renderUpcoming);
 
   async function toggleTask(id, feito) {
     const e = stored.events[id];
@@ -932,7 +913,7 @@
     const box = e.target.closest("[data-toggle-task]");
     if (box) toggleTask(box.dataset.toggleTask, box.checked);
   }
-  [nextReleasesEl, nextTasksEl, document.getElementById("day-items")].forEach((el) => {
+  [document.getElementById("day-items")].forEach((el) => {
     el.addEventListener("click", onListClick);
     el.addEventListener("change", onListChange);
   });
@@ -942,15 +923,17 @@
     renderStats();
     renderSeries();
     renderCalendar();
-    renderUpcoming();
+    renderDemos();
+    document.getElementById("people").innerHTML = people().map((p) => `<option value="${esc(p)}"></option>`).join("");
     if (!dayPanel.hidden && activeDayKey) renderDayItems();
+    if (!releasePanel.hidden && activeReleaseId) renderSetlist();
   }
 
   /* ── abas ──────────────────────────────────────────────── */
   const tabs = document.querySelectorAll(".tab");
   function setTab(name) {
     tabs.forEach((t) => t.classList.toggle("is-active", t.dataset.tab === name));
-    ["catalogo", "calendario", "proximos"].forEach((v) => {
+    ["catalogo", "calendario", "demos"].forEach((v) => {
       document.getElementById(`view-${v}`).hidden = v !== name;
     });
     try { localStorage.setItem(TAB_KEY, name); } catch (err) {}
@@ -995,11 +978,11 @@
   const rResp = document.getElementById("r-resp");
   const rBandcamp = document.getElementById("r-bandcamp");
   const rSoundcloud = document.getElementById("r-soundcloud");
-  const rFaixas = document.getElementById("r-faixas");
   const rObs = document.getElementById("r-obs");
   const rChecklist = document.getElementById("r-checklist");
   const rSource = document.getElementById("r-source");
   const rDelete = document.getElementById("r-delete");
+  const rDetails = document.getElementById("r-details");
 
   rSerie.innerHTML = SERIES.map((s) => `<option value="${s.id}">${esc(s.nome)}</option>`).join("");
   rStatus.innerHTML = STATUS.map((s) => `<option value="${s.id}">${s.nome}</option>`).join("");
@@ -1027,7 +1010,6 @@
     rResp.value = r.responsavel || "";
     rBandcamp.value = r.bandcamp || "";
     rSoundcloud.value = r.soundcloud || "";
-    rFaixas.value = r.faixas || "";
     rObs.value = r.obs || "";
     rChecklist.querySelectorAll("[data-check]").forEach((box) => { box.checked = !!(r.checklist && r.checklist[box.dataset.check]); });
     const links = [r.bandcamp && `<a href="${esc(r.bandcamp)}" target="_blank" rel="noopener">abrir no Bandcamp ↗</a>`, r.soundcloud && `<a href="${esc(r.soundcloud)}" target="_blank" rel="noopener">abrir no SoundCloud ↗</a>`].filter(Boolean).join(" · ");
@@ -1042,6 +1024,8 @@
     activeReleaseId = id;
     fillRelease(r);
     rDelete.hidden = false;
+    rDetails.open = false;
+    renderSetlist();
     openPanel(releasePanel);
   }
 
@@ -1051,6 +1035,8 @@
     activeReleaseId = null;
     fillRelease(seed(serie, vol, { data: dataKey || "", status: dataKey ? "agendado" : "planejado" }));
     rDelete.hidden = true;
+    rDetails.open = true;
+    renderSetlist();
     openPanel(releasePanel);
     rTitulo.focus();
   }
@@ -1076,7 +1062,6 @@
       responsavel: rResp.value.trim(),
       bandcamp: rBandcamp.value.trim(),
       soundcloud: rSoundcloud.value.trim(),
-      faixas: rFaixas.value.trim(),
       obs: rObs.value.trim(),
       checklist,
       fonte: base.fonte || "",
@@ -1098,6 +1083,7 @@
       const mode = await write({ releases: { [id]: r } });
       activeReleaseId = id;
       rDelete.hidden = false;
+      renderSetlist();
       if (mode !== "local-warned") showToast(`${releaseLabel(r)} salvo.`);
       return id;
     } catch (err) {
@@ -1155,6 +1141,235 @@
       console.error(err);
       showToast("Não deu pra criar o cronograma. Tenta de novo.");
     }
+  });
+
+  /* ── faixas: set list dos projetos e fila de demos ──────── */
+  const slList = document.getElementById("r-setlist");
+  const slAddRow = document.getElementById("r-setlist-add");
+  const slNew = document.getElementById("sl-new");
+  const slPull = document.getElementById("sl-pull");
+  const slHint = document.getElementById("sl-hint");
+
+  function setlistOf(rid) {
+    return Object.entries(tracks)
+      .filter(([, t]) => t.releaseId === rid)
+      .sort((a, b) => (a[1].ordem || 0) - (b[1].ordem || 0));
+  }
+  function demoQueue() {
+    return Object.entries(tracks)
+      .filter(([, t]) => !t.releaseId)
+      .sort((a, b) => (a[1].criado || "").localeCompare(b[1].criado || ""));
+  }
+  function nextOrdem(rid) {
+    return setlistOf(rid).reduce((m, [, t]) => Math.max(m, t.ordem || 0), 0) + 1;
+  }
+  function trackDoc(id, patch) {
+    const { base, ...t } = { ...tracks[id], ...patch };
+    return t;
+  }
+  async function writeTracks(changes, okMsg) {
+    try {
+      const mode = await write({ tracks: changes });
+      if (okMsg && mode !== "local-warned") showToast(okMsg);
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra salvar. Tenta de novo.");
+    }
+  }
+  function moveTrack(id, rid) {
+    if (!tracks[id]) return;
+    const msg = rid ? `Mandada pra ${releaseLabel(releases[rid])}.` : "Voltou pra fila de demos.";
+    return writeTracks({ [id]: trackDoc(id, { releaseId: rid || "", ordem: rid ? nextOrdem(rid) : 0 }) }, msg);
+  }
+  function deleteTrack(id) {
+    return writeTracks({ [id]: tracks[id] && tracks[id].base ? { deleted: true } : null }, "Faixa apagada.");
+  }
+
+  /* Projetos que ainda podem receber música: tudo que não saiu, séries
+     primeiro (na ordem da aba), depois o catálogo por data. */
+  function targetReleases() {
+    const order = Object.fromEntries(SERIES.map((s, i) => [s.id, i]));
+    return Object.entries(releases)
+      .filter(([, r]) => r.status !== "lancado")
+      .sort((a, b) => (order[a[1].serie] - order[b[1].serie]) ||
+        (isGeral(a[1]) ? (a[1].data || "9").localeCompare(b[1].data || "9") : a[1].vol - b[1].vol));
+  }
+  function targetOptions(current) {
+    return targetReleases().map(([id, r]) =>
+      `<option value="${esc(id)}"${id === current ? " selected" : ""}>${esc(releaseLabel(r))}${r.data ? ` · ${esc(shortDate(r))}` : ""}</option>`).join("");
+  }
+
+  function renderSetlist() {
+    const rid = activeReleaseId;
+    slHint.hidden = !!rid;
+    slAddRow.hidden = !rid;
+    slPull.hidden = !rid;
+    if (!rid) { slList.innerHTML = ""; return; }
+    const list = setlistOf(rid);
+    slList.innerHTML = list.map(([id, t], i) => `
+      <li class="sl-row">
+        <span class="sl-num">${i + 1}</span>
+        <span class="sl-name" contenteditable="plaintext-only" spellcheck="false" role="textbox" data-track-name="${esc(id)}" aria-label="Nome da faixa ${i + 1}">${esc(t.titulo)}</span>
+        <span class="sl-tools">
+          <button type="button" data-track-up="${esc(id)}" ${i === 0 ? "disabled" : ""} aria-label="Subir">↑</button>
+          <button type="button" data-track-down="${esc(id)}" ${i === list.length - 1 ? "disabled" : ""} aria-label="Descer">↓</button>
+          <button type="button" data-track-out="${esc(id)}" title="Tirar do set list (volta pra demos)" aria-label="Tirar do set list">⤺</button>
+        </span>
+      </li>`).join("") || `<li class="empty">Nenhuma faixa ainda. Escreve abaixo ou puxa uma demo.</li>`;
+    const demos = demoQueue();
+    slPull.innerHTML = `<option value="">${demos.length ? `Puxar uma demo da fila (${demos.length})…` : "Nenhuma demo na fila"}</option>` +
+      demos.map(([id, t]) => `<option value="${esc(id)}">${esc(t.titulo)}${t.artista ? ` — ${esc(t.artista)}` : ""}</option>`).join("");
+    slPull.disabled = !demos.length;
+  }
+
+  async function swapOrder(id, dir) {
+    const list = setlistOf(activeReleaseId);
+    const i = list.findIndex(([tid]) => tid === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= list.length) return;
+    // renumera tudo pra não depender de ordens repetidas
+    const ids = list.map(([tid]) => tid);
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    const changes = {};
+    ids.forEach((tid, k) => { if (tracks[tid].ordem !== k + 1) changes[tid] = trackDoc(tid, { ordem: k + 1 }); });
+    await writeTracks(changes);
+  }
+
+  slList.addEventListener("click", (e) => {
+    const up = e.target.closest("[data-track-up]");
+    if (up) return swapOrder(up.dataset.trackUp, -1);
+    const down = e.target.closest("[data-track-down]");
+    if (down) return swapOrder(down.dataset.trackDown, 1);
+    const out = e.target.closest("[data-track-out]");
+    if (out) return moveTrack(out.dataset.trackOut, "");
+  });
+  slList.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target.closest("[data-track-name]")) { e.preventDefault(); e.target.blur(); }
+    if (e.key === "Escape") e.stopPropagation();
+  });
+  slList.addEventListener("focusout", (e) => {
+    const el = e.target.closest("[data-track-name]");
+    const t = el && tracks[el.dataset.trackName];
+    if (!t) return;
+    const titulo = el.textContent.replace(/\s+/g, " ").trim();
+    if (!titulo) { el.textContent = t.titulo; return; }
+    if (titulo !== t.titulo) writeTracks({ [el.dataset.trackName]: trackDoc(el.dataset.trackName, { titulo }) }, "Nome da faixa salvo.");
+  });
+
+  async function addToSetlist() {
+    const titulo = slNew.value.trim();
+    if (!titulo || !activeReleaseId) { slNew.focus(); return; }
+    slNew.value = "";
+    await writeTracks({ [newId("t")]: { titulo, artista: "", releaseId: activeReleaseId, ordem: nextOrdem(activeReleaseId), link: "", obs: "", criado: new Date().toISOString() } });
+    slNew.focus();
+  }
+  document.getElementById("sl-add").addEventListener("click", addToSetlist);
+  slNew.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addToSetlist(); } });
+  slPull.addEventListener("change", () => {
+    if (slPull.value && activeReleaseId) moveTrack(slPull.value, activeReleaseId);
+  });
+
+  /* aba Demos */
+  const dTitulo = document.getElementById("d-titulo");
+  const dArtista = document.getElementById("d-artista");
+  const dLink = document.getElementById("d-link");
+  const dObs = document.getElementById("d-obs");
+  const dSave = document.getElementById("d-save");
+  const dCancel = document.getElementById("d-cancel");
+  const dDelete = document.getElementById("d-delete");
+  const demoList = document.getElementById("demo-list");
+  const demoProjects = document.getElementById("demo-projects");
+  let editingDemo = null;
+
+  function demoRow(id, t) {
+    return `
+      <div class="row demo-row">
+        <button class="row-main" type="button" data-edit-demo="${esc(id)}">
+          <b>${esc(t.titulo)}</b>
+          <span>${esc([t.artista, t.obs].filter(Boolean).join(" · "))}</span>
+        </button>
+        ${t.link ? `<a class="demo-link" href="${esc(t.link)}" target="_blank" rel="noopener" title="Ouvir">▶</a>` : ""}
+        <select class="demo-move" data-move-track="${esc(id)}" aria-label="Mandar pra um projeto">
+          <option value="__">${t.releaseId ? "Realocar…" : "Mandar pra…"}</option>
+          ${t.releaseId ? `<option value="">← Voltar pra fila</option>` : ""}
+          ${targetOptions()}
+        </select>
+      </div>`;
+  }
+
+  function renderDemos() {
+    const queue = demoQueue();
+    document.getElementById("demo-count").textContent = queue.length ? `(${queue.length})` : "";
+    demoList.innerHTML = queue.map(([id, t]) => demoRow(id, t)).join("") ||
+      `<p class="empty">Nenhuma demo na fila. Escreve a primeira aí em cima.</p>`;
+    demoProjects.innerHTML = targetReleases()
+      .map(([rid, r]) => [rid, r, setlistOf(rid)])
+      .filter(([, , list]) => list.length)
+      .map(([rid, r, list]) => `
+        <div class="demo-project" style="--serie:${seriesColor(r.serie)}">
+          <button class="demo-project-head" type="button" data-release="${esc(rid)}">
+            <b>${esc(releaseLabel(r))}</b>
+            <span>${esc([r.data ? shortDate(r) : "sem data", STATUS_NAME[r.status]].join(" · "))} · ${list.length} faixa${list.length > 1 ? "s" : ""}</span>
+          </button>
+          ${list.map(([id, t]) => demoRow(id, t)).join("")}
+        </div>`).join("") ||
+      `<p class="empty">Nenhuma música mandada pra projeto em andamento ainda.</p>`;
+  }
+
+  function resetDemoForm() {
+    editingDemo = null;
+    dTitulo.value = dArtista.value = dLink.value = dObs.value = "";
+    document.getElementById("demo-form-title").textContent = "Nova demo";
+    dSave.textContent = "+ Adicionar demo";
+    dCancel.hidden = dDelete.hidden = true;
+  }
+
+  dSave.addEventListener("click", async () => {
+    const titulo = dTitulo.value.trim();
+    if (!titulo) { showToast("Escreve o nome da música."); dTitulo.focus(); return; }
+    const fields = { titulo, artista: dArtista.value.trim(), link: dLink.value.trim(), obs: dObs.value.trim() };
+    if (editingDemo && tracks[editingDemo]) {
+      await writeTracks({ [editingDemo]: trackDoc(editingDemo, fields) }, "Demo salva.");
+    } else {
+      await writeTracks({ [newId("t")]: { ...fields, releaseId: "", ordem: 0, criado: new Date().toISOString() } }, "Demo adicionada.");
+    }
+    resetDemoForm();
+    dTitulo.focus();
+  });
+  dTitulo.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); dSave.click(); } });
+  dCancel.addEventListener("click", resetDemoForm);
+  dDelete.addEventListener("click", async () => {
+    if (!editingDemo || !confirm("Apagar essa música?")) return;
+    await deleteTrack(editingDemo);
+    resetDemoForm();
+  });
+
+  function onDemoClick(e) {
+    const rel = e.target.closest("[data-release]");
+    if (rel) return openRelease(rel.dataset.release);
+    const edit = e.target.closest("[data-edit-demo]");
+    if (!edit) return;
+    const t = tracks[edit.dataset.editDemo];
+    if (!t) return;
+    editingDemo = edit.dataset.editDemo;
+    dTitulo.value = t.titulo || "";
+    dArtista.value = t.artista || "";
+    dLink.value = t.link || "";
+    dObs.value = t.obs || "";
+    document.getElementById("demo-form-title").textContent = "Editar música";
+    dSave.textContent = "Salvar";
+    dCancel.hidden = dDelete.hidden = false;
+    document.querySelector(".demo-form").scrollIntoView({ behavior: "smooth", block: "start" });
+    dTitulo.focus();
+  }
+  function onDemoMove(e) {
+    const sel = e.target.closest("[data-move-track]");
+    if (!sel || sel.value === "__") return;
+    moveTrack(sel.dataset.moveTrack, sel.value);
+  }
+  [demoList, demoProjects].forEach((el) => {
+    el.addEventListener("click", onDemoClick);
+    el.addEventListener("change", onDemoMove);
   });
 
   /* ── painel do dia + tarefas ───────────────────────────── */
@@ -1377,7 +1592,7 @@
   /* ── init ──────────────────────────────────────────────── */
   try {
     const saved = localStorage.getItem(TAB_KEY);
-    if (saved) setTab(saved);
+    if (saved && document.getElementById(`view-${saved}`)) setTab(saved);
   } catch (err) {}
   rebuildReleases();
   renderCalendar();

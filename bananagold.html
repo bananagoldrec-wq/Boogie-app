@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/bananagold.css?v=5" />
+  <link rel="stylesheet" href="css/bananagold.css?v=7" />
 </head>
 <body>
 
@@ -43,7 +43,7 @@
   <nav class="tabs" role="tablist">
     <button class="tab is-active" type="button" data-tab="catalogo" role="tab">Séries</button>
     <button class="tab" type="button" data-tab="calendario" role="tab">Calendário</button>
-    <button class="tab" type="button" data-tab="proximos" role="tab">Próximos</button>
+    <button class="tab" type="button" data-tab="demos" role="tab">Demos</button>
   </nav>
 
   <!-- Séries / catálogo -->
@@ -85,19 +85,46 @@
     </div>
   </main>
 
-  <!-- Próximos -->
-  <main id="view-proximos" class="view" hidden>
-    <section>
-      <h2 class="section-title">Próximos lançamentos</h2>
-      <div id="next-releases" class="list"></div>
-    </section>
-    <section>
-      <h2 class="section-title">Tarefas da equipe</h2>
-      <div class="filter-row">
-        <label class="check"><input id="only-open" type="checkbox" checked /> só o que falta fazer</label>
-        <select id="filter-owner" aria-label="Filtrar por responsável"><option value="">Todo mundo</option></select>
+  <!-- Demos -->
+  <main id="view-demos" class="view" hidden>
+    <section class="demo-form">
+      <h2 id="demo-form-title" class="section-title">Nova demo</h2>
+      <div class="field-row">
+        <div class="field">
+          <label for="d-titulo">Nome da música</label>
+          <input id="d-titulo" type="text" placeholder="Ex.: Lua Cheia (BENO Edit)" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="d-artista">Artista / produção</label>
+          <input id="d-artista" type="text" list="people" placeholder="Quem fez" autocomplete="off" />
+        </div>
       </div>
-      <div id="next-tasks" class="list"></div>
+      <div class="field-row">
+        <div class="field">
+          <label for="d-link">Link (SoundCloud, Drive...)</label>
+          <input id="d-link" type="url" placeholder="opcional" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="d-obs">Notas</label>
+          <input id="d-obs" type="text" placeholder="Ex.: falta mixdown" autocomplete="off" />
+        </div>
+      </div>
+      <div class="panel-actions">
+        <button id="d-save" class="btn btn-primary" type="button">+ Adicionar demo</button>
+        <button id="d-cancel" class="btn" type="button" hidden>Cancelar</button>
+        <button id="d-delete" class="btn btn-danger" type="button" hidden>Apagar</button>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Demos na fila <span id="demo-count" class="muted"></span></h2>
+      <div id="demo-list" class="list"></div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Nos projetos em andamento</h2>
+      <p class="hint">Músicas já mandadas pra um projeto que ainda não saiu. Dá pra realocar ou devolver pra fila.</p>
+      <div id="demo-projects" class="list"></div>
     </section>
   </main>
 
@@ -113,6 +140,20 @@
       <button class="icon-btn" type="button" data-close aria-label="Fechar">×</button>
     </div>
     <div class="panel-body">
+      <section class="setlist-wrap">
+        <h3 class="setlist-title">Set list</h3>
+        <ol id="r-setlist" class="setlist"></ol>
+        <div id="r-setlist-add" class="setlist-add">
+          <input id="sl-new" type="text" placeholder="Nome da faixa" autocomplete="off" />
+          <button id="sl-add" class="btn btn-primary" type="button">+ Faixa</button>
+        </div>
+        <select id="sl-pull" class="sl-pull" aria-label="Puxar uma demo"></select>
+        <p id="sl-hint" class="hint" hidden>Salva o volume (em Detalhes) pra montar o set list.</p>
+      </section>
+
+      <details id="r-details" class="details">
+        <summary>Detalhes do lançamento</summary>
+        <div class="details-body">
       <div class="field-row">
         <div class="field">
           <label for="r-serie">Série</label>
@@ -189,10 +230,6 @@
         <label for="r-soundcloud">Link SoundCloud / outro</label>
         <input id="r-soundcloud" type="url" placeholder="opcional" autocomplete="off" />
       </div>
-      <div class="field">
-        <label for="r-faixas">Faixas (uma por linha)</label>
-        <textarea id="r-faixas" rows="4"></textarea>
-      </div>
 
       <h3 class="sub-title">Checklist do lançamento</h3>
       <div id="r-checklist" class="checklist"></div>
@@ -208,6 +245,8 @@
         <button id="r-delete" class="btn btn-danger" type="button">Apagar</button>
       </div>
       <p id="r-source" class="hint"></p>
+        </div>
+      </details>
     </div>
   </aside>
 
@@ -279,6 +318,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/bananagold.js?v=8"></script>
+  <script src="js/bananagold.js?v=10"></script>
 </body>
 </html>

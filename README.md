@@ -122,6 +122,7 @@ service cloud.firestore {
     // Banana Gold Records · lançamentos
     match /bg_releases/{doc} { allow read, write: if request.auth != null; }
     match /bg_events/{doc}   { allow read, write: if request.auth != null; }
+    match /bg_tracks/{doc}   { allow read, write: if request.auth != null; }
   }
 }
 ```
@@ -270,8 +271,16 @@ identidade do selo (verde-banana + preto).
   equipe. Sextas e feriados destacados. Toque num dia pra marcar uma tarefa
   (com responsável e lançamento ligado) ou criar um lançamento naquele dia.
   Lançamentos com só o mês confirmado aparecem numa faixa acima da grade.
-- **Próximos** — o que vem pela frente com contagem de dias, e a lista de
-  tarefas filtrável por responsável (atrasadas em vermelho).
+- **Demos** — fila de músicas em aberto (nome, quem fez, link, notas). Cada
+  uma tem "Mandar pra…" pra cair no set list de um projeto que ainda não saiu;
+  embaixo ficam as que já estão em projetos em andamento, pra realocar ou
+  devolver pra fila.
+
+Dentro de cada projeto o painel abre no **set list**: as faixas na ordem, com
+nome editável, ↑/↓ pra reordenar, ⤺ pra devolver pra demos, campo pra
+escrever uma faixa nova e "Puxar uma demo da fila". O resto (datas, links,
+checklist) fica em "Detalhes do lançamento". As faixas ficam na coleção
+`bg_tracks`.
 
 **Gerar cronograma**: no lançamento com data exata, cria 7 tarefas contando
 pra trás (master −28 dias, arte −21, metadados −18, upload −14, press −10,
@@ -296,7 +305,7 @@ responsável pela capa e contrato. Onde a página do Bandcamp mostra outro dia,
 vale o do Bandcamp e a ficha do lançamento avisa a diferença. O ícone de
 planilha no topo do app abre a planilha.
 
-Grava na nuvem nas coleções `bg_releases` e `bg_events` (mesmo projeto
+Grava na nuvem nas coleções `bg_releases`, `bg_events` e `bg_tracks` (mesmo projeto
 Firebase — publique as regras acima). Sem nuvem, segue salvando no aparelho e
 sobe o pendente quando conectar. Senha da equipe: `APP_PASSWORD` no topo de
 `js/bananagold.js` (mesmo aviso: trava visitante casual, não é segurança de
