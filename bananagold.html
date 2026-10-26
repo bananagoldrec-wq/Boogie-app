@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/bananagold.css?v=3" />
+  <link rel="stylesheet" href="css/bananagold.css?v=4" />
 </head>
 <body>
 
@@ -47,6 +47,13 @@
   <main id="view-catalogo" class="view">
     <div class="stats" id="stats"></div>
     <div id="series-list" class="series-list"></div>
+    <div class="legend">
+      <span><i class="sq sq-lancado"></i>Lançado</span>
+      <span><i class="sq sq-agendado"></i>Agendado</span>
+      <span><i class="sq sq-producao"></i>Em produção</span>
+      <span><i class="sq sq-planejado"></i>Planejado</span>
+      <span class="hint">toque na barra pra abrir a série · no número pra abrir o volume</span>
+    </div>
   </main>
 
   <!-- Calendário -->
@@ -245,6 +252,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/bananagold.js?v=4"></script>
+  <script src="js/bananagold.js?v=5"></script>
 </body>
 </html>

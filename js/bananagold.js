@@ -503,6 +503,12 @@
 
   /* ── render: séries ────────────────────────────────────── */
   const seriesListEl = document.getElementById("series-list");
+  const OPEN_KEY = "bg_open_series_v1";
+  let openSeries = new Set();
+  try { openSeries = new Set(JSON.parse(localStorage.getItem(OPEN_KEY) || "[]")); } catch (err) {}
+  function saveOpenSeries() {
+    try { localStorage.setItem(OPEN_KEY, JSON.stringify([...openSeries])); } catch (err) {}
+  }
   const statsEl = document.getElementById("stats");
 
   function renderStats() {
@@ -522,41 +528,77 @@
   }
 
   function renderSeries() {
-    seriesListEl.innerHTML = SERIES.map((s) => {
+    const allOpen = SERIES.every((s) => openSeries.has(s.id));
+    seriesListEl.innerHTML = `
+      <div class="series-tools">
+        <button class="link-btn" type="button" data-toggle-all>${allOpen ? "Recolher tudo" : "Abrir tudo"}</button>
+      </div>` + SERIES.map((s) => {
       const list = seriesReleases(s.id);
-      if (s.geral) return catalogSection(s, list);
-      const lancados = list.filter(([, r]) => r.status === "lancado").length;
-      return `
-      <section class="series" style="--serie:${s.cor}">
-        <header class="series-head">
-          <h2>${esc(s.nome)}</h2>
-          <span class="series-count">${lancados}/${list.length} lançados</span>
-          <button class="btn btn-small btn-dark" type="button" data-add-vol="${s.id}">+ Vol.</button>
-        </header>
-        <div class="vol-row">
-          ${list.map(([id, r]) => volCard(id, r)).join("") || `<p class="empty">Nenhum volume ainda.</p>`}
-        </div>
-      </section>`;
+      return s.geral ? catalogSection(s, list) : seriesSection(s, list);
     }).join("");
+  }
+
+  function lastAndNext(list) {
+    const dated = list.filter(([, r]) => r.data).sort((a, b) => a[1].data.localeCompare(b[1].data));
+    const last = dated.filter(([, r]) => r.status === "lancado").pop();
+    const next = dated.find(([, r]) => r.status !== "lancado");
+    return { last: last && last[1], next: next && next[1] };
+  }
+
+  function shortDate(r) {
+    return r.dataMes ? formatRelease(r).split(" · ")[0] : formatBr(r.data);
+  }
+
+  /* Barra da série: fechada mostra o resumo (um quadradinho por volume,
+     cheio = lançado), aberta mostra os cartões. */
+  function seriesBar(s, list, summary, dots, addLabel) {
+    const open = openSeries.has(s.id);
+    return `
+      <div class="series-bar" data-toggle-serie="${s.id}" role="button" tabindex="0" aria-expanded="${open}">
+        <span class="chevron" aria-hidden="true">${open ? "▾" : "▸"}</span>
+        <span class="bar-main">
+          <span class="bar-title">${esc(s.nome)}</span>
+          <span class="bar-summary">${summary}</span>
+        </span>
+        ${dots}
+        <button class="btn btn-small btn-dark bar-add" type="button" data-add-vol="${s.id}">${addLabel}</button>
+      </div>`;
+  }
+
+  function seriesSection(s, list) {
+    const lancados = list.filter(([, r]) => r.status === "lancado").length;
+    const { last, next } = lastAndNext(list);
+    const summary = [
+      `${lancados}/${list.length} lançados`,
+      last && `último: ${esc(last.titulo || releaseLabel(last))} · ${esc(shortDate(last))}`,
+      next && `próximo: Vol. ${pad2(next.vol)} · ${esc(shortDate(next))}`,
+    ].filter(Boolean).join(" — ");
+    const dots = `<span class="vol-dots">${list.map(([id, r]) =>
+      `<button class="vol-dot dot-${r.status}" type="button" data-release="${esc(id)}" title="${esc(`Vol. ${pad2(r.vol)} · ${STATUS_NAME[r.status]}${r.data ? ` · ${shortDate(r)}` : ""}`)}">${pad2(r.vol)}</button>`).join("")}</span>`;
+    return `
+      <section class="series${openSeries.has(s.id) ? " is-open" : ""}" style="--serie:${s.cor}">
+        ${seriesBar(s, list, summary, dots, "+ Vol.")}
+        ${openSeries.has(s.id) ? `<div class="vol-row">
+          ${list.map(([id, r]) => volCard(id, r)).join("") || `<p class="empty">Nenhum volume ainda.</p>`}
+        </div>` : ""}
+      </section>`;
   }
 
   function catalogSection(s, list) {
     const rows = list.slice().sort((a, b) => (b[1].data || "").localeCompare(a[1].data || ""));
+    const { last } = lastAndNext(list);
+    const summary = [`${list.length} lançamentos`, last && `último: ${esc(last.titulo)} · ${esc(shortDate(last))}`].filter(Boolean).join(" — ");
     return `
-      <section class="series series-geral" style="--serie:${s.cor}">
-        <header class="series-head">
-          <h2>${esc(s.nome)}</h2>
-          <span class="series-count">${list.length} no catálogo</span>
-          <button class="btn btn-small btn-dark" type="button" data-add-vol="${s.id}">+ Novo</button>
-        </header>
-        <div class="cat-list">
+      <section class="series series-geral${openSeries.has(s.id) ? " is-open" : ""}" style="--serie:${s.cor}">
+        ${seriesBar(s, list, summary, "", "+ Novo")}
+        ${openSeries.has(s.id) ? `<div class="cat-list">
           ${rows.map(([id, r]) => `
             <button class="cat-row" type="button" data-release="${esc(id)}">
-              <span class="cat-date${r.dataMes ? " is-approx" : ""}">${r.data ? esc(r.dataMes ? formatRelease(r).split(" · ")[0] : formatBr(r.data)) : "sem data"}</span>
+              <span class="cat-date${r.dataMes ? " is-approx" : ""}">${r.data ? esc(shortDate(r)) : "sem data"}</span>
               <span class="cat-main"><b>${esc(r.titulo || "título a definir")}</b><span>${esc(r.artistas || "")}</span></span>
               <span class="chip chip-${r.status}">${STATUS_NAME[r.status] || r.status}</span>
             </button>`).join("") || `<p class="empty">Nada ainda.</p>`}
-        </div>
+        </div>` : ""}
       </section>`;
   }
 
@@ -575,11 +617,33 @@
       </button>`;
   }
 
+  function toggleSerie(id) {
+    if (openSeries.has(id)) openSeries.delete(id);
+    else openSeries.add(id);
+    saveOpenSeries();
+    renderSeries();
+  }
+
   seriesListEl.addEventListener("click", (e) => {
     const add = e.target.closest("[data-add-vol]");
     if (add) return openNewRelease(add.dataset.addVol);
     const card = e.target.closest("[data-release]");
-    if (card) openRelease(card.dataset.release);
+    if (card) return openRelease(card.dataset.release);
+    if (e.target.closest("[data-toggle-all]")) {
+      const allOpen = SERIES.every((s) => openSeries.has(s.id));
+      openSeries = new Set(allOpen ? [] : SERIES.map((s) => s.id));
+      saveOpenSeries();
+      return renderSeries();
+    }
+    const bar = e.target.closest("[data-toggle-serie]");
+    if (bar) toggleSerie(bar.dataset.toggleSerie);
+  });
+  seriesListEl.addEventListener("keydown", (e) => {
+    const bar = e.target.closest && e.target.matches("[data-toggle-serie]") && e.target;
+    if (bar && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      toggleSerie(bar.dataset.toggleSerie);
+    }
   });
 
   /* ── render: calendário ────────────────────────────────── */
