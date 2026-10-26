@@ -87,6 +87,7 @@
   let artists = {};
   let activeDateKey = null;
   let activeTemplateKey = "convite";
+  let openedArtistName = "";
 
   /* ── sync (Firestore) ──────────────────────────────────── */
   let firstBookingsSnapshot = true;
@@ -710,6 +711,8 @@
   const panelDate = document.getElementById("panel-date");
 
   const fArtista = document.getElementById("f-artista");
+  const renameArtistBtn = document.getElementById("rename-artist-btn");
+  const renameArtistHint = document.getElementById("rename-artist-hint");
   const fTipo = document.getElementById("f-tipo");
   const fStatus = document.getElementById("f-status");
   const fEvento = document.getElementById("f-evento");
@@ -747,6 +750,15 @@
     if (!target) return null;
     const match = Object.keys(artists).find((k) => normalizeArtistKey(k) === target);
     return match ? artists[match] : null;
+  }
+
+  /* Acha a chave exata (como está salva no Firestore) do cadastro do
+     artista, pra poder apagar/mover o documento certo ao renomear. */
+  function findArtistKey(name) {
+    if (artists[name] !== undefined) return name;
+    const target = normalizeArtistKey(name);
+    if (!target) return null;
+    return Object.keys(artists).find((k) => normalizeArtistKey(k) === target) || null;
   }
 
   function populateBankFields(artistName) {
@@ -879,6 +891,7 @@
     const entry = data[key] || {};
 
     panelDate.textContent = `${formatBrDate(key)} — ${weekdayNameFromKey(key)}`;
+    openedArtistName = entry.artista || "";
     fArtista.value = entry.artista || "";
     fTipo.value = entry.tipo || "DJ";
     fStatus.value = entry.status || "pendente";
@@ -888,6 +901,7 @@
     fEmail.value = entry.email || "";
     fObs.value = entry.obs || "";
     populateBankFields(entry.artista || "");
+    updateRenameButtonVisibility();
 
     activeTemplateKey = "convite";
     renderWaTemplateChips();
@@ -902,6 +916,7 @@
     dayPanel.hidden = true;
     if (templatesPanel.hidden) backdrop.hidden = true;
     activeDateKey = null;
+    openedArtistName = "";
   }
 
   function readDayForm() {
@@ -1013,17 +1028,72 @@
 
   // Ao escolher/confirmar um artista já conhecido, preenche contato e
   // dados bancários salvos dele — evita redigitar a cada nova data.
+  // Se o nome digitado não bate com nenhum cadastro (ex: corrigindo um
+  // typo do nome que já estava aberto), os campos NÃO são apagados —
+  // assim a foto/PIX continuam visíveis até o usuário confirmar a
+  // correção em "Corrigir nome" (ou criar um cadastro novo mesmo, se
+  // for esse o caso).
   function applyArtistMatch(name) {
     const rec = findArtistRecord(name);
     if (rec) {
       if (!fTelefone.value && rec.telefone) fTelefone.value = rec.telefone;
       if (!fEmail.value && rec.email) fEmail.value = rec.email;
+      populateBankFields(name);
     }
-    populateBankFields(name);
+    updateRenameButtonVisibility();
     updateWaPreview();
   }
 
   fArtista.addEventListener("change", () => applyArtistMatch(fArtista.value.trim()));
+  fArtista.addEventListener("input", updateRenameButtonVisibility);
+
+  /* Mostra "Corrigir nome" só quando o nome editado é realmente
+     diferente do que estava salvo nesta data ao abrir o painel. */
+  function updateRenameButtonVisibility() {
+    const current = fArtista.value.trim();
+    const show = !!openedArtistName && !!current && current !== openedArtistName;
+    renameArtistBtn.hidden = !show;
+    renameArtistHint.hidden = !show;
+  }
+
+  renameArtistBtn.addEventListener("click", async () => {
+    const oldName = openedArtistName;
+    const newName = fArtista.value.trim();
+    if (!oldName || !newName || oldName === newName) return;
+    if (!artistsCol || !bookingsCol) {
+      showToast("Sem conexão com a nuvem. Tenta de novo em instantes.");
+      return;
+    }
+    const matchingDateKeys = Object.keys(data).filter(
+      (k) => normalizeArtistKey(data[k].artista) === normalizeArtistKey(oldName)
+    );
+    const confirmed = confirm(
+      `Corrigir "${oldName}" para "${newName}"?\n\nIsso atualiza o nome em ${matchingDateKeys.length} data(s) da agenda e mantém a foto e o PIX já salvos.`
+    );
+    if (!confirmed) return;
+    try {
+      const oldKey = findArtistKey(oldName);
+      const oldRecord = oldKey ? artists[oldKey] : null;
+      const batch = writeBatch(db);
+      matchingDateKeys.forEach((k) => {
+        batch.set(doc(bookingsCol, k), { artista: newName }, { merge: true });
+      });
+      if (oldRecord) {
+        batch.set(doc(artistsCol, newName), oldRecord, { merge: true });
+      }
+      if (oldKey && oldKey !== newName) {
+        batch.delete(doc(artistsCol, oldKey));
+      }
+      await batch.commit();
+      openedArtistName = newName;
+      populateBankFields(newName);
+      updateRenameButtonVisibility();
+      showToast(`Nome corrigido em ${matchingDateKeys.length} data(s). Foto e PIX mantidos.`);
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra corrigir o nome. Tenta de novo.");
+    }
+  });
 
   /* Sugestões de nome desenhadas à mão (datalist nativo não aparece de
      forma confiável no Safari do iPhone). */

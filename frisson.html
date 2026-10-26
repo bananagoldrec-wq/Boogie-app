@@ -87,6 +87,8 @@
         <label for="f-artista">Artista</label>
         <input id="f-artista" type="text" placeholder="Nome do DJ ou artista" autocomplete="off" />
         <div id="artist-suggestions" class="suggestions" hidden></div>
+        <button id="rename-artist-btn" class="btn btn-ghost" type="button" hidden>Corrigir nome (mantém foto e PIX)</button>
+        <p id="rename-artist-hint" class="wa-hint" hidden>Isso atualiza o nome em toda a agenda sem perder foto/PIX. Se só clicar em Salvar, vira um cadastro novo.</p>
       </div>
 
       <div class="photo-row">
@@ -268,6 +270,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/frisson.js?v=30"></script>
+  <script type="module" src="js/frisson.js?v=31"></script>
 </body>
 </html>
