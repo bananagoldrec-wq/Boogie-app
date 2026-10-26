@@ -19,13 +19,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/bananagold.css?v=4" />
+  <link rel="stylesheet" href="css/bananagold.css?v=5" />
 </head>
 <body>
 
   <header class="topbar">
     <img class="brand-logo" src="img/bananagold-logo-wide.png" alt="Banana Gold Records" />
     <div class="topbar-spacer"></div>
+    <a id="open-sheet" class="icon-btn" href="#" target="_blank" rel="noopener" aria-label="Abrir planilha da equipe" title="Abrir planilha da equipe (Google Sheets)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M4 9h16M4 15h16M10 9v12"/></svg>
+    </a>
     <button id="export-ics" class="icon-btn" type="button" aria-label="Exportar calendário (.ics)" title="Exportar calendário pro Google Agenda (.ics)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="1.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
     </button>
@@ -145,6 +148,20 @@
       </div>
       <div class="field-row">
         <div class="field">
+          <label for="r-plataforma">Plataforma</label>
+          <select id="r-plataforma">
+            <option value="">—</option>
+            <option value="todas as plataformas">Todas as plataformas</option>
+            <option value="bandcamp only">Bandcamp only</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="r-sublabel">Sub label</label>
+          <input id="r-sublabel" type="text" placeholder="House, Disco, Coco Disco..." autocomplete="off" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
           <label for="r-data">Data de lançamento</label>
           <input id="r-data" type="date" />
         </div>
@@ -154,6 +171,16 @@
         </div>
       </div>
       <label class="check"><input id="r-mes" type="checkbox" /> só o mês está certo (dia a confirmar)</label>
+      <div class="field-row">
+        <div class="field">
+          <label for="r-capa">Responsável capa</label>
+          <input id="r-capa" type="text" list="people" placeholder="Perpettuo, Lysia..." autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="r-contrato">Contrato / notas</label>
+          <input id="r-contrato" type="text" placeholder="Contrato OK" autocomplete="off" />
+        </div>
+      </div>
       <div class="field">
         <label for="r-bandcamp">Link Bandcamp</label>
         <input id="r-bandcamp" type="url" placeholder="https://bananagoldrecords.bandcamp.com/album/..." autocomplete="off" />
@@ -252,6 +279,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/bananagold.js?v=6"></script>
+  <script src="js/bananagold.js?v=8"></script>
 </body>
 </html>

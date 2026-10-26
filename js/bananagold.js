@@ -243,6 +243,105 @@
       fonte: FONTE_EXTRA[slug] || (dataMes ? "Bandcamp: discografia do selo mostra só mês/ano." : "Bandcamp: data da página do lançamento."),
     }));
   });
+  /* ── planilha da equipe: "Calendário de Lançamentos - BANANA GOLD 2026"
+     (Google Sheets, aba CALENDARIO 2026). É a fonte das datas de 2026.
+     [id, data, plataforma, sub label, resp. capa, notas, flags]
+     id = um lançamento que já existe acima, ou "+slug|título|artistas"
+     pra um que só está na planilha. flags: m = master OK, a = arte
+     final, t = texto pronto. Quando a página do Bandcamp mostra outro
+     dia, vale o do Bandcamp (já aconteceu) e a planilha fica na fonte. */
+  const SHEET_URL = "https://docs.google.com/spreadsheets/d/1qE7TOlo3JiCqXyudmGMj1B8K-ZEnsTCD70dvbSWvLYY/edit";
+  const BC = "bandcamp only", ALL = "todas as plataformas";
+  const PLANILHA = [
+    ["groovy-01", "2026-01-21", ALL, "Groovy Tools", "Perpettuo", "", "m"],
+    ["cat-coco-discos", "2026-01-23", BC, "Coco Disco", "Perpettuo", "", "m"],
+    ["cat-ensalada-de-verano", "2026-02-06", ALL, "Custom", "Perpettuo", "Contrato OK", "m"],
+    ["carna-01", "2026-02-13", BC, "Carna Tools", "Perpettuo", "", "m"],
+    ["cat-freed-from-desire", "2026-02-27", BC, "Custom", "Perpettuo", "", "m"],
+    ["baile-03", "2026-03-10", BC, "Baile Tools", "Lysia", "", "m"],
+    ["+the-simple-things|The Simple Things|Andrea Rdam", "2026-03-13", ALL, "House", "Perpettuo", "Contrato OK", "m"],
+    ["cat-pangaea-01", "2026-03-20", BC, "Pangeia", "Perpettuo", "", "m"],
+    ["cat-bg001", "2026-03-27", BC, "Custom", "Perpettuo", "", "m"],
+    ["cat-ripa-na-xulipa", "2026-04-01", BC, "Single Edit", "Lysia", "", "m"],
+    ["cat-alla-prima", "2026-04-03", ALL, "Custom", "Perpettuo", "", "m"],
+    ["+the-simple-things-beno|The Simple Things (BENO Remix)|Andrea Rdam", "2026-04-10", ALL, "House", "Perpettuo", "", "m"],
+    ["+malicia|Malicia / Back To The Beginning|Lon Sounds", "2026-04-15", ALL, "Coco Disco", "Lysia", "Contrato OK", "m"],
+    ["jacuzzi-02", "2026-04-22", BC, "Jacuzzi Edits", "", "", "m"],
+    ["cat-tipsy-kings", "2026-04-24", ALL, "Custom", "Perpettuo", "Contratos OK", "m"],
+    ["+gaspar-lysia|Gaspar Muniz & Lysia|Gaspar Muniz & Lysia", "2026-05-01", BC, "Custom", "Lysia", "", "m"],
+    ["cat-saire", "2026-05-08", BC, "Disco", "Perpettuo", "", "m"],
+    ["cat-lua", "2026-05-15", BC, "Disco", "Lysia", "Contrato OK", "m"],
+    ["cat-not-quite-my-tempo", "2026-05-22", BC, "Disco", "Perpettuo", "", "m"],
+    ["+astral-livre|Astral Livre (EP)|Gui Donada", "2026-05-29", ALL, "Custom", "Lysia", "Contrato OK", "m"],
+    ["cat-miragem", "2026-06-05", ALL, "Disco", "Lysia", "Contrato pendente", "m"],
+    ["+keep-me-in-the-light|Keep Me In The Light|", "2026-06-12", ALL, "House", "Lysia", "Contrato OK", "m"],
+    ["+pura-danca|Pura Dança|Fabio Santanna", "2026-06-19", ALL, "Disco", "Lysia", "Contrato pendente", "m"],
+    ["+pigme|Pigme|", "2026-06-26", BC, "Coco Disco", "Lysia", "", "m"],
+    ["+tuio-maravilha|Tuio Maravilha|", "2026-07-03", ALL, "", "Lysia", "", ""],
+    ["cat-bateu-onda", "2026-07-10", ALL, "Disco", "Lysia", "Contrato pendente", "m"],
+    ["cat-cruel-summer", "2026-07-17", BC, "", "Lysia", "", "m"],
+    ["cat-3-da-tarde", "2026-07-24", ALL, "", "Lysia", "", "mat"],
+    ["+eric-costa|Eric Costa|Eric Costa", "2026-07-31", ALL, "", "Lysia", "Contrato OK", "m"],
+    ["cat-miss-you", "2026-08-07", ALL, "", "Lysia", "Contrato OK", "m"],
+    ["+jeria-remixes|Remixes Francisco Jeria|Francisco Jeria", "2026-08-14", ALL, "", "Lysia", "Reagendar", ""],
+    ["cat-eu-gosto-disso", "2026-08-21", BC, "", "Lysia", "Na planilha: VP Leone Edits", "m"],
+    ["cat-count-it-off", "2026-08-28", ALL, "", "Lysia", "Contrato OK", "mt"],
+    ["cat-feels-so-good", "2026-09-04", ALL, "", "Lysia", "Contrato OK", "m"],
+    ["cat-dont-u-know", "2026-09-11", ALL, "", "Lysia", "Contrato OK", "m"],
+    ["cat-brazilian-greatest-edits-01", "2026-09-18", BC, "", "Lysia", "", ""],
+    ["cat-jazz-corner", "2026-09-25", ALL, "", "Lysia", "Contrato OK", "m"],
+    ["cat-piece-of-inspiration", "2026-10-02", BC, "", "Lysia", "Contrato OK", ""],
+    ["cat-brazilian-greatest-edits-02", "2026-10-09", BC, "", "Lysia", "", ""],
+    ["cat-sweet-dancer", "2026-10-16", ALL, "", "Lysia", "Contrato OK", "m"],
+    ["+beno-single|BENO (single)|BENO", "2026-10-23", ALL, "", "Lysia", "", ""],
+    ["+banana-sampler|Banana Sampler|Kelson, Seed, Panko, Tuca e Cent", "2026-10-30", ALL, "", "Lysia", "", ""],
+    ["+kair-makz-edit|KAIR & MAKZ Edit|KAIR & MAKZ", "2026-11-06", BC, "", "", "", ""],
+    ["+d-marco|D.Marco|D.Marco", "2026-11-13", ALL, "", "", "", ""],
+    ["+fabio-santanna-edits|Fabio Santanna Edits EP|Fabio Santanna", "2026-11-20", BC, "", "", "", ""],
+    ["+lonsounds-pack|LONSOUNDS Pack|Lon Sounds", "2026-11-27", ALL, "", "", "", ""],
+    ["+tropicals-edits|Tropicals EP Edits|Tropicals", "2026-12-04", BC, "", "", "", ""],
+    ["+capetini|Capetini|Capetini", "2026-12-11", ALL, "", "", "", ""],
+    ["+bryan|Bryan|Bryan", "2026-12-18", BC, "", "", "", ""],
+  ];
+  const SEED_BY_ID = Object.fromEntries(SEED_LIST.map((r) => [r.id || seedId(r.serie, r.vol), r]));
+  PLANILHA.forEach(([ref, data, plataforma, subLabel, capa, notas, flags]) => {
+    const extra = { plataforma, subLabel, capa, contrato: notas, planilha: data };
+    let r = SEED_BY_ID[ref];
+    if (!r) {
+      // só está na planilha: entra no catálogo geral
+      const [slug, titulo, artistas] = ref.slice(1).split("|");
+      const futuro = data >= keyFromDate(new Date());
+      r = seed("catalogo", 0, {
+        id: `cat-${slug}`, titulo, artistas, formato: "Single", data,
+        status: futuro ? "agendado" : "lancado",
+        checklist: {
+          master: flags.includes("m"),
+          bandcamp: flags.includes("a") && flags.includes("m"),
+          arte: flags.includes("a"),
+          press: flags.includes("t"),
+        },
+        fonte: futuro
+          ? "Planilha da equipe (calendário 2026)."
+          : "Planilha da equipe (calendário 2026). Não achei no Bandcamp — confirmar se saiu.",
+      });
+      SEED_LIST.push(r);
+      SEED_BY_ID[r.id] = r;
+    } else if (r.dataMes || !r.data || r.data === data) {
+      r.data = data;
+      r.dataMes = false;
+      r.fonte = r.data && r.fonte && !r.fonte.startsWith("Bandcamp: discografia")
+        ? `${r.fonte} Confere com a planilha da equipe.`
+        : "Planilha da equipe (calendário 2026).";
+    } else {
+      r.fonte = `${r.fonte} Na planilha estava ${formatBr(data)}.`;
+    }
+    if (ref === "jacuzzi-02") {
+      r.titulo = r.titulo || "Jacuzzi Edits Vol. 02";
+      r.status = "lancado";
+      r.fonte = "Planilha da equipe: 22/04/2026, bandcamp only. Não achei no Bandcamp — confirmar se saiu.";
+    }
+    Object.assign(r, extra);
+  });
   const SEED_RELEASES = Object.fromEntries(SEED_LIST.map(({ id, ...r }) => [id || seedId(r.serie, r.vol), r]));
 
   function seedId(serie, vol) { return `${serie}-${pad2(vol)}`; }
@@ -510,7 +609,10 @@
   }
   function people() {
     const set = new Set();
-    Object.values(releases).forEach((r) => r.responsavel && set.add(r.responsavel.trim()));
+    Object.values(releases).forEach((r) => {
+      if (r.responsavel) set.add(r.responsavel.trim());
+      if (r.capa) set.add(r.capa.trim());
+    });
     Object.values(stored.events).forEach((e) => e && e.responsavel && set.add(e.responsavel.trim()));
     return [...set].sort((a, b) => a.localeCompare(b, "pt-BR"));
   }
@@ -609,7 +711,7 @@
           ${rows.map(([id, r]) => `
             <button class="cat-row" type="button" data-release="${esc(id)}">
               <span class="cat-date${r.dataMes ? " is-approx" : ""}">${r.data ? esc(shortDate(r)) : "sem data"}</span>
-              <span class="cat-main"><b>${esc(r.titulo || "título a definir")}</b><span>${esc(r.artistas || "")}</span></span>
+              <span class="cat-main"><b>${esc(r.titulo || "título a definir")}</b><span>${esc([r.artistas, r.subLabel, r.plataforma === BC ? "bandcamp only" : ""].filter(Boolean).join(" · "))}</span></span>
               <span class="chip chip-${r.status}">${STATUS_NAME[r.status] || r.status}</span>
             </button>`).join("") || `<p class="empty">Nada ainda.</p>`}
         </div>` : ""}
@@ -767,7 +869,7 @@
           <span class="row-bar"></span>
           <span class="row-main">
             <b>${esc(releaseLabel(r))}</b>
-            <span>${esc(r.titulo || "título a definir")}${r.responsavel ? ` · ${esc(r.responsavel)}` : ""}</span>
+            <span>${esc((isGeral(r) ? r.artistas : r.titulo) || "título a definir")}${r.responsavel ? ` · ${esc(r.responsavel)}` : ""}</span>
           </span>
           <span class="row-side">
             <span class="chip chip-${r.status}">${STATUS_NAME[r.status]}</span>
@@ -884,6 +986,10 @@
   const rArtistas = document.getElementById("r-artistas");
   const rStatus = document.getElementById("r-status");
   const rFormato = document.getElementById("r-formato");
+  const rPlataforma = document.getElementById("r-plataforma");
+  const rSubLabel = document.getElementById("r-sublabel");
+  const rCapa = document.getElementById("r-capa");
+  const rContrato = document.getElementById("r-contrato");
   const rData = document.getElementById("r-data");
   const rMes = document.getElementById("r-mes");
   const rResp = document.getElementById("r-resp");
@@ -912,6 +1018,10 @@
     rArtistas.value = r.artistas || "";
     rStatus.value = r.status || "planejado";
     rFormato.value = r.formato || "EP";
+    rPlataforma.value = r.plataforma || "";
+    rSubLabel.value = r.subLabel || "";
+    rCapa.value = r.capa || "";
+    rContrato.value = r.contrato || "";
     rData.value = r.data || "";
     rMes.checked = !!r.dataMes;
     rResp.value = r.responsavel || "";
@@ -957,6 +1067,10 @@
       artistas: rArtistas.value.trim(),
       status: rStatus.value,
       formato: rFormato.value,
+      plataforma: rPlataforma.value,
+      subLabel: rSubLabel.value.trim(),
+      capa: rCapa.value.trim(),
+      contrato: rContrato.value.trim(),
       data: rData.value,
       dataMes: rMes.checked && !!rData.value,
       responsavel: rResp.value.trim(),
@@ -1173,11 +1287,13 @@
     return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   }
 
+  document.getElementById("open-sheet").href = SHEET_URL;
+
   document.getElementById("export-csv").addEventListener("click", () => {
-    const head = ["Série", "Volume", "Título", "Artistas", "Formato", "Status", "Data", "Dia confirmado", "Responsável", "Checklist", "Bandcamp", "SoundCloud", "Observações"];
+    const head = ["Série", "Volume", "Título", "Artistas", "Formato", "Status", "Data", "Dia confirmado", "Plataforma", "Sub label", "Responsável", "Capa", "Contrato", "Checklist", "Bandcamp", "SoundCloud", "Observações"];
     const rows = SERIES.flatMap((s) => seriesReleases(s.id).map(([, r]) => [
       s.nome, r.vol, r.titulo, r.artistas, r.formato, STATUS_NAME[r.status], r.data ? formatBr(r.data) : "",
-      r.data ? (r.dataMes ? "não" : "sim") : "", r.responsavel, `${checklistDone(r)}/${CHECKLIST.length}`, r.bandcamp, r.soundcloud, r.obs,
+      r.data ? (r.dataMes ? "não" : "sim") : "", r.plataforma, r.subLabel, r.responsavel, r.capa, r.contrato, `${checklistDone(r)}/${CHECKLIST.length}`, r.bandcamp, r.soundcloud, r.obs,
     ]));
     const csv = "\ufeff" + [head, ...rows].map((r) => r.map(csvEscape).join(";")).join("\n");
     download("banana-gold-catalogo.csv", csv, "text/csv;charset=utf-8");
