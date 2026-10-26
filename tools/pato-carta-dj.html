@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<!-- Fonte da carta do DJ do Pato com Laranja (pato-carta-dj.pdf).
+     Mesma estrutura do guia técnico do Frisson: capa, carta de boas-vindas
+     e ficha técnica. Edite aqui e rode: node tools/make_pato_carta.mjs
+     Trechos com class="tbd" ficam em aberto, como linha pra preencher. -->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Pato com Laranja — Informações técnicas</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&family=Montserrat:ital,wght@1,600;1,700;1,800&display=swap" />
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Lexend", sans-serif;
+    font-weight: 300;
+    color: #2a2622;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page {
+    width: 210mm;
+    height: 297mm;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    background: #f3ece1;
+    display: flex;
+    flex-direction: column;
+  }
+  .page:last-child { page-break-after: auto; }
+  .orange { color: #e8902a; }
+  .slant { font-family: "Montserrat", sans-serif; font-style: italic; }
+  .wordmark {
+    font-family: "Montserrat", sans-serif; font-style: italic; font-weight: 800;
+    color: #e8902a; letter-spacing: 0.01em; display: inline-flex; align-items: center;
+  }
+  .wordmark img { border-radius: 50%; margin-left: 0.04em; }
+
+  /* ── capa ── */
+  .cover {
+    background:
+      radial-gradient(ellipse 90% 34% at 50% 108%, rgba(242,165,65,0.42), rgba(242,165,65,0) 70%),
+      #1b1b1b;
+    color: #f3f1ec;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .cover .wordmark { font-size: 64pt; color: #f2a541; }
+  .cover .wordmark img { width: 0.82em; height: 0.82em; }
+  .cover .kicker { margin-top: 6mm; font-size: 8.5pt; letter-spacing: 0.42em; color: #bdb8af; }
+  .cover .logo { width: 40mm; height: 40mm; border-radius: 50%; margin: 18mm 0; }
+  .cover .title { font-size: 17pt; font-weight: 500; letter-spacing: 0.3em; padding-left: 0.3em; }
+  .cover .sub { font-size: 12pt; font-weight: 600; color: #f2a541; margin-top: 3mm; }
+  .cover .bottom { position: absolute; bottom: 14mm; left: 0; right: 0; font-size: 7.5pt; letter-spacing: 0.32em; color: #bdb8af; }
+
+  /* ── carta ── */
+  .letter { padding: 34mm 34mm 20mm; }
+  .letter .head { text-align: center; }
+  .letter .head .wordmark { font-size: 22pt; }
+  .letter .head .wordmark img { width: 0.82em; height: 0.82em; }
+  .letter .intro { margin-top: 12mm; font-size: 10.5pt; line-height: 1.7; font-weight: 400; }
+  .letter .intro b { color: #e8902a; font-weight: 600; }
+  .rule { width: 12mm; height: 0.6mm; background: #e8902a; margin: 9mm auto; }
+  .letter .body p { font-family: "Montserrat", sans-serif; font-style: italic; font-weight: 600;
+    font-size: 9.6pt; line-height: 1.75; color: #5c564f; margin: 0 0 5mm; }
+  .sign { text-align: center; margin-top: 9mm; font-size: 9pt; font-weight: 600; letter-spacing: 0.32em; color: #e8902a; }
+
+  /* ── ficha técnica ── */
+  .sheet { padding: 15mm 18mm 12mm; }
+  .sheet-top { display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 4mm; border-bottom: 0.6mm solid #e8902a; }
+  .sheet-top .wordmark { font-size: 17pt; }
+  .sheet-top .wordmark img { width: 0.82em; height: 0.82em; }
+  .sheet-top .label { font-size: 7pt; font-weight: 600; letter-spacing: 0.3em; color: #e8902a; }
+  .chip { display: inline-block; align-self: flex-start; margin: 6mm 0 1.5mm; padding: 1.6mm 3.2mm; background: #1b1b1b;
+    color: #f2a541; font-size: 6.8pt; font-weight: 600; letter-spacing: 0.24em; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { position: relative; padding: 2mm 0 2mm 6mm; font-size: 8.6pt; line-height: 1.5;
+    border-bottom: 0.25mm solid rgba(42,38,34,0.12); }
+  li::before { content: "—"; position: absolute; left: 0; color: #e8902a; font-weight: 600; }
+  li b { font-weight: 600; color: #1b1b1b; }
+  .tbd { display: inline-block; width: 70mm; height: 3.6mm; vertical-align: -0.8mm; border-bottom: 0.25mm solid rgba(42,38,34,0.45); }
+  .sheet-end { margin-top: auto; border-top: 0.6mm solid #e8902a; padding-top: 5mm; text-align: center; }
+  .sheet-end .slant { font-weight: 600; font-size: 9.5pt; color: #5c564f; }
+  .sheet-end .wordmark { font-size: 15pt; margin-top: 3mm; }
+  .sheet-end .wordmark img { width: 0.82em; height: 0.82em; }
+</style>
+</head>
+<body>
+
+<!-- 1 · capa -->
+<section class="page cover">
+  <div class="wordmark">PAT<img src="../icons/pato-logo.png" alt="O" /></div>
+  <div class="kicker">PATO COM LARANJA · RJ E SP</div>
+  <img class="logo" src="../icons/pato-logo.png" alt="" />
+  <div class="title">INFORMAÇÕES TÉCNICAS</div>
+  <div class="sub slant">Guia rápido para DJs</div>
+  <div class="bottom">✦ &nbsp; RIO DE JANEIRO &nbsp;&amp;&nbsp; SÃO PAULO &nbsp; ✦</div>
+</section>
+
+<!-- 2 · carta de boas-vindas -->
+<section class="page letter">
+  <div class="head"><div class="wordmark">PAT<img src="../icons/pato-logo.png" alt="O" /></div></div>
+
+  <p class="intro">Bem-vindo(a) ao <b>Pato</b>! Ficamos felizes em ter você por aqui — cada set
+    ajuda a desenhar o clima do nosso dia, e a ideia é que você se sinta à vontade pra construir
+    isso do seu jeito.</p>
+
+  <div class="rule"></div>
+
+  <div class="body">
+    <p>Gostamos de pensar o set como uma curva. Costuma funcionar bem começar com um volume mais
+      ambiente — só um pouco acima da playlist que já estava tocando — pra que as pessoas ainda
+      consigam conversar enquanto a casa vai enchendo.</p>
+    <p>Conforme o clima for esquentando, vale ir subindo aos poucos, sempre buscando esse equilíbrio
+      entre música e conversa. Se o dia pegar embalo e o público responder, fique à vontade pra
+      deixar mais animado — ninguém sente esse fluxo melhor do que quem está tocando.</p>
+    <p>Vale lembrar que você está construindo a trilha do dia, não uma pista obrigatória: não precisa
+      se preocupar em botar todo mundo pra dançar, mas pode seguir a energia do público se ela pedir.
+      E a equipe da casa pode, eventualmente, sugerir algum ajuste no volume — é só pra cuidar da
+      experiência de todo mundo.</p>
+  </div>
+
+  <div class="sign">bom som!</div>
+</section>
+
+<!-- 3 · ficha técnica -->
+<section class="page sheet">
+  <div class="sheet-top">
+    <div class="wordmark">PAT<img src="../icons/pato-logo.png" alt="O" /></div>
+    <div class="label">INFORMAÇÕES TÉCNICAS</div>
+  </div>
+
+  <div class="chip">EQUIPAMENTO</div>
+  <ul>
+    <li><b>Mixer:</b> <span class="tbd"></span></li>
+    <li><b>Players:</b> <span class="tbd"></span></li>
+    <li><b>Formato:</b> <span class="tbd"></span></li>
+    <li><b>Som:</b> <span class="tbd"></span></li>
+  </ul>
+
+  <div class="chip">TIPO DE SOM</div>
+  <ul>
+    <li>Clima de pé na areia e fim de tarde, com groove e um clima animado — pense num warm up de uma festa que você curte.</li>
+    <li>Sem necessidade de pesquisa obscura ou lado B: toque o que faz sentido pra você e pro público.</li>
+    <li><b>Referências:</b> disco, house, soul, brasilidades e correntes próximas.</li>
+    <li>Traga sua essência pra seleção — curadoria com identidade é o que mais valorizamos.</li>
+  </ul>
+
+  <div class="chip">INFORMAÇÕES PRÁTICAS</div>
+  <ul>
+    <li><b>Unidades:</b> o endereço e o horário do seu set vão junto com a confirmação da data.</li>
+    <li><b>Chegada:</b> 30 min antes, pra montar com calma.</li>
+    <li><b>Volume:</b> respeite o limite da unidade — várias são ao ar livre, com vizinhança.</li>
+    <li><b>Traga:</b> seus fones, pendrives e cabos — itens essenciais, não deixe pra última hora.</li>
+    <li><b>Consumação:</b> <span class="tbd"></span></li>
+  </ul>
+
+  <div class="chip">BOAS PRÁTICAS NA CABINE</div>
+  <ul>
+    <li>Respeitar o limite de volume da unidade</li>
+    <li>Evitar bebidas ou objetos apoiados sobre o equipamento</li>
+    <li>Proteger o equipamento de sol, areia e chuva — avise a equipe se precisar</li>
+    <li>Avisar a equipe com antecedência sobre qualquer necessidade especial</li>
+  </ul>
+
+  <div class="chip">DÚVIDAS</div>
+  <ul>
+    <li><b>Contato:</b> fale com a equipe que te convidou pelo WhatsApp.</li>
+  </ul>
+
+  <div class="sheet-end">
+    <div class="slant">Será um prazer ter você no Pato.</div>
+    <div class="wordmark">PAT<img src="../icons/pato-logo.png" alt="O" /></div>
+  </div>
+</section>
+
+</body>
+</html>

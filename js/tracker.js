@@ -8,7 +8,7 @@ const DAYS     = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 const DAY_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
 const START_H  = 6;
 const END_H    = 20;
-const ROUTINE_VERSION = 5;
+const ROUTINE_VERSION = 7;
 
 const CATS = [
   { id:'exercise', label:'Exercício',   color:'#A8C4A2' },
@@ -114,8 +114,21 @@ const REMINDER_MSGS = [
   'Diz não pra fissura. Diz sim pra você mesmo.',
 ];
 
-// Weekly routine template — empty, user fills in their own activities
-const ROUTINE = [];
+// Weekly routine merged once into pinnedTemplate (di: 0=Seg … 6=Dom)
+const ROUTINE = [
+  { di:0, h:7,  m:0, text:'Malhação', category:'exercise', startTime:'07:00', endTime:null    },
+  { di:0, h:9,  m:0, text:'KNN',      category:'study',    startTime:'09:00', endTime:'11:00' },
+  { di:0, h:19, m:0, text:'Yoga',     category:'exercise', startTime:'19:00', endTime:null    },
+  { di:1, h:7,  m:0, text:'Malhação', category:'exercise', startTime:'07:00', endTime:null    },
+  { di:1, h:8,  m:0, text:'Yoga',     category:'exercise', startTime:'08:00', endTime:null    },
+  { di:1, h:19, m:0, text:'IBEU',     category:'study',    startTime:'19:00', endTime:null    },
+  { di:2, h:7,  m:0, text:'Yoga',     category:'exercise', startTime:'07:00', endTime:null    },
+  { di:3, h:7,  m:0, text:'Malhação', category:'exercise', startTime:'07:00', endTime:null    },
+  { di:3, h:19, m:0, text:'IBEU',     category:'study',    startTime:'19:00', endTime:null    },
+  { di:4, h:7,  m:0, text:'Malhação', category:'exercise', startTime:'07:00', endTime:null    },
+  { di:4, h:9,  m:0, text:'KNN',      category:'study',    startTime:'09:00', endTime:'11:00' },
+  ...[0,1,2,3,4].map(di => ({ di, h:12, m:0, text:'Estúdio', category:'work', startTime:'12:00', endTime:'18:00', v:7 })),
+];
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -123,6 +136,7 @@ let S = loadState();
 let weekStart        = getMonday(new Date());
 let editCell         = null;
 let selCat           = null;
+let _pinActive          = false;
 let _lastReminderKey    = null;
 let _firedReminders     = new Set();
 let _firedRemindersDate = null;
@@ -133,9 +147,7 @@ function loadState() {
     if (!raw) return defaultState();
     const state = JSON.parse(raw);
     if ((state.routineVersion || 0) < ROUTINE_VERSION) {
-      // Clear all activities and re-seed fresh with the full current routine
-      // (preserves XP, streak, achievements, and smoking data)
-      state.activities = {};
+      // Only clear seeded weeks marker — preserve all user-added activities
       state.seededWeeks = [];
       state.routineVersion = ROUTINE_VERSION;
       localStorage.setItem(SK, JSON.stringify(state));
@@ -153,6 +165,10 @@ function defaultState() {
     lastActiveDate: null,
     achievements: {},
     totalDone: 0,
+    seededWeeks: [],
+    routineVersion: ROUTINE_VERSION,
+    pinnedTemplate: [],
+    notifLeadMins: 0,
   };
 }
 
@@ -269,18 +285,30 @@ function setAct(di, h, m = 0, act) {
 
 function seedRoutineIfEmpty() {
   if (!S.seededWeeks) S.seededWeeks = [];
+  if (!S.pinnedTemplate) S.pinnedTemplate = [];
+  if (S.routineApplied !== ROUTINE_VERSION) {
+    // Merge ROUTINE into the template and the current week, keeping user edits
+    // Only apply entries added after the last applied version, so deleted items don't come back
+    ROUTINE.filter(r => (r.v || 6) > (S.routineApplied || 0)).forEach(r => {
+      if (!S.pinnedTemplate.some(p => p.di === r.di && p.h === r.h && p.m === r.m)) S.pinnedTemplate.push({ ...r });
+      const cur = getAct(r.di, r.h, r.m);
+      if (cur) { cur.pin = true; S.activities[aKey(r.di, r.h, r.m)] = cur; }
+      else S.activities[aKey(r.di, r.h, r.m)] = { text:r.text, category:r.category, done:false, startTime:r.startTime, endTime:r.endTime, pin:true };
+    });
+    S.routineApplied = ROUTINE_VERSION;
+    save();
+  }
   const wkKey = wk();
   if (S.seededWeeks.includes(wkKey)) return;
   const hasActivity = Object.keys(S.activities).some(k => k.startsWith(wkKey));
-  if (hasActivity) {
-    S.seededWeeks.push(wkKey); save(); return;
+  if (!hasActivity && S.pinnedTemplate.length > 0) {
+    S.pinnedTemplate.forEach(({ di, h, m, text, category, startTime, endTime }) => {
+      S.activities[aKey(di, h, m)] = { text, category, done: false, startTime, endTime, pin: true };
+    });
+    setTimeout(() => showReminderToast('Rotina da semana carregada! 📅'), 500);
   }
-  ROUTINE.forEach(([di, h, m, text, category, startTime, endTime]) => {
-    S.activities[aKey(di, h, m)] = { text, category, done: false, startTime, endTime };
-  });
   S.seededWeeks.push(wkKey);
   save();
-  setTimeout(() => showReminderToast('Rotina da semana carregada! 📅'), 500);
 }
 
 // ── XP & Level engine ─────────────────────────────────────────────────────────
@@ -444,6 +472,14 @@ function updateTodayProgress() {
 
 // ── Grid ──────────────────────────────────────────────────────────────────────
 
+function calcSpan(act) {
+  if (!act.endTime || !act.startTime) return 1;
+  const [sh, sm] = act.startTime.split(':').map(Number);
+  const [eh, em] = act.endTime.split(':').map(Number);
+  const diff = (eh * 60 + em) - (sh * 60 + sm);
+  return diff > 0 ? Math.ceil(diff / 30) : 1;
+}
+
 function buildGrid() {
   seedRoutineIfEmpty();
   const grid = q('#week-grid');
@@ -455,7 +491,9 @@ function buildGrid() {
   const todayDI     = now.getDay() === 0 ? 6 : now.getDay() - 1;
 
   // Corner
-  grid.appendChild(mk('div', 'g-corner'));
+  const corner = mk('div', 'g-corner');
+  corner.style.gridRow = '1'; corner.style.gridColumn = '1';
+  grid.appendChild(corner);
 
   // Day headers
   DAYS.forEach((name, i) => {
@@ -464,6 +502,7 @@ function buildGrid() {
     const isToday = isThisWeek && i === todayDI;
 
     const hdr   = mk('div', `g-day${isToday ? ' is-today' : ''}`);
+    hdr.style.gridRow = '1'; hdr.style.gridColumn = String(i + 2);
     const dname = mk('span', 'dh-name'); dname.textContent = name;
     const ddate = mk('span', 'dh-date'); ddate.textContent = date.getDate();
     hdr.appendChild(dname);
@@ -471,23 +510,54 @@ function buildGrid() {
     grid.appendChild(hdr);
   });
 
-  // Hour rows (30-min slots)
+  // Pre-scan: mark slots absorbed by a spanning activity
+  const covered = new Set();
+  for (let h = START_H; h <= END_H; h++) {
+    for (const m of [0, 30]) {
+      for (let di = 0; di < 7; di++) {
+        const act = getAct(di, h, m);
+        if (!act) continue;
+        const span = calcSpan(act);
+        let ch = h, cm = m;
+        for (let s = 1; s < span; s++) {
+          cm += 30;
+          if (cm >= 60) { cm -= 60; ch++; }
+          if (ch > END_H) break;
+          covered.add(`${di}-${ch}-${cm}`);
+        }
+      }
+    }
+  }
+
+  // Hour rows (30-min slots) with explicit grid placement
+  let rowIdx = 2;
   for (let h = START_H; h <= END_H; h++) {
     for (const m of [0, 30]) {
       const lbl = mk('div', m === 0 ? 'g-time' : 'g-time g-time-half');
       lbl.textContent = m === 0 ? `${String(h).padStart(2,'0')}h` : ':30';
+      lbl.style.gridRow = String(rowIdx); lbl.style.gridColumn = '1';
       grid.appendChild(lbl);
 
       DAYS.forEach((_, di) => {
+        if (covered.has(`${di}-${h}-${m}`)) return;
+
         const isToday = isThisWeek && di === todayDI;
         const cell    = mk('div', `g-cell${isToday ? ' is-today-col' : ''}`);
         cell.dataset.di   = di;
         cell.dataset.hour = h;
         cell.dataset.min  = m;
+        cell.style.gridRow    = String(rowIdx);
+        cell.style.gridColumn = String(di + 2);
 
         const act = getAct(di, h, m);
         if (act) {
-          renderChip(cell, act);
+          const span = calcSpan(act);
+          if (span > 1) {
+            cell.style.gridRow = `${rowIdx} / span ${span}`;
+            cell.style.height  = 'auto';
+            cell.classList.add('is-span');
+          }
+          renderChip(cell, act, span);
           cell.addEventListener('click', e => {
             if (e.target.classList.contains('chip-edit')) return;
             toggleDone(di, h, m, cell);
@@ -497,6 +567,8 @@ function buildGrid() {
         }
         grid.appendChild(cell);
       });
+
+      rowIdx++;
     }
   }
 
@@ -504,11 +576,11 @@ function buildGrid() {
   updateTodayProgress();
 }
 
-function renderChip(cell, act) {
+function renderChip(cell, act, span = 1) {
   const cat   = CATS.find(c => c.id === act.category);
   const color = cat ? cat.color : '#8E8E93';
 
-  const chip  = mk('div', `chip${act.done ? ' is-done' : ''}`);
+  const chip  = mk('div', `chip${act.done ? ' is-done' : ''}${span > 1 ? ' is-tall' : ''}`);
   chip.style.background  = hexA(color, 0.14);
   chip.style.borderLeft  = `3px solid ${color}`;
 
@@ -517,10 +589,12 @@ function renderChip(cell, act) {
   const body = mk('div', 'chip-body');
   if (act.startTime) {
     const tl = mk('span', 'chip-time');
-    tl.textContent = act.endTime ? `${act.startTime}–${act.endTime}` : act.startTime;
+    const showEnd = act.endTime && act.endTime !== act.startTime;
+    tl.textContent = showEnd ? `${act.startTime}–${act.endTime}` : act.startTime;
     body.appendChild(tl);
   }
-  const txt = mk('span', 'chip-text'); txt.textContent = act.text;
+  const txt = mk('span', 'chip-text');
+  txt.textContent = (act.pin ? '📌 ' : '') + act.text;
   body.appendChild(txt);
 
   const edit = mk('button', 'chip-edit');
@@ -539,15 +613,25 @@ function renderChip(cell, act) {
 }
 
 function placeTimeLine(di, now) {
-  const h      = now.getHours();
-  const rawMin = now.getMinutes();
-  const m      = rawMin < 30 ? 0 : 30;
+  const h = now.getHours(), rawMin = now.getMinutes();
   if (h < START_H || h > END_H) return;
-  const cell = q(`.g-cell[data-di="${di}"][data-hour="${h}"][data-min="${m}"]`);
-  if (!cell) return;
-  const line = mk('div', 'time-line');
-  line.style.top = `${((rawMin % 30) / 30) * 100}%`;
-  cell.appendChild(line);
+  const nowTotalMin = h * 60 + rawMin;
+
+  // Find the rendered cell that contains current time (may be a spanning cell)
+  const cells = document.querySelectorAll(`.g-cell[data-di="${di}"]`);
+  for (const c of cells) {
+    const ch = Number(c.dataset.hour), cm = Number(c.dataset.min);
+    const act = getAct(di, ch, cm);
+    const span = act ? calcSpan(act) : 1;
+    const startMin = ch * 60 + cm;
+    const endMin   = startMin + span * 30;
+    if (nowTotalMin >= startMin && nowTotalMin < endMin) {
+      const line = mk('div', 'time-line');
+      line.style.top = `${((nowTotalMin - startMin) / (span * 30)) * 100}%`;
+      c.appendChild(line);
+      return;
+    }
+  }
 }
 
 // ── Activity modal ────────────────────────────────────────────────────────────
@@ -570,6 +654,9 @@ function openActModal(di, h, m = 0, editMode = false) {
 
   selCat = act ? act.category : null;
   refreshCatUI();
+
+  _pinActive = act ? !!act.pin : false;
+  refreshPinBtn();
 
   q('#btn-del-act').hidden = !act;
   q('#act-overlay').hidden = false;
@@ -600,13 +687,28 @@ function saveAct() {
   }
 
   const existing = getAct(di, h, m);
-  setAct(di, h, m, text ? {
+  if (!S.pinnedTemplate) S.pinnedTemplate = [];
+  const actObj = text ? {
     text,
     category: selCat || 'other',
     done: existing ? existing.done : false,
     startTime: startTime || `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,
     endTime:   endTime || null,
-  } : null);
+    pin: _pinActive || undefined,
+  } : null;
+
+  // Sync pinnedTemplate
+  const tplIdx = S.pinnedTemplate.findIndex(p => p.di === di && p.h === h && p.m === m);
+  if (_pinActive && actObj) {
+    const entry = { di, h, m, text: actObj.text, category: actObj.category, startTime: actObj.startTime, endTime: actObj.endTime };
+    if (tplIdx >= 0) S.pinnedTemplate[tplIdx] = entry;
+    else             S.pinnedTemplate.push(entry);
+  } else if (!_pinActive && tplIdx >= 0) {
+    S.pinnedTemplate.splice(tplIdx, 1);
+  }
+
+  setAct(di, h, m, actObj);
+  save();
   closeActModal();
   buildGrid();
 }
@@ -639,6 +741,13 @@ function refreshCatUI() {
     btn.style.borderColor = active && cat ? cat.color : '';
     btn.style.background  = active && cat ? hexA(cat.color, 0.15) : '';
   });
+}
+
+function refreshPinBtn() {
+  const btn = q('#btn-pin-act');
+  if (!btn) return;
+  btn.classList.toggle('active', _pinActive);
+  btn.textContent = _pinActive ? '📌 Fixado toda semana' : '📌 Fixar toda semana';
 }
 
 // ── Smoking tracker ───────────────────────────────────────────────────────────
@@ -1028,50 +1137,171 @@ function hexA(hex, a) {
 
 // ── Notifications & reminders ─────────────────────────────────────────────────
 
-function playChime() {
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+// iOS only allows audio from a context created/resumed during a user tap
+['touchstart', 'click'].forEach(ev =>
+  document.addEventListener(ev, () => { try { getAudioCtx(); } catch (_) {} }, { once: true, passive: true }));
+
+function playBirds() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [[523.25, 0], [659.25, 0.18], [783.99, 0.36]].forEach(([freq, delay]) => {
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+    const ctx = getAudioCtx();
+    function chirp(t0, f0, f1, dur, vol) {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
       osc.type = 'sine';
-      osc.frequency.value = freq;
-      const t = ctx.currentTime + delay;
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.25, t + 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
-      osc.start(t);
-      osc.stop(t + 1.8);
-    });
+      osc.frequency.setValueAtTime(f0, t0);
+      osc.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(vol, t0 + 0.015);
+      gain.gain.setValueAtTime(vol, t0 + dur - 0.04);
+      gain.gain.linearRampToValueAtTime(0, t0 + dur);
+      osc.start(t0); osc.stop(t0 + dur + 0.01);
+    }
+    const t = ctx.currentTime;
+    // Primeiro pássaro — 3 gorjeios ascendentes
+    chirp(t,       2800, 3400, 0.11, 0.18);
+    chirp(t+0.16,  3000, 3700, 0.10, 0.18);
+    chirp(t+0.30,  2600, 3100, 0.13, 0.15);
+    // Segundo pássaro — duplet rápido
+    chirp(t+0.75,  4200, 4800, 0.07, 0.14);
+    chirp(t+0.86,  4500, 5200, 0.07, 0.14);
+    // Terceiro pássaro — suave e distante
+    chirp(t+1.40,  2100, 2600, 0.16, 0.09);
+    chirp(t+1.62,  2300, 2800, 0.14, 0.09);
   } catch (_) {}
 }
 
 function checkActivityReminders() {
-  const now = new Date();
-  const dk  = todayKey();
+  const now  = new Date();
+  const dk   = todayKey();
   if (_firedRemindersDate !== dk) { _firedReminders = new Set(); _firedRemindersDate = dk; }
-  const todayMonday = getMonday(now);
-  if (weekStart.getTime() !== todayMonday.getTime()) return;
-  const di = now.getDay() === 0 ? 6 : now.getDay() - 1;
-  const h  = now.getHours(), m = now.getMinutes();
-  for (let sh = START_H; sh <= END_H; sh++) {
+  // Always look at today's real week, even if the user is browsing another week
+  const wkToday  = getMonday(now).toISOString().slice(0,10);
+  const di       = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  const nowMins  = now.getHours() * 60 + now.getMinutes();
+  const lead     = S.notifLeadMins || 0;
+  for (let sh = 0; sh < 24; sh++) {
     for (const sm of [0, 30]) {
-      const act = getAct(di, sh, sm);
+      const act = S.activities[`${wkToday}-${DAY_KEYS[di]}-${sh}-${sm}`]
+               || (sm === 0 ? S.activities[`${wkToday}-${DAY_KEYS[di]}-${sh}`] : null);
       if (!act || act.done || !act.startTime) continue;
       const [ah, am] = act.startTime.split(':').map(Number);
-      if (ah !== h || am !== m) continue;
+      const fireMins = ah * 60 + am - lead;
+      // 5-min window: timers get throttled/delayed, an exact-minute match gets missed
+      if (nowMins < fireMins || nowMins > fireMins + 5) continue;
       const key = `${dk}-${act.startTime}-${act.text}`;
       if (_firedReminders.has(key)) continue;
       _firedReminders.add(key);
-      if (Notification.permission === 'granted') {
-        try { new Notification(`⏰ ${act.text}`, { body: `Hora de começar! ${act.startTime}` }); } catch (_) {}
-      }
-      showReminderToast(`⏰ ${act.text} — hora de começar!`);
-      playChime();
+      const msg = lead > 0 ? `Em ${lead} min: ${act.text} (${act.startTime})` : `Hora de começar! ${act.startTime}`;
+      showNotif(`⏰ ${act.text}`, msg, `act-${act.startTime}`);
+      startAlarm(act.text, msg);
     }
   }
+}
+
+// ── Ringing alarm (1 min, until dismissed) ────────────────────────────────────
+
+const ALARM_MS = 60000;
+let _alarmTimer = null, _alarmStop = null, _alarmTick = null;
+
+function startAlarm(title, msg) {
+  stopAlarm();
+  q('#alarm-title').textContent = title;
+  q('#alarm-msg').textContent   = msg;
+  q('#alarm-overlay').hidden = false;
+  const started = Date.now();
+  const ring = () => {
+    playBirds();
+    if (navigator.vibrate) navigator.vibrate([600, 300, 600, 300, 600]);
+    const left = Math.max(0, Math.ceil((ALARM_MS - (Date.now() - started)) / 1000));
+    q('#alarm-countdown').textContent = `Tocando… ${left}s`;
+  };
+  ring();
+  _alarmTimer = setInterval(ring, 2500);
+  _alarmTick  = setInterval(() => {
+    const left = Math.max(0, Math.ceil((ALARM_MS - (Date.now() - started)) / 1000));
+    q('#alarm-countdown').textContent = `Tocando… ${left}s`;
+  }, 1000);
+  _alarmStop = setTimeout(stopAlarm, ALARM_MS);
+}
+
+function stopAlarm() {
+  clearInterval(_alarmTimer); clearInterval(_alarmTick); clearTimeout(_alarmStop);
+  _alarmTimer = _alarmTick = _alarmStop = null;
+  if (navigator.vibrate) navigator.vibrate(0);
+  const ov = q('#alarm-overlay');
+  if (ov) ov.hidden = true;
+}
+
+// ── Google Agenda ─────────────────────────────────────────────────────────────
+
+const GCAL_DAYS = ['MO','TU','WE','TH','FR','SA','SU'];
+
+function gcalLink(group) {
+  const first = group.items[0];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayDi = today.getDay() === 0 ? 6 : today.getDay() - 1;
+  // First occurrence: next matching weekday from today
+  let offset = 7;
+  group.items.forEach(it => { const d = (it.di - todayDi + 7) % 7; if (d < offset) offset = d; });
+  const d = new Date(today); d.setDate(d.getDate() + offset);
+  const ymd = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  const [sh, sm] = first.startTime.split(':').map(Number);
+  let endMins = sh * 60 + sm + 60;
+  if (first.endTime) {
+    const [eh, em] = first.endTime.split(':').map(Number);
+    if (eh * 60 + em > sh * 60 + sm) endMins = eh * 60 + em;
+  }
+  const hhmm = mins => `${String(Math.floor(mins/60)).padStart(2,'0')}${String(mins%60).padStart(2,'0')}00`;
+  const days = [...new Set(group.items.map(it => GCAL_DAYS[it.di]))].join(',');
+  const params = new URLSearchParams({
+    action:  'TEMPLATE',
+    text:    first.text,
+    dates:   `${ymd}T${hhmm(sh*60+sm)}/${ymd}T${hhmm(endMins)}`,
+    recur:   `RRULE:FREQ=WEEKLY;BYDAY=${days}`,
+    details: 'Rotina — Minha Rotina',
+  });
+  return `https://calendar.google.com/calendar/render?${params}`;
+}
+
+function renderGcalList() {
+  const list = q('#gcal-list');
+  if (!list) return;
+  list.innerHTML = '';
+  const groups = {};
+  (S.pinnedTemplate || []).forEach(it => {
+    const k = `${it.text}|${it.startTime}|${it.endTime || ''}`;
+    (groups[k] ||= { items: [] }).items.push(it);
+  });
+  const arr = Object.values(groups);
+  if (!arr.length) {
+    const p = mk('p', 'gcal-empty');
+    p.textContent = 'Fixe atividades com 📌 para enviá-las ao Google Agenda.';
+    list.appendChild(p);
+    return;
+  }
+  arr.sort((a, b) => a.items[0].startTime.localeCompare(b.items[0].startTime));
+  arr.forEach(g => {
+    const it = g.items[0];
+    const a = mk('a', 'gcal-item');
+    a.href = gcalLink(g);
+    a.target = '_blank';
+    a.rel = 'noopener';
+    const days = g.items.map(x => DAYS[x.di]).join(', ');
+    const time = it.endTime && it.endTime !== it.startTime ? `${it.startTime}–${it.endTime}` : it.startTime;
+    const info = mk('span', 'gcal-info');
+    const t = mk('strong'); t.textContent = it.text;
+    const s = mk('span'); s.textContent = `${days} · ${time}`;
+    info.appendChild(t); info.appendChild(s);
+    const plus = mk('span', 'gcal-plus'); plus.textContent = '+ Agenda';
+    a.appendChild(info); a.appendChild(plus);
+    list.appendChild(a);
+  });
 }
 
 function requestNotifPermission(cb) {
@@ -1089,9 +1319,13 @@ function showReminderToast(msg) {
   t._timer = setTimeout(() => { t.hidden = true; }, 6000);
 }
 
-function showNotif(title, body) {
-  if ('Notification' in window && Notification.permission === 'granted') {
-    try { new Notification(title, { body }); } catch (_) {}
+function showNotif(title, body, tag) {
+  const granted = 'Notification' in window && Notification.permission === 'granted';
+  const sw = granted && 'serviceWorker' in navigator && navigator.serviceWorker.controller;
+  if (sw) {
+    navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag });
+  } else if ('Notification' in window && Notification.permission === 'granted') {
+    try { new Notification(title, { body, tag }); } catch (_) {}
   }
   showReminderToast(body);
 }
@@ -1414,8 +1648,10 @@ function init() {
   refreshSmokingStrip();
   updateNotifBtn();
   setInterval(refreshSmokingStrip, 30000);
-  setInterval(() => { checkScheduledReminders(); checkActivityReminders(); }, 60000);
+  setInterval(checkScheduledReminders, 60000);
+  setInterval(checkActivityReminders, 20000);
   checkActivityReminders();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkActivityReminders(); });
   if ('Notification' in window && Notification.permission === 'default') {
     setTimeout(() => requestNotifPermission(updateNotifBtn), 3000);
   }
@@ -1430,11 +1666,37 @@ function init() {
   q('#btn-save-act').addEventListener('click', saveAct);
   q('#btn-del-act').addEventListener('click', () => {
     if (!editCell) return;
-    setAct(editCell.di, editCell.h, editCell.m, null);
+    const { di, h, m } = editCell;
+    setAct(di, h, m, null);
+    if (!S.pinnedTemplate) S.pinnedTemplate = [];
+    const tplIdx = S.pinnedTemplate.findIndex(p => p.di === di && p.h === h && p.m === m);
+    if (tplIdx >= 0) S.pinnedTemplate.splice(tplIdx, 1);
+    save();
     closeActModal();
     buildGrid();
   });
   q('#act-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveAct(); });
+  q('#btn-pin-act').addEventListener('click', () => { _pinActive = !_pinActive; refreshPinBtn(); });
+
+  // Settings
+  q('#btn-open-settings').addEventListener('click', openSettings);
+  q('#btn-test-alarm').addEventListener('click', () => {
+    requestNotifPermission(() => {
+      q('#settings-overlay').hidden = true;
+      showNotif('⏰ Teste de alarme', 'Se você ouviu os pássaros, o alarme está funcionando.', 'test');
+      startAlarm('Teste de alarme', 'Se você ouviu os pássaros, o alarme está funcionando.');
+    });
+  });
+  q('#btn-alarm-off').addEventListener('click', stopAlarm);
+  q('#btn-close-settings').addEventListener('click', () => { q('#settings-overlay').hidden = true; });
+  q('#settings-overlay').addEventListener('click', e => { if (e.target.id === 'settings-overlay') q('#settings-overlay').hidden = true; });
+  q('#lead-options').addEventListener('click', e => {
+    const btn = e.target.closest('.lead-btn');
+    if (!btn) return;
+    S.notifLeadMins = Number(btn.dataset.mins);
+    save();
+    refreshLeadUI();
+  });
 
   // Smoking strip → detail
   q('#smoke-strip').addEventListener('click', () => {
@@ -1500,6 +1762,17 @@ function init() {
   }
 
   requestAnimationFrame(() => setTimeout(scrollToCurrent, 60));
+}
+
+function openSettings() {
+  refreshLeadUI();
+  renderGcalList();
+  q('#settings-overlay').hidden = false;
+}
+
+function refreshLeadUI() {
+  const cur = S.notifLeadMins || 0;
+  qAll('.lead-btn').forEach(btn => btn.classList.toggle('active', Number(btn.dataset.mins) === cur));
 }
 
 function setSetupMode(mode) {
