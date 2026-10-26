@@ -117,9 +117,10 @@
 
     seed("carna", 1, {
       titulo: "Carnatools Vol. 01", artistas: "Gaspar Muniz & BENO", status: "lancado",
-      data: "2026-02-01", dataMes: true, soundcloud: `${SOUNDCLOUD}/sets/carnatools-vol-1`, checklist: ALL_DONE,
+      data: "2026-02-13", bandcamp: `${BANDCAMP}/track/kiri-gaspar-muniz-edit`, soundcloud: `${SOUNDCLOUD}/sets/carnatools-vol-1`, checklist: ALL_DONE,
       obs: "4 edits pro calor do Carnaval, entre house e disco.",
-      fonte: "Bandcamp: discografia do selo lista \"Feb 2026\" (sem dia).",
+      faixas: "Kiriê (Gaspar Muniz Edit)",
+      fonte: "Bandcamp: faixa Kiriê (Gaspar Muniz Edit), do Carnatools Vol. 01, released February 13, 2026.",
     }),
     seed("carna", 2), seed("carna", 3), seed("carna", 4),
 
@@ -139,7 +140,8 @@
     }),
     seed("gangue", 2, {
       titulo: "Gangue do Sorriso Vol. 02", formato: "Compilação", status: "lancado",
-      data: "2025-06-01", dataMes: true, checklist: ALL_DONE,
+      data: "2025-06-01", dataMes: true, checklist: ALL_DONE, soundcloud: SOUNDCLOUD,
+      faixas: "Lágrimas E Chuva (Gaspar Muniz Acid Tears Mix)\nQual A Ideia (Lysia Synth Mix)\nWhat Is This (Paco Cabana & Mangolab Italo Mix)",
       fonte: "Bandcamp: discografia do selo lista \"Jun 2025\" (sem dia).",
     }),
     seed("gangue", 3), seed("gangue", 4),
@@ -196,8 +198,12 @@
     ["caso-serio", "Rita Lee - Caso Sério (KAIR & MAKZ Edit)", "KAIR & MAKZ", "2025-02-25", false, "track/rita-lee-caso-s-rio-kair-makz-edit"],
     ["barril", "Barril", "Kalebe & Mangolab", "2025-04-09", false, "album/kalebe-mangolab-barril"],
     ["flerte-revival", "Letrux - Flerte Revival (Gaspar Muniz, BENO & Banana Gold Remix)", "Gaspar Muniz & BENO", "2025-07-11", false, "album/letrux-flerte-revival-gaspar-muniz-beno-banana-gold-remix"],
+    ["could-u-be-loved", "Could U Be Loved (House Mix)", "Perpettuo & BENO", "2025-08-01", true, ""],
     ["poderosa", "Poderosa", "Filipe Shock", "2025-08-08", false, "album/filipe-shock-poderosa"],
+    ["crazy", "Crazy", "Caio Gomes", "2025-09-19", false, ""],
     ["raizes-cruzadas", "Raízes Cruzadas", "Kelson & BENO", "2025-09-26", false, "album/kelson-beno-ra-zes-cruzadas"],
+    ["burlesco-affair", "Burlesco Affair", "T_Pazos", "2025-10-31", false, ""],
+    ["tropic-soul", "Tropic Soul (incl. Beranger Remix)", "Mari Rossi", "2025-11-21", false, ""],
     ["coco-discos", "Coco Discos & Banana Gold", "Coco Discos & Banana Gold", "2026-01-31", false, "album/coco-discos-banana-gold"],
     ["ensalada-de-verano", "Ensalada de Verano (incl. remixes BENO & Pedro Botafogo)", "Mary Olivetti feat. Maria Luma", "2026-02-01", true, ""],
     ["freed-from-desire", "Freed From Desire (Gaspar Muniz, BENO & Pebo Italo Edit)", "Gaspar Muniz, BENO & Pebo", "2026-02-27", false, "album/freed-from-desire-gaspar-muniz-beno-pebo-italo-edit"],
@@ -221,12 +227,20 @@
     ["jazz-corner", "Jazz Corner (BG025)", "Milton Chuquer", "2026-09-25", false, ""],
     ["brazilian-greatest-edits-01", "Brazilian Greatest Edits Vol. 01", "Vários", "2026-09-01", true, ""],
     ["brazilian-greatest-edits-02", "Brazilian Greatest Edits Vol. 02", "Vários", "2026-10-01", true, ""],
+    ["piece-of-inspiration", "Piece Of Inspiration", "Milton Chuquer", "2026-10-01", true, ""],
+    ["sweet-dancer", "Sweet Dancer", "Boogietraxx", "2026-10-01", true, ""],
   ];
+  const FONTE_EXTRA = {
+    "crazy": "Deezer: ℗ 2025 Banana Gold Records, 19/09/2025 (Bandcamp mostra set/2025).",
+    "burlesco-affair": "Deezer: lançamento em 31/10/2025 (Bandcamp mostra out/2025).",
+    "tropic-soul": "Premiere do remix do Beranger anunciou 21/11 (Bandcamp mostra nov/2025) — conferir.",
+    "jazz-corner": "Traxsource: BG025, 25/09/2026.",
+  };
   CATALOGO.forEach(([slug, titulo, artistas, data, dataMes, path]) => {
     SEED_LIST.push(seed("catalogo", 0, {
       id: `cat-${slug}`, titulo, artistas, data, dataMes, status: "lancado", formato: "Single",
       bandcamp: path ? `${BANDCAMP}/${path}` : "", checklist: ALL_DONE,
-      fonte: dataMes ? "Bandcamp: discografia do selo mostra só mês/ano." : "Bandcamp: data da página do lançamento.",
+      fonte: FONTE_EXTRA[slug] || (dataMes ? "Bandcamp: discografia do selo mostra só mês/ano." : "Bandcamp: data da página do lançamento."),
     }));
   });
   const SEED_RELEASES = Object.fromEntries(SEED_LIST.map(({ id, ...r }) => [id || seedId(r.serie, r.vol), r]));
