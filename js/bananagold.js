@@ -42,7 +42,7 @@
     { id: "gangue", nome: "Gangue do Sorriso", sigla: "GDS", cor: "#ffd400" },
     { id: "baile", nome: "Baile Tools", sigla: "BLT", cor: "#b07cff" },
     { id: "selector", nome: "Selector Tools", sigla: "SLT", cor: "#ffffff" },
-    { id: "tributos", nome: "Tributos", sigla: "TRB", cor: "#ff5a36" },
+    { id: "tributes", nome: "Tributes", sigla: "TRB", cor: "#ff5a36" },
   ];
   const SERIES_BY_ID = Object.fromEntries(SERIES.map((s) => [s.id, s]));
 
@@ -162,13 +162,15 @@
 
     seed("selector", 1), seed("selector", 2), seed("selector", 3),
 
-    seed("tributos", 1, {
+    seed("tributes", 1, {
       titulo: "Roy Ayers Tribute", artistas: "Banana Gold & Coco Discos", status: "lancado", data: "2025-04-18",
       bandcamp: `${BANDCAMP}/album/roy-ayers-tribute`, soundcloud: `${SOUNDCLOUD}/sets/roy-ayers-tribute`, checklist: ALL_DONE,
       faixas: "Hey Uh What You Say Come On (Disco House Mix) — Coco Discos & Banana Gold\nLove Will Bring Us Back Together (Banana Gold House Mix)",
       obs: "Pequeno tributo à lenda do jazz-funk e do neo-soul.",
       fonte: "Bandcamp: released April 18, 2025.",
     }),
+    seed("tributes", 2, { titulo: "Djavan Tribute" }),
+    seed("tributes", 3, { titulo: "Jorge Ben Tribute" }),
   ];
   const SEED_RELEASES = Object.fromEntries(SEED_LIST.map((r) => [seedId(r.serie, r.vol), r]));
 

@@ -261,7 +261,7 @@ identidade do selo (verde-banana + preto).
 **Três abas:**
 
 - **Séries** — Groovy Tools, Carna Tools, Jacuzzi Edits, Gangue do Sorriso,
-  Baile Tools, Selector Tools e Tributos, cada uma com seus volumes. Cada volume tem
+  Baile Tools, Selector Tools e Tributes (um artista homenageado por volume), cada uma com seus volumes. Cada volume tem
   status (planejado → em produção → agendado → lançado), data, responsável,
   links do Bandcamp/SoundCloud, faixas e um checklist (master, arte,
   metadados/ISRC, upload, distribuidora, press release, posts). `+ Vol.` cria o
