@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Catálogo das séries institucionais e calendário de lançamentos da Banana Gold Records." />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="theme-color" content="#a9f419" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Banana Gold" />
+  <title>banana gold records · lançamentos</title>
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-bananagold.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-bananagold-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-bananagold-512.png" />
+  <link rel="manifest" href="manifest-bananagold.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/bananagold.css?v=2" />
+</head>
+<body>
+
+  <header class="topbar">
+    <img class="brand-logo" src="img/bananagold-logo-wide.png" alt="Banana Gold Records" />
+    <div class="topbar-spacer"></div>
+    <button id="export-ics" class="icon-btn" type="button" aria-label="Exportar calendário (.ics)" title="Exportar calendário pro Google Agenda (.ics)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="1.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+    </button>
+    <button id="export-csv" class="icon-btn" type="button" aria-label="Exportar catálogo em CSV" title="Exportar catálogo (CSV)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0-4-4m4 4 4-4M4 19h16"/></svg>
+    </button>
+    <button id="logout-btn" class="icon-btn" type="button" aria-label="Sair" title="Sair">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5M20 12H9M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/></svg>
+    </button>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab is-active" type="button" data-tab="catalogo" role="tab">Séries</button>
+    <button class="tab" type="button" data-tab="calendario" role="tab">Calendário</button>
+    <button class="tab" type="button" data-tab="proximos" role="tab">Próximos</button>
+  </nav>
+
+  <!-- Séries / catálogo -->
+  <main id="view-catalogo" class="view">
+    <div class="stats" id="stats"></div>
+    <div id="series-list" class="series-list"></div>
+  </main>
+
+  <!-- Calendário -->
+  <main id="view-calendario" class="view" hidden>
+    <div class="month-nav">
+      <button id="prev-month" type="button" aria-label="Mês anterior">‹</button>
+      <span id="month-label">—</span>
+      <button id="next-month" type="button" aria-label="Próximo mês">›</button>
+      <button id="today-btn" class="btn btn-small" type="button">Hoje</button>
+    </div>
+    <div id="month-loose" class="month-loose" hidden></div>
+    <section class="cal-wrap">
+      <div class="cal-weekdays">
+        <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+      </div>
+      <div id="cal-grid" class="cal-grid"></div>
+    </section>
+    <div class="legend">
+      <span><i class="dot dot-release"></i>Lançamento</span>
+      <span><i class="dot dot-task"></i>Tarefa da equipe</span>
+      <span><i class="dot dot-done"></i>Tarefa feita</span>
+      <span><i class="sw sw-friday"></i>Sexta (dia de lançamento)</span>
+      <span><i class="sw sw-holiday"></i>Feriado</span>
+      <span class="hint">toque num dia pra ver ou marcar tarefas</span>
+    </div>
+  </main>
+
+  <!-- Próximos -->
+  <main id="view-proximos" class="view" hidden>
+    <section>
+      <h2 class="section-title">Próximos lançamentos</h2>
+      <div id="next-releases" class="list"></div>
+    </section>
+    <section>
+      <h2 class="section-title">Tarefas da equipe</h2>
+      <div class="filter-row">
+        <label class="check"><input id="only-open" type="checkbox" checked /> só o que falta fazer</label>
+        <select id="filter-owner" aria-label="Filtrar por responsável"><option value="">Todo mundo</option></select>
+      </div>
+      <div id="next-tasks" class="list"></div>
+    </section>
+  </main>
+
+  <div id="backdrop" class="panel-backdrop" hidden></div>
+
+  <!-- Editor de lançamento -->
+  <aside id="release-panel" class="side-panel" hidden aria-label="Lançamento">
+    <div class="panel-head">
+      <div>
+        <h2 id="release-title">Lançamento</h2>
+        <div id="release-sub" class="panel-sub"></div>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Fechar">×</button>
+    </div>
+    <div class="panel-body">
+      <div class="field-row">
+        <div class="field">
+          <label for="r-serie">Série</label>
+          <select id="r-serie"></select>
+        </div>
+        <div class="field field-narrow">
+          <label for="r-vol">Volume</label>
+          <input id="r-vol" type="number" min="1" step="1" inputmode="numeric" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="r-titulo">Título no Bandcamp</label>
+        <input id="r-titulo" type="text" placeholder="Ex.: BAILE TOOLS [004]" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="r-artistas">Artistas / produção</label>
+        <input id="r-artistas" type="text" placeholder="Ex.: Gaspar Muniz & BENO" autocomplete="off" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="r-status">Status</label>
+          <select id="r-status"></select>
+        </div>
+        <div class="field">
+          <label for="r-formato">Formato</label>
+          <select id="r-formato">
+            <option value="EP">EP</option>
+            <option value="LP">LP</option>
+            <option value="Single">Single</option>
+            <option value="Compilação">Compilação</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="r-data">Data de lançamento</label>
+          <input id="r-data" type="date" />
+        </div>
+        <div class="field">
+          <label for="r-resp">Responsável</label>
+          <input id="r-resp" type="text" list="people" placeholder="Quem puxa" autocomplete="off" />
+        </div>
+      </div>
+      <label class="check"><input id="r-mes" type="checkbox" /> só o mês está certo (dia a confirmar)</label>
+      <div class="field">
+        <label for="r-bandcamp">Link Bandcamp</label>
+        <input id="r-bandcamp" type="url" placeholder="https://bananagoldrecords.bandcamp.com/album/..." autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="r-soundcloud">Link SoundCloud / outro</label>
+        <input id="r-soundcloud" type="url" placeholder="opcional" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="r-faixas">Faixas (uma por linha)</label>
+        <textarea id="r-faixas" rows="4"></textarea>
+      </div>
+
+      <h3 class="sub-title">Checklist do lançamento</h3>
+      <div id="r-checklist" class="checklist"></div>
+
+      <div class="field">
+        <label for="r-obs">Observações</label>
+        <textarea id="r-obs" rows="2"></textarea>
+      </div>
+
+      <div class="panel-actions">
+        <button id="r-save" class="btn btn-primary" type="button">Salvar</button>
+        <button id="r-plan" class="btn" type="button" title="Cria as tarefas de master, arte, upload e divulgação contando pra trás da data">Gerar cronograma</button>
+        <button id="r-delete" class="btn btn-danger" type="button">Apagar</button>
+      </div>
+      <p id="r-source" class="hint"></p>
+    </div>
+  </aside>
+
+  <!-- Dia / tarefa -->
+  <aside id="day-panel" class="side-panel" hidden aria-label="Dia">
+    <div class="panel-head">
+      <div>
+        <h2 id="day-title">Dia</h2>
+        <div id="day-sub" class="panel-sub"></div>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Fechar">×</button>
+    </div>
+    <div class="panel-body">
+      <div id="day-items" class="list"></div>
+
+      <h3 id="task-form-title" class="sub-title">Nova tarefa</h3>
+      <div class="field">
+        <label for="t-titulo">Tarefa</label>
+        <input id="t-titulo" type="text" placeholder="Ex.: entregar master do Groovy Tools Vol. 02" autocomplete="off" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="t-tipo">Tipo</label>
+          <select id="t-tipo"></select>
+        </div>
+        <div class="field">
+          <label for="t-data">Data</label>
+          <input id="t-data" type="date" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="t-resp">Responsável</label>
+          <input id="t-resp" type="text" list="people" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="t-release">Lançamento</label>
+          <select id="t-release"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="t-obs">Observações</label>
+        <textarea id="t-obs" rows="2"></textarea>
+      </div>
+      <label class="check"><input id="t-feito" type="checkbox" /> feito</label>
+      <div class="panel-actions">
+        <button id="t-save" class="btn btn-primary" type="button">Salvar tarefa</button>
+        <button id="t-new-release" class="btn" type="button">+ Lançamento nesse dia</button>
+        <button id="t-delete" class="btn btn-danger" type="button" hidden>Apagar</button>
+      </div>
+    </div>
+  </aside>
+
+  <datalist id="people"></datalist>
+
+  <!-- Trava de senha -->
+  <div id="login-gate" class="login-gate" hidden>
+    <form id="login-form" class="login-card">
+      <img class="login-logo" src="img/bananagold-logo-box.png" alt="Banana Gold Records" />
+      <h2>Acesso da equipe</h2>
+      <div class="field">
+        <label for="login-password">Senha</label>
+        <input id="login-password" type="password" autocomplete="current-password" required />
+      </div>
+      <div id="login-error" class="error" hidden>Senha incorreta.</div>
+      <button class="btn btn-primary" type="submit">Entrar</button>
+    </form>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="js/bananagold.js?v=1"></script>
+</body>
+</html>
