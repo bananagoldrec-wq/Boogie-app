@@ -491,3 +491,28 @@ button.row:hover, .row .row-main:hover b { text-decoration: underline; }
   .icon-btn { width: 34px; height: 34px; }
   .icon-btn svg { width: 17px; height: 17px; }
 }
+
+/* ── catálogo geral (fora das séries) ───────────────────── */
+.series-geral .series-head { border-bottom-color: var(--green-deep); }
+.cat-list { display: flex; flex-direction: column; }
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+.cat-row:last-child { border-bottom: none; }
+.cat-row:hover { background: var(--green-soft); }
+.cat-date { flex: 0 0 86px; font-size: 0.8rem; font-weight: 800; }
+.cat-date.is-approx { font-style: italic; font-weight: 600; }
+.cat-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cat-main b { font-weight: 800; font-size: 0.92rem; }
+.cat-main span { font-size: 0.78rem; color: var(--ink-dim); }
+.ev-geral { background: var(--ink-soft); border-left-color: var(--green-deep); font-weight: 700; }
+@media (max-width: 720px) {
+  .cat-date { flex-basis: 68px; font-size: 0.72rem; }
+  .cat-row .chip { display: none; }
+}
+.dot-geral { background: var(--ink-soft); border-left: 4px solid var(--green-deep); }

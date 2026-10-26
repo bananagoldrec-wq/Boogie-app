@@ -43,8 +43,12 @@
     { id: "baile", nome: "Baile Tools", sigla: "BLT", cor: "#b07cff" },
     { id: "selector", nome: "Selector Tools", sigla: "SLT", cor: "#ffffff" },
     { id: "tributes", nome: "Tributes", sigla: "TRB", cor: "#ff5a36" },
+    // catálogo geral: tudo o que o selo lançou fora das séries. Não tem
+    // volume — aparece como lista no fim da aba Séries e no calendário.
+    { id: "catalogo", nome: "Outros lançamentos", sigla: "BG", cor: "#000000", geral: true },
   ];
   const SERIES_BY_ID = Object.fromEntries(SERIES.map((s) => [s.id, s]));
+  const isGeral = (r) => !!(SERIES_BY_ID[r.serie] || {}).geral;
 
   const STATUS = [
     { id: "planejado", nome: "Planejado" },
@@ -172,7 +176,60 @@
     seed("tributes", 2, { titulo: "Djavan Tribute" }),
     seed("tributes", 3, { titulo: "Jorge Ben Tribute" }),
   ];
-  const SEED_RELEASES = Object.fromEntries(SEED_LIST.map((r) => [seedId(r.serie, r.vol), r]));
+
+  /* Catálogo geral (fora das séries). [slug, título, artistas, data,
+     dataMes, caminho no Bandcamp]. Mesma regra: dataMes = o Bandcamp só
+     mostrou mês/ano na discografia. */
+  const CATALOGO = [
+    ["erva-venenosa", "Erva Venenosa (Banana Gold Remix)", "Banana Gold", "2023-02-16", false, "track/erva-venenosa-banana-gold-remix"],
+    ["azul", "Azul (Banana Gold Remix)", "Banana Gold", "2023-05-06", false, "track/azul-banana-gold-remix"],
+    ["debaixo-do-mar", "Debaixo do Mar", "Simo Not Simon", "2023-08-25", false, "track/simo-not-simon-debaixo-do-mar"],
+    ["old-new-house", "Old New House EP", "KAIR", "2023-09-29", false, "album/old-new-house-ep"],
+    ["tem-q-pegar", "Tem Q Pegar (Original Mix)", "João Brasil", "2023-12-15", false, "track/tem-q-pegar-original-mix"],
+    ["os-orixas", "Trio Mocotó - Os Orixás (Remix)", "Banana Gold", "2024-02-02", false, "album/trio-mocot-os-orix-s-remix"],
+    ["sempre-em-movimento", "Sempre em Movimento EP", "Seed Selector", "2024-04-26", false, "album/sempre-em-movimento-ep"],
+    ["vem-chegando-o-verao", "Vem Chegando O Verão (Mulú & Banana Gold Edit)", "Mulú & Banana Gold", "2024-04-30", false, "track/vem-chegando-o-ver-o-mul-banana-gold-edit"],
+    ["agepe-mama", "Agepê - Mama (Nepal & Banana Gold Edit)", "Nepal, Gaspar Muniz & BENO", "2024-08-23", false, "track/agepe-mama-nepal-banana-gold-edit"],
+    ["super-crema", "PR.A.DO / Super Crema (EP)", "PR.A.DO ft. Gaspar Muniz", "2024-12-18", false, "album/pr-a-do-super-crema-ep"],
+    ["que-nem-mare", "Que Nem Maré (EP)", "LON & Banana Gold", "2025-01-27", false, "album/que-nem-mar-ep"],
+    ["polen", "Pólen", "Banana Gold · remix Simo Not Simon", "2025-02-17", false, "album/p-len"],
+    ["caso-serio", "Rita Lee - Caso Sério (KAIR & MAKZ Edit)", "KAIR & MAKZ", "2025-02-25", false, "track/rita-lee-caso-s-rio-kair-makz-edit"],
+    ["barril", "Barril", "Kalebe & Mangolab", "2025-04-09", false, "album/kalebe-mangolab-barril"],
+    ["flerte-revival", "Letrux - Flerte Revival (Gaspar Muniz, BENO & Banana Gold Remix)", "Gaspar Muniz & BENO", "2025-07-11", false, "album/letrux-flerte-revival-gaspar-muniz-beno-banana-gold-remix"],
+    ["poderosa", "Poderosa", "Filipe Shock", "2025-08-08", false, "album/filipe-shock-poderosa"],
+    ["raizes-cruzadas", "Raízes Cruzadas", "Kelson & BENO", "2025-09-26", false, "album/kelson-beno-ra-zes-cruzadas"],
+    ["coco-discos", "Coco Discos & Banana Gold", "Coco Discos & Banana Gold", "2026-01-31", false, "album/coco-discos-banana-gold"],
+    ["ensalada-de-verano", "Ensalada de Verano (incl. remixes BENO & Pedro Botafogo)", "Mary Olivetti feat. Maria Luma", "2026-02-01", true, ""],
+    ["freed-from-desire", "Freed From Desire (Gaspar Muniz, BENO & Pebo Italo Edit)", "Gaspar Muniz, BENO & Pebo", "2026-02-27", false, "album/freed-from-desire-gaspar-muniz-beno-pebo-italo-edit"],
+    ["pangaea-01", "Pangaea Vol. 01", "Vários", "2026-03-20", false, "album/pangaea-vol-01"],
+    ["bg001", "BG001", "BENO, PERPETTUO, KAIR & PEBO", "2026-03-27", false, "album/beno-perpettuo-kair-pebo-bg001"],
+    ["ripa-na-xulipa", "Ripa na Xulipa (Bauhouse Edit)", "Bauhouse", "2026-04-01", false, "album/ripa-na-xulipa-bauhouse-edit"],
+    ["alla-prima", "Alla Prima", "C4STRO", "2026-04-03", false, "album/c4stro-alla-prima"],
+    ["tipsy-kings", "Tipsy Kings EP", "Ocsav", "2026-04-24", false, "track/ocsav-untz-do-tres-original-mix"],
+    ["saire", "Haréton Salvanini - Sairé (BENO & Pebo Remix)", "BENO & Pebo", "2026-05-08", false, "album/hare-ton-salvanini-saire-beno-pebo-remix"],
+    ["lua", "Lua", "Gui Donada", "2026-05-15", false, "album/gui-donada-lua"],
+    ["not-quite-my-tempo", "Not Quite My Tempo", "VP Leone & Bernardo Campos", "2026-05-22", false, "album/vp-leone-bernardo-campos-not-quite-my-tempo"],
+    ["miragem", "Miragem", "Fabio Santanna", "2026-06-05", false, "album/fabio-santanna-miragem"],
+    ["bateu-onda", "Bateu Onda (álbum)", "Fabio Santanna", "2026-07-10", false, "album/fabio-santanna-bateu-onda-full-album"],
+    ["3-da-tarde", "3 da Tarde (Zopelar Remix)", "BENO & Bernardo Campos", "2026-07-01", true, ""],
+    ["cruel-summer", "Cruel Summer (Gazpacho Happy Summer Mix)", "Gazpacho", "2026-07-01", true, ""],
+    ["count-it-off", "Count It Off", "Losciale", "2026-08-01", true, ""],
+    ["eu-gosto-disso", "Eu Gosto Disso", "VP Leone", "2026-08-01", true, ""],
+    ["miss-you", "Miss You", "Jeria", "2026-08-01", true, ""],
+    ["feels-so-good", "Feels So Good", "DJ Atlance", "2026-09-01", true, ""],
+    ["dont-u-know", "Don't U Know", "Elluzy", "2026-09-11", false, "album/elluzy-dont-u-know"],
+    ["jazz-corner", "Jazz Corner (BG025)", "Milton Chuquer", "2026-09-25", false, ""],
+    ["brazilian-greatest-edits-01", "Brazilian Greatest Edits Vol. 01", "Vários", "2026-09-01", true, ""],
+    ["brazilian-greatest-edits-02", "Brazilian Greatest Edits Vol. 02", "Vários", "2026-10-01", true, ""],
+  ];
+  CATALOGO.forEach(([slug, titulo, artistas, data, dataMes, path]) => {
+    SEED_LIST.push(seed("catalogo", 0, {
+      id: `cat-${slug}`, titulo, artistas, data, dataMes, status: "lancado", formato: "Single",
+      bandcamp: path ? `${BANDCAMP}/${path}` : "", checklist: ALL_DONE,
+      fonte: dataMes ? "Bandcamp: discografia do selo mostra só mês/ano." : "Bandcamp: data da página do lançamento.",
+    }));
+  });
+  const SEED_RELEASES = Object.fromEntries(SEED_LIST.map(({ id, ...r }) => [id || seedId(r.serie, r.vol), r]));
 
   function seedId(serie, vol) { return `${serie}-${pad2(vol)}`; }
 
@@ -372,6 +429,7 @@
     return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
   function releaseLabel(r) {
+    if (isGeral(r)) return r.titulo || "lançamento";
     const s = SERIES_BY_ID[r.serie];
     return `${s ? s.nome : r.serie} Vol. ${pad2(r.vol)}`;
   }
@@ -448,7 +506,7 @@
   const statsEl = document.getElementById("stats");
 
   function renderStats() {
-    const all = Object.values(releases);
+    const all = Object.values(releases).filter((r) => !isGeral(r));
     const count = (st) => all.filter((r) => r.status === st).length;
     const upcoming = Object.entries(releases)
       .filter(([, r]) => r.data && r.data >= todayKey && r.status !== "lancado")
@@ -466,6 +524,7 @@
   function renderSeries() {
     seriesListEl.innerHTML = SERIES.map((s) => {
       const list = seriesReleases(s.id);
+      if (s.geral) return catalogSection(s, list);
       const lancados = list.filter(([, r]) => r.status === "lancado").length;
       return `
       <section class="series" style="--serie:${s.cor}">
@@ -479,6 +538,26 @@
         </div>
       </section>`;
     }).join("");
+  }
+
+  function catalogSection(s, list) {
+    const rows = list.slice().sort((a, b) => (b[1].data || "").localeCompare(a[1].data || ""));
+    return `
+      <section class="series series-geral" style="--serie:${s.cor}">
+        <header class="series-head">
+          <h2>${esc(s.nome)}</h2>
+          <span class="series-count">${list.length} no catálogo</span>
+          <button class="btn btn-small btn-dark" type="button" data-add-vol="${s.id}">+ Novo</button>
+        </header>
+        <div class="cat-list">
+          ${rows.map(([id, r]) => `
+            <button class="cat-row" type="button" data-release="${esc(id)}">
+              <span class="cat-date${r.dataMes ? " is-approx" : ""}">${r.data ? esc(r.dataMes ? formatRelease(r).split(" · ")[0] : formatBr(r.data)) : "sem data"}</span>
+              <span class="cat-main"><b>${esc(r.titulo || "título a definir")}</b><span>${esc(r.artistas || "")}</span></span>
+              <span class="chip chip-${r.status}">${STATUS_NAME[r.status] || r.status}</span>
+            </button>`).join("") || `<p class="empty">Nada ainda.</p>`}
+        </div>
+      </section>`;
   }
 
   function volCard(id, r) {
@@ -535,7 +614,7 @@
       if (key === todayKey) cls.push("is-today");
       if (rel.length) cls.push("has-release");
       const items = [
-        ...rel.map(([, r]) => `<span class="ev ev-release" style="--serie:${seriesColor(r.serie)}">${esc(SERIES_BY_ID[r.serie] ? SERIES_BY_ID[r.serie].sigla : "")} ${pad2(r.vol)}</span>`),
+        ...rel.map(([, r]) => `<span class="ev ev-release${isGeral(r) ? " ev-geral" : ""}" style="--serie:${seriesColor(r.serie)}">${esc(isGeral(r) ? r.titulo : `${SERIES_BY_ID[r.serie] ? SERIES_BY_ID[r.serie].sigla : ""} ${pad2(r.vol)}`)}</span>`),
         ...evs.slice(0, 3).map(([, e]) => `<span class="ev ev-task${e.feito ? " is-done" : ""}">${esc(e.titulo)}</span>`),
       ];
       if (evs.length > 3) items.push(`<span class="ev ev-more">+${evs.length - 3}</span>`);
@@ -742,9 +821,15 @@
   rStatus.innerHTML = STATUS.map((s) => `<option value="${s.id}">${s.nome}</option>`).join("");
   rChecklist.innerHTML = CHECKLIST.map((c) => `<label class="check"><input type="checkbox" data-check="${c.id}" /> ${esc(c.nome)}</label>`).join("");
 
+  function syncVolField() {
+    rVol.closest(".field").hidden = !!(SERIES_BY_ID[rSerie.value] || {}).geral;
+  }
+  rSerie.addEventListener("change", syncVolField);
+
   function fillRelease(r) {
     rSerie.value = r.serie;
     rVol.value = r.vol;
+    syncVolField();
     rTitulo.value = r.titulo || "";
     rArtistas.value = r.artistas || "";
     rStatus.value = r.status || "planejado";
@@ -807,13 +892,14 @@
   }
 
   function idForNew(r) {
+    if (isGeral(r)) return newId("cat");
     const id = seedId(r.serie, r.vol);
     return releases[id] || stored.releases[id] ? newId(r.serie) : id;
   }
 
   async function saveRelease() {
     const r = readRelease();
-    const clash = Object.entries(releases).find(([id, o]) => id !== activeReleaseId && o.serie === r.serie && o.vol === r.vol);
+    const clash = !isGeral(r) && Object.entries(releases).find(([id, o]) => id !== activeReleaseId && o.serie === r.serie && o.vol === r.vol);
     if (clash && !confirm(`Já existe ${releaseLabel(r)}. Salvar mesmo assim?`)) return null;
     const id = activeReleaseId || idForNew(r);
     try {
