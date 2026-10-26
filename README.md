@@ -285,6 +285,9 @@ catálogo em CSV.
 Bandcamp do selo em out/2026. Data com dia = confirmada na página do
 lançamento; "dia a confirmar" = a discografia do Bandcamp só mostrava mês/ano.
 Volumes sem data são os previstos na série que ainda não estavam no Bandcamp.
+Além das séries, o `CATALOGO` traz os outros lançamentos do selo (singles,
+EPs de artistas, remixes) — aparecem numa lista no fim da aba Séries e no
+calendário, sem volume.
 
 Grava na nuvem nas coleções `bg_releases` e `bg_events` (mesmo projeto
 Firebase — publique as regras acima). Sem nuvem, segue salvando no aparelho e
