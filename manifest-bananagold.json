@@ -1,0 +1,32 @@
+{
+  "name": "Banana Gold Records · Lançamentos",
+  "short_name": "Banana Gold",
+  "description": "Catálogo das séries institucionais e calendário de lançamentos da Banana Gold Records.",
+  "lang": "pt-BR",
+  "start_url": "./bananagold.html",
+  "scope": "./bananagold.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#a9f419",
+  "theme_color": "#a9f419",
+  "icons": [
+    {
+      "src": "icons/icon-bananagold-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-bananagold-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-bananagold-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
