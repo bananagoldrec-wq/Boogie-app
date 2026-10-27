@@ -712,3 +712,41 @@ a.icon-btn { color: var(--ink); text-decoration: none; }
   .demo-row .demo-audio { order: 4; }
   .drop-hint { display: none; }
 }
+
+/* ── player das demos ───────────────────────────────────── */
+.player-bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: var(--ink);
+  color: var(--green);
+  border-top: 4px solid var(--green-deep);
+}
+body.has-player { padding-bottom: 120px; }
+body.has-player .toast { bottom: calc(110px + env(safe-area-inset-bottom)); }
+.pl-controls { display: flex; align-items: center; gap: 4px; flex: none; }
+.pl-controls button { width: 38px; height: 38px; border-radius: 50%; font-size: 0.95rem; color: var(--green); }
+.pl-controls button:disabled { opacity: 0.3; cursor: default; }
+.pl-controls .pl-toggle { width: 50px; height: 50px; background: var(--green); color: var(--ink); font-weight: 900; font-size: 1.1rem; }
+.pl-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pl-info b { font-weight: 900; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#pl-sub { font-size: 0.74rem; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-seek { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; font-variant-numeric: tabular-nums; }
+.pl-seek input[type="range"] { flex: 1; padding: 0; border: none; background: transparent; accent-color: var(--green); height: 22px; }
+.pl-btn {
+  flex: none; width: 36px; height: 36px; display: grid; place-items: center;
+  border: 2px solid var(--green); border-radius: 50%;
+  color: var(--green); text-decoration: none; font-weight: 900; font-size: 1.1rem;
+}
+.pl-btn:hover { background: var(--green); color: var(--ink); }
+@media (max-width: 720px) {
+  .player-bar { flex-wrap: wrap; gap: 6px 10px; padding-top: 8px; }
+  .pl-info { order: -1; flex-basis: 100%; }
+  .pl-controls { flex: 1; justify-content: center; }
+  body.has-player { padding-bottom: 150px; }
+  body.has-player .toast { bottom: calc(140px + env(safe-area-inset-bottom)); }
+}
