@@ -277,6 +277,36 @@ identidade do selo (verde-banana + preto).
   entra em "Projetos novos" na aba Séries. Embaixo ficam as músicas já
   alocadas, por projeto, pra realocar ou devolver pra fila.
 
+**Áudio das demos (WAV):** no campo de nova demo tem "♪ WAV" (dá pra escolher
+vários; cada arquivo vira uma demo com o nome dele) e cada música tem
+"+ WAV"/"trocar", ▶ pra ouvir e ⤓ pra baixar. No computador dá pra arrastar
+os WAVs pra aba. O ▶ aparece também no set list do projeto. Os arquivos vão
+pro **Firebase Storage** em `bg_demos/` (até 300 MB cada). Enquanto o Storage
+não estiver ligado, o áudio fica guardado só no aparelho de quem subiu
+(aparece "só aqui"); depois de ligar, é só tocar em "trocar" e escolher o
+arquivo de novo pra subir pra nuvem.
+
+Pra ligar, no console do Firebase, projeto **frisson-agenda**:
+
+1. **Criação → Storage → Primeiros passos.** Projetos novos pedem o plano
+   **Blaze** (pago por uso) pra ter Storage; até 5 GB guardados o uso é
+   gratuito, e dá pra pôr um alerta de orçamento em Uso e faturamento.
+2. **Storage → Regras**, publique:
+
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /bg_demos/{faixa}/{arquivo} {
+      allow read, delete: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 300 * 1024 * 1024
+                   && request.resource.contentType.matches('audio/.*');
+    }
+  }
+}
+```
+
 Dentro de cada projeto o painel abre no **set list**: as faixas na ordem, com
 nome editável, ↑/↓ pra reordenar, ⤺ pra devolver pra demos, campo pra
 escrever uma faixa nova e "Puxar uma demo da fila". O resto (datas, links,

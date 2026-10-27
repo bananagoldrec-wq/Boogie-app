@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-build="14">
+<html lang="pt-BR" data-build="15">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/bananagold.css?v=8" />
+  <link rel="stylesheet" href="css/bananagold.css?v=9" />
 </head>
 <body>
 
@@ -89,6 +89,10 @@
     <section class="demo-form">
       <div class="demo-add">
         <input id="d-titulo" type="text" placeholder="Nome da música" autocomplete="off" aria-label="Nome da música" />
+        <label class="btn file-btn" title="Escolher WAV (pode ser mais de um)">
+          <span id="d-file-label">♪ WAV</span>
+          <input id="d-file" type="file" accept=".wav,audio/wav,audio/x-wav,audio/*" multiple hidden />
+        </label>
         <select id="d-destino" class="demo-move" aria-label="Pra onde vai"></select>
         <button id="d-save" class="btn btn-primary" type="button">+ Adicionar</button>
       </div>
@@ -110,6 +114,9 @@
         <button id="np-cancel" class="btn" type="button">Cancelar</button>
       </div>
     </div>
+
+    <input id="audio-input" type="file" accept=".wav,audio/wav,audio/x-wav,audio/*" hidden />
+    <p class="hint drop-hint">Dá pra arrastar WAVs aqui pra criar uma demo por arquivo.</p>
 
     <section>
       <h2 class="section-title">Demos na fila <span id="demo-count" class="muted"></span></h2>
@@ -312,6 +319,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/bananagold.js?v=14"></script>
+  <script src="js/bananagold.js?v=15"></script>
 </body>
 </html>
