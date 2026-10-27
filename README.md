@@ -311,4 +311,6 @@ Firebase — publique as regras acima). Sem nuvem, segue salvando no aparelho e
 sobe o pendente quando conectar. Senha da equipe: `APP_PASSWORD` no topo de
 `js/bananagold.js` (mesmo aviso: trava visitante casual, não é segurança de
 verdade). Ao mexer em `js/bananagold.js`/`css/bananagold.css`, suba o `?v=` do
-`bananagold.html`.
+`bananagold.html` e, junto, o `data-build` do `<html>` e o `BUILD` no topo
+do JS (os três iguais). Se o celular abrir a página velha com o código novo,
+o app percebe a diferença e recarrega sozinho em vez de travar.

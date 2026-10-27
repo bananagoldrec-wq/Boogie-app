@@ -10,6 +10,21 @@
 (() => {
   "use strict";
 
+  /* A página fica até 10 min no cache do GitHub Pages/navegador. Se o
+     HTML velho carregar este JS novo (ou o contrário), os elementos não
+     batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
+     data-build do bananagold.html: suba os dois juntos com o ?v=. */
+  const BUILD = "13";
+  if (document.documentElement.dataset.build !== BUILD) {
+    const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
+    if (!tried) {
+      try { sessionStorage.setItem("bg_build_reload", BUILD); } catch (err) {}
+      // busca a página de novo ignorando o cache, depois recarrega
+      fetch(location.href, { cache: "reload" }).catch(() => {}).finally(() => location.reload());
+      return;
+    }
+  }
+
   /* Mesmo projeto Firebase do Frisson, em coleções separadas (bg_*) —
      veja o README pras regras. */
   const firebaseConfig = {
@@ -922,15 +937,28 @@
     el.addEventListener("change", onListChange);
   });
 
+  /* Cada parte desenha sozinha: se uma quebrar, as outras aparecem e o
+     erro vira um aviso na tela em vez de página em branco. */
+  function safe(name, fn) {
+    try {
+      fn();
+    } catch (err) {
+      console.error(name, err);
+      showToast(`Erro ao montar ${name}. Fecha e abre o app de novo.`);
+    }
+  }
+
   function renderAll() {
-    rebuildReleases();
-    renderStats();
-    renderSeries();
-    renderCalendar();
-    renderDemos();
-    document.getElementById("people").innerHTML = people().map((p) => `<option value="${esc(p)}"></option>`).join("");
-    if (!dayPanel.hidden && activeDayKey) renderDayItems();
-    if (!releasePanel.hidden && activeReleaseId) renderSetlist();
+    safe("os dados", rebuildReleases);
+    safe("os números", renderStats);
+    safe("as séries", renderSeries);
+    safe("o calendário", renderCalendar);
+    safe("as demos", renderDemos);
+    safe("a lista de pessoas", () => {
+      document.getElementById("people").innerHTML = people().map((p) => `<option value="${esc(p)}"></option>`).join("");
+    });
+    if (!dayPanel.hidden && activeDayKey) safe("o dia", renderDayItems);
+    if (!releasePanel.hidden && activeReleaseId) safe("o set list", renderSetlist);
   }
 
   /* ── abas ──────────────────────────────────────────────── */
