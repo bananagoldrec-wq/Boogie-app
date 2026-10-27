@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "16";
+  const BUILD = "17";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -394,12 +394,22 @@
 
   /* As faixas da base saem do campo `faixas` de cada lançamento, com id
      fixo (lançamento--posição), então editar/mover vira um doc por cima. */
+  const SEED_DEMOS = [
+    "Velejo", "Bounce Like That", "1234", "Demo BIBI", "Lizzie", "Joca Remix", "Dádiva",
+    "Marcos Tocae Edit", "Ítalo Airplane", "Track Alemães", "Tracey Girl", "Olhos Coloridos", "Track Gush e Joana",
+  ];
+
   function rebuildTracks() {
     const next = {};
     Object.entries(releases).forEach(([rid, r]) => {
       String(r.faixas || "").split("\n").map((t) => t.trim()).filter(Boolean).forEach((titulo, i) => {
         next[`${rid}--${i + 1}`] = { titulo, artista: "", releaseId: rid, ordem: i + 1, link: "", obs: "", base: true };
       });
+    });
+    // demos que a equipe passou pra começar a fila (ordem da lista)
+    SEED_DEMOS.forEach((titulo, i) => {
+      const slug = titulo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      next[`demo-${slug}`] = { titulo, artista: "", releaseId: "", ordem: 0, link: "", obs: "", criado: `2026-10-27T00:00:${String(i).padStart(2, "0")}Z`, base: true };
     });
     Object.entries(stored.tracks).forEach(([id, t]) => {
       if (!t || t.deleted) delete next[id];
