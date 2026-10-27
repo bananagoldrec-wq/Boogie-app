@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "13";
+  const BUILD = "14";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -668,23 +668,6 @@
   function saveOpenSeries() {
     try { localStorage.setItem(OPEN_KEY, JSON.stringify([...openSeries])); } catch (err) {}
   }
-  const statsEl = document.getElementById("stats");
-
-  function renderStats() {
-    const all = Object.values(releases).filter((r) => !isGeral(r));
-    const count = (st) => all.filter((r) => r.status === st).length;
-    const upcoming = Object.entries(releases)
-      .filter(([, r]) => r.data && r.data >= todayKey && r.status !== "lancado")
-      .sort((a, b) => a[1].data.localeCompare(b[1].data))[0];
-    statsEl.innerHTML = `
-      <div class="stat"><b>${count("lancado")}</b><span>lançados</span></div>
-      <div class="stat"><b>${count("agendado")}</b><span>agendados</span></div>
-      <div class="stat"><b>${count("producao")}</b><span>em produção</span></div>
-      <div class="stat"><b>${count("planejado")}</b><span>planejados</span></div>
-      <div class="stat stat-wide">${upcoming
-        ? `<span>próximo</span><b class="stat-next">${esc(releaseLabel(upcoming[1]))}</b><span>${esc(formatRelease(upcoming[1]))}</span>`
-        : `<span>próximo</span><b class="stat-next">nada agendado</b><span>marca uma data num volume</span>`}</div>`;
-  }
 
   function renderSeries() {
     const allOpen = SERIES.every((s) => openSeries.has(s.id));
@@ -950,7 +933,6 @@
 
   function renderAll() {
     safe("os dados", rebuildReleases);
-    safe("os números", renderStats);
     safe("as séries", renderSeries);
     safe("o calendário", renderCalendar);
     safe("as demos", renderDemos);
