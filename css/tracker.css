@@ -1513,3 +1513,48 @@ body {
   cursor: pointer;
   font-family: inherit;
 }
+
+/* ── Desktop: use the full width and height ────────────────────── */
+
+@media (min-width: 900px) {
+  :root {
+    --col-time: 64px;
+    --hdr-h:    56px;
+    /* 30 half-hour rows (06h–20h30) fill the visible height, never below 32px */
+    --row-h:    max(32px, calc((100vh - 160px) / 30));
+  }
+
+  .week-grid {
+    grid-template-columns: var(--col-time) repeat(7, minmax(0, 1fr));
+    min-width: 0;
+  }
+
+  .top-bar, .xp-slim { padding-left: 24px; padding-right: 24px; }
+
+  .g-time               { font-size: 12px; padding: 4px 10px 0 0; }
+  .g-time.g-time-half   { font-size: 10px; }
+  .dh-name              { font-size: 11px; }
+  .dh-date              { font-size: 20px; width: 36px; height: 36px; }
+
+  .g-cell               { padding: 3px; }
+  .chip                 { border-radius: 7px; padding: 4px 22px 4px 8px; gap: 5px; }
+  .chip-check           { font-size: 11px; }
+  .chip-time            { font-size: 11px; }
+  .chip-text            { font-size: 14px; -webkit-line-clamp: 2; }
+  .chip.is-tall         { padding: 8px 22px 8px 10px; }
+  .chip.is-tall .chip-text { font-size: 16px; }
+  .chip.is-tall .chip-time { font-size: 12px; }
+  .chip-edit            { width: 20px; height: 20px; font-size: 12px; top: 3px; right: 3px; }
+
+  /* Single-slot chips: time and name side by side so the name isn't clipped */
+  .chip:not(.is-tall)                 { align-items: center; padding-top: 0; padding-bottom: 0; }
+  .chip:not(.is-tall) .chip-body      { flex-direction: row; align-items: baseline; gap: 6px; }
+  .chip:not(.is-tall) .chip-text      { -webkit-line-clamp: 1; }
+  .chip:not(.is-tall) .chip-edit      { top: 50%; transform: translateY(-50%); }
+
+  .g-cell:hover         { background: var(--surface); }
+
+  /* Sheets become centered dialogs instead of bottom sheets */
+  .overlay              { align-items: center; justify-content: center; padding: 24px; }
+  .sheet                { max-width: 480px; border-radius: 20px; }
+}
