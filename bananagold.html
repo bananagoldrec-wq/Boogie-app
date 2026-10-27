@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/bananagold.css?v=7" />
+  <link rel="stylesheet" href="css/bananagold.css?v=8" />
 </head>
 <body>
 
@@ -88,33 +88,29 @@
   <!-- Demos -->
   <main id="view-demos" class="view" hidden>
     <section class="demo-form">
-      <h2 id="demo-form-title" class="section-title">Nova demo</h2>
-      <div class="field-row">
-        <div class="field">
-          <label for="d-titulo">Nome da música</label>
-          <input id="d-titulo" type="text" placeholder="Ex.: Lua Cheia (BENO Edit)" autocomplete="off" />
-        </div>
-        <div class="field">
-          <label for="d-artista">Artista / produção</label>
-          <input id="d-artista" type="text" list="people" placeholder="Quem fez" autocomplete="off" />
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="d-link">Link (SoundCloud, Drive...)</label>
-          <input id="d-link" type="url" placeholder="opcional" autocomplete="off" />
-        </div>
-        <div class="field">
-          <label for="d-obs">Notas</label>
-          <input id="d-obs" type="text" placeholder="Ex.: falta mixdown" autocomplete="off" />
-        </div>
-      </div>
-      <div class="panel-actions">
-        <button id="d-save" class="btn btn-primary" type="button">+ Adicionar demo</button>
-        <button id="d-cancel" class="btn" type="button" hidden>Cancelar</button>
-        <button id="d-delete" class="btn btn-danger" type="button" hidden>Apagar</button>
+      <div class="demo-add">
+        <input id="d-titulo" type="text" placeholder="Nome da música" autocomplete="off" aria-label="Nome da música" />
+        <select id="d-destino" class="demo-move" aria-label="Pra onde vai"></select>
+        <button id="d-save" class="btn btn-primary" type="button">+ Adicionar</button>
       </div>
     </section>
+
+    <!-- criar projeto (abre pelo "+ Criar projeto novo…" de qualquer seletor) -->
+    <div id="new-project" class="new-project" hidden>
+      <h3 class="sub-title">Projeto novo</h3>
+      <div class="field">
+        <label for="np-nome">Nome do projeto</label>
+        <input id="np-nome" type="text" placeholder="Ex.: Verão Tools Vol. 01" autocomplete="off" />
+      </div>
+      <div class="seg" role="radiogroup" aria-label="Formato">
+        <button type="button" class="seg-btn is-on" data-np-formato="EP">EP</button>
+        <button type="button" class="seg-btn" data-np-formato="LP">LP</button>
+      </div>
+      <div class="panel-actions">
+        <button id="np-create" class="btn btn-primary" type="button">Criar e mandar a música</button>
+        <button id="np-cancel" class="btn" type="button">Cancelar</button>
+      </div>
+    </div>
 
     <section>
       <h2 class="section-title">Demos na fila <span id="demo-count" class="muted"></span></h2>
@@ -122,8 +118,7 @@
     </section>
 
     <section>
-      <h2 class="section-title">Nos projetos em andamento</h2>
-      <p class="hint">Músicas já mandadas pra um projeto que ainda não saiu. Dá pra realocar ou devolver pra fila.</p>
+      <h2 class="section-title">Nos projetos</h2>
       <div id="demo-projects" class="list"></div>
     </section>
   </main>
@@ -318,6 +313,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/bananagold.js?v=10"></script>
+  <script src="js/bananagold.js?v=12"></script>
 </body>
 </html>

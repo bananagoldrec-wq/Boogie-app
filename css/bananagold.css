@@ -647,3 +647,39 @@ a.icon-btn { color: var(--ink); text-decoration: none; }
   .demo-move { max-width: none; flex: 1 1 100%; }
   .demo-form .field-row { flex-direction: column; }
 }
+
+/* ── demos simplificadas ────────────────────────────────── */
+.demo-add { display: flex; gap: 8px; align-items: stretch; }
+.demo-add input { flex: 1 1 40%; min-width: 0; }
+.demo-add .demo-move { flex: 1 1 35%; max-width: none; }
+.demo-add .btn { flex: none; }
+.demo-row { gap: 8px; padding: 8px 10px; }
+.demo-name { flex: 1; min-width: 0; font-weight: 800; padding: 5px 6px; border: 1px solid transparent; border-radius: 3px; overflow-wrap: anywhere; cursor: text; }
+.demo-name:hover { border-color: rgba(0, 0, 0, 0.25); }
+.demo-name:focus { background: #fff; border-color: var(--ink); outline: none; }
+.demo-del { flex: none; width: 30px; height: 30px; border-radius: 50%; font-size: 1.2rem; font-weight: 900; color: var(--ink-dim); }
+.demo-del:hover { background: var(--late); color: #fff; }
+.new-project {
+  border: var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 14px;
+  margin: -10px 0 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 6px 6px 0 var(--ink);
+}
+.new-project .sub-title { border-top: none; padding-top: 0; margin-top: 0; }
+.seg { display: inline-flex; border: var(--line-thin); border-radius: var(--radius); overflow: hidden; align-self: flex-start; }
+.seg-btn { padding: 9px 22px; font-weight: 900; }
+.seg-btn + .seg-btn { border-left: var(--line-thin); }
+.seg-btn.is-on { background: var(--ink); color: var(--green); }
+@media (max-width: 720px) {
+  .demo-add { flex-wrap: wrap; }
+  .demo-add input, .demo-add .demo-move { flex-basis: 100%; }
+  .demo-add .btn { flex: 1; }
+  .demo-row { flex-wrap: wrap; }
+  .demo-row .demo-name { flex-basis: calc(100% - 40px); }
+  .demo-row .demo-move { order: 3; flex: 1 1 100%; }
+}

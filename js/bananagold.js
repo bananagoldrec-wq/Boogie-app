@@ -45,6 +45,8 @@
     { id: "tributes", nome: "Tributes", sigla: "TRB", cor: "#ff5a36" },
     // catálogo geral: tudo o que o selo lançou fora das séries. Não tem
     // volume — aparece como lista no fim da aba Séries e no calendário.
+    // projetos com nome livre, criados pela equipe (aba Demos ou + Novo)
+    { id: "projetos", nome: "Projetos novos", sigla: "PRJ", cor: "#ffffff", geral: true },
     { id: "catalogo", nome: "Outros lançamentos", sigla: "BG", cor: "#000000", geral: true },
   ];
   const SERIES_BY_ID = Object.fromEntries(SERIES.map((s) => [s.id, s]));
@@ -729,7 +731,9 @@
   function catalogSection(s, list) {
     const rows = list.slice().sort((a, b) => (b[1].data || "").localeCompare(a[1].data || ""));
     const { last } = lastAndNext(list);
-    const summary = [`${list.length} lançamentos`, last && `último: ${esc(last.titulo)} · ${esc(shortDate(last))}`].filter(Boolean).join(" — ");
+    const summary = s.id === "projetos"
+      ? `${list.length} projeto${list.length === 1 ? "" : "s"} — ${list.filter(([, r]) => r.status !== "lancado").length} em andamento`
+      : [`${list.length} lançamentos`, last && `último: ${esc(last.titulo)} · ${esc(shortDate(last))}`].filter(Boolean).join(" — ");
     return `
       <section class="series series-geral${openSeries.has(s.id) ? " is-open" : ""}" style="--serie:${s.cor}">
         ${seriesBar(s, list, summary, "", "+ Novo")}
@@ -1194,9 +1198,14 @@
       .sort((a, b) => (order[a[1].serie] - order[b[1].serie]) ||
         (isGeral(a[1]) ? (a[1].data || "9").localeCompare(b[1].data || "9") : a[1].vol - b[1].vol));
   }
-  function targetOptions(current) {
-    return targetReleases().map(([id, r]) =>
-      `<option value="${esc(id)}"${id === current ? " selected" : ""}>${esc(releaseLabel(r))}${r.data ? ` · ${esc(shortDate(r))}` : ""}</option>`).join("");
+  function targetOptions() {
+    const groups = {};
+    targetReleases().forEach(([id, r]) => { (groups[r.serie] = groups[r.serie] || []).push([id, r]); });
+    // projetos novos primeiro: são os que a equipe acabou de criar
+    const ordem = [SERIES_BY_ID.projetos, ...SERIES.filter((s) => s.id !== "projetos")];
+    return `<option value="__new">+ Criar projeto novo…</option>` + ordem.filter((s) => groups[s.id]).map((s) =>
+      `<optgroup label="${esc(s.nome)}">${groups[s.id].map(([id, r]) =>
+        `<option value="${esc(id)}">${esc(s.geral ? `${r.titulo || "sem nome"}${r.formato ? ` (${r.formato})` : ""}` : `Vol. ${pad2(r.vol)}${r.titulo ? ` — ${r.titulo}` : ""}`)}</option>`).join("")}</optgroup>`).join("");
   }
 
   function renderSetlist() {
@@ -1269,107 +1278,146 @@
     if (slPull.value && activeReleaseId) moveTrack(slPull.value, activeReleaseId);
   });
 
-  /* aba Demos */
+  /* aba Demos: só o nome da música e pra onde ela vai */
   const dTitulo = document.getElementById("d-titulo");
-  const dArtista = document.getElementById("d-artista");
-  const dLink = document.getElementById("d-link");
-  const dObs = document.getElementById("d-obs");
+  const dDestino = document.getElementById("d-destino");
   const dSave = document.getElementById("d-save");
-  const dCancel = document.getElementById("d-cancel");
-  const dDelete = document.getElementById("d-delete");
   const demoList = document.getElementById("demo-list");
   const demoProjects = document.getElementById("demo-projects");
-  let editingDemo = null;
+  const npBox = document.getElementById("new-project");
+  const npNome = document.getElementById("np-nome");
+  let npFormato = "EP";
+  let npFor = null;  // "form" ou o id da música que vai pro projeto novo
 
   function demoRow(id, t) {
     return `
       <div class="row demo-row">
-        <button class="row-main" type="button" data-edit-demo="${esc(id)}">
-          <b>${esc(t.titulo)}</b>
-          <span>${esc([t.artista, t.obs].filter(Boolean).join(" · "))}</span>
-        </button>
-        ${t.link ? `<a class="demo-link" href="${esc(t.link)}" target="_blank" rel="noopener" title="Ouvir">▶</a>` : ""}
-        <select class="demo-move" data-move-track="${esc(id)}" aria-label="Mandar pra um projeto">
+        <span class="demo-name" contenteditable="plaintext-only" spellcheck="false" role="textbox" data-track-name="${esc(id)}">${esc(t.titulo)}</span>
+        <select class="demo-move" data-move-track="${esc(id)}" aria-label="Pra onde vai">
           <option value="__">${t.releaseId ? "Realocar…" : "Mandar pra…"}</option>
           ${t.releaseId ? `<option value="">← Voltar pra fila</option>` : ""}
           ${targetOptions()}
         </select>
+        <button class="demo-del" type="button" data-del-track="${esc(id)}" aria-label="Apagar" title="Apagar">×</button>
       </div>`;
   }
 
   function renderDemos() {
+    const keep = dDestino.value;
+    dDestino.innerHTML = `<option value="">Fila de demos (sem projeto)</option>` + targetOptions();
+    if ([...dDestino.options].some((o) => o.value === keep) && keep !== "__new") dDestino.value = keep;
     const queue = demoQueue();
     document.getElementById("demo-count").textContent = queue.length ? `(${queue.length})` : "";
     demoList.innerHTML = queue.map(([id, t]) => demoRow(id, t)).join("") ||
-      `<p class="empty">Nenhuma demo na fila. Escreve a primeira aí em cima.</p>`;
+      `<p class="empty">Nenhuma demo na fila.</p>`;
     demoProjects.innerHTML = targetReleases()
       .map(([rid, r]) => [rid, r, setlistOf(rid)])
       .filter(([, , list]) => list.length)
       .map(([rid, r, list]) => `
         <div class="demo-project" style="--serie:${seriesColor(r.serie)}">
           <button class="demo-project-head" type="button" data-release="${esc(rid)}">
-            <b>${esc(releaseLabel(r))}</b>
-            <span>${esc([r.data ? shortDate(r) : "sem data", STATUS_NAME[r.status]].join(" · "))} · ${list.length} faixa${list.length > 1 ? "s" : ""}</span>
+            <b>${esc(releaseLabel(r))}${r.formato && isGeral(r) ? ` · ${esc(r.formato)}` : ""}</b>
+            <span>${list.length} faixa${list.length > 1 ? "s" : ""}${r.data ? ` · ${esc(shortDate(r))}` : ""}</span>
           </button>
           ${list.map(([id, t]) => demoRow(id, t)).join("")}
         </div>`).join("") ||
-      `<p class="empty">Nenhuma música mandada pra projeto em andamento ainda.</p>`;
+      `<p class="empty">Nenhuma música mandada pra projeto ainda.</p>`;
   }
 
-  function resetDemoForm() {
-    editingDemo = null;
-    dTitulo.value = dArtista.value = dLink.value = dObs.value = "";
-    document.getElementById("demo-form-title").textContent = "Nova demo";
-    dSave.textContent = "+ Adicionar demo";
-    dCancel.hidden = dDelete.hidden = true;
-  }
-
-  dSave.addEventListener("click", async () => {
+  async function addDemo() {
     const titulo = dTitulo.value.trim();
     if (!titulo) { showToast("Escreve o nome da música."); dTitulo.focus(); return; }
-    const fields = { titulo, artista: dArtista.value.trim(), link: dLink.value.trim(), obs: dObs.value.trim() };
-    if (editingDemo && tracks[editingDemo]) {
-      await writeTracks({ [editingDemo]: trackDoc(editingDemo, fields) }, "Demo salva.");
-    } else {
-      await writeTracks({ [newId("t")]: { ...fields, releaseId: "", ordem: 0, criado: new Date().toISOString() } }, "Demo adicionada.");
-    }
-    resetDemoForm();
+    const rid = dDestino.value;
+    dTitulo.value = "";
+    await writeTracks({ [newId("t")]: { titulo, artista: "", releaseId: rid, ordem: rid ? nextOrdem(rid) : 0, link: "", obs: "", criado: new Date().toISOString() } },
+      rid ? `Entrou em ${releaseLabel(releases[rid])}.` : "Demo adicionada.");
     dTitulo.focus();
+  }
+  dSave.addEventListener("click", addDemo);
+  dTitulo.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addDemo(); } });
+
+  /* projeto novo: nome livre + EP/LP. Entra em "Projetos novos" e já
+     recebe a música que pediu ele. */
+  function openNewProject(forWhat) {
+    npFor = forWhat;
+    npNome.value = "";
+    npFormato = "EP";
+    npBox.querySelectorAll("[data-np-formato]").forEach((x) => x.classList.toggle("is-on", x.dataset.npFormato === "EP"));
+    npBox.hidden = false;
+    npBox.scrollIntoView({ behavior: "smooth", block: "center" });
+    npNome.focus();
+  }
+  function closeNewProject() {
+    npBox.hidden = true;
+    npFor = null;
+    renderDemos();
+  }
+  npBox.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-np-formato]");
+    if (!b) return;
+    npFormato = b.dataset.npFormato;
+    npBox.querySelectorAll("[data-np-formato]").forEach((x) => x.classList.toggle("is-on", x === b));
   });
-  dTitulo.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); dSave.click(); } });
-  dCancel.addEventListener("click", resetDemoForm);
-  dDelete.addEventListener("click", async () => {
-    if (!editingDemo || !confirm("Apagar essa música?")) return;
-    await deleteTrack(editingDemo);
-    resetDemoForm();
+  document.getElementById("np-cancel").addEventListener("click", closeNewProject);
+  npNome.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("np-create").click(); } });
+  document.getElementById("np-create").addEventListener("click", async () => {
+    const nome = npNome.value.trim();
+    if (!nome) { showToast("Dá um nome pro projeto."); npNome.focus(); return; }
+    const pid = newId("prj");
+    const projeto = seed("projetos", 0, { titulo: nome, formato: npFormato, status: "producao" });
+    delete projeto.id;
+    const target = npFor;
+    try {
+      await write({ releases: { [pid]: projeto } });
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra criar o projeto. Tenta de novo.");
+      return;
+    }
+    npBox.hidden = true;
+    npFor = null;
+    if (target === "form") {
+      renderDemos();
+      dDestino.value = pid;
+      if (dTitulo.value.trim()) await addDemo();
+      else { showToast(`Projeto ${nome} criado.`); dTitulo.focus(); }
+    } else if (target && tracks[target]) {
+      await moveTrack(target, pid);
+    } else {
+      showToast(`Projeto ${nome} criado.`);
+    }
   });
+
+  dDestino.addEventListener("change", () => { if (dDestino.value === "__new") openNewProject("form"); });
 
   function onDemoClick(e) {
     const rel = e.target.closest("[data-release]");
     if (rel) return openRelease(rel.dataset.release);
-    const edit = e.target.closest("[data-edit-demo]");
-    if (!edit) return;
-    const t = tracks[edit.dataset.editDemo];
-    if (!t) return;
-    editingDemo = edit.dataset.editDemo;
-    dTitulo.value = t.titulo || "";
-    dArtista.value = t.artista || "";
-    dLink.value = t.link || "";
-    dObs.value = t.obs || "";
-    document.getElementById("demo-form-title").textContent = "Editar música";
-    dSave.textContent = "Salvar";
-    dCancel.hidden = dDelete.hidden = false;
-    document.querySelector(".demo-form").scrollIntoView({ behavior: "smooth", block: "start" });
-    dTitulo.focus();
+    const del = e.target.closest("[data-del-track]");
+    if (del && confirm(`Apagar "${tracks[del.dataset.delTrack].titulo}"?`)) deleteTrack(del.dataset.delTrack);
   }
   function onDemoMove(e) {
     const sel = e.target.closest("[data-move-track]");
     if (!sel || sel.value === "__") return;
+    if (sel.value === "__new") return openNewProject(sel.dataset.moveTrack);
     moveTrack(sel.dataset.moveTrack, sel.value);
+  }
+  function onDemoKey(e) {
+    if (e.key === "Enter" && e.target.closest("[data-track-name]")) { e.preventDefault(); e.target.blur(); }
+  }
+  function onDemoRename(e) {
+    const el = e.target.closest("[data-track-name]");
+    const t = el && tracks[el.dataset.trackName];
+    if (!t) return;
+    const titulo = el.textContent.replace(/\s+/g, " ").trim();
+    if (!titulo) { el.textContent = t.titulo; return; }
+    if (titulo !== t.titulo) writeTracks({ [el.dataset.trackName]: trackDoc(el.dataset.trackName, { titulo }) }, "Nome salvo.");
   }
   [demoList, demoProjects].forEach((el) => {
     el.addEventListener("click", onDemoClick);
     el.addEventListener("change", onDemoMove);
+    el.addEventListener("keydown", onDemoKey);
+    el.addEventListener("focusout", onDemoRename);
   });
 
   /* ── painel do dia + tarefas ───────────────────────────── */

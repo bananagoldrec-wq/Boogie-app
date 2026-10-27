@@ -271,10 +271,11 @@ identidade do selo (verde-banana + preto).
   equipe. Sextas e feriados destacados. Toque num dia pra marcar uma tarefa
   (com responsável e lançamento ligado) ou criar um lançamento naquele dia.
   Lançamentos com só o mês confirmado aparecem numa faixa acima da grade.
-- **Demos** — fila de músicas em aberto (nome, quem fez, link, notas). Cada
-  uma tem "Mandar pra…" pra cair no set list de um projeto que ainda não saiu;
-  embaixo ficam as que já estão em projetos em andamento, pra realocar ou
-  devolver pra fila.
+- **Demos** — só o nome da música e pra onde ela vai. Cada uma tem "Mandar
+  pra…" com os projetos que ainda não saíram, agrupados por série, e
+  "+ Criar projeto novo…" pra dar nome livre a um projeto (EP ou LP), que
+  entra em "Projetos novos" na aba Séries. Embaixo ficam as músicas já
+  alocadas, por projeto, pra realocar ou devolver pra fila.
 
 Dentro de cada projeto o painel abre no **set list**: as faixas na ordem, com
 nome editável, ↑/↓ pra reordenar, ⤺ pra devolver pra demos, campo pra
