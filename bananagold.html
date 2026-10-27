@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-build="15">
+<html lang="pt-BR" data-build="16">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/bananagold.css?v=9" />
+  <link rel="stylesheet" href="css/bananagold.css?v=10" />
 </head>
 <body>
 
@@ -317,8 +317,28 @@
     </form>
   </div>
 
+  <!-- player das demos (aparece ao tocar uma música) -->
+  <div id="player-bar" class="player-bar" hidden>
+    <div class="pl-controls">
+      <button id="pl-prev" type="button" aria-label="Anterior">⏮</button>
+      <button id="pl-toggle" class="pl-toggle" type="button" aria-label="Tocar">▶</button>
+      <button id="pl-next" type="button" aria-label="Próxima">⏭</button>
+    </div>
+    <div class="pl-info">
+      <b id="pl-title"></b>
+      <span id="pl-sub"></span>
+      <div class="pl-seek">
+        <span id="pl-cur">0:00</span>
+        <input id="pl-seek" type="range" min="0" max="1000" value="0" aria-label="Posição" />
+        <span id="pl-dur">0:00</span>
+      </div>
+    </div>
+    <a id="pl-down" class="pl-btn" href="#" target="_blank" rel="noopener" download aria-label="Baixar o WAV" title="Baixar o WAV">⤓</a>
+    <button id="pl-close" class="pl-btn" type="button" aria-label="Fechar player">×</button>
+  </div>
+
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/bananagold.js?v=15"></script>
+  <script src="js/bananagold.js?v=16"></script>
 </body>
 </html>

@@ -280,7 +280,11 @@ identidade do selo (verde-banana + preto).
 **Áudio das demos (WAV):** no campo de nova demo tem "♪ WAV" (dá pra escolher
 vários; cada arquivo vira uma demo com o nome dele) e cada música tem
 "+ WAV"/"trocar", ▶ pra ouvir e ⤓ pra baixar. No computador dá pra arrastar
-os WAVs pra aba. O ▶ aparece também no set list do projeto. Os arquivos vão
+os WAVs pra aba. O ▶ aparece também no set list do projeto. Tocar abre o **player**
+embaixo da tela: toca o WAV original, sem compressão (mostra bits/kHz quando
+lê o cabeçalho), com barra de posição, anterior/próxima dentro da lista onde
+o play foi apertado, passa sozinho pra próxima e responde aos controles da
+tela de bloqueio. Os arquivos vão
 pro **Firebase Storage** em `bg_demos/` (até 300 MB cada). Enquanto o Storage
 não estiver ligado, o áudio fica guardado só no aparelho de quem subiu
 (aparece "só aqui"); depois de ligar, é só tocar em "trocar" e escolher o

@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "15";
+  const BUILD = "16";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -1375,7 +1375,11 @@
   const dFileLabel = document.getElementById("d-file-label");
   const audioInput = document.getElementById("audio-input");
   const player = new Audio();
-  let playingId = null;
+  player.preload = "auto";
+  let playingId = null;      // faixa carregada no player (tocando ou pausada)
+  let queue = [];            // ids da lista onde o play foi apertado
+  const localUrls = new Map();  // id → blob: URL dos áudios guardados no aparelho
+  const localMeta = new Map();  // id → "24-bit · 48 kHz" lido do cabeçalho do WAV
   let audioFor = null;
   const uploads = {};  // id da faixa → % enviado
   const MAX_AUDIO = 300 * 1024 * 1024;
@@ -1398,7 +1402,9 @@
   function audioButtons(id, t, full) {
     if (uploads[id] != null) return `<span class="up-prog" data-prog="${esc(id)}">${uploads[id]}%</span>`;
     const a = t.audio;
-    const play = a ? `<button type="button" class="play-btn${playingId === id ? " is-playing" : ""}" data-play="${esc(id)}" aria-label="${playingId === id ? "Pausar" : "Tocar"}" title="${esc(a.nome || "áudio")}${a.local ? " (só neste aparelho)" : ""}">${playingId === id ? "❚❚" : "▶"}</button>` : "";
+    if (a && a.local) preloadLocal(id);
+    const on = playingId === id && !player.paused;
+    const play = a ? `<button type="button" class="play-btn${on ? " is-playing" : ""}" data-play="${esc(id)}" aria-label="${on ? "Pausar" : "Tocar"}" title="${esc(a.nome || "áudio")}${a.local ? " (só neste aparelho)" : ""}">${on ? "❚❚" : "▶"}</button>` : "";
     if (!full) return play;
     const down = a && a.url ? `<a class="audio-down" href="${esc(a.url)}" target="_blank" rel="noopener" download="${esc(a.nome || "demo.wav")}" title="Baixar ${esc(a.nome || "")}" aria-label="Baixar">⤓</a>` : "";
     const local = a && a.local ? `<span class="audio-local" title="Esse áudio só está no aparelho de quem subiu">só aqui</span>` : "";
@@ -1428,7 +1434,11 @@
   async function storage() {
     if (!fbApp || !fbUser) throw new Error("sem nuvem");
     if (!storageMod) storageMod = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js");
-    return { mod: storageMod, st: storageMod.getStorage(fbApp) };
+    const st = storageMod.getStorage(fbApp);
+    // o padrão do SDK é tentar por 10 min — parecia travado em 0%
+    st.maxUploadRetryTime = 20000;
+    st.maxOperationRetryTime = 20000;
+    return { mod: storageMod, st };
   }
 
   function setProgress(id, pct) {
@@ -1448,20 +1458,37 @@
       const { mod, st } = await storage();
       const path = `bg_demos/${id}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
       const task = mod.uploadBytesResumable(mod.ref(st, path), file, { contentType: file.type || "audio/wav" });
-      await new Promise((res, rej) => task.on("state_changed",
-        (snap) => setProgress(id, Math.round((snap.bytesTransferred / snap.totalBytes) * 100)), rej, res));
+      await new Promise((res, rej) => {
+        // se nada andar em 25 s, a nuvem não está aceitando: desiste
+        let last = 0, stall = setTimeout(() => task.cancel(), 25000);
+        task.on("state_changed", (snap) => {
+          if (snap.bytesTransferred > last) {
+            last = snap.bytesTransferred;
+            clearTimeout(stall);
+            stall = setTimeout(() => task.cancel(), 60000);
+          }
+          setProgress(id, Math.round((snap.bytesTransferred / snap.totalBytes) * 100));
+        }, (err) => { clearTimeout(stall); rej(err); }, () => { clearTimeout(stall); res(); });
+      });
       audio = { url: await mod.getDownloadURL(task.snapshot.ref), path, nome: file.name, tamanho: file.size };
     } catch (err) {
-      console.warn("Storage indisponível, guardando no aparelho:", err && (err.code || err.message));
+      const code = (err && (err.code || err.message)) || "";
+      console.warn("Storage indisponível, guardando no aparelho:", code);
+      const motivo = /unauthorized/.test(code) ? "as regras do Storage ainda não liberam"
+        : /sem nuvem/.test(code) ? "sem conexão com a nuvem"
+        : "o Storage da nuvem não respondeu (ainda não ligado?)";
       try {
         await idbDo("readwrite", (os) => os.put(file, id));
         audio = { local: true, nome: file.name, tamanho: file.size };
-        showToast("Áudio guardado só neste aparelho — o Storage da nuvem ainda não está ligado.");
+        if (localUrls.has(id)) URL.revokeObjectURL(localUrls.get(id));
+        localUrls.set(id, URL.createObjectURL(file));
+        readWavInfo(file).then((info) => { if (info) localMeta.set(id, info); });
+        showToast(`Áudio guardado só neste aparelho — ${motivo}.`);
       } catch (err2) {
         console.error(err2);
         delete uploads[id];
         renderAll();
-        showToast("Não deu pra guardar o áudio. Tenta de novo.");
+        showToast("Não deu pra guardar o áudio nem neste aparelho. Tenta um arquivo menor.");
         return;
       }
     }
@@ -1483,32 +1510,164 @@
     }
   }
 
-  async function togglePlay(id) {
-    if (playingId === id) {
-      player.pause();
-      playingId = null;
-      renderAll();
+  /* Áudios guardados no aparelho viram blob: URL antes do toque — o
+     Safari do iPhone só deixa tocar se o play acontece direto no toque,
+     sem esperar o IndexedDB. */
+  const loadingLocal = new Set();
+  function preloadLocal(id) {
+    if (localUrls.has(id) || loadingLocal.has(id)) return;
+    loadingLocal.add(id);
+    idbDo("readonly", (os) => os.get(id)).then((blob) => {
+      if (!blob) return;
+      localUrls.set(id, URL.createObjectURL(blob));
+      return readWavInfo(blob).then((info) => { if (info) localMeta.set(id, info); });
+    }).catch(() => {}).finally(() => loadingLocal.delete(id));
+  }
+
+  /* lê o cabeçalho do WAV: bits e taxa de amostragem */
+  async function readWavInfo(blob) {
+    try {
+      const v = new DataView(await blob.slice(0, 4096).arrayBuffer());
+      if (v.getUint32(0, false) !== 0x52494646) return null;  // "RIFF"
+      for (let i = 12; i < v.byteLength - 24; ) {
+        const idTag = v.getUint32(i, false), size = v.getUint32(i + 4, true);
+        if (idTag === 0x666d7420) {  // "fmt "
+          const ch = v.getUint16(i + 10, true), rate = v.getUint32(i + 12, true), bits = v.getUint16(i + 22, true);
+          return `${bits}-bit · ${(rate / 1000).toFixed(rate % 1000 ? 1 : 0)} kHz · ${ch === 1 ? "mono" : "estéreo"}`;
+        }
+        i += 8 + size + (size % 2);
+      }
+    } catch (err) {}
+    return null;
+  }
+
+  /* ── player ──────────────────────────────────────────────── */
+  const plBar = document.getElementById("player-bar");
+  const plToggle = document.getElementById("pl-toggle");
+  const plTitle = document.getElementById("pl-title");
+  const plSub = document.getElementById("pl-sub");
+  const plSeek = document.getElementById("pl-seek");
+  const plCur = document.getElementById("pl-cur");
+  const plDur = document.getElementById("pl-dur");
+  const plDown = document.getElementById("pl-down");
+  let seeking = false;
+
+  function fmtTime(sec) {
+    if (!isFinite(sec)) return "0:00";
+    const m = Math.floor(sec / 60), s2 = Math.floor(sec % 60);
+    return `${m}:${String(s2).padStart(2, "0")}`;
+  }
+
+  function where(t) {
+    return t.releaseId && releases[t.releaseId] ? releaseLabel(releases[t.releaseId]) : "Fila de demos";
+  }
+
+  function syncPlayerBar() {
+    const t = playingId && tracks[playingId];
+    plBar.hidden = !t;
+    document.body.classList.toggle("has-player", !!t);
+    if (!t) return;
+    const a = t.audio || {};
+    plTitle.textContent = t.titulo;
+    plSub.textContent = [localMeta.get(playingId) || (/\.wav$/i.test(a.nome || "") ? "WAV original, sem compressão" : a.nome),
+      a.tamanho ? fmtSize(a.tamanho) : "", where(t), a.local ? "só neste aparelho" : ""].filter(Boolean).join(" · ");
+    plToggle.textContent = player.paused ? "▶" : "❚❚";
+    plToggle.setAttribute("aria-label", player.paused ? "Tocar" : "Pausar");
+    plDown.hidden = !(a.url || localUrls.has(playingId));
+    plDown.href = a.url || localUrls.get(playingId) || "#";
+    plDown.download = a.nome || "demo.wav";
+    const i = queue.indexOf(playingId);
+    document.getElementById("pl-prev").disabled = i <= 0 && player.currentTime < 3;
+    document.getElementById("pl-next").disabled = i < 0 || i >= queue.length - 1;
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: t.titulo, artist: "Banana Gold Records", album: where(t) });
+    }
+  }
+
+  function playTrack(id) {
+    const t = tracks[id];
+    const a = t && t.audio;
+    if (!a) return;
+    const src = a.url || localUrls.get(id);
+    if (!src) {
+      if (a.local) { preloadLocal(id); showToast("Esse áudio só está no aparelho de quem subiu."); }
       return;
     }
-    const a = tracks[id] && tracks[id].audio;
-    if (!a) return;
-    let src = a.url;
-    if (!src && a.local) {
-      const blob = await idbDo("readonly", (os) => os.get(id)).catch(() => null);
-      if (!blob) { showToast("Esse áudio só está no aparelho de quem subiu."); return; }
-      src = URL.createObjectURL(blob);
-    }
-    if (player.src.startsWith("blob:")) URL.revokeObjectURL(player.src);
-    player.src = src;
+    if (player.src !== src) player.src = src;
     playingId = id;
-    player.play().catch(() => { playingId = null; showToast("Não deu pra tocar esse arquivo."); renderAll(); });
+    player.play().catch((err) => {
+      console.warn(err);
+      showToast("Não deu pra tocar esse arquivo aqui.");
+    });
+    syncPlayerBar();
     renderAll();
   }
-  player.addEventListener("ended", () => { playingId = null; renderAll(); });
+
+  function togglePlay(id, list) {
+    if (playingId === id) {
+      if (player.paused) player.play().catch(() => {});
+      else player.pause();
+      return;
+    }
+    if (list) queue = list;
+    else if (!queue.includes(id)) queue = [id];
+    playTrack(id);
+  }
+
+  function step(dir) {
+    if (dir < 0 && player.currentTime > 3) { player.currentTime = 0; return; }
+    const i = queue.indexOf(playingId) + dir;
+    if (i >= 0 && i < queue.length) playTrack(queue[i]);
+  }
+
+  ["play", "pause"].forEach((ev) => player.addEventListener(ev, () => { syncPlayerBar(); renderAll(); }));
+  player.addEventListener("ended", () => {
+    const i = queue.indexOf(playingId);
+    if (i >= 0 && i < queue.length - 1) playTrack(queue[i + 1]);
+    else { syncPlayerBar(); renderAll(); }
+  });
+  player.addEventListener("loadedmetadata", () => { plDur.textContent = fmtTime(player.duration); });
+  player.addEventListener("timeupdate", () => {
+    plCur.textContent = fmtTime(player.currentTime);
+    if (!seeking && player.duration) plSeek.value = String(Math.round((player.currentTime / player.duration) * 1000));
+  });
+  player.addEventListener("error", () => {
+    if (playingId) showToast("Falhou ao carregar o áudio — confere a conexão ou sobe o arquivo de novo.");
+  });
+  plSeek.addEventListener("input", () => {
+    seeking = true;
+    if (player.duration) plCur.textContent = fmtTime((plSeek.value / 1000) * player.duration);
+  });
+  plSeek.addEventListener("change", () => {
+    if (player.duration) player.currentTime = (plSeek.value / 1000) * player.duration;
+    seeking = false;
+  });
+  plToggle.addEventListener("click", () => { if (playingId) togglePlay(playingId); });
+  document.getElementById("pl-prev").addEventListener("click", () => step(-1));
+  document.getElementById("pl-next").addEventListener("click", () => step(1));
+  document.getElementById("pl-close").addEventListener("click", () => {
+    player.pause();
+    playingId = null;
+    syncPlayerBar();
+    renderAll();
+  });
+  if ("mediaSession" in navigator) {
+    try {
+      navigator.mediaSession.setActionHandler("play", () => player.play());
+      navigator.mediaSession.setActionHandler("pause", () => player.pause());
+      navigator.mediaSession.setActionHandler("previoustrack", () => step(-1));
+      navigator.mediaSession.setActionHandler("nexttrack", () => step(1));
+    } catch (err) {}
+  }
 
   function onAudioClick(e) {
     const play = e.target.closest("[data-play]");
-    if (play) { e.stopPropagation(); togglePlay(play.dataset.play); return true; }
+    if (play) {
+      e.stopPropagation();
+      const list = [...e.currentTarget.querySelectorAll("[data-play]")].map((b) => b.dataset.play);
+      togglePlay(play.dataset.play, list);
+      return true;
+    }
     const pick = e.target.closest("[data-pick-audio]");
     if (pick) { audioFor = pick.dataset.pickAudio; audioInput.value = ""; audioInput.click(); return true; }
     return false;
