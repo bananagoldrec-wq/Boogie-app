@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "14";
+  const BUILD = "15";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -410,6 +410,7 @@
 
   /* ── armazenamento: nuvem com reserva no aparelho ───────── */
   let db, cols = {}, doc, onSnapshot, writeBatch;
+  let fbApp = null, fbUser = null;
   let cloudReady = false;
   let warnedLocal = false;
 
@@ -532,7 +533,7 @@
       onSnapshot = fsMod.onSnapshot;
       writeBatch = fsMod.writeBatch;
 
-      const fbApp = appMod.initializeApp(firebaseConfig);
+      fbApp = appMod.initializeApp(firebaseConfig);
       const auth = authMod.getAuth(fbApp);
       db = fsMod.getFirestore(fbApp);
       cols = {
@@ -544,6 +545,7 @@
       authMod.signInAnonymously(auth).catch((err) => goLocal(err && err.code));
       let started = false;
       authMod.onAuthStateChanged(auth, (user) => {
+        fbUser = user;
         if (user && !started) {
           started = true;
           startSync();
@@ -1196,6 +1198,7 @@
     return writeTracks({ [id]: trackDoc(id, { releaseId: rid || "", ordem: rid ? nextOrdem(rid) : 0 }) }, msg);
   }
   function deleteTrack(id) {
+    if (tracks[id] && tracks[id].audio) removeAudioFile(id, tracks[id].audio);
     return writeTracks({ [id]: tracks[id] && tracks[id].base ? { deleted: true } : null }, "Faixa apagada.");
   }
 
@@ -1230,6 +1233,7 @@
         <span class="sl-num">${i + 1}</span>
         <span class="sl-name" contenteditable="plaintext-only" spellcheck="false" role="textbox" data-track-name="${esc(id)}" aria-label="Nome da faixa ${i + 1}">${esc(t.titulo)}</span>
         <span class="sl-tools">
+          ${audioButtons(id, t, false)}
           <button type="button" data-track-up="${esc(id)}" ${i === 0 ? "disabled" : ""} aria-label="Subir">↑</button>
           <button type="button" data-track-down="${esc(id)}" ${i === list.length - 1 ? "disabled" : ""} aria-label="Descer">↓</button>
           <button type="button" data-track-out="${esc(id)}" title="Tirar do set list (volta pra demos)" aria-label="Tirar do set list">⤺</button>
@@ -1308,6 +1312,7 @@
           ${t.releaseId ? `<option value="">← Voltar pra fila</option>` : ""}
           ${targetOptions()}
         </select>
+        <span class="demo-audio">${audioButtons(id, t, true)}</span>
         <button class="demo-del" type="button" data-del-track="${esc(id)}" aria-label="Apagar" title="Apagar">×</button>
       </div>`;
   }
@@ -1334,17 +1339,196 @@
       `<p class="empty">Nenhuma música mandada pra projeto ainda.</p>`;
   }
 
-  async function addDemo() {
+  /* Com áudio escolhido: um arquivo usa o nome digitado (ou o do
+     arquivo); vários viram uma demo cada, com o nome do arquivo. */
+  async function addDemo(filesArg) {
+    const files = filesArg && filesArg.length ? [...filesArg] : [...dFile.files];
     const titulo = dTitulo.value.trim();
-    if (!titulo) { showToast("Escreve o nome da música."); dTitulo.focus(); return; }
-    const rid = dDestino.value;
+    if (!titulo && !files.length) { showToast("Escreve o nome da música ou escolhe um WAV."); dTitulo.focus(); return; }
+    const rid = dDestino.value === "__new" ? "" : dDestino.value;
+    const items = files.length
+      ? files.map((f) => [files.length === 1 && titulo ? titulo : fileTitle(f.name), f])
+      : [[titulo, null]];
+    const changes = {};
+    let ordem = rid ? nextOrdem(rid) : 0;
+    const created = items.map(([nome, f]) => {
+      const id = newId("t");
+      changes[id] = { titulo: nome, artista: "", releaseId: rid, ordem: rid ? ordem++ : 0, link: "", obs: "", criado: new Date().toISOString() };
+      return [id, f];
+    });
     dTitulo.value = "";
-    await writeTracks({ [newId("t")]: { titulo, artista: "", releaseId: rid, ordem: rid ? nextOrdem(rid) : 0, link: "", obs: "", criado: new Date().toISOString() } },
-      rid ? `Entrou em ${releaseLabel(releases[rid])}.` : "Demo adicionada.");
+    dFile.value = "";
+    syncFileLabel();
+    await writeTracks(changes, created.length > 1 ? `${created.length} demos adicionadas.` : rid ? `Entrou em ${releaseLabel(releases[rid])}.` : "Demo adicionada.");
+    created.forEach(([id, f]) => { if (f) uploadAudio(id, f); });
     dTitulo.focus();
   }
-  dSave.addEventListener("click", addDemo);
+  dSave.addEventListener("click", () => addDemo());
   dTitulo.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addDemo(); } });
+
+  /* ── áudio (WAV) das demos ─────────────────────────────────
+     Sobe pro Firebase Storage (bg_demos/<faixa>/<arquivo>) e guarda no
+     doc da faixa { url, path, nome, tamanho }. Se o Storage não estiver
+     ligado ou a nuvem cair, guarda o arquivo neste aparelho (IndexedDB)
+     com { local: true } — toca aqui, e dá pra subir de novo depois. */
+  const dFile = document.getElementById("d-file");
+  const dFileLabel = document.getElementById("d-file-label");
+  const audioInput = document.getElementById("audio-input");
+  const player = new Audio();
+  let playingId = null;
+  let audioFor = null;
+  const uploads = {};  // id da faixa → % enviado
+  const MAX_AUDIO = 300 * 1024 * 1024;
+
+  function fileTitle(name) {
+    return name.replace(/\.[a-z0-9]{2,4}$/i, "").replace(/[_]+/g, " ").trim() || "Demo";
+  }
+  function fmtSize(n) {
+    return n > 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`;
+  }
+  function syncFileLabel() {
+    const n = dFile.files.length;
+    dFileLabel.textContent = n ? (n === 1 ? `♪ ${dFile.files[0].name}` : `♪ ${n} arquivos`) : "♪ WAV";
+    dFileLabel.closest(".file-btn").classList.toggle("has-file", !!n);
+    if (n === 1 && !dTitulo.value.trim()) dTitulo.placeholder = fileTitle(dFile.files[0].name);
+    if (!n) dTitulo.placeholder = "Nome da música";
+  }
+  dFile.addEventListener("change", syncFileLabel);
+
+  function audioButtons(id, t, full) {
+    if (uploads[id] != null) return `<span class="up-prog" data-prog="${esc(id)}">${uploads[id]}%</span>`;
+    const a = t.audio;
+    const play = a ? `<button type="button" class="play-btn${playingId === id ? " is-playing" : ""}" data-play="${esc(id)}" aria-label="${playingId === id ? "Pausar" : "Tocar"}" title="${esc(a.nome || "áudio")}${a.local ? " (só neste aparelho)" : ""}">${playingId === id ? "❚❚" : "▶"}</button>` : "";
+    if (!full) return play;
+    const down = a && a.url ? `<a class="audio-down" href="${esc(a.url)}" target="_blank" rel="noopener" download="${esc(a.nome || "demo.wav")}" title="Baixar ${esc(a.nome || "")}" aria-label="Baixar">⤓</a>` : "";
+    const local = a && a.local ? `<span class="audio-local" title="Esse áudio só está no aparelho de quem subiu">só aqui</span>` : "";
+    return `${play}${down}${local}<button type="button" class="wav-btn" data-pick-audio="${esc(id)}" title="${a ? "Trocar o áudio" : "Adicionar WAV"}">${a ? "trocar" : "+ WAV"}</button>`;
+  }
+
+  /* IndexedDB: áudio guardado só neste aparelho */
+  function idb() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open("bg_audio", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("files");
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  }
+  async function idbDo(mode, fn) {
+    const db2 = await idb();
+    return new Promise((res, rej) => {
+      const tx = db2.transaction("files", mode);
+      const req = fn(tx.objectStore("files"));
+      tx.oncomplete = () => res(req && req.result);
+      tx.onerror = () => rej(tx.error);
+    });
+  }
+
+  let storageMod = null;
+  async function storage() {
+    if (!fbApp || !fbUser) throw new Error("sem nuvem");
+    if (!storageMod) storageMod = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js");
+    return { mod: storageMod, st: storageMod.getStorage(fbApp) };
+  }
+
+  function setProgress(id, pct) {
+    uploads[id] = pct;
+    const el = document.querySelector(`[data-prog="${CSS.escape(id)}"]`);
+    if (el) el.textContent = `${pct}%`;
+  }
+
+  async function uploadAudio(id, file) {
+    if (!tracks[id]) return;
+    if (file.size > MAX_AUDIO) { showToast(`Arquivo grande demais (${fmtSize(file.size)}). Máximo 300 MB.`); return; }
+    const old = tracks[id].audio;
+    setProgress(id, 0);
+    renderAll();
+    let audio;
+    try {
+      const { mod, st } = await storage();
+      const path = `bg_demos/${id}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
+      const task = mod.uploadBytesResumable(mod.ref(st, path), file, { contentType: file.type || "audio/wav" });
+      await new Promise((res, rej) => task.on("state_changed",
+        (snap) => setProgress(id, Math.round((snap.bytesTransferred / snap.totalBytes) * 100)), rej, res));
+      audio = { url: await mod.getDownloadURL(task.snapshot.ref), path, nome: file.name, tamanho: file.size };
+    } catch (err) {
+      console.warn("Storage indisponível, guardando no aparelho:", err && (err.code || err.message));
+      try {
+        await idbDo("readwrite", (os) => os.put(file, id));
+        audio = { local: true, nome: file.name, tamanho: file.size };
+        showToast("Áudio guardado só neste aparelho — o Storage da nuvem ainda não está ligado.");
+      } catch (err2) {
+        console.error(err2);
+        delete uploads[id];
+        renderAll();
+        showToast("Não deu pra guardar o áudio. Tenta de novo.");
+        return;
+      }
+    }
+    delete uploads[id];
+    if (!tracks[id]) return;
+    await writeTracks({ [id]: trackDoc(id, { audio }) }, audio.local ? null : `Áudio salvo (${fmtSize(file.size)}).`);
+    if (old && old.path !== audio.path) removeAudioFile(id, old, !audio.local);
+  }
+
+  async function removeAudioFile(id, a, keepLocal) {
+    try {
+      if (a.path) {
+        const { mod, st } = await storage();
+        await mod.deleteObject(mod.ref(st, a.path));
+      }
+      if (a.local && !keepLocal) await idbDo("readwrite", (os) => os.delete(id));
+    } catch (err) {
+      console.warn("não deu pra apagar o áudio antigo", err);
+    }
+  }
+
+  async function togglePlay(id) {
+    if (playingId === id) {
+      player.pause();
+      playingId = null;
+      renderAll();
+      return;
+    }
+    const a = tracks[id] && tracks[id].audio;
+    if (!a) return;
+    let src = a.url;
+    if (!src && a.local) {
+      const blob = await idbDo("readonly", (os) => os.get(id)).catch(() => null);
+      if (!blob) { showToast("Esse áudio só está no aparelho de quem subiu."); return; }
+      src = URL.createObjectURL(blob);
+    }
+    if (player.src.startsWith("blob:")) URL.revokeObjectURL(player.src);
+    player.src = src;
+    playingId = id;
+    player.play().catch(() => { playingId = null; showToast("Não deu pra tocar esse arquivo."); renderAll(); });
+    renderAll();
+  }
+  player.addEventListener("ended", () => { playingId = null; renderAll(); });
+
+  function onAudioClick(e) {
+    const play = e.target.closest("[data-play]");
+    if (play) { e.stopPropagation(); togglePlay(play.dataset.play); return true; }
+    const pick = e.target.closest("[data-pick-audio]");
+    if (pick) { audioFor = pick.dataset.pickAudio; audioInput.value = ""; audioInput.click(); return true; }
+    return false;
+  }
+  audioInput.addEventListener("change", () => {
+    if (audioFor && audioInput.files[0]) uploadAudio(audioFor, audioInput.files[0]);
+    audioFor = null;
+  });
+  [demoList, demoProjects, slList].forEach((el) => el.addEventListener("click", onAudioClick, true));
+
+  /* arrastar WAVs pra aba Demos cria uma demo por arquivo */
+  const viewDemos = document.getElementById("view-demos");
+  viewDemos.addEventListener("dragover", (e) => { e.preventDefault(); viewDemos.classList.add("is-drop"); });
+  viewDemos.addEventListener("dragleave", (e) => { if (e.target === viewDemos) viewDemos.classList.remove("is-drop"); });
+  viewDemos.addEventListener("drop", (e) => {
+    e.preventDefault();
+    viewDemos.classList.remove("is-drop");
+    const files = [...e.dataTransfer.files].filter((f) => /^audio\//.test(f.type) || /\.(wav|aiff?|mp3|flac)$/i.test(f.name));
+    if (files.length) addDemo(files);
+  });
 
   /* projeto novo: nome livre + EP/LP. Entra em "Projetos novos" e já
      recebe a música que pediu ele. */
