@@ -220,8 +220,8 @@ body {
 
 .week-grid {
   display: grid;
-  grid-template-columns: var(--col-time) repeat(7, var(--col-day));
-  min-width: max-content;
+  /* Columns stretch to fill the window; below 7 × --col-day it scrolls sideways */
+  grid-template-columns: var(--col-time) repeat(7, minmax(var(--col-day), 1fr));
 }
 
 /* ── Corner + sticky time ────────────────────────────────────── */
@@ -1516,17 +1516,13 @@ body {
 
 /* ── Desktop: use the full width and height ────────────────────── */
 
-@media (min-width: 900px) {
+@media (min-width: 700px) {
   :root {
     --col-time: 64px;
     --hdr-h:    56px;
     /* 30 half-hour rows (06h–20h30) fill the visible height, never below 32px */
     --row-h:    max(32px, calc((100vh - 160px) / 30));
-  }
-
-  .week-grid {
-    grid-template-columns: var(--col-time) repeat(7, minmax(0, 1fr));
-    min-width: 0;
+    --col-day:  0px;
   }
 
   .top-bar, .xp-slim { padding-left: 24px; padding-right: 24px; }
@@ -1557,4 +1553,12 @@ body {
   /* Sheets become centered dialogs instead of bottom sheets */
   .overlay              { align-items: center; justify-content: center; padding: 24px; }
   .sheet                { max-width: 480px; border-radius: 20px; }
+}
+
+/* Medium windows: short chips show only the name (the row label already shows the time) */
+@media (min-width: 700px) and (max-width: 1100px) {
+  .chip:not(.is-tall) .chip-time { display: none; }
+  .chip:not(.is-tall)             { padding-left: 6px; padding-right: 16px; }
+  .chip:not(.is-tall) .chip-text  { font-size: 12px; }
+  .chip:not(.is-tall) .chip-edit  { width: 14px; height: 14px; font-size: 10px; right: 2px; }
 }
