@@ -779,3 +779,6 @@ body.has-player .toast { bottom: calc(110px + env(safe-area-inset-bottom)); }
 @media (max-width: 720px) {
   .drive-row .demo-move, .demo-row .demo-move { width: 100%; }
 }
+.drive-upload-box { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; border-top: var(--line-thin); padding-top: 12px; }
+.drive-up.is-error { border-color: var(--late); }
+.drive-up.is-error .row-main span { color: var(--late); }
