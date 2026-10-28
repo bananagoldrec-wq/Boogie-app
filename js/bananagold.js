@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "23";
+  const BUILD = "24";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -432,6 +432,8 @@
         if (base && base.audio && (!t.audio || stale)) next[id].audio = base.audio;
       }
     });
+    // { none: true } = áudio tirado de propósito (não volta o da base)
+    Object.values(next).forEach((t) => { if (t.audio && t.audio.none) delete t.audio; });
     tracks = next;
   }
 
@@ -965,6 +967,7 @@
     safe("as séries", renderSeries);
     safe("o calendário", renderCalendar);
     safe("as demos", renderDemos);
+    safe("o Drive", renderDrive);
     safe("a lista de pessoas", () => {
       document.getElementById("people").innerHTML = people().map((p) => `<option value="${esc(p)}"></option>`).join("");
     });
@@ -976,9 +979,10 @@
   const tabs = document.querySelectorAll(".tab");
   function setTab(name) {
     tabs.forEach((t) => t.classList.toggle("is-active", t.dataset.tab === name));
-    ["catalogo", "calendario", "demos"].forEach((v) => {
+    ["catalogo", "calendario", "demos", "drive"].forEach((v) => {
       document.getElementById(`view-${v}`).hidden = v !== name;
     });
+    if (name === "drive") loadDrive();
     try { localStorage.setItem(TAB_KEY, name); } catch (err) {}
   }
   tabs.forEach((t) => t.addEventListener("click", () => setTab(t.dataset.tab)));
@@ -2085,6 +2089,105 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => (el.hidden = true), 2800);
   }
+
+  /* ── aba Drive: a pasta MUSICAS BANANA ─────────────────────
+     Lista os arquivos pela Drive API (a pasta está como "Qualquer pessoa
+     com o link"; a chave do app tem a Google Drive API liberada) e deixa
+     ligar cada um a uma demo ou criar uma demo nova com ele. */
+  const DRIVE_FOLDER_ID = "1OUu4FKsh_FxNO5GyZwO3dkq9wx_hOxIv";
+  const driveListEl = document.getElementById("drive-list");
+  let driveFiles = null;      // null = ainda não carregou
+  let driveError = "";
+  let driveLoading = false;
+  document.getElementById("drive-open").href = `https://drive.google.com/drive/folders/${DRIVE_FOLDER_ID}`;
+
+  async function loadDrive() {
+    if (driveLoading) return;
+    driveLoading = true;
+    driveError = "";
+    renderDrive();
+    const q = encodeURIComponent(`'${DRIVE_FOLDER_ID}' in parents and trashed = false`);
+    const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,size,mimeType)&orderBy=name&pageSize=500` +
+      `&supportsAllDrives=true&includeItemsFromAllDrives=true&key=${firebaseConfig.apiKey}`;
+    try {
+      const res = await fetch(url);
+      const json = await res.json();
+      if (!res.ok) throw new Error((json.error && json.error.message) || res.status);
+      driveFiles = (json.files || []).filter((f) => /^audio\//.test(f.mimeType) || /\.(wav|mp3|aiff?|flac|m4a)$/i.test(f.name));
+    } catch (err) {
+      console.warn("Drive", err);
+      driveError = "Não deu pra ler a pasta agora. Use “Abrir a pasta no Drive” e tente “Atualizar lista” daqui a pouco.";
+    }
+    driveLoading = false;
+    renderDrive();
+  }
+  document.getElementById("drive-refresh").addEventListener("click", loadDrive);
+
+  function trackUsingFile(fid) {
+    return Object.entries(tracks).find(([, t]) => t.audio && driveIdOf(t.audio) === fid);
+  }
+
+  function trackOptions() {
+    const demos = demoQueue();
+    const inProjects = Object.entries(tracks).filter(([, t]) => t.releaseId && releases[t.releaseId])
+      .sort((a, b) => releaseLabel(releases[a[1].releaseId]).localeCompare(releaseLabel(releases[b[1].releaseId])) || (a[1].ordem || 0) - (b[1].ordem || 0));
+    const opt = ([id, t]) => `<option value="${esc(id)}">${esc(t.titulo)}${t.audio && !t.audio.local ? " ♪" : ""}</option>`;
+    return `<optgroup label="Demos na fila">${demos.map(opt).join("")}</optgroup>` +
+      (inProjects.length ? `<optgroup label="Músicas em projetos">${inProjects.map(opt).join("")}</optgroup>` : "");
+  }
+
+  function renderDrive() {
+    document.getElementById("drive-count").textContent = driveFiles ? `(${driveFiles.length})` : "";
+    if (driveLoading && !driveFiles) { driveListEl.innerHTML = `<p class="empty">Carregando a pasta…</p>`; return; }
+    if (driveError) { driveListEl.innerHTML = `<p class="empty">${esc(driveError)}</p>`; return; }
+    if (!driveFiles) { driveListEl.innerHTML = ""; return; }
+    if (!driveFiles.length) { driveListEl.innerHTML = `<p class="empty">A pasta ainda não tem músicas.</p>`; return; }
+    const options = trackOptions();
+    driveListEl.innerHTML = driveFiles.map((f) => {
+      const used = trackUsingFile(f.id);
+      return `
+        <div class="row drive-row${used ? " is-linked" : ""}">
+          <span class="row-main">
+            <b>${esc(f.name)}</b>
+            <span>${f.size ? fmtSize(+f.size) : ""}${used ? ` · ligada a <b>${esc(used[1].titulo)}</b>` : " · ainda não está em nenhuma música"}</span>
+          </span>
+          ${used ? `<button type="button" class="play-btn${playingId === used[0] && !player.paused ? " is-playing" : ""}" data-play="${esc(used[0])}" aria-label="Tocar">${playingId === used[0] && !player.paused ? "❚❚" : "▶"}</button>` : ""}
+          <select class="demo-move" data-drive-link="${esc(f.id)}" aria-label="Ligar a uma música">
+            <option value="">${used ? "Trocar de música…" : "Ligar a uma música…"}</option>
+            <option value="__new">+ Criar demo nova com esse arquivo</option>
+            ${options}
+          </select>
+        </div>`;
+    }).join("");
+  }
+
+  function fileAudio(f) {
+    return { url: `https://drive.google.com/uc?export=download&id=${f.id}`, link: `https://drive.google.com/file/d/${f.id}/view`, nome: f.name, tamanho: +f.size || 0, origem: "drive" };
+  }
+
+  driveListEl.addEventListener("change", async (e) => {
+    const sel = e.target.closest("[data-drive-link]");
+    if (!sel || !sel.value) return;
+    const f = driveFiles.find((x) => x.id === sel.dataset.driveLink);
+    if (!f) return;
+    const changes = {};
+    // o arquivo sai da música onde estava
+    const prev = trackUsingFile(f.id);
+    if (prev && prev[0] !== sel.value) changes[prev[0]] = trackDoc(prev[0], { audio: { none: true } });
+    if (sel.value === "__new") {
+      changes[newId("t")] = { titulo: fileTitle(f.name), artista: "", releaseId: "", ordem: 0, link: "", obs: "", criado: new Date().toISOString(), audio: fileAudio(f) };
+      await writeTracks(changes, "Demo criada com o arquivo do Drive.");
+    } else {
+      changes[sel.value] = trackDoc(sel.value, { audio: fileAudio(f) });
+      await writeTracks(changes, `Ligada a ${tracks[sel.value].titulo}.`);
+    }
+  });
+  driveListEl.addEventListener("click", (e) => {
+    const play = e.target.closest("[data-play]");
+    if (!play) return;
+    const list = [...driveListEl.querySelectorAll("[data-play]")].map((b) => b.dataset.play);
+    togglePlay(play.dataset.play, list);
+  });
 
   /* ── service worker (habilita instalar como app) ──────── */
   if ("serviceWorker" in navigator) {
