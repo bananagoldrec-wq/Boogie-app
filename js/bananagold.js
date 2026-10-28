@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "17";
+  const BUILD = "18";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -1416,9 +1416,9 @@
     const on = playingId === id && !player.paused;
     const play = a ? `<button type="button" class="play-btn${on ? " is-playing" : ""}" data-play="${esc(id)}" aria-label="${on ? "Pausar" : "Tocar"}" title="${esc(a.nome || "áudio")}${a.local ? " (só neste aparelho)" : ""}">${on ? "❚❚" : "▶"}</button>` : "";
     if (!full) return play;
-    const down = a && a.url ? `<a class="audio-down" href="${esc(a.url)}" target="_blank" rel="noopener" download="${esc(a.nome || "demo.wav")}" title="Baixar ${esc(a.nome || "")}" aria-label="Baixar">⤓</a>` : "";
+    const down = a && a.url ? `<a class="audio-down" href="${esc(a.link || a.url)}" target="_blank" rel="noopener" download="${esc(a.nome || "demo.wav")}" title="${a.link ? "Abrir o link original" : `Baixar ${esc(a.nome || "")}`}" aria-label="Baixar">${a.link ? "↗" : "⤓"}</a>` : "";
     const local = a && a.local ? `<span class="audio-local" title="Esse áudio só está no aparelho de quem subiu">só aqui</span>` : "";
-    return `${play}${down}${local}<button type="button" class="wav-btn" data-pick-audio="${esc(id)}" title="${a ? "Trocar o áudio" : "Adicionar WAV"}">${a ? "trocar" : "+ WAV"}</button>`;
+    return `${play}${down}${local}<button type="button" class="wav-btn" data-pick-audio="${esc(id)}" title="${a ? "Trocar o áudio" : "Adicionar WAV"}">${a ? "trocar" : "+ WAV"}</button><button type="button" class="wav-btn wav-link" data-link-audio="${esc(id)}" title="Colar link do Google Drive ou Dropbox">🔗</button>`;
   }
 
   /* IndexedDB: áudio guardado só neste aparelho */
@@ -1584,7 +1584,7 @@
     plToggle.textContent = player.paused ? "▶" : "❚❚";
     plToggle.setAttribute("aria-label", player.paused ? "Tocar" : "Pausar");
     plDown.hidden = !(a.url || localUrls.has(playingId));
-    plDown.href = a.url || localUrls.get(playingId) || "#";
+    plDown.href = a.link || a.url || localUrls.get(playingId) || "#";
     plDown.download = a.nome || "demo.wav";
     const i = queue.indexOf(playingId);
     document.getElementById("pl-prev").disabled = i <= 0 && player.currentTime < 3;
@@ -1642,7 +1642,10 @@
     if (!seeking && player.duration) plSeek.value = String(Math.round((player.currentTime / player.duration) * 1000));
   });
   player.addEventListener("error", () => {
-    if (playingId) showToast("Falhou ao carregar o áudio — confere a conexão ou sobe o arquivo de novo.");
+    const a = playingId && tracks[playingId] && tracks[playingId].audio;
+    if (!a) return;
+    if (a.origem === "drive") showToast("O Drive não liberou o áudio: confere se está \"Qualquer pessoa com o link\". Arquivo acima de ~100 MB o Drive não deixa tocar aqui — use ↗ pra abrir.");
+    else showToast("Falhou ao carregar o áudio — confere a conexão ou sobe o arquivo de novo.");
   });
   plSeek.addEventListener("input", () => {
     seeking = true;
@@ -1670,7 +1673,46 @@
     } catch (err) {}
   }
 
+  /* Link do Google Drive / Dropbox no lugar do upload. Vira um endereço
+     que o player toca direto; o link original fica pra abrir/baixar.
+     Drive: o arquivo precisa estar em "Qualquer pessoa com o link"; acima
+     de ~100 MB o Drive mostra um aviso antes do download e não toca aqui. */
+  function audioFromLink(raw) {
+    const link = raw.trim();
+    let u;
+    try { u = new URL(link); } catch (err) { return null; }
+    const host = u.hostname.replace(/^www\./, "");
+    if (/(^|\.)drive\.google\.com$/.test(host) || host === "docs.google.com") {
+      const m = u.pathname.match(/\/d\/([\w-]{10,})/) || [null, u.searchParams.get("id")];
+      if (!m[1]) return null;
+      return { url: `https://drive.google.com/uc?export=download&id=${m[1]}`, link, nome: "Google Drive", origem: "drive" };
+    }
+    if (/(^|\.)dropbox\.com$/.test(host)) {
+      u.searchParams.delete("dl");
+      u.searchParams.set("raw", "1");
+      return { url: u.toString(), link, nome: decodeURIComponent(u.pathname.split("/").pop() || "Dropbox"), origem: "dropbox" };
+    }
+    if (/\.(wav|aiff?|mp3|flac|m4a|ogg)(\?|$)/i.test(u.pathname)) {
+      return { url: link, link, nome: decodeURIComponent(u.pathname.split("/").pop()), origem: "link" };
+    }
+    return null;
+  }
+
+  async function linkAudio(id) {
+    const t = tracks[id];
+    if (!t) return;
+    const raw = window.prompt(`Cole o link do WAV de "${t.titulo}" (Google Drive ou Dropbox).\nNo Drive, compartilhe como "Qualquer pessoa com o link".`, (t.audio && t.audio.link) || "");
+    if (raw == null || !raw.trim()) return;
+    const audio = audioFromLink(raw);
+    if (!audio) { showToast("Não reconheci esse link. Use um link de compartilhamento do Google Drive ou do Dropbox."); return; }
+    const old = t.audio;
+    await writeTracks({ [id]: trackDoc(id, { audio }) }, `Link salvo (${audio.nome}). Toque no ▶ pra ouvir.`);
+    if (old && (old.path || old.local)) removeAudioFile(id, old);
+  }
+
   function onAudioClick(e) {
+    const linkBtn = e.target.closest("[data-link-audio]");
+    if (linkBtn) { e.stopPropagation(); linkAudio(linkBtn.dataset.linkAudio); return true; }
     const play = e.target.closest("[data-play]");
     if (play) {
       e.stopPropagation();

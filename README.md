@@ -290,6 +290,13 @@ não estiver ligado, o áudio fica guardado só no aparelho de quem subiu
 (aparece "só aqui"); depois de ligar, é só tocar em "trocar" e escolher o
 arquivo de novo pra subir pra nuvem.
 
+Sem Storage (ou enquanto ele não funciona), cada música tem 🔗 pra colar um
+link do **Google Drive** ou do **Dropbox**: o app converte pro endereço de
+download e toca no mesmo player; ↗ abre o original. No Drive o arquivo tem
+que estar em "Qualquer pessoa com o link", e acima de ~100 MB o Drive mostra
+um aviso antes do download e não toca dentro do app (Dropbox não tem esse
+limite).
+
 Pra ligar, no console do Firebase, projeto **frisson-agenda**:
 
 1. **Criação → Storage → Primeiros passos.** Projetos novos pedem o plano
