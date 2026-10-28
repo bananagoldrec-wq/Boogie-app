@@ -751,3 +751,31 @@ body.has-player .toast { bottom: calc(110px + env(safe-area-inset-bottom)); }
   body.has-player .toast { bottom: calc(140px + env(safe-area-inset-bottom)); }
 }
 .wav-link { padding: 5px 7px; font-size: 0.85rem; }
+
+/* ── aba Drive ──────────────────────────────────────────── */
+.drive-head {
+  border: var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.drive-head .section-title { margin: 0; }
+.drive-head .btn { text-decoration: none; }
+.drive-row { border-left-width: 2px; gap: 10px; }
+.drive-row.is-linked { border-left: 8px solid var(--ink); }
+.drive-row .row-main span b { font-weight: 900; color: var(--ink); }
+.drive-row .demo-move { max-width: 46%; }
+@media (max-width: 720px) {
+  .tab { font-size: 0.74rem; padding: 11px 2px; letter-spacing: 0; }
+  .drive-row { flex-wrap: wrap; }
+  .drive-row .row-main { flex-basis: calc(100% - 50px); }
+  .drive-row .demo-move { flex: 1 1 100%; max-width: none; }
+}
+.demo-move { min-width: 0; }
+@media (max-width: 720px) {
+  .drive-row .demo-move, .demo-row .demo-move { width: 100%; }
+}

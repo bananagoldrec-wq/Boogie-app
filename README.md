@@ -297,6 +297,13 @@ que estar em "Qualquer pessoa com o link", e acima de ~100 MB o Drive mostra
 um aviso antes do download e não toca dentro do app (Dropbox não tem esse
 limite).
 
+**Aba Drive:** botão pra abrir a pasta **MUSICAS BANANA** no Google Drive e a
+lista dos áudios que estão nela (lida pela Drive API com a chave do app — a
+pasta precisa estar em "Qualquer pessoa com o link" e a chave com a Google
+Drive API liberada). Cada arquivo tem "Ligar a uma música…" (demo da fila ou
+música de projeto) ou "+ Criar demo nova com esse arquivo"; ligar um arquivo
+a outra música tira ele da anterior.
+
 Pra ligar, no console do Firebase, projeto **frisson-agenda**:
 
 1. **Criação → Storage → Primeiros passos.** Projetos novos pedem o plano
