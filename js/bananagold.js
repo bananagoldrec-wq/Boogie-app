@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "28";
+  const BUILD = "29";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -983,6 +983,7 @@
     window.scrollTo(0, 0);
   }
   document.getElementById("home-btn").addEventListener("click", () => setTab("home"));
+  document.getElementById("back-btn").addEventListener("click", () => setTab("home"));
   tabs.forEach((t) => t.addEventListener("click", () => setTab(t.dataset.tab)));
 
   /* ── painéis ───────────────────────────────────────────── */

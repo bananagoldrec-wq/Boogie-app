@@ -828,3 +828,23 @@ body.at-home .player-bar { position: fixed; }
   .brand-logo { height: 16px; }
   body.at-home .tab { font-size: 1.05rem; padding: 18px 12px; }
 }
+
+/* dentro das partes: sem abas, só "Voltar" */
+body:not(.at-home) .tabs { display: none; }
+.topbar { position: sticky; justify-content: center; }
+.back-btn {
+  position: absolute;
+  left: max(12px, env(safe-area-inset-left));
+  top: 50%;
+  transform: translateY(-50%);
+  margin-top: calc(env(safe-area-inset-top) / 2);
+  font-weight: 900;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 8px 6px;
+}
+.back-btn:hover { text-decoration: underline; }
+@media (max-width: 720px) {
+  .topbar { justify-content: flex-end; padding-right: 16px; }
+}
