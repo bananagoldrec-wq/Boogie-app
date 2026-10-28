@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "19";
+  const BUILD = "20";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -397,11 +397,13 @@
   /* WAVs da pasta "MUSICAS BANANA" no Google Drive (id do arquivo).
      Precisam estar compartilhados como "Qualquer pessoa com o link". */
   const SEED_DEMO_AUDIO = {
-    "Marcos Tocae Edit": ["1CPBRLgUvZ0bMQwXHpNrbbIsfkEKKdKlP", "MARCOS TOCAE - MANDELAR v2.wav", 60939544],
-    "Ítalo Airplane": ["1INxU8b6Obx_pE05K4FY7RFv0rAUnm9HB", "italo beno airplane no vocals.wav", 45750276],
+    "Marcos Tocae Edit": ["1d36JPOrsiFPmV2uZb9KpYuawggcjEiI3", "MARCOS TOCAE - MANDELAR v2.wav", 60939544],
+    "Ítalo Airplane": ["1cgMouUc0gXicPmoczE3-8zOvLHW7XYkA", "italo airplane.mp3", 10374791],
   };
+  // arquivos que saíram do Drive: um link salvo pra eles cede lugar ao novo
+  const RETIRED_DRIVE_IDS = ["1CPBRLgUvZ0bMQwXHpNrbbIsfkEKKdKlP", "1INxU8b6Obx_pE05K4FY7RFv0rAUnm9HB"];
   function driveAudio([fid, nome, tamanho]) {
-    return { url: `https://drive.google.com/uc?export=download&id=${fid}`, link: `https://drive.google.com/file/d/${fid}/view`, nome, tamanho, origem: "drive" };
+    return { url: `https://drive.google.com/uc?export=download&id=${fid}`, link: `https://drive.google.com/file/d/${fid}/view`, nome, tamanho, origem: "drive", seed: true };
   }
 
   const SEED_DEMOS = [
@@ -428,7 +430,8 @@
         const base = next[id];
         next[id] = { ...(base || {}), ...t };
         // áudio do Drive vale mais que um "só neste aparelho" ou que nada
-        if (base && base.audio && (!t.audio || t.audio.local)) next[id].audio = base.audio;
+        const stale = t.audio && (t.audio.local || t.audio.seed || RETIRED_DRIVE_IDS.some((fid) => (t.audio.url || "").includes(fid)));
+        if (base && base.audio && (!t.audio || stale)) next[id].audio = base.audio;
       }
     });
     tracks = next;
