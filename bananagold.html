@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-build="27">
+<html lang="pt-BR" data-build="28">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -19,44 +19,32 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/bananagold.css?v=14" />
+  <link rel="stylesheet" href="css/bananagold.css?v=15" />
 </head>
 <body>
 
   <header class="topbar">
-    <img class="brand-logo" src="img/bananagold-logo-wide.png" alt="Banana Gold Records" />
-    <div class="topbar-spacer"></div>
-    <a id="open-sheet" class="icon-btn" href="#" target="_blank" rel="noopener" aria-label="Abrir planilha da equipe" title="Abrir planilha da equipe (Google Sheets)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M4 9h16M4 15h16M10 9v12"/></svg>
-    </a>
-    <button id="export-ics" class="icon-btn" type="button" aria-label="Exportar calendário (.ics)" title="Exportar calendário pro Google Agenda (.ics)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="1.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
-    </button>
-    <button id="export-csv" class="icon-btn" type="button" aria-label="Exportar catálogo em CSV" title="Exportar catálogo (CSV)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0-4-4m4 4 4-4M4 19h16"/></svg>
-    </button>
-    <button id="logout-btn" class="icon-btn" type="button" aria-label="Sair" title="Sair">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5M20 12H9M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/></svg>
+    <button id="home-btn" class="brand-btn" type="button" aria-label="Início">
+      <img class="brand-logo" src="img/bananagold-logo-wide.png" alt="Banana Gold Records" />
     </button>
   </header>
 
+  <!-- Início: só o logo e as quatro partes -->
+  <div class="home-logo" aria-hidden="true">
+    <img src="img/bananagold-logo-box.png" alt="" />
+  </div>
+
   <nav class="tabs" role="tablist">
-    <button class="tab is-active" type="button" data-tab="catalogo" role="tab">Séries</button>
+    <button class="tab" type="button" data-tab="catalogo" role="tab">Séries</button>
     <button class="tab" type="button" data-tab="calendario" role="tab">Calendário</button>
     <button class="tab" type="button" data-tab="demos" role="tab">Demos</button>
     <button class="tab" type="button" data-tab="drive" role="tab">Drive</button>
   </nav>
+  <button id="logout-btn" class="home-logout link-btn" type="button">sair</button>
 
   <!-- Séries / catálogo -->
-  <main id="view-catalogo" class="view">
+  <main id="view-catalogo" class="view" hidden>
     <div id="series-list" class="series-list"></div>
-    <div class="legend">
-      <span><i class="sq sq-lancado"></i>Lançado</span>
-      <span><i class="sq sq-agendado"></i>Agendado</span>
-      <span><i class="sq sq-producao"></i>Em produção</span>
-      <span><i class="sq sq-planejado"></i>Planejado</span>
-      <span class="hint">toque na barra pra abrir a série · no número pra abrir o volume</span>
-    </div>
   </main>
 
   <!-- Calendário -->
@@ -74,24 +62,13 @@
       </div>
       <div id="cal-grid" class="cal-grid"></div>
     </section>
-    <div class="legend">
-      <span><i class="dot dot-release"></i>Lançamento das séries</span>
-      <span><i class="dot dot-geral"></i>Outros lançamentos</span>
-      <span><i class="dot dot-task"></i>Tarefa da equipe</span>
-      <span><i class="dot dot-done"></i>Tarefa feita</span>
-      <span><i class="sw sw-friday"></i>Sexta (dia de lançamento)</span>
-      <span><i class="sw sw-holiday"></i>Feriado</span>
-      <span class="hint">toque num dia pra ver ou marcar tarefas</span>
-    </div>
   </main>
 
   <!-- Drive: pasta das músicas -->
   <main id="view-drive" class="view" hidden>
     <section class="drive-head">
-      <h2 class="section-title">Pasta das músicas</h2>
-      <p>Suba os arquivos (MP3 ou WAV) na pasta <b>MUSICAS BANANA</b> do Google Drive. Tudo que entra nela já fica liberado pro app tocar.</p>
       <div class="panel-actions">
-        <a id="drive-open" class="btn btn-primary" href="#" target="_blank" rel="noopener">Abrir a pasta no Drive ↗</a>
+        <a id="drive-open" class="btn" href="#" target="_blank" rel="noopener">Abrir no Drive ↗</a>
         <button id="drive-refresh" class="btn" type="button">Atualizar lista</button>
       </div>
       <div class="drive-upload-box">
@@ -101,7 +78,6 @@
         <button id="drive-disconnect" class="link-btn" type="button" hidden>sair do Google</button>
       </div>
       <div id="drive-uploads" class="list"></div>
-      <p class="hint">No celular abre o app do Drive: toque no <b>+</b> e em <b>Fazer upload</b>. Depois volte aqui e toque em “Atualizar lista”.</p>
     </section>
     <section>
       <h2 class="section-title">Arquivos na pasta <span id="drive-count" class="muted"></span></h2>
@@ -141,7 +117,6 @@
     </div>
 
     <input id="audio-input" type="file" accept=".wav,audio/wav,audio/x-wav,audio/*" hidden />
-    <p class="hint drop-hint">Dá pra arrastar WAVs aqui pra criar uma demo por arquivo.</p>
 
     <section>
       <h2 class="section-title">Demos na fila <span id="demo-count" class="muted"></span></h2>
@@ -364,6 +339,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/bananagold.js?v=27"></script>
+  <script src="js/bananagold.js?v=28"></script>
 </body>
 </html>

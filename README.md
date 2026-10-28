@@ -6,7 +6,11 @@ agenda do Frisson — abre em `beno.html`.
 
 ## Como funciona
 
-**Três abas:**
+**Tela inicial:** só o logo e quatro botões — Séries, Calendário, Demos e
+Drive (e um "sair" discreto). Dentro de cada parte o topo tem só o logo
+(toque = volta pro início) e as abas pra trocar de parte.
+
+**Partes:**
 
 - **Negociações** — funil em colunas (A contatar → Contatado → Conversando →
   Proposta enviada → Fechado → Já tocou → Recusado). Arraste o card entre
