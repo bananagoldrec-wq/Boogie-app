@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "20";
+  const BUILD = "21";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -1613,16 +1613,42 @@
     }
   }
 
+  /* Endereços pra tentar, em ordem. Drive: a API oficial (não tem a tela
+     de aviso de arquivo grande; precisa da Google Drive API ligada no
+     projeto) e depois os dois endereços de download direto. */
+  let srcList = [];
+  let srcIdx = 0;
+  function driveIdOf(a) {
+    const m = `${a.url || ""} ${a.link || ""}`.match(/(?:id=|\/d\/)([\w-]{10,})/);
+    return m && m[1];
+  }
+  function audioSources(id, a) {
+    if (a.origem === "drive") {
+      const fid = driveIdOf(a);
+      if (fid) {
+        return [
+          `https://www.googleapis.com/drive/v3/files/${fid}?alt=media&key=${firebaseConfig.apiKey}`,
+          `https://drive.usercontent.google.com/download?id=${fid}&export=download&confirm=t`,
+          `https://drive.google.com/uc?export=download&id=${fid}`,
+        ];
+      }
+    }
+    const one = a.url || localUrls.get(id);
+    return one ? [one] : [];
+  }
+
   function playTrack(id) {
     const t = tracks[id];
     const a = t && t.audio;
     if (!a) return;
-    const src = a.url || localUrls.get(id);
+    srcList = audioSources(id, a);
+    srcIdx = 0;
+    const src = srcList[0];
     if (!src) {
       if (a.local) { preloadLocal(id); showToast("Esse áudio só está no aparelho de quem subiu."); }
       return;
     }
-    if (player.src !== src) player.src = src;
+    if (playingId !== id || !srcList.includes(player.src)) player.src = src;
     playingId = id;
     player.play().catch((err) => {
       console.warn(err);
@@ -1663,7 +1689,14 @@
   player.addEventListener("error", () => {
     const a = playingId && tracks[playingId] && tracks[playingId].audio;
     if (!a) return;
-    if (a.origem === "drive") showToast("O Drive não liberou o áudio: confere se está \"Qualquer pessoa com o link\". Arquivo acima de ~100 MB o Drive não deixa tocar aqui — use ↗ pra abrir.");
+    // tenta o próximo endereço antes de desistir
+    if (srcIdx < srcList.length - 1) {
+      srcIdx += 1;
+      player.src = srcList[srcIdx];
+      player.play().catch(() => {});
+      return;
+    }
+    if (a.origem === "drive") showToast("O Drive não entregou o áudio. Confere se o arquivo está como \"Qualquer pessoa com o link\" e se a Google Drive API está ativada no projeto. Enquanto isso, ↗ abre no Drive.");
     else showToast("Falhou ao carregar o áudio — confere a conexão ou sobe o arquivo de novo.");
   });
   plSeek.addEventListener("input", () => {
