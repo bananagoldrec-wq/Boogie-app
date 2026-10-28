@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "29";
+  const BUILD = "30";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -1423,7 +1423,7 @@
   }
   function syncFileLabel() {
     const n = dFile.files.length;
-    dFileLabel.textContent = n ? (n === 1 ? `♪ ${dFile.files[0].name}` : `♪ ${n} arquivos`) : "♪ WAV";
+    dFileLabel.textContent = n ? (n === 1 ? dFile.files[0].name : `${n} arquivos`) : "Áudio";
     dFileLabel.closest(".file-btn").classList.toggle("has-file", !!n);
     if (n === 1 && !dTitulo.value.trim()) dTitulo.placeholder = fileTitle(dFile.files[0].name);
     if (!n) dTitulo.placeholder = "Nome da música";
@@ -1439,7 +1439,7 @@
     if (!full) return play;
     const down = a && a.url ? `<a class="audio-down" href="${esc(a.link || a.url)}" target="_blank" rel="noopener" download="${esc(a.nome || "demo.wav")}" title="${a.link ? "Abrir o link original" : `Baixar ${esc(a.nome || "")}`}" aria-label="Baixar">${a.link ? "↗" : "⤓"}</a>` : "";
     const local = a && a.local ? `<span class="audio-local" title="Esse áudio só está no aparelho de quem subiu">só aqui</span>` : "";
-    return `${play}${down}${local}<button type="button" class="wav-btn" data-pick-audio="${esc(id)}" title="${a ? "Trocar o áudio" : "Adicionar WAV"}">${a ? "trocar" : "+ WAV"}</button><button type="button" class="wav-btn wav-link" data-link-audio="${esc(id)}" title="Colar link do Google Drive ou Dropbox">🔗</button>`;
+    return `${play}${down}${local}<button type="button" class="wav-btn" data-pick-audio="${esc(id)}" title="${a ? "Trocar o áudio" : "Adicionar WAV"}">${a ? "trocar áudio" : "áudio"}</button><button type="button" class="wav-btn wav-link" data-link-audio="${esc(id)}" title="Colar link do Google Drive ou Dropbox">link</button>`;
   }
 
   /* IndexedDB: áudio guardado só neste aparelho */
