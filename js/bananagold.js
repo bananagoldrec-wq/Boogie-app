@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "27";
+  const BUILD = "28";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -701,11 +701,7 @@
   }
 
   function renderSeries() {
-    const allOpen = SERIES.every((s) => openSeries.has(s.id));
-    seriesListEl.innerHTML = `
-      <div class="series-tools">
-        <button class="link-btn" type="button" data-toggle-all>${allOpen ? "Recolher tudo" : "Abrir tudo"}</button>
-      </div>` + SERIES.map((s) => {
+    seriesListEl.innerHTML = SERIES.map((s) => {
       const list = seriesReleases(s.id);
       return s.geral ? catalogSection(s, list) : seriesSection(s, list);
     }).join("");
@@ -731,7 +727,6 @@
         <span class="chevron" aria-hidden="true">${open ? "▾" : "▸"}</span>
         <span class="bar-main">
           <span class="bar-title">${esc(s.nome)}</span>
-          <span class="bar-summary">${summary}</span>
         </span>
         ${dots}
         <button class="btn btn-small btn-dark bar-add" type="button" data-add-vol="${s.id}">${addLabel}</button>
@@ -977,14 +972,17 @@
 
   /* ── abas ──────────────────────────────────────────────── */
   const tabs = document.querySelectorAll(".tab");
+  /* name "home" = tela inicial: só o logo e as quatro partes */
   function setTab(name) {
+    document.body.classList.toggle("at-home", name === "home");
     tabs.forEach((t) => t.classList.toggle("is-active", t.dataset.tab === name));
     ["catalogo", "calendario", "demos", "drive"].forEach((v) => {
       document.getElementById(`view-${v}`).hidden = v !== name;
     });
     if (name === "drive") loadDrive();
-    try { localStorage.setItem(TAB_KEY, name); } catch (err) {}
+    window.scrollTo(0, 0);
   }
+  document.getElementById("home-btn").addEventListener("click", () => setTab("home"));
   tabs.forEach((t) => t.addEventListener("click", () => setTab(t.dataset.tab)));
 
   /* ── painéis ───────────────────────────────────────────── */
@@ -2034,9 +2032,9 @@
     return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   }
 
-  document.getElementById("open-sheet").href = SHEET_URL;
 
-  document.getElementById("export-csv").addEventListener("click", () => {
+
+  document.getElementById("export-csv")?.addEventListener("click", () => {
     const head = ["Série", "Volume", "Título", "Artistas", "Formato", "Status", "Data", "Dia confirmado", "Plataforma", "Sub label", "Responsável", "Capa", "Contrato", "Checklist", "Bandcamp", "SoundCloud", "Observações"];
     const rows = SERIES.flatMap((s) => seriesReleases(s.id).map(([, r]) => [
       s.nome, r.vol, r.titulo, r.artistas, r.formato, STATUS_NAME[r.status], r.data ? formatBr(r.data) : "",
@@ -2050,7 +2048,7 @@
     return String(s ?? "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/[,;]/g, (c) => `\\${c}`);
   }
 
-  document.getElementById("export-ics").addEventListener("click", () => {
+  document.getElementById("export-ics")?.addEventListener("click", () => {
     const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
     const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Banana Gold Records//Lancamentos//PT", "CALSCALE:GREGORIAN", "X-WR-CALNAME:Banana Gold · lançamentos"];
     const event = (uid, key, summary, desc) => {
@@ -2345,8 +2343,7 @@
   function renderDriveAuth() {
     const on = driveConnected();
     driveUpBtn.textContent = !GOOGLE_CLIENT_ID ? "Subir músicas (falta configurar)" : on ? "↑ Subir músicas" : "Entrar com Google pra subir";
-    driveStatus.textContent = !GOOGLE_CLIENT_ID ? "O envio pelo app ainda não está configurado."
-      : on ? "Conectado ao Google neste aparelho." : "Pra subir pelo app, entre com a conta Google que tem acesso de editor à pasta.";
+    driveStatus.textContent = on ? "conectado ao Google" : "";
     document.getElementById("drive-disconnect").hidden = !on;
   }
 
@@ -2435,10 +2432,7 @@
   }
 
   /* ── init ──────────────────────────────────────────────── */
-  try {
-    const saved = localStorage.getItem(TAB_KEY);
-    if (saved && document.getElementById(`view-${saved}`)) setTab(saved);
-  } catch (err) {}
+  setTab("home");
   rebuildReleases();
   renderCalendar();
   if (isUnlocked()) startApp();

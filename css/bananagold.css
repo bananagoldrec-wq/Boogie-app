@@ -782,3 +782,49 @@ body.has-player .toast { bottom: calc(110px + env(safe-area-inset-bottom)); }
 .drive-upload-box { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; border-top: var(--line-thin); padding-top: 12px; }
 .drive-up.is-error { border-color: var(--late); }
 .drive-up.is-error .row-main span { color: var(--late); }
+
+/* ── minimalista: topo só com o logo + tela inicial ──────── */
+.brand-btn { padding: 0; display: block; }
+.brand-btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+.topbar { justify-content: center; padding-top: calc(14px + env(safe-area-inset-top)); padding-bottom: 14px; }
+.brand-logo { height: 22px; }
+.home-logo, .home-logout { display: none; }
+
+body.at-home { padding-bottom: 0; min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; }
+body.at-home .topbar { display: none; }
+body.at-home .home-logo {
+  display: block;
+  width: min(420px, calc(100% - 48px));
+  margin: 0 auto 36px;
+}
+body.at-home .home-logo img { width: 100%; height: auto; display: block; }
+body.at-home .tabs {
+  flex-direction: column;
+  width: min(420px, calc(100% - 48px));
+  margin: 0 auto;
+  border: none;
+  gap: 12px;
+  overflow: visible;
+}
+body.at-home .tab {
+  border: var(--line);
+  border-radius: var(--radius);
+  padding: 20px 12px;
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  background: transparent;
+  color: var(--ink);
+}
+body.at-home .tab + .tab { border-left: var(--line); }
+body.at-home .tab:hover, body.at-home .tab:active { background: var(--ink); color: var(--green); }
+body.at-home .home-logout {
+  display: block;
+  margin: 28px auto calc(20px + env(safe-area-inset-bottom));
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+body.at-home .player-bar { position: fixed; }
+@media (max-width: 720px) {
+  .brand-logo { height: 16px; }
+  body.at-home .tab { font-size: 1.05rem; padding: 18px 12px; }
+}
