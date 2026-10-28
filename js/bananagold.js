@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "26";
+  const BUILD = "27";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -1490,6 +1490,7 @@
       try {
         const up = await uploadToDrive(file, (pct) => setProgress(id, pct));
         delete uploads[id];
+        addUploadedFile(up, file);
         await writeTracks({ [id]: trackDoc(id, { audio: fileAudio(up) }) }, `Áudio salvo no Drive (${fmtSize(file.size)}).`);
         if (old && (old.path || old.local)) removeAudioFile(id, old);
         if (driveFiles) loadDrive();
@@ -2247,27 +2248,47 @@
   let driveLoading = false;
   document.getElementById("drive-open").href = `https://drive.google.com/drive/folders/${DRIVE_FOLDER_ID}`;
 
-  async function loadDrive() {
+  const driveRefreshBtn = document.getElementById("drive-refresh");
+
+  async function loadDrive(manual) {
     if (driveLoading) return;
     driveLoading = true;
     driveError = "";
+    driveRefreshBtn.textContent = "Atualizando…";
+    driveRefreshBtn.disabled = true;
     renderDrive();
     const q = encodeURIComponent(`'${DRIVE_FOLDER_ID}' in parents and trashed = false`);
+    // com login do Google usa a conta (lista na hora o que acabou de subir);
+    // sem login, a chave pública do app
+    const auth = driveConnected();
     const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,size,mimeType)&orderBy=name&pageSize=500` +
-      `&supportsAllDrives=true&includeItemsFromAllDrives=true&key=${firebaseConfig.apiKey}`;
+      `&supportsAllDrives=true&includeItemsFromAllDrives=true${auth ? "" : `&key=${firebaseConfig.apiKey}`}&_=${Date.now()}`;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: "no-store", signal: ctrl.signal, headers: auth ? { Authorization: `Bearer ${gToken}` } : {} });
       const json = await res.json();
+      if (res.status === 401 && auth) driveDisconnect();
       if (!res.ok) throw new Error((json.error && json.error.message) || res.status);
-      driveFiles = (json.files || []).filter((f) => /^audio\//.test(f.mimeType) || /\.(wav|mp3|aiff?|flac|m4a)$/i.test(f.name));
+      const fresh = (json.files || []).filter((f) => /^audio\//.test(f.mimeType) || /\.(wav|mp3|aiff?|flac|m4a)$/i.test(f.name));
+      // o que acabou de subir pelo app fica na lista mesmo que a busca ainda não mostre
+      (driveFiles || []).filter((f) => f.justUploaded && !fresh.some((x) => x.id === f.id)).forEach((f) => fresh.push(f));
+      driveFiles = fresh;
+      if (manual) showToast(`Lista atualizada: ${driveFiles.length} arquivo${driveFiles.length === 1 ? "" : "s"}.`);
     } catch (err) {
       console.warn("Drive", err);
-      driveError = "Não deu pra ler a pasta agora. Use “Abrir a pasta no Drive” e tente “Atualizar lista” daqui a pouco.";
+      driveError = ctrl.signal.aborted ? "O Drive demorou demais pra responder. Tente “Atualizar lista” de novo."
+        : "Não deu pra ler a pasta agora. Use “Abrir a pasta no Drive” e tente “Atualizar lista” daqui a pouco.";
+      if (manual) showToast(driveError);
+    } finally {
+      clearTimeout(timer);
+      driveLoading = false;
+      driveRefreshBtn.textContent = "Atualizar lista";
+      driveRefreshBtn.disabled = false;
+      renderDrive();
     }
-    driveLoading = false;
-    renderDrive();
   }
-  document.getElementById("drive-refresh").addEventListener("click", loadDrive);
+  driveRefreshBtn.addEventListener("click", () => loadDrive(true));
 
   const driveUpBtn = document.getElementById("drive-upload");
   const driveUpInput = document.getElementById("drive-upload-input");
@@ -2293,6 +2314,7 @@
       try {
         const up = await uploadToDrive(f, (pct) => { item.pct = pct; renderDriveUploads(); });
         item.pct = 100;
+        addUploadedFile(up, f);
         // nome do arquivo igual ao de uma demo sem áudio: já liga
         const alvo = Object.entries(tracks).find(([, t]) => !t.audio && t.titulo.toLowerCase() === fileTitle(f.name).toLowerCase());
         if (alvo) await writeTracks({ [alvo[0]]: trackDoc(alvo[0], { audio: fileAudio(up) }) }, `${f.name} subiu e foi ligado a ${alvo[1].titulo}.`);
@@ -2326,6 +2348,15 @@
     driveStatus.textContent = !GOOGLE_CLIENT_ID ? "O envio pelo app ainda não está configurado."
       : on ? "Conectado ao Google neste aparelho." : "Pra subir pelo app, entre com a conta Google que tem acesso de editor à pasta.";
     document.getElementById("drive-disconnect").hidden = !on;
+  }
+
+  function addUploadedFile(up, file) {
+    if (!driveFiles) driveFiles = [];
+    if (!driveFiles.some((x) => x.id === up.id)) {
+      driveFiles.push({ id: up.id, name: up.name || file.name, size: up.size || String(file.size), mimeType: up.mimeType || file.type, justUploaded: true });
+      driveFiles.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+    }
+    renderDrive();
   }
 
   function trackUsingFile(fid) {
