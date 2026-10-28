@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "22";
+  const BUILD = "23";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -194,8 +194,6 @@
       obs: "Pequeno tributo à lenda do jazz-funk e do neo-soul.",
       fonte: "Bandcamp: released April 18, 2025.",
     }),
-    seed("tributes", 2, { titulo: "Djavan Tribute" }),
-    seed("tributes", 3, { titulo: "Jorge Ben Tribute" }),
   ];
 
   /* Catálogo geral (fora das séries). [slug, título, artistas, data,
