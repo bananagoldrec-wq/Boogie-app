@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "25";
+  const BUILD = "26";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -2120,7 +2120,7 @@
      um Drive compartilhado — o "drive.file" não deixa gravar dentro dela.
      O Client ID é público por natureza (fica no código de qualquer site).
      Vazio = recurso desligado e os botões explicam o que falta. */
-  const GOOGLE_CLIENT_ID = "";
+  const GOOGLE_CLIENT_ID = "28732138318-3gji71rf7b2h4uibpetj66al3jnv8hat.apps.googleusercontent.com";
   const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive";
   const GTOKEN_KEY = "bg_gtoken_v1";
   let gToken = "", gTokenExp = 0, gisClient = null, gisLoading = null, gisWaiter = null;
