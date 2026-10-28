@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "24";
+  const BUILD = "25";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -1486,6 +1486,22 @@
     setProgress(id, 0);
     renderAll();
     let audio;
+    if (GOOGLE_CLIENT_ID && driveConnected()) {
+      try {
+        const up = await uploadToDrive(file, (pct) => setProgress(id, pct));
+        delete uploads[id];
+        await writeTracks({ [id]: trackDoc(id, { audio: fileAudio(up) }) }, `Áudio salvo no Drive (${fmtSize(file.size)}).`);
+        if (old && (old.path || old.local)) removeAudioFile(id, old);
+        if (driveFiles) loadDrive();
+        return;
+      } catch (err) {
+        console.warn(err);
+        delete uploads[id];
+        renderAll();
+        showToast(`Não subiu pro Drive: ${driveErrMsg(err)}.`);
+        return;
+      }
+    }
     try {
       const { mod, st } = await storage();
       const path = `bg_demos/${id}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
@@ -1776,7 +1792,14 @@
       return true;
     }
     const pick = e.target.closest("[data-pick-audio]");
-    if (pick) { audioFor = pick.dataset.pickAudio; audioInput.value = ""; audioInput.click(); return true; }
+    if (pick) {
+      // com o Google configurado o "+ WAV" sobe pro Drive; sem login, o toque abre o login
+      if (GOOGLE_CLIENT_ID && !driveConnected()) {
+        connectDrive().then((ok) => { if (ok) showToast("Conectado. Toque em + WAV de novo pra escolher o arquivo."); });
+        return true;
+      }
+      audioFor = pick.dataset.pickAudio; audioInput.value = ""; audioInput.click(); return true;
+    }
     return false;
   }
   audioInput.addEventListener("change", () => {
@@ -2059,6 +2082,7 @@
     loadLocal();
     renderAll();
     connectFirebase();
+    loadGis();
     setTimeout(() => { if (!cloudReady) goLocal("timeout"); }, 15000);
   }
 
@@ -2088,6 +2112,128 @@
     el.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => (el.hidden = true), 2800);
+  }
+
+  /* ── subir pro Drive com a conta Google de quem está usando ──
+     Login pelo Google Identity Services (token de ~1 h, guardado no
+     aparelho até vencer). Escopo "drive" porque a pasta já existe e é de
+     um Drive compartilhado — o "drive.file" não deixa gravar dentro dela.
+     O Client ID é público por natureza (fica no código de qualquer site).
+     Vazio = recurso desligado e os botões explicam o que falta. */
+  const GOOGLE_CLIENT_ID = "";
+  const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive";
+  const GTOKEN_KEY = "bg_gtoken_v1";
+  let gToken = "", gTokenExp = 0, gisClient = null, gisLoading = null, gisWaiter = null;
+  try {
+    const saved = JSON.parse(localStorage.getItem(GTOKEN_KEY) || "null");
+    if (saved && saved.exp > Date.now() + 60000) { gToken = saved.t; gTokenExp = saved.exp; }
+  } catch (err) {}
+
+  function driveConnected() { return !!gToken && Date.now() < gTokenExp - 60000; }
+
+  // carrega o script do Google cedo: o popup de login só abre se for
+  // pedido direto no toque, sem esperar download
+  function loadGis() {
+    if (!GOOGLE_CLIENT_ID) return Promise.resolve(false);
+    if (gisLoading) return gisLoading;
+    gisLoading = new Promise((resolve) => {
+      const s2 = document.createElement("script");
+      s2.src = "https://accounts.google.com/gsi/client";
+      s2.async = true;
+      s2.onload = () => {
+        gisClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: DRIVE_SCOPE,
+          callback: (resp) => {
+            const w = gisWaiter; gisWaiter = null;
+            if (!resp || resp.error || !resp.access_token) {
+              showToast(`O Google não liberou o acesso (${(resp && resp.error) || "sem token"}).`);
+              if (w) w(false);
+              return;
+            }
+            gToken = resp.access_token;
+            gTokenExp = Date.now() + (Number(resp.expires_in) || 3600) * 1000;
+            try { localStorage.setItem(GTOKEN_KEY, JSON.stringify({ t: gToken, exp: gTokenExp })); } catch (err) {}
+            renderDrive();
+            if (w) w(true);
+          },
+          error_callback: (err) => {
+            const w = gisWaiter; gisWaiter = null;
+            showToast(`Login do Google não concluído (${(err && err.type) || "erro"}).`);
+            if (w) w(false);
+          },
+        });
+        resolve(true);
+      };
+      s2.onerror = () => resolve(false);
+      document.head.appendChild(s2);
+    });
+    return gisLoading;
+  }
+
+  /* Chamar direto dentro de um toque (abre o popup do Google). */
+  function connectDrive() {
+    if (!GOOGLE_CLIENT_ID) {
+      showToast("O envio pro Drive ainda não foi configurado (falta o Client ID do Google).");
+      return Promise.resolve(false);
+    }
+    if (!gisClient) {
+      loadGis();
+      showToast("Preparando o login do Google… toque de novo em 1 segundo.");
+      return Promise.resolve(false);
+    }
+    return new Promise((resolve) => {
+      gisWaiter = resolve;
+      gisClient.requestAccessToken({ prompt: driveConnected() ? "" : "select_account" });
+    });
+  }
+
+  function driveDisconnect() {
+    try { if (gToken && window.google) window.google.accounts.oauth2.revoke(gToken, () => {}); } catch (err) {}
+    gToken = ""; gTokenExp = 0;
+    try { localStorage.removeItem(GTOKEN_KEY); } catch (err) {}
+    renderDrive();
+  }
+
+  /* Upload resumível (aguenta WAV grande) com progresso. */
+  async function uploadToDrive(file, onProgress) {
+    const meta = { name: file.name, parents: [DRIVE_FOLDER_ID], mimeType: file.type || "audio/wav" };
+    const start = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true&fields=id,name,size,mimeType", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${gToken}`,
+        "Content-Type": "application/json; charset=UTF-8",
+        "X-Upload-Content-Type": meta.mimeType,
+        "X-Upload-Content-Length": String(file.size),
+      },
+      body: JSON.stringify(meta),
+    });
+    if (start.status === 401) { driveDisconnect(); throw new Error("login vencido"); }
+    if (!start.ok) {
+      const j = await start.json().catch(() => ({}));
+      throw new Error((j.error && j.error.message) || `erro ${start.status}`);
+    }
+    const location = start.headers.get("Location");
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", location);
+      xhr.setRequestHeader("Content-Type", meta.mimeType);
+      xhr.upload.onprogress = (ev) => { if (ev.lengthComputable && onProgress) onProgress(Math.round((ev.loaded / ev.total) * 100)); };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve(JSON.parse(xhr.responseText));
+        else reject(new Error(`erro ${xhr.status}`));
+      };
+      xhr.onerror = () => reject(new Error("conexão caiu"));
+      xhr.send(file);
+    });
+  }
+
+  function driveErrMsg(err) {
+    const m = (err && err.message) || "";
+    if (/insufficient|permission|forbidden|403|notFound|not found|404/i.test(m)) {
+      return "sua conta Google não tem permissão de editar a pasta MUSICAS BANANA — peça acesso de editor";
+    }
+    return m || "erro desconhecido";
   }
 
   /* ── aba Drive: a pasta MUSICAS BANANA ─────────────────────
@@ -2123,6 +2269,65 @@
   }
   document.getElementById("drive-refresh").addEventListener("click", loadDrive);
 
+  const driveUpBtn = document.getElementById("drive-upload");
+  const driveUpInput = document.getElementById("drive-upload-input");
+  const driveStatus = document.getElementById("drive-status");
+  const driveUploads = [];  // { nome, pct, erro }
+
+  driveUpBtn.addEventListener("click", async () => {
+    if (!driveConnected()) {
+      if (await connectDrive()) showToast("Conectado ao Google. Toque em “Subir músicas” pra escolher os arquivos.");
+      return;
+    }
+    driveUpInput.value = "";
+    driveUpInput.click();
+  });
+  document.getElementById("drive-disconnect").addEventListener("click", driveDisconnect);
+
+  driveUpInput.addEventListener("change", async () => {
+    const files = [...driveUpInput.files];
+    for (const f of files) {
+      const item = { nome: f.name, pct: 0, erro: "" };
+      driveUploads.push(item);
+      renderDrive();
+      try {
+        const up = await uploadToDrive(f, (pct) => { item.pct = pct; renderDriveUploads(); });
+        item.pct = 100;
+        // nome do arquivo igual ao de uma demo sem áudio: já liga
+        const alvo = Object.entries(tracks).find(([, t]) => !t.audio && t.titulo.toLowerCase() === fileTitle(f.name).toLowerCase());
+        if (alvo) await writeTracks({ [alvo[0]]: trackDoc(alvo[0], { audio: fileAudio(up) }) }, `${f.name} subiu e foi ligado a ${alvo[1].titulo}.`);
+        else showToast(`${f.name} subiu pro Drive. Escolha a música na lista.`);
+      } catch (err) {
+        console.warn(err);
+        item.erro = driveErrMsg(err);
+        showToast(`Não subiu ${f.name}: ${item.erro}.`);
+      }
+      renderDriveUploads();
+    }
+    setTimeout(() => {
+      for (let i = driveUploads.length - 1; i >= 0; i--) if (!driveUploads[i].erro) driveUploads.splice(i, 1);
+      renderDriveUploads();
+    }, 4000);
+    loadDrive();
+  });
+
+  function renderDriveUploads() {
+    const el = document.getElementById("drive-uploads");
+    el.innerHTML = driveUploads.map((u) => `
+      <div class="row drive-up${u.erro ? " is-error" : ""}">
+        <span class="row-main"><b>${esc(u.nome)}</b><span>${u.erro ? esc(u.erro) : u.pct >= 100 ? "enviado" : "enviando…"}</span></span>
+        ${u.erro ? "" : `<span class="up-prog">${u.pct}%</span>`}
+      </div>`).join("");
+  }
+
+  function renderDriveAuth() {
+    const on = driveConnected();
+    driveUpBtn.textContent = !GOOGLE_CLIENT_ID ? "Subir músicas (falta configurar)" : on ? "↑ Subir músicas" : "Entrar com Google pra subir";
+    driveStatus.textContent = !GOOGLE_CLIENT_ID ? "O envio pelo app ainda não está configurado."
+      : on ? "Conectado ao Google neste aparelho." : "Pra subir pelo app, entre com a conta Google que tem acesso de editor à pasta.";
+    document.getElementById("drive-disconnect").hidden = !on;
+  }
+
   function trackUsingFile(fid) {
     return Object.entries(tracks).find(([, t]) => t.audio && driveIdOf(t.audio) === fid);
   }
@@ -2137,6 +2342,8 @@
   }
 
   function renderDrive() {
+    renderDriveAuth();
+    renderDriveUploads();
     document.getElementById("drive-count").textContent = driveFiles ? `(${driveFiles.length})` : "";
     if (driveLoading && !driveFiles) { driveListEl.innerHTML = `<p class="empty">Carregando a pasta…</p>`; return; }
     if (driveError) { driveListEl.innerHTML = `<p class="empty">${esc(driveError)}</p>`; return; }
