@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "21";
+  const BUILD = "22";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -1070,6 +1070,7 @@
     fillRelease(r);
     rDelete.hidden = false;
     rDetails.open = false;
+    rDetails.hidden = true;
     renderSetlist();
     openPanel(releasePanel);
   }
@@ -1081,6 +1082,7 @@
     fillRelease(seed(serie, vol, { data: dataKey || "", status: dataKey ? "agendado" : "planejado" }));
     rDelete.hidden = true;
     rDetails.open = true;
+    rDetails.hidden = false;
     renderSetlist();
     openPanel(releasePanel);
     rTitulo.focus();
@@ -1252,9 +1254,11 @@
 
   function renderSetlist() {
     const rid = activeReleaseId;
-    slHint.hidden = !!rid;
-    slAddRow.hidden = !rid;
-    slPull.hidden = !rid;
+    // dentro do projeto fica só a lista de músicas; elas chegam pela aba Demos
+    slHint.hidden = true;
+    slAddRow.hidden = true;
+    slPull.hidden = true;
+    document.querySelector(".setlist-wrap").hidden = !rid;
     if (!rid) { slList.innerHTML = ""; return; }
     const list = setlistOf(rid);
     slList.innerHTML = list.map(([id, t], i) => `
@@ -1263,11 +1267,8 @@
         <span class="sl-name" contenteditable="plaintext-only" spellcheck="false" role="textbox" data-track-name="${esc(id)}" aria-label="Nome da faixa ${i + 1}">${esc(t.titulo)}</span>
         <span class="sl-tools">
           ${audioButtons(id, t, false)}
-          <button type="button" data-track-up="${esc(id)}" ${i === 0 ? "disabled" : ""} aria-label="Subir">↑</button>
-          <button type="button" data-track-down="${esc(id)}" ${i === list.length - 1 ? "disabled" : ""} aria-label="Descer">↓</button>
-          <button type="button" data-track-out="${esc(id)}" title="Tirar do set list (volta pra demos)" aria-label="Tirar do set list">⤺</button>
         </span>
-      </li>`).join("") || `<li class="empty">Nenhuma faixa ainda. Escreve abaixo ou puxa uma demo.</li>`;
+      </li>`).join("") || `<li class="empty">Nenhuma música ainda. Mande pela aba Demos.</li>`;
     const demos = demoQueue();
     slPull.innerHTML = `<option value="">${demos.length ? `Puxar uma demo da fila (${demos.length})…` : "Nenhuma demo na fila"}</option>` +
       demos.map(([id, t]) => `<option value="${esc(id)}">${esc(t.titulo)}${t.artista ? ` — ${esc(t.artista)}` : ""}</option>`).join("");
