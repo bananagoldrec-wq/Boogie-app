@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "18";
+  const BUILD = "19";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -394,6 +394,16 @@
 
   /* As faixas da base saem do campo `faixas` de cada lançamento, com id
      fixo (lançamento--posição), então editar/mover vira um doc por cima. */
+  /* WAVs da pasta "MUSICAS BANANA" no Google Drive (id do arquivo).
+     Precisam estar compartilhados como "Qualquer pessoa com o link". */
+  const SEED_DEMO_AUDIO = {
+    "Marcos Tocae Edit": ["1CPBRLgUvZ0bMQwXHpNrbbIsfkEKKdKlP", "MARCOS TOCAE - MANDELAR v2.wav", 60939544],
+    "Ítalo Airplane": ["1INxU8b6Obx_pE05K4FY7RFv0rAUnm9HB", "italo beno airplane no vocals.wav", 45750276],
+  };
+  function driveAudio([fid, nome, tamanho]) {
+    return { url: `https://drive.google.com/uc?export=download&id=${fid}`, link: `https://drive.google.com/file/d/${fid}/view`, nome, tamanho, origem: "drive" };
+  }
+
   const SEED_DEMOS = [
     "Velejo", "Bounce Like That", "1234", "Demo BIBI", "Lizzie", "Joca Remix", "Dádiva",
     "Marcos Tocae Edit", "Ítalo Airplane", "Track Alemães", "Tracey Girl", "Olhos Coloridos", "Track Gush e Joana",
@@ -410,10 +420,16 @@
     SEED_DEMOS.forEach((titulo, i) => {
       const slug = titulo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
       next[`demo-${slug}`] = { titulo, artista: "", releaseId: "", ordem: 0, link: "", obs: "", criado: `2026-10-27T00:00:${String(i).padStart(2, "0")}Z`, base: true };
+      if (SEED_DEMO_AUDIO[titulo]) next[`demo-${slug}`].audio = driveAudio(SEED_DEMO_AUDIO[titulo]);
     });
     Object.entries(stored.tracks).forEach(([id, t]) => {
       if (!t || t.deleted) delete next[id];
-      else next[id] = { ...(next[id] || {}), ...t };
+      else {
+        const base = next[id];
+        next[id] = { ...(base || {}), ...t };
+        // áudio do Drive vale mais que um "só neste aparelho" ou que nada
+        if (base && base.audio && (!t.audio || t.audio.local)) next[id].audio = base.audio;
+      }
     });
     tracks = next;
   }
