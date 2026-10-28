@@ -750,3 +750,4 @@ body.has-player .toast { bottom: calc(110px + env(safe-area-inset-bottom)); }
   body.has-player { padding-bottom: 150px; }
   body.has-player .toast { bottom: calc(140px + env(safe-area-inset-bottom)); }
 }
+.wav-link { padding: 5px 7px; font-size: 0.85rem; }
