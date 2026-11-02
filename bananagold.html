@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-build="38">
+<html lang="pt-BR" data-build="39">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/bananagold.css?v=23" />
+  <link rel="stylesheet" href="css/bananagold.css?v=24" />
 </head>
 <body>
 
@@ -80,6 +80,11 @@
       <div id="drive-uploads" class="list"></div>
     </section>
     <section>
+      <div class="drive-auth">
+        <button id="drive-login" class="btn btn-primary" type="button">Entrar com Google pra baixar</button>
+        <span id="drive-auth-status" class="hint"></span>
+        <button id="drive-logout" class="link-btn" type="button" hidden>sair do Google</button>
+      </div>
       <div class="series-list">
         <section id="drive-group" class="series demo-group is-open" style="--serie:var(--green-deep)">
           <div id="drive-toggle" class="series-bar" role="button" tabindex="0" aria-expanded="true">
@@ -339,6 +344,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/bananagold.js?v=38"></script>
+  <script src="js/bananagold.js?v=39"></script>
 </body>
 </html>
