@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "35";
+  const BUILD = "36";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -2392,7 +2392,6 @@
     if (driveError) { driveListEl.innerHTML = `<p class="empty">${esc(driveError)}</p>`; return; }
     if (!driveFiles) { driveListEl.innerHTML = ""; return; }
     if (!driveFiles.length) { driveListEl.innerHTML = `<p class="empty">A pasta ainda não tem músicas.</p>`; return; }
-    const options = trackOptions();
     driveListEl.innerHTML = driveFiles.map((f) => {
       const used = trackUsingFile(f.id);
       return `
@@ -2401,11 +2400,7 @@
             <b>${esc(f.name)}</b>
           </span>
           ${used ? `<button type="button" class="play-btn${playingId === used[0] && !player.paused ? " is-playing" : ""}" data-play="${esc(used[0])}" aria-label="Tocar">${playingId === used[0] && !player.paused ? "❚❚" : "▶"}</button>` : ""}
-          ${used ? "" : `<select class="demo-move" data-drive-link="${esc(f.id)}" aria-label="Ligar a uma música">
-            <option value="">Ligar a uma música…</option>
-            <option value="__new">+ Criar demo nova com esse arquivo</option>
-            ${options}
-          </select>`}
+          <a class="btn btn-small drive-down" href="https://drive.usercontent.google.com/download?id=${esc(f.id)}&export=download&confirm=t" target="_blank" rel="noopener" download="${esc(f.name)}">Baixar</a>
         </div>`;
     }).join("");
   }
