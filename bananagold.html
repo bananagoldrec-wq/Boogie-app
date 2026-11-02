@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-build="37">
+<html lang="pt-BR" data-build="38">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/bananagold.css?v=22" />
+  <link rel="stylesheet" href="css/bananagold.css?v=23" />
 </head>
 <body>
 
@@ -81,13 +81,13 @@
     </section>
     <section>
       <div class="series-list">
-        <section id="drive-group" class="series demo-group" style="--serie:var(--green-deep)">
-          <div id="drive-toggle" class="series-bar" role="button" tabindex="0" aria-expanded="false">
-            <span id="drive-chevron" class="chevron" aria-hidden="true">▸</span>
+        <section id="drive-group" class="series demo-group is-open" style="--serie:var(--green-deep)">
+          <div id="drive-toggle" class="series-bar" role="button" tabindex="0" aria-expanded="true">
+            <span id="drive-chevron" class="chevron" aria-hidden="true">▾</span>
             <span class="bar-main"><span class="bar-title">Arquivos na pasta</span></span>
             <span id="drive-count" class="bar-count"></span>
           </div>
-          <div id="drive-list" class="list demo-group-body" hidden></div>
+          <div id="drive-list" class="list demo-group-body"></div>
         </section>
       </div>
     </section>
@@ -339,6 +339,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/bananagold.js?v=37"></script>
+  <script src="js/bananagold.js?v=38"></script>
 </body>
 </html>
