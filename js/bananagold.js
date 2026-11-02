@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "30";
+  const BUILD = "31";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -1255,9 +1255,9 @@
 
   function renderSetlist() {
     const rid = activeReleaseId;
-    // dentro do projeto fica só a lista de músicas; elas chegam pela aba Demos
+    // dentro do projeto fica só a lista de músicas + um campo pra escrever mais
     slHint.hidden = true;
-    slAddRow.hidden = true;
+    slAddRow.hidden = !rid;
     slPull.hidden = true;
     document.querySelector(".setlist-wrap").hidden = !rid;
     if (!rid) { slList.innerHTML = ""; return; }
@@ -1269,7 +1269,7 @@
         <span class="sl-tools">
           ${audioButtons(id, t, false)}
         </span>
-      </li>`).join("") || `<li class="empty">Nenhuma música ainda. Mande pela aba Demos.</li>`;
+      </li>`).join("") || `<li class="empty">Nenhuma música ainda.</li>`;
     const demos = demoQueue();
     slPull.innerHTML = `<option value="">${demos.length ? `Puxar uma demo da fila (${demos.length})…` : "Nenhuma demo na fila"}</option>` +
       demos.map(([id, t]) => `<option value="${esc(id)}">${esc(t.titulo)}${t.artista ? ` — ${esc(t.artista)}` : ""}</option>`).join("");
@@ -1306,7 +1306,8 @@
     const t = el && tracks[el.dataset.trackName];
     if (!t) return;
     const titulo = el.textContent.replace(/\s+/g, " ").trim();
-    if (!titulo) { el.textContent = t.titulo; return; }
+    // apagar o nome inteiro tira a música do set list
+    if (!titulo) { deleteTrack(el.dataset.trackName); return; }
     if (titulo !== t.titulo) writeTracks({ [el.dataset.trackName]: trackDoc(el.dataset.trackName, { titulo }) }, "Nome da faixa salvo.");
   });
 
