@@ -1016,3 +1016,8 @@ body.at-home .tabs { gap: 10px; }
   .demo-row .demo-move { order: 3; flex: 1 1 auto; width: auto; max-width: none; }
   .demo-row .demo-audio { order: 4; }
 }
+
+/* demos em barras, como as séries */
+.demo-groups { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; }
+.demo-group .bar-count { font-weight: 700; font-size: 0.8rem; opacity: 0.7; flex: none; }
+.demo-group-body { padding: 4px 0 14px; }

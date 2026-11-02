@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "33";
+  const BUILD = "34";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -1329,7 +1329,6 @@
   const dDestino = document.getElementById("d-destino");
   const dSave = document.getElementById("d-save");
   const demoList = document.getElementById("demo-list");
-  const demoProjects = document.getElementById("demo-projects");
   const npBox = document.getElementById("new-project");
   const npNome = document.getElementById("np-nome");
   let npFormato = "EP";
@@ -1353,22 +1352,37 @@
     const keep = dDestino.value;
     dDestino.innerHTML = `<option value="">Fila de demos (sem projeto)</option>` + targetOptions();
     if ([...dDestino.options].some((o) => o.value === keep) && keep !== "__new") dDestino.value = keep;
+    // uma barra pra fila e uma pra cada projeto, como as séries
     const queue = demoQueue();
-    document.getElementById("demo-count").textContent = queue.length ? `(${queue.length})` : "";
-    demoList.innerHTML = queue.map(([id, t]) => demoRow(id, t)).join("") ||
-      `<p class="empty">Nenhuma demo na fila.</p>`;
-    demoProjects.innerHTML = targetReleases()
+    const projetos = targetReleases()
       .map(([rid, r]) => [rid, r, setlistOf(rid)])
-      .filter(([, , list]) => list.length)
-      .map(([rid, r, list]) => `
-        <div class="demo-project" style="--serie:${seriesColor(r.serie)}">
-          <button class="demo-project-head" type="button" data-release="${esc(rid)}">
-            <b>${esc(releaseLabel(r))}${r.formato && isGeral(r) ? ` · ${esc(r.formato)}` : ""}</b>
-            <span>${list.length} faixa${list.length > 1 ? "s" : ""}${r.data ? ` · ${esc(shortDate(r))}` : ""}</span>
-          </button>
-          ${list.map(([id, t]) => demoRow(id, t)).join("")}
-        </div>`).join("") ||
-      `<p class="empty">Nenhuma música mandada pra projeto ainda.</p>`;
+      .filter(([, , list]) => list.length);
+    demoList.innerHTML = demoGroup("fila", "Demos na fila", "var(--green-deep)", queue,
+      `<p class="empty">Nenhuma demo na fila.</p>`) +
+      projetos.map(([rid, r, list]) => demoGroup(rid,
+        `${releaseLabel(r)}${r.formato && isGeral(r) ? ` · ${r.formato}` : ""}`, seriesColor(r.serie), list, "")).join("");
+  }
+
+  const DEMO_OPEN_KEY = "bg_open_demos_v1";
+  let openDemos = new Set(["fila"]);
+  try { const v = localStorage.getItem(DEMO_OPEN_KEY); if (v) openDemos = new Set(JSON.parse(v)); } catch (err) {}
+  function demoGroup(key, titulo, cor, list, empty) {
+    const open = openDemos.has(key);
+    return `
+      <section class="series demo-group${open ? " is-open" : ""}" style="--serie:${cor}">
+        <div class="series-bar" data-toggle-demo="${esc(key)}" role="button" tabindex="0" aria-expanded="${open}">
+          <span class="chevron" aria-hidden="true">${open ? "▾" : "▸"}</span>
+          <span class="bar-main"><span class="bar-title">${esc(titulo)}</span></span>
+          <span class="bar-count">${list.length}</span>
+        </div>
+        ${open ? `<div class="list demo-group-body">${list.map(([id, t]) => demoRow(id, t)).join("") || empty}</div>` : ""}
+      </section>`;
+  }
+  function toggleDemoGroup(key) {
+    if (openDemos.has(key)) openDemos.delete(key);
+    else openDemos.add(key);
+    try { localStorage.setItem(DEMO_OPEN_KEY, JSON.stringify([...openDemos])); } catch (err) {}
+    renderDemos();
   }
 
   /* Com áudio escolhido: um arquivo usa o nome digitado (ou o do
@@ -1440,7 +1454,8 @@
     if (!full) return play;
     const down = a && a.url ? `<a class="audio-down" href="${esc(a.link || a.url)}" target="_blank" rel="noopener" download="${esc(a.nome || "demo.wav")}" title="${a.link ? "Abrir o link original" : `Baixar ${esc(a.nome || "")}`}" aria-label="Baixar">${a.link ? "↗" : "⤓"}</a>` : "";
     const local = a && a.local ? `<span class="audio-local" title="Esse áudio só está no aparelho de quem subiu">só aqui</span>` : "";
-    return `${play}${down}${local}<button type="button" class="wav-btn" data-pick-audio="${esc(id)}" title="${a ? "Trocar o áudio" : "Adicionar WAV"}">${a ? "trocar áudio" : "áudio"}</button><button type="button" class="wav-btn wav-link" data-link-audio="${esc(id)}" title="Colar link do Google Drive ou Dropbox">link</button>`;
+    if (a) return `${play}${down}${local}`;
+    return `<button type="button" class="wav-btn" data-pick-audio="${esc(id)}" title="Adicionar WAV">áudio</button><button type="button" class="wav-btn wav-link" data-link-audio="${esc(id)}" title="Colar link do Google Drive ou Dropbox">link</button>`;
   }
 
   /* IndexedDB: áudio guardado só neste aparelho */
@@ -1807,7 +1822,7 @@
     if (audioFor && audioInput.files[0]) uploadAudio(audioFor, audioInput.files[0]);
     audioFor = null;
   });
-  [demoList, demoProjects, slList].forEach((el) => el.addEventListener("click", onAudioClick, true));
+  [demoList, slList].forEach((el) => el.addEventListener("click", onAudioClick, true));
 
   /* arrastar WAVs pra aba Demos cria uma demo por arquivo */
   const viewDemos = document.getElementById("view-demos");
@@ -1875,6 +1890,8 @@
   dDestino.addEventListener("change", () => { if (dDestino.value === "__new") openNewProject("form"); });
 
   function onDemoClick(e) {
+    const bar = e.target.closest("[data-toggle-demo]");
+    if (bar) return toggleDemoGroup(bar.dataset.toggleDemo);
     const rel = e.target.closest("[data-release]");
     if (rel) return openRelease(rel.dataset.release);
     const del = e.target.closest("[data-del-track]");
@@ -1887,6 +1904,10 @@
     moveTrack(sel.dataset.moveTrack, sel.value);
   }
   function onDemoKey(e) {
+    if (e.target.matches("[data-toggle-demo]") && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      return toggleDemoGroup(e.target.dataset.toggleDemo);
+    }
     if (e.key === "Enter" && e.target.closest("[data-track-name]")) { e.preventDefault(); e.target.blur(); }
   }
   function onDemoRename(e) {
@@ -1897,12 +1918,10 @@
     if (!titulo) { el.textContent = t.titulo; return; }
     if (titulo !== t.titulo) writeTracks({ [el.dataset.trackName]: trackDoc(el.dataset.trackName, { titulo }) }, "Nome salvo.");
   }
-  [demoList, demoProjects].forEach((el) => {
-    el.addEventListener("click", onDemoClick);
-    el.addEventListener("change", onDemoMove);
-    el.addEventListener("keydown", onDemoKey);
-    el.addEventListener("focusout", onDemoRename);
-  });
+  demoList.addEventListener("click", onDemoClick);
+  demoList.addEventListener("change", onDemoMove);
+  demoList.addEventListener("keydown", onDemoKey);
+  demoList.addEventListener("focusout", onDemoRename);
 
   /* ── painel do dia + tarefas ───────────────────────────── */
   const dayItems = document.getElementById("day-items");
@@ -2248,14 +2267,11 @@
   let driveLoading = false;
   document.getElementById("drive-open").href = `https://drive.google.com/drive/folders/${DRIVE_FOLDER_ID}`;
 
-  const driveRefreshBtn = document.getElementById("drive-refresh");
 
   async function loadDrive(manual) {
     if (driveLoading) return;
     driveLoading = true;
     driveError = "";
-    driveRefreshBtn.textContent = "Atualizando…";
-    driveRefreshBtn.disabled = true;
     renderDrive();
     const q = encodeURIComponent(`'${DRIVE_FOLDER_ID}' in parents and trashed = false`);
     // com login do Google usa a conta (lista na hora o que acabou de subir);
@@ -2277,18 +2293,15 @@
       if (manual) showToast(`Lista atualizada: ${driveFiles.length} arquivo${driveFiles.length === 1 ? "" : "s"}.`);
     } catch (err) {
       console.warn("Drive", err);
-      driveError = ctrl.signal.aborted ? "O Drive demorou demais pra responder. Tente “Atualizar lista” de novo."
-        : "Não deu pra ler a pasta agora. Use “Abrir a pasta no Drive” e tente “Atualizar lista” daqui a pouco.";
+      driveError = ctrl.signal.aborted ? "O Drive demorou demais pra responder. Saia e entre de novo nesta aba."
+        : "Não deu pra ler a pasta agora. Saia e entre de novo nesta aba daqui a pouco.";
       if (manual) showToast(driveError);
     } finally {
       clearTimeout(timer);
       driveLoading = false;
-      driveRefreshBtn.textContent = "Atualizar lista";
-      driveRefreshBtn.disabled = false;
       renderDrive();
     }
   }
-  driveRefreshBtn.addEventListener("click", () => loadDrive(true));
 
   const driveUpBtn = document.getElementById("drive-upload");
   const driveUpInput = document.getElementById("drive-upload-input");

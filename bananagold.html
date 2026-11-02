@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-build="33">
+<html lang="pt-BR" data-build="34">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/bananagold.css?v=19" />
+  <link rel="stylesheet" href="css/bananagold.css?v=20" />
 </head>
 <body>
 
@@ -70,7 +70,6 @@
     <section class="drive-head">
       <div class="panel-actions">
         <a id="drive-open" class="btn" href="#" target="_blank" rel="noopener">Abrir no Drive ↗</a>
-        <button id="drive-refresh" class="btn" type="button">Atualizar lista</button>
       </div>
       <div class="drive-upload-box">
         <button id="drive-upload" class="btn btn-primary" type="button">↑ Subir músicas</button>
@@ -119,15 +118,7 @@
 
     <input id="audio-input" type="file" accept=".wav,audio/wav,audio/x-wav,audio/*" hidden />
 
-    <section>
-      <h2 class="section-title">Demos na fila <span id="demo-count" class="muted"></span></h2>
-      <div id="demo-list" class="list"></div>
-    </section>
-
-    <section>
-      <h2 class="section-title">Nos projetos</h2>
-      <div id="demo-projects" class="list"></div>
-    </section>
+    <div id="demo-list" class="series-list demo-groups"></div>
   </main>
 
   <div id="backdrop" class="panel-backdrop" hidden></div>
@@ -340,6 +331,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/bananagold.js?v=33"></script>
+  <script src="js/bananagold.js?v=34"></script>
 </body>
 </html>
