@@ -5,9 +5,9 @@
    ============================================================ */
 
 :root {
-  --green: #c3df86;
-  --green-deep: #a9c868;
-  --green-soft: #d7eaae;
+  --green: #a9f419;
+  --green-deep: #93d90f;
+  --green-soft: #c4f960;
   --ink: #000;
   --ink-soft: #1c2a05;
   --ink-dim: rgba(0, 0, 0, 0.62);
@@ -210,7 +210,7 @@ a { color: var(--ink); font-weight: 800; }
   text-transform: uppercase;
 }
 .progress { align-self: stretch; height: 6px; margin: 0 -12px; background: rgba(0, 0, 0, 0.12); }
-.status-lancado .progress { background: rgba(120, 150, 50, 0.2); }
+.status-lancado .progress { background: rgba(169, 244, 25, 0.2); }
 .progress i { display: block; height: 100%; background: var(--serie, currentColor); }
 .series .progress i { background: var(--serie); }
 
@@ -306,7 +306,7 @@ a { color: var(--ink); font-weight: 800; }
 .cal-cell:nth-child(7n) { border-right: none; }
 .cal-cell.is-blank { background: rgba(0, 0, 0, 0.04); }
 .cal-cell:not(.is-blank):hover { background: var(--green-soft); }
-.cal-cell.is-friday { background: rgba(120, 150, 50, 0.35); }
+.cal-cell.is-friday { background: rgba(169, 244, 25, 0.35); }
 .cal-cell.is-holiday { background: #fff4c2; }
 .cal-cell.has-release { background: var(--green); }
 .cal-num { font-weight: 900; font-size: 0.95rem; }
@@ -354,7 +354,7 @@ a { color: var(--ink); font-weight: 800; }
 .dot-task { background: #fff; border: 1.5px solid var(--ink); }
 .dot-done { background: #fff; border: 1.5px solid var(--ink); opacity: 0.45; }
 .sw { width: 14px; height: 14px; border: 1.5px solid var(--ink); display: inline-block; }
-.sw-friday { background: #a9c868; }
+.sw-friday { background: #d4fa8a; }
 .sw-holiday { background: #fff4c2; }
 
 /* ── listas (próximos / dia) ────────────────────────────── */
@@ -557,7 +557,7 @@ button.row:hover, .row .row-main:hover b { text-decoration: underline; }
 .vol-dot:hover { transform: translateY(-1px); }
 .vol-dot.dot-lancado { background: var(--green); color: var(--ink); }
 .vol-dot.dot-agendado { background: var(--serie); border-color: var(--serie); color: var(--ink); }
-.vol-dot.dot-producao { border-style: solid; background: rgba(120, 150, 50, 0.25); }
+.vol-dot.dot-producao { border-style: solid; background: rgba(169, 244, 25, 0.25); }
 .vol-dot.dot-planejado { border-style: dashed; opacity: 0.6; }
 
 @media (max-width: 720px) {
