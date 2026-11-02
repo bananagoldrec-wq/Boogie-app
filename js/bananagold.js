@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "36";
+  const BUILD = "37";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -2262,6 +2262,19 @@
      ligar cada um a uma demo ou criar uma demo nova com ele. */
   const DRIVE_FOLDER_ID = "1OUu4FKsh_FxNO5GyZwO3dkq9wx_hOxIv";
   const driveListEl = document.getElementById("drive-list");
+  // a lista fica numa barra que abre e fecha, como as séries
+  const driveToggle = document.getElementById("drive-toggle");
+  function toggleDriveList() {
+    const open = driveListEl.hidden;
+    driveListEl.hidden = !open;
+    driveToggle.setAttribute("aria-expanded", open);
+    document.getElementById("drive-chevron").textContent = open ? "▾" : "▸";
+    document.getElementById("drive-group").classList.toggle("is-open", open);
+  }
+  driveToggle.addEventListener("click", toggleDriveList);
+  driveToggle.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleDriveList(); }
+  });
   let driveFiles = null;      // null = ainda não carregou
   let driveError = "";
   let driveLoading = false;
@@ -2387,7 +2400,7 @@
   function renderDrive() {
     renderDriveAuth();
     renderDriveUploads();
-    document.getElementById("drive-count").textContent = driveFiles ? `(${driveFiles.length})` : "";
+    document.getElementById("drive-count").textContent = driveFiles ? driveFiles.length : "";
     if (driveLoading && !driveFiles) { driveListEl.innerHTML = `<p class="empty">Carregando a pasta…</p>`; return; }
     if (driveError) { driveListEl.innerHTML = `<p class="empty">${esc(driveError)}</p>`; return; }
     if (!driveFiles) { driveListEl.innerHTML = ""; return; }
