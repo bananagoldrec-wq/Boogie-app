@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "32";
+  const BUILD = "33";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -2386,7 +2386,6 @@
         <div class="row drive-row${used ? " is-linked" : ""}">
           <span class="row-main">
             <b>${esc(f.name)}</b>
-            <span>${f.size ? fmtSize(+f.size) : ""}${used ? ` · ligada a <b>${esc(used[1].titulo)}</b>` : " · ainda não está em nenhuma música"}</span>
           </span>
           ${used ? `<button type="button" class="play-btn${playingId === used[0] && !player.paused ? " is-playing" : ""}" data-play="${esc(used[0])}" aria-label="Tocar">${playingId === used[0] && !player.paused ? "❚❚" : "▶"}</button>` : ""}
           ${used ? "" : `<select class="demo-move" data-drive-link="${esc(f.id)}" aria-label="Ligar a uma música">
