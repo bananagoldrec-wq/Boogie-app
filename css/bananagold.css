@@ -1021,3 +1021,11 @@ body.at-home .tabs { gap: 10px; }
 .demo-groups { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; }
 .demo-group .bar-count { font-weight: 700; font-size: 0.8rem; opacity: 0.7; flex: none; }
 .demo-group-body { padding: 4px 0 14px; }
+
+/* demos só pra ouvir; download só pra baixar */
+.demo-form[hidden], .drive-head[hidden] { display: none !important; }
+.demo-groups { margin-top: 0; }
+.drive-row { align-items: center; }
+.drive-down { flex: none; }
+.drive-row { display: flex; flex-wrap: nowrap; gap: 10px; }
+.drive-row .row-main { flex: 1; min-width: 0; overflow-wrap: anywhere; }
