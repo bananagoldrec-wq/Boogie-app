@@ -14,7 +14,7 @@
      HTML velho carregar este JS novo (ou o contrário), os elementos não
      batem e o app trava sem desenhar nada. BUILD tem que ser igual ao
      data-build do bananagold.html: suba os dois juntos com o ?v=. */
-  const BUILD = "38";
+  const BUILD = "39";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bg_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -2161,6 +2161,7 @@
       s2.src = "https://accounts.google.com/gsi/client";
       s2.async = true;
       s2.onload = () => {
+        if (!window.google || !window.google.accounts) { gisLoading = null; return resolve(false); }
         gisClient = window.google.accounts.oauth2.initTokenClient({
           client_id: GOOGLE_CLIENT_ID,
           scope: DRIVE_SCOPE,
@@ -2262,6 +2263,8 @@
      ligar cada um a uma demo ou criar uma demo nova com ele. */
   const DRIVE_FOLDER_ID = "1OUu4FKsh_FxNO5GyZwO3dkq9wx_hOxIv";
   const driveListEl = document.getElementById("drive-list");
+  const driveDownloading = {};  // id do arquivo → % baixado
+  const driveLoginBtn = document.getElementById("drive-login");
   // a lista fica numa barra que abre e fecha, como as séries
   const driveToggle = document.getElementById("drive-toggle");
   function toggleDriveList() {
@@ -2373,6 +2376,9 @@
     driveUpBtn.textContent = !GOOGLE_CLIENT_ID ? "Subir músicas (falta configurar)" : on ? "↑ Subir músicas" : "Entrar com Google pra subir";
     driveStatus.textContent = on ? "conectado ao Google" : "";
     document.getElementById("drive-disconnect").hidden = !on;
+    driveLoginBtn.hidden = on;
+    document.getElementById("drive-auth-status").textContent = on ? "conectado ao Google" : "";
+    document.getElementById("drive-logout").hidden = !on;
   }
 
   function addUploadedFile(up, file) {
@@ -2413,7 +2419,7 @@
             <b>${esc(f.name)}</b>
           </span>
           ${used ? `<button type="button" class="play-btn${playingId === used[0] && !player.paused ? " is-playing" : ""}" data-play="${esc(used[0])}" aria-label="Tocar">${playingId === used[0] && !player.paused ? "❚❚" : "▶"}</button>` : ""}
-          <a class="btn btn-small drive-down" href="https://drive.usercontent.google.com/download?id=${esc(f.id)}&export=download&confirm=t" target="_blank" rel="noopener" download="${esc(f.name)}">Baixar</a>
+          <button type="button" class="btn btn-small drive-down" data-drive-down="${esc(f.id)}">${driveDownloading[f.id] != null ? `${driveDownloading[f.id]}%` : "Baixar"}</button>
         </div>`;
     }).join("");
   }
@@ -2439,7 +2445,64 @@
       await writeTracks(changes, `Ligada a ${tracks[sel.value].titulo}.`);
     }
   });
+  /* Baixar: com o login do Google (conta da equipe) puxa o arquivo
+     original pela API e salva com o nome certo. */
+  driveLoginBtn.addEventListener("click", async () => {
+    if (await connectDrive()) showToast("Conectado ao Google. Agora é só tocar em Baixar.");
+  });
+  document.getElementById("drive-logout").addEventListener("click", driveDisconnect);
+  loadGis();  // deixa o login pronto pro primeiro toque
+
+  async function downloadDriveFile(f) {
+    if (driveDownloading[f.id] != null) return;
+    if (!driveConnected() && !(await connectDrive())) return;
+    driveDownloading[f.id] = 0;
+    renderDrive();
+    try {
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(f.id)}?alt=media&supportsAllDrives=true`,
+        { headers: { Authorization: `Bearer ${gToken}` } });
+      if (res.status === 401) driveDisconnect();
+      if (!res.ok) throw new Error(res.status);
+      const total = +res.headers.get("Content-Length") || +f.size || 0;
+      const reader = res.body.getReader();
+      const parts = [];
+      let got = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        parts.push(value);
+        got += value.length;
+        if (total) {
+          driveDownloading[f.id] = Math.min(99, Math.round((got / total) * 100));
+          const b = driveListEl.querySelector(`[data-drive-down="${CSS.escape(f.id)}"]`);
+          if (b) b.textContent = `${driveDownloading[f.id]}%`;
+        }
+      }
+      const url = URL.createObjectURL(new Blob(parts, { type: res.headers.get("Content-Type") || "application/octet-stream" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = f.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      showToast(`${f.name} baixado.`);
+    } catch (err) {
+      console.warn("download", err);
+      showToast("Não deu pra baixar. Confere se essa conta tem acesso à pasta e tenta de novo.");
+    } finally {
+      delete driveDownloading[f.id];
+      renderDrive();
+    }
+  }
+
   driveListEl.addEventListener("click", (e) => {
+    const down = e.target.closest("[data-drive-down]");
+    if (down) {
+      const f = (driveFiles || []).find((x) => x.id === down.dataset.driveDown);
+      if (f) downloadDriveFile(f);
+      return;
+    }
     const play = e.target.closest("[data-play]");
     if (!play) return;
     const list = [...driveListEl.querySelectorAll("[data-play]")].map((b) => b.dataset.play);

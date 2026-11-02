@@ -1032,3 +1032,5 @@ body.at-home .tabs { gap: 10px; }
 #drive-list[hidden] { display: none !important; }
 /* no celular o sublinhado do hover grudava depois do toque */
 @media (hover: none) { .series-bar:hover .bar-title { text-decoration: none; } }
+.drive-auth { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 16px; }
+.drive-auth [hidden] { display: none !important; }
