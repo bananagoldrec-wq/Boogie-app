@@ -15,7 +15,7 @@
   /* BUILD tem que ser igual ao data-build do belaciavatta.html: suba os
      dois juntos com o ?v=. Se o HTML velho carregar o JS novo (cache),
      recarrega uma vez em vez de travar. */
-  const BUILD = "10";
+  const BUILD = "11";
   const ICON_PLAY = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7 4.9v14.2a.9.9 0 0 0 1.4.8l11-7.1a.9.9 0 0 0 0-1.6l-11-7.1A.9.9 0 0 0 7 4.9Z"/></svg>';
   const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>';
   if (document.documentElement.dataset.build !== BUILD) {
@@ -96,62 +96,79 @@
     "A cada semana precisamos fechar com a agenda da próxima previamente amarrada!",
     "O cronograma precisa ser confirmado com todos os envolvidos com antecedência, inclusive mix e master.",
   ];
-  const BLOCO_1 = "Ponto de Partida, Nada, Amor1x, Moço, Adeus Por Despedida, Romance";
-  const BLOCO_2 = "Uma, Preciso Me Encontrar, Guarnicê, Tem Jeito Não";
+  const BLOCO_1 = ["Ponto de Partida", "Nada", "Amor1x", "Moço", "Adeus Por Despedida", "Romance"];
+  const BLOCO_2 = ["Uma", "Preciso Me Encontrar", "Guarnicê", "Tem Jeito Não"];
+  /* passos: [grupo, item]. Grupo com várias faixas vira um item por faixa,
+     pra marcar uma a uma. */
+  const porFaixa = (grupo, faixas) => faixas.map((f) => [grupo, f]);
+  const agenda = (n) => ["Combinados", `Agenda da semana ${n} amarrada e confirmada com todos (inclusive mix/master)`];
   const SEED_MILESTONES = {
     "rm-s1": {
       titulo: "Semana 1 · Fechar retoques finais", inicio: "2026-11-02", data: "2026-11-06",
-      foco: [
-        "FECHAR as 6 faixas que precisam de retoques finais (Nada, Amor1x, Moço, Adeus Por Despedida, Romance)",
-        "(Bela) DEFINIÇÃO de bpm/tom de Preciso Me Encontrar, e o que vai ser do Guarnicê (ele faz sentido pra introduzir esse álbum?)",
+      passos: [
+        ["Planejamento", "No primeiro dia, planejar todos os outros (o que precisa de estúdio, horário do encontro de cada dia)"],
+        ...porFaixa("Fechar retoques finais", ["Nada", "Amor1x", "Moço", "Adeus Por Despedida", "Romance"]),
+        ["Bela", "Definir bpm/tom de Preciso Me Encontrar"],
+        ["Bela", "Decidir o que vai ser do Guarnicê (faz sentido pra introduzir esse álbum?)"],
+        agenda(2),
       ],
-      obs: "No primeiro dia, planejar todos os outros detalhadamente (o que precisa de estúdio, que horas o encontro de cada dia etc.).\nUm dos dias vai precisar resolver 2 músicas.\nDudu vai estar menos presente, pois está finalizando um projeto grande. Todos os dias vai acompanhar os resultados.",
+      obs: "Um dos dias vai precisar resolver 2 músicas.\nDudu vai estar menos presente, pois está finalizando um projeto grande. Todos os dias vai acompanhar os resultados.",
     },
     "rm-s2": {
       titulo: "Semana 2 · Mandar pra mix + arranjos", inicio: "2026-11-09", data: "2026-11-13",
-      foco: [
-        `MANDAR PRA MIX as 7 faixas prontas (${BLOCO_1})`,
-        `ARRANJO / GUIA / PLANO DE GRAVAÇÃO — ${BLOCO_2}`,
+      passos: [
+        ...porFaixa("Mandar pra mix (Beno)", BLOCO_1),
+        ...porFaixa("Arranjo / guia / plano de gravação (Dudu e Bela)", BLOCO_2),
+        ["Laila", "Encontro pra fechar o chordmelody de Preciso Me Encontrar (gravar harmonia + voz → Bela canta por cima)"],
+        agenda(3),
       ],
-      obs: "É importante nos dividirmos: no início da semana, enquanto o Beno manda pra mix, Dudu e Bela fecham arranjos. No final, nos juntamos para fazer as guias.\nEncontro com Laila pra fechar o chordmelody de Preciso Me Encontrar, a partir de melodia pré-sugerida de contraponto (gravar harmonia + voz → Bela cantar por cima).",
+      obs: "É importante nos dividirmos: no início da semana, enquanto o Beno manda pra mix, Dudu e Bela fecham arranjos. No final, nos juntamos para fazer as guias.",
     },
     "rm-s3": {
       titulo: "Semana 3 · Gravações / edits + recall mix", inicio: "2026-11-16", data: "2026-11-20",
-      foco: [
-        `GRAVAÇÕES / EDITS — ${BLOCO_2}`,
-        `RECALL MIX — ${BLOCO_1}`,
+      passos: [
+        ...porFaixa("Gravações / edits (com vozes selecionadas e afinadas)", BLOCO_2),
+        ...porFaixa("Recall mix", BLOCO_1),
+        agenda(4),
       ],
       obs: "Não deve ter todas as mix prontas de cara, mas é ideal que tenha a maioria.\nTodas as gravações, inclusive vozes selecionadas e afinadas, precisam caber aqui.",
     },
     "rm-s4": {
       titulo: "Semana 4 · Retoques finais / mandar pra mix", inicio: "2026-11-23", data: "2026-11-27",
-      foco: [
-        `RETOQUES FINAIS / MANDAR PRA MIX — ${BLOCO_2}`,
-        "RECALL MIX — o que faltar da semana passada + o que for ficando pronto",
+      passos: [
+        ...porFaixa("Retoques finais e mandar pra mix", BLOCO_2),
+        ["Recall mix", "O que faltar da semana passada + o que for ficando pronto"],
+        agenda(5),
       ],
       obs: "",
     },
     "rm-s5": {
       titulo: "Semana 5 · Margem de erro + recall mix", inicio: "2026-11-30", data: "2026-12-04",
-      foco: [
-        "MARGEM DE ERRO pra qualquer retoque final",
-        `RECALL MIX — ${BLOCO_2}, ${BLOCO_1}`,
+      passos: [
+        ["Margem de erro", "Qualquer retoque final que ainda faltar"],
+        ...porFaixa("Recall mix", [...BLOCO_2, ...BLOCO_1]),
+        agenda(6),
       ],
       obs: "",
     },
-    "rm-meta-mix": { titulo: "META · Mix pronta", data: "2026-12-07", meta: true, foco: [], obs: "" },
+    "rm-meta-mix": { titulo: "META · Mix pronta", data: "2026-12-07", meta: true },
     "rm-s6": {
       titulo: "Semana 6 · Mandar o álbum pra master", inicio: "2026-12-07", data: "2026-12-11",
-      foco: ["MANDAR O ÁLBUM PRA MASTER"], obs: "",
+      passos: [["Master", "Mandar o álbum pra master"], agenda(7)],
+      obs: "",
     },
     "rm-s7": {
       titulo: "Semana 7 · Recall master", inicio: "2026-12-14", data: "2026-12-18",
-      foco: ["RECALL MASTER"], obs: "",
+      passos: [["Master", "Recall master"]],
+      obs: "",
     },
-    "rm-meta-master": { titulo: "META · Master pronta", data: "2026-12-23", meta: true, foco: [], obs: "" },
-    "rm-meta-limite": { titulo: "LIMITE ABSOLUTO", data: "2027-01-11", meta: true, foco: [], obs: "" },
+    "rm-meta-master": { titulo: "META · Master pronta", data: "2026-12-23", meta: true },
+    "rm-meta-limite": { titulo: "LIMITE ABSOLUTO", data: "2027-01-11", meta: true },
   };
-  Object.values(SEED_MILESTONES).forEach((m, i) => Object.assign(m, { status: "aberto", ordem: i + 1, ...m }));
+  Object.entries(SEED_MILESTONES).forEach(([id, m], i) => {
+    m.passos = (m.passos || []).map(([g, t], k) => ({ id: `${id}-${k + 1}`, g, t, feito: false }));
+    Object.assign(m, { status: "aberto", obs: "", ordem: i + 1, ...m });
+  });
   // marcos genéricos da primeira versão: se alguém editou, não voltam
   const OLD_SEED_MS = new Set(["ms-repertorio", "ms-preproducao", "ms-gravacao", "ms-mix", "ms-master", "ms-arte", "ms-distribuicao", "ms-divulgacao", "ms-lancamento"]);
 
@@ -1254,28 +1271,55 @@
     document.getElementById("rm-combinados").innerHTML = RM_COMBINADOS.map((c) => `<li>${esc(c)}</li>`).join("");
     const ms = msOrder();
     document.getElementById("rm-list").innerHTML = ms.map(([id, m], i) => {
-      const late = m.data && m.status !== "feito" && m.data < todayKey;
+      const passos = passosOf(m);
+      const done = passos.filter((x) => x.feito).length;
+      const feito = m.status === "feito";
+      const late = m.data && !feito && m.data < todayKey;
       const now = m.inicio && m.data && m.inicio <= todayKey && todayKey <= m.data;
+      const open = msOpen.has(id) || (now && !msClosed.has(id));
       const quando = m.inicio && m.data ? `${shortBr(m.inicio)} → ${shortBr(m.data)}` : m.data ? formatBr(m.data) : "sem prazo";
       const sub = [
         quando,
-        now ? "esta semana" : m.data && m.status !== "feito" ? countdown(m.inicio && m.inicio > todayKey ? m.inicio : m.data) : "",
-        m.status === "feito" ? "concluído" : m.status === "andamento" ? "em andamento" : "",
+        now ? "esta semana" : m.data && !feito ? countdown(m.inicio && m.inicio > todayKey ? m.inicio : m.data) : "",
       ].filter(Boolean).join(" · ");
-      const foco = Array.isArray(m.foco) ? m.foco : [];
-      return `<li class="ms is-${esc(m.status || "aberto")}${m.meta ? " is-meta" : ""}${now ? " is-now" : ""}" data-id="${esc(id)}">
-        <div class="item">
-          <button type="button" class="item-main" data-act="open" style="text-align:left">
+      // passos agrupados, na ordem em que aparecem
+      const groups = [];
+      passos.forEach((x) => {
+        let g = groups.find((gg) => gg.nome === (x.g || ""));
+        if (!g) groups.push(g = { nome: x.g || "", itens: [] });
+        g.itens.push(x);
+      });
+      const pct = passos.length ? Math.round((done / passos.length) * 100) : (feito ? 100 : 0);
+      return `<li class="ms is-${esc(m.status || "aberto")}${m.meta ? " is-meta" : ""}${now ? " is-now" : ""}${open ? " is-open" : ""}" data-id="${esc(id)}">
+        <div class="ms-bar" ${passos.length || m.obs ? `data-act="toggle" role="button" tabindex="0" aria-expanded="${open}"` : ""}>
+          ${!passos.length ? `<input type="checkbox" data-act="meta-check" ${feito ? "checked" : ""} aria-label="Concluído" />` : ""}
+          <div class="ms-bar-main">
             <div class="item-title">${esc(m.titulo)}</div>
-            <div class="item-sub">${esc(sub)}</div>
-            ${foco.length ? `<ul class="ms-foco">${foco.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>` : ""}
-            ${m.obs ? `<div class="item-sub ms-obs">${esc(m.obs.split("\n")[0]).slice(0, 120)}${m.obs.length > 120 || m.obs.includes("\n") ? " …" : ""}</div>` : ""}
-          </button>
-          ${late ? `<span class="badge is-late">atrasado</span>` : ""}
-          <span class="ms-move">
-            <button class="mini" type="button" data-act="up" ${i === 0 ? "disabled" : ""} aria-label="Subir">↑</button>
-            <button class="mini" type="button" data-act="down" ${i === ms.length - 1 ? "disabled" : ""} aria-label="Descer">↓</button>
-          </span>
+            <div class="item-sub">${esc(sub)}${late ? ` · <span class="late">atrasado</span>` : ""}</div>
+          </div>
+          ${passos.length ? `<span class="ms-count${done === passos.length ? " is-full" : ""}">${done}/${passos.length}</span><span class="chevron" aria-hidden="true">▾</span>` : ""}
+        </div>
+        ${passos.length ? `<div class="ms-progress"><span style="width:${pct}%"></span></div>` : ""}
+        <div class="ms-body">
+          ${groups.map((g) => `
+            ${g.nome ? `<div class="ms-group">${esc(g.nome)}</div>` : ""}
+            ${g.itens.map((x) => `<div class="todo${x.feito ? " is-done" : ""}" data-passo="${esc(x.id)}">
+              <input type="checkbox" data-act="check" ${x.feito ? "checked" : ""} aria-label="Feito" />
+              <span class="todo-text">${esc(x.t)}</span>
+              <button class="mini danger" type="button" data-act="del-passo" aria-label="Apagar item">×</button>
+            </div>`).join("")}`).join("")}
+          ${m.obs ? `<div class="ms-obs">${esc(m.obs).replace(/\n/g, "<br />")}</div>` : ""}
+          <div class="todo-add">
+            <input type="text" data-act="new-passo" placeholder="Novo item nesta etapa" autocomplete="off" aria-label="Novo item" />
+            <button class="btn btn-primary btn-small" type="button" data-act="add-passo">+</button>
+          </div>
+          <div class="ms-tools">
+            <button class="link-btn" type="button" data-act="open">editar etapa</button>
+            <span>
+              <button class="mini" type="button" data-act="up" ${i === 0 ? "disabled" : ""} aria-label="Subir">↑</button>
+              <button class="mini" type="button" data-act="down" ${i === ms.length - 1 ? "disabled" : ""} aria-label="Descer">↓</button>
+            </span>
+          </div>
         </div>
       </li>`;
     }).join("") || `<li class="empty">Nenhum marco. Adicione abaixo.</li>`;
@@ -1291,13 +1335,86 @@
     await write({ milestones: changes });
   }
 
-  document.getElementById("rm-list").addEventListener("click", (e) => {
-    const row = e.target.closest("[data-id]");
+  /* abre/fecha cada etapa; a semana atual abre sozinha (até alguém fechar) */
+  const MS_OPEN_KEY = "bc_ms_open_v1";
+  let msOpen = new Set(), msClosed = new Set();
+  try {
+    const raw = JSON.parse(localStorage.getItem(MS_OPEN_KEY) || "{}");
+    msOpen = new Set(raw.open || []);
+    msClosed = new Set(raw.closed || []);
+  } catch (err) {}
+  function saveMsOpen() {
+    try { localStorage.setItem(MS_OPEN_KEY, JSON.stringify({ open: [...msOpen], closed: [...msClosed] })); } catch (err) {}
+  }
+  function passosOf(m) { return Array.isArray(m.passos) ? m.passos : []; }
+  /* status acompanha o checklist: nada marcado = a fazer, alguma coisa =
+     em andamento, tudo = concluído */
+  function statusFor(passos, atual) {
+    if (!passos.length) return atual || "aberto";
+    const n = passos.filter((x) => x.feito).length;
+    return n === passos.length ? "feito" : n ? "andamento" : "aberto";
+  }
+  async function savePassos(id, passos) {
+    const m = milestones[id];
+    if (!m) return;
+    const status = statusFor(passos, m.status);
+    await write({ milestones: { [id]: { ...m, passos, status, atualizado: Date.now() } } });
+    if (status === "feito" && m.status !== "feito") showToast(`${m.titulo.split("·")[0].trim()} concluída ✓`);
+  }
+  function addPasso(id, input) {
+    const m = milestones[id];
+    const t = input.value.trim();
+    if (!m || !t) { input.focus(); return; }
+    input.value = "";
+    input.blur();
+    const passos = passosOf(m);
+    savePassos(id, [...passos, { id: newId("p"), g: "Extra", t, feito: false }]);
+    setTimeout(() => {
+      const again = document.querySelector(`#rm-list [data-id="${CSS.escape(id)}"] [data-act="new-passo"]`);
+      if (again) again.focus();
+    }, 30);
+  }
+
+  const rmList = document.getElementById("rm-list");
+  rmList.addEventListener("click", (e) => {
+    const row = e.target.closest(".ms[data-id]");
     const act = e.target.closest("[data-act]");
     if (!row || !act) return;
-    if (act.dataset.act === "open") openMilestone(row.dataset.id);
-    else if (act.dataset.act === "up") moveMs(row.dataset.id, -1);
-    else if (act.dataset.act === "down") moveMs(row.dataset.id, 1);
+    const id = row.dataset.id;
+    const a = act.dataset.act;
+    if (a === "toggle") {
+      if (e.target.closest("input")) return;
+      const isOpen = row.classList.toggle("is-open");
+      act.setAttribute("aria-expanded", isOpen);
+      if (isOpen) { msOpen.add(id); msClosed.delete(id); } else { msOpen.delete(id); msClosed.add(id); }
+      saveMsOpen();
+    }
+    else if (a === "open") openMilestone(id);
+    else if (a === "up") moveMs(id, -1);
+    else if (a === "down") moveMs(id, 1);
+    else if (a === "add-passo") addPasso(id, row.querySelector('[data-act="new-passo"]'));
+    else if (a === "del-passo") {
+      const pid = e.target.closest("[data-passo]").dataset.passo;
+      const item = passosOf(milestones[id]).find((x) => x.id === pid);
+      if (item && window.confirm(`Tirar "${item.t}" desta etapa?`)) savePassos(id, passosOf(milestones[id]).filter((x) => x.id !== pid));
+    }
+  });
+  rmList.addEventListener("change", (e) => {
+    const row = e.target.closest(".ms[data-id]");
+    if (!row || !milestones[row.dataset.id]) return;
+    const id = row.dataset.id;
+    if (e.target.dataset.act === "check") {
+      const pid = e.target.closest("[data-passo]").dataset.passo;
+      savePassos(id, passosOf(milestones[id]).map((x) => (x.id === pid ? { ...x, feito: e.target.checked } : x)));
+    } else if (e.target.dataset.act === "meta-check") {
+      write({ milestones: { [id]: { ...milestones[id], status: e.target.checked ? "feito" : "aberto", atualizado: Date.now() } } });
+    }
+  });
+  rmList.addEventListener("keydown", (e) => {
+    const row = e.target.closest(".ms[data-id]");
+    if (!row) return;
+    if (e.key === "Enter" && e.target.dataset.act === "new-passo") addPasso(row.dataset.id, e.target);
+    else if ((e.key === "Enter" || e.key === " ") && e.target.dataset.act === "toggle") { e.preventDefault(); e.target.click(); }
   });
 
   async function addMilestone() {
@@ -1322,7 +1439,6 @@
     document.getElementById("ms-nome").value = m.titulo;
     document.getElementById("ms-data").value = m.data || "";
     document.getElementById("ms-inicio").value = m.inicio || "";
-    document.getElementById("ms-foco").value = (Array.isArray(m.foco) ? m.foco : []).join("\n");
     document.getElementById("ms-status").value = m.status || "aberto";
     document.getElementById("ms-obs").value = m.obs || "";
     openPanel(msPanel);
@@ -1336,8 +1452,7 @@
       titulo,
       data: document.getElementById("ms-data").value,
       inicio: document.getElementById("ms-inicio").value,
-      foco: document.getElementById("ms-foco").value.split("\n").map((x) => x.trim()).filter(Boolean),
-      status: document.getElementById("ms-status").value,
+      status: passosOf(milestones[id]).length ? statusFor(passosOf(milestones[id])) : document.getElementById("ms-status").value,
       obs: document.getElementById("ms-obs").value.trim(),
       atualizado: Date.now(),
     } } });

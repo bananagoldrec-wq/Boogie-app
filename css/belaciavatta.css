@@ -479,11 +479,31 @@ body.has-player .toast { bottom: calc(92px + env(safe-area-inset-bottom)); }
   display: flex; flex-direction: column; gap: 6px;
 }
 .rm-combinados li::before { content: "→ "; color: var(--wine); }
-.ms-foco { margin: 8px 0 0; padding: 0 0 0 16px; font-size: 0.86rem; line-height: 1.45; display: flex; flex-direction: column; gap: 4px; }
-.ms-foco li::marker { color: var(--ink-dim); }
-.ms-obs { margin-top: 6px; font-style: italic; }
 .ms.is-meta .item-title { color: var(--wine); }
 .ms.is-meta::before { border-radius: 2px; transform: rotate(45deg); border-color: var(--wine); }
 .ms.is-meta.is-feito::before { background: var(--wine); }
 .ms.is-now::before { background: var(--ink); border-color: var(--ink); box-shadow: 0 0 0 4px var(--soft); }
 .ms.is-now .item-sub:first-of-type { color: var(--ink); }
+
+/* etapa do cronograma = checklist que abre e fecha */
+.ms { border-bottom: var(--line); }
+.ms-bar { display: flex; align-items: center; gap: 12px; padding: 14px 0; cursor: pointer; user-select: none; }
+.ms-bar:not([data-act]) { cursor: default; }
+.ms-bar-main { flex: 1; min-width: 0; }
+.ms-bar .late { color: var(--late); }
+.ms-count { font-size: 0.78rem; color: var(--ink-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ms-count.is-full { color: var(--ok); }
+.ms .chevron { transition: transform 0.15s; }
+.ms:not(.is-open) .chevron { transform: rotate(-90deg); }
+.ms-progress { height: 2px; background: var(--hair); margin: -6px 0 8px; border-radius: 1px; overflow: hidden; }
+.ms-progress span { display: block; height: 100%; background: var(--ink); }
+.ms.is-feito .ms-progress span { background: var(--ok); }
+.ms-body { display: none; padding: 2px 0 16px; }
+.ms.is-open .ms-body { display: block; }
+.ms-group { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-dim); margin: 14px 0 4px; }
+.ms-group:first-child { margin-top: 4px; }
+.ms-body .todo-text { padding: 4px 0; line-height: 1.35; }
+.ms-obs { margin-top: 12px; padding-left: 10px; border-left: 2px solid var(--hair); font-size: 0.82rem; font-style: italic; color: var(--ink-dim); line-height: 1.5; }
+.ms-tools { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.ms.is-feito .item-title { text-decoration: none; color: var(--ink-dim); }
+.ms::before { top: 22px; }
