@@ -14,7 +14,7 @@
   /* BUILD tem que ser igual ao data-build do belaciavatta.html: suba os
      dois juntos com o ?v=. Se o HTML velho carregar o JS novo (cache),
      recarrega uma vez em vez de travar. */
-  const BUILD = "5";
+  const BUILD = "6";
   const ICON_PLAY = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7 4.9v14.2a.9.9 0 0 0 1.4.8l11-7.1a.9.9 0 0 0 0-1.6l-11-7.1A.9.9 0 0 0 7 4.9Z"/></svg>';
   const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>';
   if (document.documentElement.dataset.build !== BUILD) {
@@ -777,12 +777,33 @@
   const plSeek = document.getElementById("pl-seek");
   let seeking = false;
 
-  function srcOf(id) {
-    const t = tracks[id];
-    if (!t || !t.audio) return "";
-    if (t.audio.local) return localUrls.get(id) || "";
-    return t.audio.url || "";
+  /* Arquivo do Drive: primeiro pela API do Drive (com a chave do app —
+     responde com Range, que o Safari do iPhone exige pra tocar), depois
+     pelos endereços de download comuns, que funcionam em outros
+     navegadores. Se um falhar, o player tenta o próximo. */
+  function driveIdOf(a) {
+    const m = `${a.url || ""} ${a.link || ""}`.match(/(?:id=|\/d\/)([\w-]{10,})/);
+    return m && m[1];
   }
+  function sourcesOf(id) {
+    const t = tracks[id];
+    if (!t || !t.audio) return [];
+    const a = t.audio;
+    if (a.local) return localUrls.has(id) ? [localUrls.get(id)] : [];
+    if (a.origem === "drive") {
+      const fid = driveIdOf(a);
+      if (fid) {
+        return [
+          `https://www.googleapis.com/drive/v3/files/${fid}?alt=media&key=${firebaseConfig.apiKey}`,
+          `https://drive.usercontent.google.com/download?id=${fid}&export=download&confirm=t`,
+          `https://drive.google.com/uc?export=download&id=${fid}`,
+        ];
+      }
+    }
+    return a.url ? [a.url] : [];
+  }
+  function srcOf(id) { return sourcesOf(id)[0] || ""; }
+  let srcList = [], srcIdx = 0;
   function playable() {
     return albumOrder().filter(([id]) => srcOf(id)).map(([id]) => id);
   }
@@ -794,11 +815,10 @@
       return;
     }
     player.id = id;
+    srcList = sourcesOf(id);
+    srcIdx = 0;
     audio.src = src;
-    audio.play().catch((err) => {
-      console.warn(err);
-      showToast("Não deu pra tocar. Se for link do Drive, confira se está em \"Qualquer pessoa com o link\".");
-    });
+    tryPlay();
     if ("mediaSession" in navigator) {
       try {
         navigator.mediaSession.metadata = new MediaMetadata({ title: tracks[id].titulo, artist: "Bela Ciavatta", album: "álbum · demos" });
@@ -855,8 +875,22 @@
     document.getElementById("pl-cur").textContent = fmtTime(audio.currentTime);
     if (!seeking && audio.duration) plSeek.value = Math.round((audio.currentTime / audio.duration) * 1000);
   });
+  function tryPlay() {
+    audio.play().catch((err) => {
+      console.warn(err);
+      // erro de arquivo cai no "error" abaixo, que tenta o próximo endereço
+      if (err && err.name === "NotAllowedError") showToast("Toque no ▶ de novo pra tocar.");
+    });
+  }
+
   audio.addEventListener("error", () => {
     if (!player.id) return;
+    if (srcIdx + 1 < srcList.length) {
+      srcIdx++;
+      audio.src = srcList[srcIdx];
+      tryPlay();
+      return;
+    }
     const t = tracks[player.id];
     const drive = t && t.audio && t.audio.origem === "drive";
     audio.pause();
