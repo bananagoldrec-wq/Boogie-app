@@ -1,0 +1,17 @@
+{
+  "name": "Bela Ciavatta · Álbum",
+  "short_name": "Bela Ciavatta",
+  "description": "Finalização do álbum: demos, calendário, road map e to-do de cada faixa.",
+  "lang": "pt-BR",
+  "start_url": "./belaciavatta.html",
+  "scope": "./belaciavatta.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3ebdd",
+  "theme_color": "#f3ebdd",
+  "icons": [
+    { "src": "icons/icon-belaciavatta-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-belaciavatta-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-belaciavatta-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

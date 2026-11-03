@@ -366,3 +366,63 @@ verdade). Ao mexer em `js/bananagold.js`/`css/bananagold.css`, suba o `?v=` do
 `bananagold.html` e, junto, o `data-build` do `<html>` e o `BUILD` no topo
 do JS (os três iguais). Se o celular abrir a página velha com o código novo,
 o app percebe a diferença e recarrega sozinho em vez de travar.
+
+---
+
+# 🎙️ Bela Ciavatta · finalização do álbum
+
+App pra fechar o álbum, na mesma base do app da Banana Gold. Abre em
+`belaciavatta.html` (senha: `belaciavatta`, em `APP_PASSWORD` no topo de
+`js/belaciavatta.js` — trava visitante casual, não é segurança de verdade).
+A tela inicial tem o nome, a barra de progresso do álbum e **quatro abas**:
+
+- **Demos** — as faixas na ordem do álbum, com ▶ pra ouvir no player de baixo
+  (anterior/próxima, passa sozinho pra próxima, controles da tela de
+  bloqueio). Nome editável, ↑/↓ pra mudar a ordem, **+ áudio** sobe o arquivo
+  (WAV, MP3, AIFF, FLAC, M4A; dá pra escolher vários de uma vez — cada um vira
+  uma faixa — ou arrastar pra aba no computador) e 🔗 cola um link do Google
+  Drive ou Dropbox no lugar do upload.
+- **Calendário** — mês a mês com os compromissos (estúdio, ensaio, mix,
+  master, reunião, entrega, lançamento), cada um com horário e faixa ligada,
+  e os prazos dos marcos do road map (◆). Embaixo, a lista dos próximos e dos
+  atrasados.
+- **Road map** — quantas faixas estão em cada etapa (Demo → Arranjo →
+  Gravação → Mix → Master → Pronta), a barrinha de cada faixa e a linha dos
+  marcos do álbum (repertório, pré-produção, gravações, mix, master, arte,
+  distribuidora, divulgação, lançamento), cada um com prazo, status e notas.
+  Dá pra reordenar, apagar e criar marcos.
+- **To-do** — uma barra por faixa que abre e fecha, com a etapa, as tarefas
+  (marcar, editar, apagar, adicionar), notas da faixa e "+ usar checklist
+  padrão" (letra, arranjo, vozes, instrumentos, edição, mix, master, créditos,
+  ISRC). "Pendentes" esconde o que já foi feito.
+
+Grava na nuvem nas coleções `bc_tracks`, `bc_events` e `bc_milestones` (mesmo
+projeto Firebase) e os áudios no Storage em `bc_demos/`. Sem nuvem, segue
+salvando no aparelho e sobe o pendente quando conectar (a bolinha no topo fica
+verde quando está sincronizado). Pra ligar, acrescente nas regras do
+**Firestore** (junto das que já existem):
+
+```
+    // Bela Ciavatta · álbum
+    match /bc_tracks/{doc}     { allow read, write: if request.auth != null; }
+    match /bc_events/{doc}     { allow read, write: if request.auth != null; }
+    match /bc_milestones/{doc} { allow read, write: if request.auth != null; }
+```
+
+e nas do **Storage**:
+
+```
+    match /bc_demos/{faixa}/{arquivo} {
+      allow read, delete: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 300 * 1024 * 1024
+                   && request.resource.contentType.matches('audio/.*');
+    }
+```
+
+Enquanto o Storage não liberar, o áudio subido fica só no aparelho de quem
+subiu ("só neste aparelho") — use 🔗 com um link do Drive pra todo mundo
+ouvir. Ícones: `python3 tools/make_belaciavatta_icons.py`. Ao mexer em
+`js/belaciavatta.js`/`css/belaciavatta.css`, suba o `?v=` do
+`belaciavatta.html` e, junto, o `data-build` do `<html>` e o `BUILD` no topo do
+JS (os três iguais).
