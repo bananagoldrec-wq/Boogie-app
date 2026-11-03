@@ -8,7 +8,7 @@ const DAYS     = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 const DAY_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
 const START_H  = 6;
 const END_H    = 20;
-const ROUTINE_VERSION = 8;
+const ROUTINE_VERSION = 9;
 
 const CATS = [
   { id:'exercise', label:'Exercício',   color:'#A8C4A2' },
@@ -129,6 +129,7 @@ const ROUTINE = [
   { di:4, h:9,  m:0, text:'KNN',      category:'study',    startTime:'09:00', endTime:'11:00' },
   ...[0,2,3,4].map(di => ({ di, h:12, m:0, text:'Estúdio', category:'work', startTime:'12:00', endTime:'18:00', v:7 })),
   { di:1, h:13, m:0, text:'Estúdio', category:'work', startTime:'13:00', endTime:'18:00', v:8 },
+  { di:1, h:12, m:0, text:'Canto',   category:'study', startTime:'12:00', endTime:'13:00', v:9 },
 ];
 
 // ── State ────────────────────────────────────────────────────────────────────
