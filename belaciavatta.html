@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-build="9">
+<html lang="pt-BR" data-build="10">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/belaciavatta.css?v=5" />
+  <link rel="stylesheet" href="css/belaciavatta.css?v=6" />
 </head>
 <body>
 
@@ -83,19 +83,20 @@
 
   <!-- Road map -->
   <main id="view-roadmap" class="view" hidden>
-    <section class="rm-summary">
-      <h3 class="sub-title">Faixas por etapa</h3>
-      <div id="rm-stages" class="rm-stages"></div>
-      <div id="rm-matrix" class="rm-matrix"></div>
-    </section>
     <section>
-      <h3 class="sub-title">Marcos do álbum</h3>
+      <h3 class="sub-title rm-head">Cronograma de finalização <span>V1 · 30/10</span></h3>
+      <ul id="rm-combinados" class="rm-combinados"></ul>
       <ol id="rm-list" class="rm-list"></ol>
       <div class="add-row">
         <input id="m-titulo" type="text" placeholder="Novo marco (ex.: sessão de cordas)" autocomplete="off" aria-label="Novo marco" />
         <input id="m-data" type="date" aria-label="Data" />
         <button id="m-add" class="btn btn-primary" type="button">Adicionar</button>
       </div>
+    </section>
+    <section class="rm-summary">
+      <h3 class="sub-title">Faixas por etapa</h3>
+      <div id="rm-stages" class="rm-stages"></div>
+      <div id="rm-matrix" class="rm-matrix"></div>
     </section>
   </main>
 
@@ -175,9 +176,19 @@
       </div>
       <div class="field-row">
         <div class="field">
-          <label for="ms-data">Prazo</label>
+          <label for="ms-inicio">Início</label>
+          <input id="ms-inicio" type="date" />
+        </div>
+        <div class="field">
+          <label for="ms-data">Fim / prazo</label>
           <input id="ms-data" type="date" />
         </div>
+      </div>
+      <div class="field">
+        <label for="ms-foco">O que precisa ser feito (um item por linha)</label>
+        <textarea id="ms-foco" rows="4"></textarea>
+      </div>
+      <div class="field-row">
         <div class="field">
           <label for="ms-status">Status</label>
           <select id="ms-status">
@@ -233,6 +244,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/belaciavatta.js?v=9"></script>
+  <script src="js/belaciavatta.js?v=10"></script>
 </body>
 </html>

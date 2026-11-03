@@ -15,7 +15,7 @@
   /* BUILD tem que ser igual ao data-build do belaciavatta.html: suba os
      dois juntos com o ?v=. Se o HTML velho carregar o JS novo (cache),
      recarrega uma vez em vez de travar. */
-  const BUILD = "9";
+  const BUILD = "10";
   const ICON_PLAY = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7 4.9v14.2a.9.9 0 0 0 1.4.8l11-7.1a.9.9 0 0 0 0-1.6l-11-7.1A.9.9 0 0 0 7 4.9Z"/></svg>';
   const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>';
   if (document.documentElement.dataset.build !== BUILD) {
@@ -88,19 +88,72 @@
     "ISRC e metadados",
   ];
 
-  /* road map padrão de finalização de álbum (sem datas: a equipe põe) */
+  /* Road map: "PONTO DE PARTIDA — cronograma de finalização V1 (30/10)".
+     Cada semana é um marco com início e fim (data = sexta), o que precisa
+     ser feito (foco, um item por linha) e as observações. As metas são
+     marcos de um dia só. */
+  const RM_COMBINADOS = [
+    "A cada semana precisamos fechar com a agenda da próxima previamente amarrada!",
+    "O cronograma precisa ser confirmado com todos os envolvidos com antecedência, inclusive mix e master.",
+  ];
+  const BLOCO_1 = "Ponto de Partida, Nada, Amor1x, Moço, Adeus Por Despedida, Romance";
+  const BLOCO_2 = "Uma, Preciso Me Encontrar, Guarnicê, Tem Jeito Não";
   const SEED_MILESTONES = {
-    "ms-repertorio": { titulo: "Fechar repertório e ordem das faixas", ordem: 1 },
-    "ms-preproducao": { titulo: "Pré-produção e arranjos", ordem: 2 },
-    "ms-gravacao": { titulo: "Gravações", ordem: 3 },
-    "ms-mix": { titulo: "Mixagem", ordem: 4 },
-    "ms-master": { titulo: "Masterização", ordem: 5 },
-    "ms-arte": { titulo: "Capa, arte e fotos", ordem: 6 },
-    "ms-distribuicao": { titulo: "Distribuidora, ISRC e metadados", ordem: 7 },
-    "ms-divulgacao": { titulo: "Plano de divulgação e single", ordem: 8 },
-    "ms-lancamento": { titulo: "Lançamento do álbum", ordem: 9 },
+    "rm-s1": {
+      titulo: "Semana 1 · Fechar retoques finais", inicio: "2026-11-02", data: "2026-11-06",
+      foco: [
+        "FECHAR as 6 faixas que precisam de retoques finais (Nada, Amor1x, Moço, Adeus Por Despedida, Romance)",
+        "(Bela) DEFINIÇÃO de bpm/tom de Preciso Me Encontrar, e o que vai ser do Guarnicê (ele faz sentido pra introduzir esse álbum?)",
+      ],
+      obs: "No primeiro dia, planejar todos os outros detalhadamente (o que precisa de estúdio, que horas o encontro de cada dia etc.).\nUm dos dias vai precisar resolver 2 músicas.\nDudu vai estar menos presente, pois está finalizando um projeto grande. Todos os dias vai acompanhar os resultados.",
+    },
+    "rm-s2": {
+      titulo: "Semana 2 · Mandar pra mix + arranjos", inicio: "2026-11-09", data: "2026-11-13",
+      foco: [
+        `MANDAR PRA MIX as 7 faixas prontas (${BLOCO_1})`,
+        `ARRANJO / GUIA / PLANO DE GRAVAÇÃO — ${BLOCO_2}`,
+      ],
+      obs: "É importante nos dividirmos: no início da semana, enquanto o Beno manda pra mix, Dudu e Bela fecham arranjos. No final, nos juntamos para fazer as guias.\nEncontro com Laila pra fechar o chordmelody de Preciso Me Encontrar, a partir de melodia pré-sugerida de contraponto (gravar harmonia + voz → Bela cantar por cima).",
+    },
+    "rm-s3": {
+      titulo: "Semana 3 · Gravações / edits + recall mix", inicio: "2026-11-16", data: "2026-11-20",
+      foco: [
+        `GRAVAÇÕES / EDITS — ${BLOCO_2}`,
+        `RECALL MIX — ${BLOCO_1}`,
+      ],
+      obs: "Não deve ter todas as mix prontas de cara, mas é ideal que tenha a maioria.\nTodas as gravações, inclusive vozes selecionadas e afinadas, precisam caber aqui.",
+    },
+    "rm-s4": {
+      titulo: "Semana 4 · Retoques finais / mandar pra mix", inicio: "2026-11-23", data: "2026-11-27",
+      foco: [
+        `RETOQUES FINAIS / MANDAR PRA MIX — ${BLOCO_2}`,
+        "RECALL MIX — o que faltar da semana passada + o que for ficando pronto",
+      ],
+      obs: "",
+    },
+    "rm-s5": {
+      titulo: "Semana 5 · Margem de erro + recall mix", inicio: "2026-11-30", data: "2026-12-04",
+      foco: [
+        "MARGEM DE ERRO pra qualquer retoque final",
+        `RECALL MIX — ${BLOCO_2}, ${BLOCO_1}`,
+      ],
+      obs: "",
+    },
+    "rm-meta-mix": { titulo: "META · Mix pronta", data: "2026-12-07", meta: true, foco: [], obs: "" },
+    "rm-s6": {
+      titulo: "Semana 6 · Mandar o álbum pra master", inicio: "2026-12-07", data: "2026-12-11",
+      foco: ["MANDAR O ÁLBUM PRA MASTER"], obs: "",
+    },
+    "rm-s7": {
+      titulo: "Semana 7 · Recall master", inicio: "2026-12-14", data: "2026-12-18",
+      foco: ["RECALL MASTER"], obs: "",
+    },
+    "rm-meta-master": { titulo: "META · Master pronta", data: "2026-12-23", meta: true, foco: [], obs: "" },
+    "rm-meta-limite": { titulo: "LIMITE ABSOLUTO", data: "2027-01-11", meta: true, foco: [], obs: "" },
   };
-  Object.values(SEED_MILESTONES).forEach((m) => Object.assign(m, { data: "", status: "aberto", obs: "", ...m }));
+  Object.values(SEED_MILESTONES).forEach((m, i) => Object.assign(m, { status: "aberto", ordem: i + 1, ...m }));
+  // marcos genéricos da primeira versão: se alguém editou, não voltam
+  const OLD_SEED_MS = new Set(["ms-repertorio", "ms-preproducao", "ms-gravacao", "ms-mix", "ms-master", "ms-arte", "ms-distribuicao", "ms-divulgacao", "ms-lancamento"]);
 
   /* Faixas que já vêm no app: os bounces da pasta BOUNCES no Google Drive
      (https://drive.google.com/drive/folders/1LMmr416ktsMHmQD1AK-cDilvwiMybh6H).
@@ -165,6 +218,7 @@
     const ms = {};
     Object.entries(SEED_MILESTONES).forEach(([id, m]) => { ms[id] = { ...m }; });
     Object.entries(stored.milestones).forEach(([id, m]) => {
+      if (OLD_SEED_MS.has(id)) return;
       if (!m || m.deleted) delete ms[id];
       else ms[id] = { ...(ms[id] || {}), ...m };
     });
@@ -343,6 +397,10 @@
   }
   function daysBetween(fromKey, toKey) {
     return Math.round((dateFromKey(toKey) - dateFromKey(fromKey)) / 86400000);
+  }
+  function shortBr(key) {
+    const dt = dateFromKey(key);
+    return `${WEEKDAY_SHORT[dt.getDay()]} ${dt.getDate()}/${dt.getMonth() + 1}`;
   }
   function formatBr(key) {
     const dt = dateFromKey(key);
@@ -1193,19 +1251,25 @@
       }).join("")
       : `<div class="empty">As faixas aparecem aqui quando entrarem na aba Demos.</div>`;
 
+    document.getElementById("rm-combinados").innerHTML = RM_COMBINADOS.map((c) => `<li>${esc(c)}</li>`).join("");
     const ms = msOrder();
     document.getElementById("rm-list").innerHTML = ms.map(([id, m], i) => {
       const late = m.data && m.status !== "feito" && m.data < todayKey;
+      const now = m.inicio && m.data && m.inicio <= todayKey && todayKey <= m.data;
+      const quando = m.inicio && m.data ? `${shortBr(m.inicio)} → ${shortBr(m.data)}` : m.data ? formatBr(m.data) : "sem prazo";
       const sub = [
-        m.status === "feito" ? "concluído" : m.status === "andamento" ? "em andamento" : "a fazer",
-        m.data ? `${formatBr(m.data)} (${countdown(m.data)})` : "sem prazo",
-      ].join(" · ");
-      return `<li class="ms is-${esc(m.status || "aberto")}" data-id="${esc(id)}">
+        quando,
+        now ? "esta semana" : m.data && m.status !== "feito" ? countdown(m.inicio && m.inicio > todayKey ? m.inicio : m.data) : "",
+        m.status === "feito" ? "concluído" : m.status === "andamento" ? "em andamento" : "",
+      ].filter(Boolean).join(" · ");
+      const foco = Array.isArray(m.foco) ? m.foco : [];
+      return `<li class="ms is-${esc(m.status || "aberto")}${m.meta ? " is-meta" : ""}${now ? " is-now" : ""}" data-id="${esc(id)}">
         <div class="item">
           <button type="button" class="item-main" data-act="open" style="text-align:left">
             <div class="item-title">${esc(m.titulo)}</div>
             <div class="item-sub">${esc(sub)}</div>
-            ${m.obs ? `<div class="item-sub">${esc(m.obs).slice(0, 140)}</div>` : ""}
+            ${foco.length ? `<ul class="ms-foco">${foco.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>` : ""}
+            ${m.obs ? `<div class="item-sub ms-obs">${esc(m.obs.split("\n")[0]).slice(0, 120)}${m.obs.length > 120 || m.obs.includes("\n") ? " …" : ""}</div>` : ""}
           </button>
           ${late ? `<span class="badge is-late">atrasado</span>` : ""}
           <span class="ms-move">
@@ -1254,9 +1318,11 @@
     if (!m) return;
     activeMsId = id;
     document.getElementById("ms-title").textContent = m.titulo;
-    document.getElementById("ms-sub").textContent = m.data ? `${formatBr(m.data)} · ${countdown(m.data)}` : "sem prazo";
+    document.getElementById("ms-sub").textContent = m.inicio && m.data ? `${shortBr(m.inicio)} → ${shortBr(m.data)}` : m.data ? `${formatBr(m.data)} · ${countdown(m.data)}` : "sem prazo";
     document.getElementById("ms-nome").value = m.titulo;
     document.getElementById("ms-data").value = m.data || "";
+    document.getElementById("ms-inicio").value = m.inicio || "";
+    document.getElementById("ms-foco").value = (Array.isArray(m.foco) ? m.foco : []).join("\n");
     document.getElementById("ms-status").value = m.status || "aberto";
     document.getElementById("ms-obs").value = m.obs || "";
     openPanel(msPanel);
@@ -1269,6 +1335,8 @@
       ...milestones[id],
       titulo,
       data: document.getElementById("ms-data").value,
+      inicio: document.getElementById("ms-inicio").value,
+      foco: document.getElementById("ms-foco").value.split("\n").map((x) => x.trim()).filter(Boolean),
       status: document.getElementById("ms-status").value,
       obs: document.getElementById("ms-obs").value.trim(),
       atualizado: Date.now(),
