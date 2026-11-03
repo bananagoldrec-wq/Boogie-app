@@ -407,7 +407,6 @@ As 6 demos da pasta BOUNCES do Drive vêm em versão leve (AAC 192k) em
 `audio/belaciavatta/`, servidas junto com o app; o ↗ abre o WAV original.
 Áudio subido pelo app tentaria o Firebase Storage em `bg_demos/bc-<faixa>/`,
 mas o Storage não está ativado no projeto, então fica só no aparelho de quem
-subiu. Enquanto o Storage não liberar, o áudio subido fica só no aparelho de quem
 subiu ("só neste aparelho") — use 🔗 com um link do Drive pra todo mundo
 ouvir. Ícones: `python3 tools/make_belaciavatta_icons.py`. Ao mexer em
 `js/belaciavatta.js`/`css/belaciavatta.css`, suba o `?v=` do
