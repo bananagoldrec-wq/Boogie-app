@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Rotina" />
   <title>Minha Rotina</title>
-  <link rel="stylesheet" href="css/tracker.css?v=15" />
+  <link rel="stylesheet" href="css/tracker.css?v=16" />
 </head>
 <body>
 
@@ -198,8 +198,13 @@
         <button class="lead-btn" data-mins="30">30 min antes</button>
       </div>
       <button id="btn-test-alarm" class="btn secondary" type="button" style="width:100%;margin-top:12px">🐦 Testar alarme</button>
-      <p class="settings-note">O alarme do app só toca com o app aberto na tela — o iPhone pausa apps da web em segundo plano. Para alarme garantido, adicione a rotina ao Google Agenda:</p>
+      <p class="settings-note">O alarme do app só toca com o app aberto na tela. Com o Google Agenda conectado, o Google avisa no celular mesmo com o app fechado.</p>
       <label class="field-label">Google Agenda</label>
+      <p id="gcal-status" class="settings-note gcal-status"></p>
+      <button id="btn-gcal-connect" class="btn primary" type="button" style="width:100%">Conectar Google Agenda</button>
+      <button id="btn-gcal-sync" class="btn secondary" type="button" style="width:100%;margin-top:8px" hidden>Sincronizar agora</button>
+      <button id="btn-gcal-disconnect" class="btn secondary" type="button" style="width:100%;margin-top:8px" hidden>Desconectar</button>
+      <label id="gcal-links-label" class="field-label">Ou adicione uma por uma</label>
       <div id="gcal-list" class="gcal-list"></div>
     </div>
   </div>
@@ -221,7 +226,8 @@
   <!-- Confetti canvas -->
   <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
-  <script src="js/tracker.js?v=15"></script>
+  <script src="js/tracker.js?v=16"></script>
+  <script src="js/gcal.js?v=16"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => {});

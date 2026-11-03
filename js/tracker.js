@@ -309,6 +309,8 @@ function seedRoutineIfEmpty() {
     S.routineApplied = ROUTINE_VERSION;
     save();
   }
+  // With Google Agenda linked, weekly repeats come from Google's recurring events
+  if (typeof gcalConnected === 'function' && gcalConnected()) return;
   const wkKey = wk();
   if (S.seededWeeks.includes(wkKey)) return;
   const hasActivity = Object.keys(S.activities).some(k => k.startsWith(wkKey));
@@ -687,6 +689,7 @@ function saveAct() {
 
   // Determine target slot from start time input
   let { di, h, m } = editCell;
+  const orig = getAct(di, h, m);
   if (startTime) {
     const [sh, sm] = startTime.split(':').map(Number);
     const newH = sh, newM = sm < 30 ? 0 : 30;
@@ -702,7 +705,7 @@ function saveAct() {
   const actObj = text ? {
     text,
     category: selCat || 'other',
-    done: existing ? existing.done : false,
+    done: orig ? orig.done : existing ? existing.done : false,
     startTime: startTime || `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,
     endTime:   endTime || null,
     pin: _pinActive || undefined,
@@ -718,10 +721,14 @@ function saveAct() {
     S.pinnedTemplate.splice(tplIdx, 1);
   }
 
+  if (actObj) gcalBeforeSave(orig, actObj);
+  else        gcalQueueDelete(orig, di);
+
   setAct(di, h, m, actObj);
   save();
   closeActModal();
   buildGrid();
+  gcalSync();
 }
 
 // ── Categories ────────────────────────────────────────────────────────────────
@@ -1113,6 +1120,7 @@ function shiftWeek(delta) {
   weekStart.setDate(weekStart.getDate() + delta * 7);
   updateWeekLabel();
   buildGrid();
+  gcalSync();
 }
 
 function updateWeekLabel() {
@@ -1678,6 +1686,7 @@ function init() {
   q('#btn-del-act').addEventListener('click', () => {
     if (!editCell) return;
     const { di, h, m } = editCell;
+    gcalQueueDelete(getAct(di, h, m), di);
     setAct(di, h, m, null);
     if (!S.pinnedTemplate) S.pinnedTemplate = [];
     const tplIdx = S.pinnedTemplate.findIndex(p => p.di === di && p.h === h && p.m === m);
@@ -1685,6 +1694,7 @@ function init() {
     save();
     closeActModal();
     buildGrid();
+    gcalSync();
   });
   q('#act-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveAct(); });
   q('#btn-pin-act').addEventListener('click', () => { _pinActive = !_pinActive; refreshPinBtn(); });
@@ -1778,6 +1788,7 @@ function init() {
 function openSettings() {
   refreshLeadUI();
   renderGcalList();
+  renderGcalSettings();
   q('#settings-overlay').hidden = false;
 }
 
