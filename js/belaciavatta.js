@@ -1,9 +1,10 @@
 /* Bela Ciavatta · finalização do álbum — lógica do app.
    Mesma base do app da Banana Gold: grava no aparelho e sincroniza pelo
-   Firestore quando dá. Três coleções:
-   - bc_tracks:     as faixas do álbum (ordem, etapa, áudio, to-do, notas);
-   - bc_events:     compromissos do calendário (estúdio, ensaio, entrega...);
-   - bc_milestones: os marcos do road map.
+   Firestore quando dá. Três tipos de registro, todos guardados na
+   coleção pato_settings (veja HOST_COLLECTION) como "bc__<tipo>__<id>":
+   - tracks:     as faixas do álbum (ordem, etapa, áudio, to-do, notas);
+   - events:     compromissos do calendário (estúdio, ensaio, entrega...);
+   - milestones: os marcos do road map.
    Os marcos padrão vêm embutidos (SEED_MILESTONES); o que a equipe edita
    por cima vira um doc com o mesmo id, e apagar grava { deleted: true }
    pra ele não voltar. */
@@ -14,7 +15,7 @@
   /* BUILD tem que ser igual ao data-build do belaciavatta.html: suba os
      dois juntos com o ?v=. Se o HTML velho carregar o JS novo (cache),
      recarrega uma vez em vez de travar. */
-  const BUILD = "8";
+  const BUILD = "9";
   const ICON_PLAY = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7 4.9v14.2a.9.9 0 0 0 1.4.8l11-7.1a.9.9 0 0 0 0-1.6l-11-7.1A.9.9 0 0 0 7 4.9Z"/></svg>';
   const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>';
   if (document.documentElement.dataset.build !== BUILD) {
@@ -171,7 +172,14 @@
   }
 
   /* ── armazenamento: nuvem com reserva no aparelho ───────── */
-  let db, cols = {}, doc, onSnapshot, writeBatch;
+  /* Sem coleções próprias: os dados moram em `pato_settings`, que as
+     regras do projeto já liberam e o app do Pato só usa o doc
+     "templates". Cada registro vira um doc "bc__<tipo>__<id>", então não
+     encosta em nada do Pato e não precisa mexer nas regras do Firebase. */
+  const HOST_COLLECTION = "pato_settings";
+  const DOC_PREFIX = "bc__";
+  let db, hostCol = null, doc, onSnapshot, writeBatch;
+  const docRef = (col, id) => doc(hostCol, `${DOC_PREFIX}${col}__${id}`);
   let fbApp = null, fbUser = null;
   let cloudReady = false;
   let warnedLocal = false;
@@ -211,8 +219,8 @@
         const batch = writeBatch(db);
         Object.entries(changes).forEach(([col, items]) => {
           Object.entries(items).forEach(([id, entry]) => {
-            if (entry) batch.set(doc(cols[col], id), entry);
-            else batch.delete(doc(cols[col], id));
+            if (entry) batch.set(docRef(col, id), entry);
+            else batch.delete(docRef(col, id));
           });
         });
         await batch.commit();
@@ -239,8 +247,8 @@
     const batch = writeBatch(db);
     Object.entries(pending).forEach(([col, items]) => {
       Object.entries(items).forEach(([id, entry]) => {
-        if (entry) batch.set(doc(cols[col], id), entry);
-        else batch.delete(doc(cols[col], id));
+        if (entry) batch.set(docRef(col, id), entry);
+        else batch.delete(docRef(col, id));
       });
     });
     try {
@@ -265,32 +273,33 @@
   }
 
   function startSync() {
-    let firstSnaps = 0;
-    COLS.forEach((col) => {
-      let first = true;
-      onSnapshot(cols[col], (snap) => {
-        const next = {};
-        snap.forEach((d) => { next[d.id] = d.data(); });
-        // as alterações offline ainda não estão no snapshot
-        Object.entries(pending[col]).forEach(([id, entry]) => {
-          if (entry) next[id] = entry;
-          else delete next[id];
-        });
-        stored[col] = next;
-        if (first) {
-          first = false;
-          if (++firstSnaps === COLS.length) {
-            cloudReady = true;
-            renderSync();
-            flushPending();
-          }
-        }
-        saveLocal();
-        renderAll();
-      }, (err) => {
-        console.error(err);
-        goLocal(err && err.code);
+    onSnapshot(hostCol, (snap) => {
+      const next = emptyCols();
+      snap.forEach((d) => {
+        if (!d.id.startsWith(DOC_PREFIX)) return;
+        const rest = d.id.slice(DOC_PREFIX.length);
+        const cut = rest.indexOf("__");
+        const col = rest.slice(0, cut), id = rest.slice(cut + 2);
+        if (cut > 0 && next[col]) next[col][id] = d.data();
       });
+      // as alterações offline ainda não estão no snapshot
+      COLS.forEach((col) => {
+        Object.entries(pending[col]).forEach(([id, entry]) => {
+          if (entry) next[col][id] = entry;
+          else delete next[col][id];
+        });
+      });
+      stored = next;
+      if (!cloudReady) {
+        cloudReady = true;
+        renderSync();
+        flushPending();
+      }
+      saveLocal();
+      renderAll();
+    }, (err) => {
+      console.error(err);
+      goLocal(err && err.code);
     });
   }
 
@@ -308,11 +317,7 @@
       fbApp = appMod.initializeApp(firebaseConfig, "belaciavatta");
       const auth = authMod.getAuth(fbApp);
       db = fsMod.getFirestore(fbApp);
-      cols = {
-        tracks: fsMod.collection(db, "bc_tracks"),
-        events: fsMod.collection(db, "bc_events"),
-        milestones: fsMod.collection(db, "bc_milestones"),
-      };
+      hostCol = fsMod.collection(db, HOST_COLLECTION);
 
       authMod.signInAnonymously(auth).catch((err) => goLocal(err && err.code));
       let started = false;
@@ -672,7 +677,7 @@
     let a;
     try {
       const { mod, st } = await storage();
-      const path = `bc_demos/${id}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
+      const path = `bg_demos/bc-${id}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
       const task = mod.uploadBytesResumable(mod.ref(st, path), file, { contentType: file.type || "audio/wav" });
       await new Promise((res, rej) => {
         // se nada andar em 25 s, a nuvem não está aceitando: desiste

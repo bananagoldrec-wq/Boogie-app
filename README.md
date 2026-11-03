@@ -396,31 +396,18 @@ A tela inicial tem o nome, a barra de progresso do álbum e **quatro abas**:
   padrão" (letra, arranjo, vozes, instrumentos, edição, mix, master, créditos,
   ISRC). "Pendentes" esconde o que já foi feito.
 
-Grava na nuvem nas coleções `bc_tracks`, `bc_events` e `bc_milestones` (mesmo
-projeto Firebase) e os áudios no Storage em `bc_demos/`. Sem nuvem, segue
-salvando no aparelho e sobe o pendente quando conectar (a bolinha no topo fica
-verde quando está sincronizado). Pra ligar, acrescente nas regras do
-**Firestore** (junto das que já existem):
+Sincroniza pelo mesmo projeto Firebase dos outros apps **sem precisar mexer
+nas regras**: os registros moram na coleção `pato_settings` (já liberada; o
+app do Pato só usa o doc `templates` dela) com ids `bc__tracks__…`,
+`bc__events__…` e `bc__milestones__…`. O que uma pessoa faz aparece pras
+outras em ~2 s. Sem nuvem, segue salvando no aparelho e sobe o pendente quando
+conectar (a bolinha no topo fica verde quando está sincronizado).
 
-```
-    // Bela Ciavatta · álbum
-    match /bc_tracks/{doc}     { allow read, write: if request.auth != null; }
-    match /bc_events/{doc}     { allow read, write: if request.auth != null; }
-    match /bc_milestones/{doc} { allow read, write: if request.auth != null; }
-```
-
-e nas do **Storage**:
-
-```
-    match /bc_demos/{faixa}/{arquivo} {
-      allow read, delete: if request.auth != null;
-      allow write: if request.auth != null
-                   && request.resource.size < 300 * 1024 * 1024
-                   && request.resource.contentType.matches('audio/.*');
-    }
-```
-
-Enquanto o Storage não liberar, o áudio subido fica só no aparelho de quem
+As 6 demos da pasta BOUNCES do Drive vêm em versão leve (AAC 192k) em
+`audio/belaciavatta/`, servidas junto com o app; o ↗ abre o WAV original.
+Áudio subido pelo app tentaria o Firebase Storage em `bg_demos/bc-<faixa>/`,
+mas o Storage não está ativado no projeto, então fica só no aparelho de quem
+subiu. Enquanto o Storage não liberar, o áudio subido fica só no aparelho de quem
 subiu ("só neste aparelho") — use 🔗 com um link do Drive pra todo mundo
 ouvir. Ícones: `python3 tools/make_belaciavatta_icons.py`. Ao mexer em
 `js/belaciavatta.js`/`css/belaciavatta.css`, suba o `?v=` do
