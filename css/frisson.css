@@ -486,6 +486,22 @@ input:focus, select:focus, textarea:focus {
 
 .wa-hint { font-size: 0.72rem; color: var(--text-faint); }
 
+/* Opção extra discreta (ex.: adicionar segundo artista num B2B) — texto
+   pequeno em vez de botão cheio, pra não competir visualmente com o
+   fluxo principal de uma data com um único artista. */
+.discreet-toggle {
+  background: none;
+  border: none;
+  padding: 2px 0;
+  margin: -4px 0 10px;
+  color: var(--text-faint);
+  font-size: 0.78rem;
+  text-decoration: underline;
+  cursor: pointer;
+  display: block;
+}
+.discreet-toggle:hover { color: var(--cyan); }
+
 .no-phone-hint { font-size: 0.78rem; color: var(--danger); }
 
 /* ── Templates settings panel ───────────────────────────── */

@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-frisson-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-frisson-512.png" />
   <link rel="manifest" href="manifest-frisson.json" />
-  <link rel="stylesheet" href="css/frisson.css?v=16" />
+  <link rel="stylesheet" href="css/frisson.css?v=17" />
 </head>
 <body>
 
@@ -98,6 +98,24 @@
           <button id="pick-photo" class="btn btn-ghost" type="button">Escolher foto</button>
           <button id="share-photo" class="btn btn-ghost" type="button" hidden>Compartilhar</button>
           <button id="remove-photo" class="btn btn-danger-ghost" type="button" hidden>Remover</button>
+        </div>
+      </div>
+
+      <button id="toggle-second-artist" class="discreet-toggle" type="button">+ Segundo artista (B2B)</button>
+
+      <div id="second-artist-section" hidden>
+        <div class="field">
+          <label for="f-artista2">Segundo artista</label>
+          <input id="f-artista2" type="text" placeholder="Nome do segundo DJ ou artista" autocomplete="off" />
+        </div>
+        <div class="photo-row">
+          <div id="artist-photo-preview-2" class="photo-preview">Sem foto</div>
+          <div class="photo-actions">
+            <input id="f-photo-input-2" type="file" accept="image/*" hidden />
+            <button id="pick-photo-2" class="btn btn-ghost" type="button">Escolher foto</button>
+            <button id="share-photo-2" class="btn btn-ghost" type="button" hidden>Compartilhar</button>
+            <button id="remove-photo-2" class="btn btn-danger-ghost" type="button" hidden>Remover</button>
+          </div>
         </div>
       </div>
 
@@ -270,6 +288,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/frisson.js?v=32"></script>
+  <script type="module" src="js/frisson.js?v=33"></script>
 </body>
 </html>
