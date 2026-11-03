@@ -14,7 +14,7 @@
   /* BUILD tem que ser igual ao data-build do belaciavatta.html: suba os
      dois juntos com o ?v=. Se o HTML velho carregar o JS novo (cache),
      recarrega uma vez em vez de travar. */
-  const BUILD = "2";
+  const BUILD = "3";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bc_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -99,6 +99,28 @@
   };
   Object.values(SEED_MILESTONES).forEach((m) => Object.assign(m, { data: "", status: "aberto", obs: "", ...m }));
 
+  /* Faixas que já vêm no app: os bounces da pasta BOUNCES no Google Drive
+     (https://drive.google.com/drive/folders/1LMmr416ktsMHmQD1AK-cDilvwiMybh6H).
+     [id, título, id do arquivo no Drive, nome do arquivo, tamanho]. Pra
+     tocar aqui, os arquivos precisam estar em "Qualquer pessoa com o link".
+     O que a equipe edita vira um doc com o mesmo id por cima; apagar grava
+     { deleted: true } pra faixa não voltar. */
+  const SEED_TRACKS = Object.fromEntries([
+    ["seed-moco", "Moço", "1LN0Jn5NlyoOeb8DqJMAao6jKLQL_FLBy", "MOCO BELLA CIAVATA - bg 175 .wav", 62454908],
+    ["seed-ponto", "Ponto de Partida", "1c1mOBhzzvHTLDflIOx5XQCKE_QXsJTXg", "ponto de partida.wav", 60621722],
+    ["seed-ponto-coro", "Ponto de Partida (coro)", "1qZp6a6LES3kZU_R5gsxrX1cuYxAxLGQU", "ponto de partida coro 122.wav", 60621722],
+    ["seed-nada", "Nada (versão final sem voz)", "1Wpo1cNxWalSJn-FuiUaR_U5eI16aT3vT", "nada v2 VERSAO FINAL sem voz.wav", 55296080],
+    ["seed-nada-v2", "Nada (versão final sem voz v2)", "1bYRGfdhrXJBzwRBAfh-6unr9F3-7744G", "nada v2 VERSAO FINAL sem voz v2.wav", 55296080],
+    ["seed-romance", "Romance (sem vocal)", "1jEeFQNPjJBqr1O7aMsKtndPxNwk_3xKu", "Bela Ciavatta - romance  sem vocal.wav", 64021064],
+  ].map(([id, titulo, fid, nome, tamanho], i) => [id, {
+    titulo, ordem: i + 1, etapa: "demo", todos: [], notas: "",
+    audio: {
+      url: `https://drive.google.com/uc?export=download&id=${fid}`,
+      link: `https://drive.google.com/file/d/${fid}/view`,
+      nome, tamanho, origem: "drive",
+    },
+  }]));
+
   /* ── estado ────────────────────────────────────────────── */
   const today = new Date();
   const todayKey = keyFromDate(today);
@@ -119,8 +141,13 @@
   try { openGroups = new Set(JSON.parse(localStorage.getItem(OPEN_KEY) || "[]")); } catch (err) {}
 
   function rebuild() {
-    tracks = {};
-    Object.entries(stored.tracks).forEach(([id, t]) => { if (t && !t.deleted) tracks[id] = t; });
+    const tr = {};
+    Object.entries(SEED_TRACKS).forEach(([id, t]) => { tr[id] = { ...t }; });
+    Object.entries(stored.tracks).forEach(([id, t]) => {
+      if (!t || t.deleted) delete tr[id];
+      else tr[id] = { ...(tr[id] || {}), ...t };
+    });
+    tracks = tr;
     events = {};
     Object.entries(stored.events).forEach(([id, e]) => { if (e && !e.deleted) events[id] = e; });
     const ms = {};
@@ -524,7 +551,7 @@
     if (!t) return;
     if (!window.confirm(`Apagar a faixa "${t.titulo}"? O áudio e o to-do dela somem também.`)) return;
     if (player.id === id) closePlayer();
-    await write({ tracks: { [id]: null } });
+    await write({ tracks: { [id]: SEED_TRACKS[id] ? { deleted: true } : null } });
     if (t.audio) removeAudioFile(id, t.audio);
     showToast("Faixa apagada.");
   }
