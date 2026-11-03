@@ -14,7 +14,7 @@
   /* BUILD tem que ser igual ao data-build do belaciavatta.html: suba os
      dois juntos com o ?v=. Se o HTML velho carregar o JS novo (cache),
      recarrega uma vez em vez de travar. */
-  const BUILD = "1";
+  const BUILD = "2";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bc_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -1278,7 +1278,7 @@
 
   loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    if (loginPassword.value.trim().toLowerCase() === APP_PASSWORD) {
+    if (loginPassword.value.toLowerCase().replace(/\s+/g, "") === APP_PASSWORD) {
       try { localStorage.setItem(UNLOCK_KEY, "1"); } catch (err) {}
       loginGate.hidden = true;
       startApp();
