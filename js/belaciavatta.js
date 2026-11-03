@@ -14,7 +14,9 @@
   /* BUILD tem que ser igual ao data-build do belaciavatta.html: suba os
      dois juntos com o ?v=. Se o HTML velho carregar o JS novo (cache),
      recarrega uma vez em vez de travar. */
-  const BUILD = "4";
+  const BUILD = "5";
+  const ICON_PLAY = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7 4.9v14.2a.9.9 0 0 0 1.4.8l11-7.1a.9.9 0 0 0 0-1.6l-11-7.1A.9.9 0 0 0 7 4.9Z"/></svg>';
+  const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>';
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bc_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -488,7 +490,7 @@
       const open = todos.filter((x) => !x.feito).length;
       return `<li class="demo${player.id === id ? " is-playing" : ""}${openTools.has(id) ? " show-tools" : ""}" data-id="${esc(id)}">
         <span class="demo-num">${i + 1}</span>
-        <button class="play-btn" type="button" data-act="play" ${can || (t.audio && t.audio.local) ? "" : "disabled"} aria-label="${playing ? "Pausar" : "Tocar"}">${playing ? "❚❚" : "▶"}</button>
+        <button class="play-btn" type="button" data-act="play" ${can || (t.audio && t.audio.local) ? "" : "disabled"} aria-label="${playing ? "Pausar" : "Tocar"}">${playing ? ICON_PAUSE : ICON_PLAY}</button>
         <div class="demo-main">
           <input class="demo-title" type="text" value="${esc(t.titulo)}" data-act="rename" aria-label="Nome da faixa" />
           <div class="demo-meta">
@@ -841,7 +843,7 @@
     if (!t) return;
     document.getElementById("pl-title").textContent = `${trackNum(player.id)}. ${t.titulo}`;
     document.getElementById("pl-sub").textContent = `${STAGE_NAME[t.etapa] || "Demo"} · ${(t.audio && t.audio.nome) || ""}`;
-    plToggle.textContent = audio.paused ? "▶" : "❚❚";
+    plToggle.innerHTML = audio.paused ? ICON_PLAY : ICON_PAUSE;
     plToggle.setAttribute("aria-label", audio.paused ? "Tocar" : "Pausar");
   }
 
@@ -854,7 +856,15 @@
     if (!seeking && audio.duration) plSeek.value = Math.round((audio.currentTime / audio.duration) * 1000);
   });
   audio.addEventListener("error", () => {
-    if (player.id) showToast("Não deu pra carregar esse áudio.");
+    if (!player.id) return;
+    const t = tracks[player.id];
+    const drive = t && t.audio && t.audio.origem === "drive";
+    audio.pause();
+    syncPlayerBar();
+    renderDemos();
+    showToast(drive
+      ? "Não abriu: no Drive, o arquivo precisa estar em \"Qualquer pessoa com o link\"."
+      : "Não deu pra carregar esse áudio.");
   });
   plSeek.addEventListener("input", () => { seeking = true; });
   plSeek.addEventListener("change", () => {
@@ -1204,7 +1214,7 @@
             <select class="stage-select" data-act="stage" style="--st:${stageVar(t.etapa)}" aria-label="Etapa">
               ${STAGES.map((s) => `<option value="${s.id}" ${s.id === (t.etapa || "demo") ? "selected" : ""}>${esc(s.nome)}</option>`).join("")}
             </select>
-            ${srcOf(id) || (t.audio && t.audio.local) ? `<button class="mini" type="button" data-act="play">${player.id === id && !audio.paused ? "❚❚ pausar" : "▶ ouvir"}</button>` : ""}
+            ${srcOf(id) || (t.audio && t.audio.local) ? `<button class="mini" type="button" data-act="play">${player.id === id && !audio.paused ? "❚❚ pausar" : "▶\uFE0E ouvir"}</button>` : ""}
           </div>
           ${shown.map((x) => `<div class="todo${x.feito ? " is-done" : ""}" data-todo="${esc(x.id)}">
             <input type="checkbox" data-act="check" ${x.feito ? "checked" : ""} aria-label="Feito" />

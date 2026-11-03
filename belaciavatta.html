@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-build="4">
+<html lang="pt-BR" data-build="5">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/belaciavatta.css?v=4" />
+  <link rel="stylesheet" href="css/belaciavatta.css?v=5" />
 </head>
 <body>
 
@@ -58,7 +58,7 @@
       </label>
       <button id="d-save" class="btn btn-primary" type="button">Adicionar</button>
     </div>
-    <p class="hint">▶ pra ouvir. No ⋯ de cada faixa: mudar a ordem, trocar o áudio, link do Drive e to-do.</p>
+    <p class="hint">▶&#xFE0E; pra ouvir. No ⋯ de cada faixa: mudar a ordem, trocar o áudio, link do Drive e to-do.</p>
     <ol id="demo-list" class="demo-list"></ol>
     <input id="audio-input" type="file" accept=".wav,.mp3,.aif,.aiff,.flac,.m4a,audio/*" hidden />
   </main>
@@ -215,9 +215,9 @@
   <!-- player (aparece ao tocar uma faixa) -->
   <div id="player-bar" class="player-bar" hidden>
     <div class="pl-controls">
-      <button id="pl-prev" type="button" aria-label="Anterior">⏮</button>
-      <button id="pl-toggle" class="pl-toggle" type="button" aria-label="Tocar">▶</button>
-      <button id="pl-next" type="button" aria-label="Próxima">⏭</button>
+      <button id="pl-prev" type="button" aria-label="Anterior"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="5" y="5" width="2.2" height="14" rx="1"/><path d="M19 5.8v12.4a.8.8 0 0 1-1.2.7L9 12.7a.8.8 0 0 1 0-1.4l8.8-6.2a.8.8 0 0 1 1.2.7Z"/></svg></button>
+      <button id="pl-toggle" class="pl-toggle" type="button" aria-label="Tocar"></button>
+      <button id="pl-next" type="button" aria-label="Próxima"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="16.8" y="5" width="2.2" height="14" rx="1"/><path d="M5 5.8v12.4a.8.8 0 0 0 1.2.7l8.8-6.2a.8.8 0 0 0 0-1.4L6.2 5.1A.8.8 0 0 0 5 5.8Z"/></svg></button>
     </div>
     <div class="pl-info">
       <b id="pl-title"></b>
@@ -233,6 +233,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/belaciavatta.js?v=4"></script>
+  <script src="js/belaciavatta.js?v=5"></script>
 </body>
 </html>
