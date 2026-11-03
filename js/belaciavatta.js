@@ -14,7 +14,7 @@
   /* BUILD tem que ser igual ao data-build do belaciavatta.html: suba os
      dois juntos com o ?v=. Se o HTML velho carregar o JS novo (cache),
      recarrega uma vez em vez de travar. */
-  const BUILD = "7";
+  const BUILD = "8";
   const ICON_PLAY = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7 4.9v14.2a.9.9 0 0 0 1.4.8l11-7.1a.9.9 0 0 0 0-1.6l-11-7.1A.9.9 0 0 0 7 4.9Z"/></svg>';
   const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>';
   if (document.documentElement.dataset.build !== BUILD) {
@@ -107,19 +107,23 @@
      tocar aqui, os arquivos precisam estar em "Qualquer pessoa com o link".
      O que a equipe edita vira um doc com o mesmo id por cima; apagar grava
      { deleted: true } pra faixa não voltar. */
+  /* Versões leves (AAC 192k, ~5 MB) geradas dos WAVs da pasta BOUNCES e
+     servidas junto com o app — tocam na hora no celular. O ↗ abre o WAV
+     original no Drive. [id, título, arquivo em audio/belaciavatta/, id
+     do WAV no Drive, nome do WAV, tamanho da versão leve]. */
   const SEED_TRACKS = Object.fromEntries([
-    ["seed-moco", "Moço", "1LN0Jn5NlyoOeb8DqJMAao6jKLQL_FLBy", "MOCO BELLA CIAVATA - bg 175 .wav", 62454908],
-    ["seed-ponto", "Ponto de Partida", "1c1mOBhzzvHTLDflIOx5XQCKE_QXsJTXg", "ponto de partida.wav", 60621722],
-    ["seed-ponto-coro", "Ponto de Partida (coro)", "1qZp6a6LES3kZU_R5gsxrX1cuYxAxLGQU", "ponto de partida coro 122.wav", 60621722],
-    ["seed-nada", "Nada (versão final sem voz)", "1Wpo1cNxWalSJn-FuiUaR_U5eI16aT3vT", "nada v2 VERSAO FINAL sem voz.wav", 55296080],
-    ["seed-nada-v2", "Nada (versão final sem voz v2)", "1bYRGfdhrXJBzwRBAfh-6unr9F3-7744G", "nada v2 VERSAO FINAL sem voz v2.wav", 55296080],
-    ["seed-romance", "Romance (sem vocal)", "1jEeFQNPjJBqr1O7aMsKtndPxNwk_3xKu", "Bela Ciavatta - romance  sem vocal.wav", 64021064],
-  ].map(([id, titulo, fid, nome, tamanho], i) => [id, {
+    ["seed-moco", "Moço", "moco", "1LN0Jn5NlyoOeb8DqJMAao6jKLQL_FLBy", "MOCO BELLA CIAVATA - bg 175 .wav", 5434918],
+    ["seed-ponto", "Ponto de Partida", "ponto", "1c1mOBhzzvHTLDflIOx5XQCKE_QXsJTXg", "ponto de partida.wav", 4729425],
+    ["seed-ponto-coro", "Ponto de Partida (coro)", "ponto-coro", "1qZp6a6LES3kZU_R5gsxrX1cuYxAxLGQU", "ponto de partida coro 122.wav", 1149336],
+    ["seed-nada", "Nada (versão final sem voz)", "nada", "1Wpo1cNxWalSJn-FuiUaR_U5eI16aT3vT", "nada v2 VERSAO FINAL sem voz.wav", 4717008],
+    ["seed-nada-v2", "Nada (versão final sem voz v2)", "nada-v2", "1bYRGfdhrXJBzwRBAfh-6unr9F3-7744G", "nada v2 VERSAO FINAL sem voz v2.wav", 4713688],
+    ["seed-romance", "Romance (sem vocal)", "romance", "1jEeFQNPjJBqr1O7aMsKtndPxNwk_3xKu", "Bela Ciavatta - romance  sem vocal.wav", 5466258],
+  ].map(([id, titulo, arq, fid, nome, tamanho], i) => [id, {
     titulo, ordem: i + 1, etapa: "demo", todos: [], notas: "",
     audio: {
-      url: `https://drive.google.com/uc?export=download&id=${fid}`,
+      url: `audio/belaciavatta/${arq}.m4a`,
       link: `https://drive.google.com/file/d/${fid}/view`,
-      nome, tamanho, origem: "drive",
+      nome, tamanho, origem: "app", fid,
     },
   }]));
 
@@ -146,8 +150,13 @@
     const tr = {};
     Object.entries(SEED_TRACKS).forEach(([id, t]) => { tr[id] = { ...t }; });
     Object.entries(stored.tracks).forEach(([id, t]) => {
-      if (!t || t.deleted) delete tr[id];
-      else tr[id] = { ...(tr[id] || {}), ...t };
+      if (!t || t.deleted) { delete tr[id]; return; }
+      const merged = { ...(tr[id] || {}), ...t };
+      // faixa da base editada antes das versões leves: o áudio gravado
+      // ainda é o WAV do Drive — troca pela versão leve
+      const seed = SEED_TRACKS[id];
+      if (seed && t.audio && t.audio.origem === "drive" && (t.audio.url || "").includes(seed.audio.fid)) merged.audio = seed.audio;
+      tr[id] = merged;
     });
     tracks = tr;
     events = {};
@@ -472,7 +481,7 @@
   function audioInfo(t) {
     const a = t.audio;
     if (!a) return "";
-    return [a.nome, fmtSize(a.tamanho), a.origem === "dropbox" ? "Dropbox" : a.origem === "drive" ? "Google Drive" : a.link ? "link" : ""].filter(Boolean).map(esc).join(" · ");
+    return [a.nome, fmtSize(a.tamanho), a.origem === "app" ? "versão leve · WAV original no ↗" : a.origem === "dropbox" ? "Dropbox" : a.origem === "drive" ? "Google Drive" : a.link ? "link" : ""].filter(Boolean).map(esc).join(" · ");
   }
   const openTools = new Set();
 
