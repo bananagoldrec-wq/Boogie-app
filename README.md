@@ -6,7 +6,11 @@ agenda do Frisson — abre em `beno.html`.
 
 ## Como funciona
 
-**Três abas:**
+**Tela inicial:** só o logo e quatro botões — Séries, Calendário, Demos e
+Drive (e um "sair" discreto). Dentro de cada parte o topo tem só o logo
+(toque = volta pro início) e as abas pra trocar de parte.
+
+**Partes:**
 
 - **Negociações** — funil em colunas (A contatar → Contatado → Conversando →
   Proposta enviada → Fechado → Já tocou → Recusado). Arraste o card entre
@@ -262,7 +266,7 @@ identidade do selo (verde-banana + preto).
 **Três abas:**
 
 - **Séries** — Groovy Tools, Carna Tools, Jacuzzi Edits, Gangue do Sorriso,
-  Baile Tools, Selector Tools e Tributes (um artista homenageado por volume), cada uma com seus volumes. Cada volume tem
+  Baile Tools, Selector Tools e Tributes, cada uma com seus volumes. Cada volume tem
   status (planejado → em produção → agendado → lançado), data, responsável,
   links do Bandcamp/SoundCloud, faixas e um checklist (master, arte,
   metadados/ISRC, upload, distribuidora, press release, posts). `+ Vol.` cria o
@@ -271,10 +275,59 @@ identidade do selo (verde-banana + preto).
   equipe. Sextas e feriados destacados. Toque num dia pra marcar uma tarefa
   (com responsável e lançamento ligado) ou criar um lançamento naquele dia.
   Lançamentos com só o mês confirmado aparecem numa faixa acima da grade.
-- **Demos** — fila de músicas em aberto (nome, quem fez, link, notas). Cada
-  uma tem "Mandar pra…" pra cair no set list de um projeto que ainda não saiu;
-  embaixo ficam as que já estão em projetos em andamento, pra realocar ou
-  devolver pra fila.
+- **Demos** — só o nome da música e pra onde ela vai. Cada uma tem "Mandar
+  pra…" com os projetos que ainda não saíram, agrupados por série, e
+  "+ Criar projeto novo…" pra dar nome livre a um projeto (EP ou LP), que
+  entra em "Projetos novos" na aba Séries. Embaixo ficam as músicas já
+  alocadas, por projeto, pra realocar ou devolver pra fila.
+
+**Áudio das demos (WAV):** no campo de nova demo tem "♪ WAV" (dá pra escolher
+vários; cada arquivo vira uma demo com o nome dele) e cada música tem
+"+ WAV"/"trocar", ▶ pra ouvir e ⤓ pra baixar. No computador dá pra arrastar
+os WAVs pra aba. O ▶ aparece também no set list do projeto. Tocar abre o **player**
+embaixo da tela: toca o WAV original, sem compressão (mostra bits/kHz quando
+lê o cabeçalho), com barra de posição, anterior/próxima dentro da lista onde
+o play foi apertado, passa sozinho pra próxima e responde aos controles da
+tela de bloqueio. Os arquivos vão
+pro **Firebase Storage** em `bg_demos/` (até 300 MB cada). Enquanto o Storage
+não estiver ligado, o áudio fica guardado só no aparelho de quem subiu
+(aparece "só aqui"); depois de ligar, é só tocar em "trocar" e escolher o
+arquivo de novo pra subir pra nuvem.
+
+Sem Storage (ou enquanto ele não funciona), cada música tem 🔗 pra colar um
+link do **Google Drive** ou do **Dropbox**: o app converte pro endereço de
+download e toca no mesmo player; ↗ abre o original. No Drive o arquivo tem
+que estar em "Qualquer pessoa com o link", e acima de ~100 MB o Drive mostra
+um aviso antes do download e não toca dentro do app (Dropbox não tem esse
+limite).
+
+**Aba Drive:** botão pra abrir a pasta **MUSICAS BANANA** no Google Drive e a
+lista dos áudios que estão nela (lida pela Drive API com a chave do app — a
+pasta precisa estar em "Qualquer pessoa com o link" e a chave com a Google
+Drive API liberada). Cada arquivo tem "Ligar a uma música…" (demo da fila ou
+música de projeto) ou "+ Criar demo nova com esse arquivo"; ligar um arquivo
+a outra música tira ele da anterior.
+
+Pra ligar, no console do Firebase, projeto **frisson-agenda**:
+
+1. **Criação → Storage → Primeiros passos.** Projetos novos pedem o plano
+   **Blaze** (pago por uso) pra ter Storage; até 5 GB guardados o uso é
+   gratuito, e dá pra pôr um alerta de orçamento em Uso e faturamento.
+2. **Storage → Regras**, publique:
+
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /bg_demos/{faixa}/{arquivo} {
+      allow read, delete: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 300 * 1024 * 1024
+                   && request.resource.contentType.matches('audio/.*');
+    }
+  }
+}
+```
 
 Dentro de cada projeto o painel abre no **set list**: as faixas na ordem, com
 nome editável, ↑/↓ pra reordenar, ⤺ pra devolver pra demos, campo pra
@@ -310,4 +363,6 @@ Firebase — publique as regras acima). Sem nuvem, segue salvando no aparelho e
 sobe o pendente quando conectar. Senha da equipe: `APP_PASSWORD` no topo de
 `js/bananagold.js` (mesmo aviso: trava visitante casual, não é segurança de
 verdade). Ao mexer em `js/bananagold.js`/`css/bananagold.css`, suba o `?v=` do
-`bananagold.html`.
+`bananagold.html` e, junto, o `data-build` do `<html>` e o `BUILD` no topo
+do JS (os três iguais). Se o celular abrir a página velha com o código novo,
+o app percebe a diferença e recarrega sozinho em vez de travar.

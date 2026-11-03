@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-build="39">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -19,44 +19,33 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/bananagold.css?v=7" />
+  <link rel="stylesheet" href="css/bananagold.css?v=24" />
 </head>
 <body>
 
   <header class="topbar">
-    <img class="brand-logo" src="img/bananagold-logo-wide.png" alt="Banana Gold Records" />
-    <div class="topbar-spacer"></div>
-    <a id="open-sheet" class="icon-btn" href="#" target="_blank" rel="noopener" aria-label="Abrir planilha da equipe" title="Abrir planilha da equipe (Google Sheets)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M4 9h16M4 15h16M10 9v12"/></svg>
-    </a>
-    <button id="export-ics" class="icon-btn" type="button" aria-label="Exportar calendário (.ics)" title="Exportar calendário pro Google Agenda (.ics)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="1.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
-    </button>
-    <button id="export-csv" class="icon-btn" type="button" aria-label="Exportar catálogo em CSV" title="Exportar catálogo (CSV)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0-4-4m4 4 4-4M4 19h16"/></svg>
-    </button>
-    <button id="logout-btn" class="icon-btn" type="button" aria-label="Sair" title="Sair">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5M20 12H9M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/></svg>
+    <button id="back-btn" class="back-btn" type="button">← Voltar</button>
+    <button id="home-btn" class="brand-btn" type="button" aria-label="Início">
+      <img class="brand-logo" src="img/bananagold-logo-wide.png" alt="Banana Gold Records" />
     </button>
   </header>
 
+  <!-- Início: só o logo e as quatro partes -->
+  <div class="home-logo" aria-hidden="true">
+    <img src="img/bananagold-logo-box.png" alt="" />
+  </div>
+
   <nav class="tabs" role="tablist">
-    <button class="tab is-active" type="button" data-tab="catalogo" role="tab">Séries</button>
+    <button class="tab" type="button" data-tab="catalogo" role="tab">Séries</button>
     <button class="tab" type="button" data-tab="calendario" role="tab">Calendário</button>
     <button class="tab" type="button" data-tab="demos" role="tab">Demos</button>
+    <button class="tab" type="button" data-tab="drive" role="tab">Download a track</button>
   </nav>
+  <button id="logout-btn" class="home-logout link-btn" type="button">sair</button>
 
   <!-- Séries / catálogo -->
-  <main id="view-catalogo" class="view">
-    <div class="stats" id="stats"></div>
+  <main id="view-catalogo" class="view" hidden>
     <div id="series-list" class="series-list"></div>
-    <div class="legend">
-      <span><i class="sq sq-lancado"></i>Lançado</span>
-      <span><i class="sq sq-agendado"></i>Agendado</span>
-      <span><i class="sq sq-producao"></i>Em produção</span>
-      <span><i class="sq sq-planejado"></i>Planejado</span>
-      <span class="hint">toque na barra pra abrir a série · no número pra abrir o volume</span>
-    </div>
   </main>
 
   <!-- Calendário -->
@@ -74,58 +63,75 @@
       </div>
       <div id="cal-grid" class="cal-grid"></div>
     </section>
-    <div class="legend">
-      <span><i class="dot dot-release"></i>Lançamento das séries</span>
-      <span><i class="dot dot-geral"></i>Outros lançamentos</span>
-      <span><i class="dot dot-task"></i>Tarefa da equipe</span>
-      <span><i class="dot dot-done"></i>Tarefa feita</span>
-      <span><i class="sw sw-friday"></i>Sexta (dia de lançamento)</span>
-      <span><i class="sw sw-holiday"></i>Feriado</span>
-      <span class="hint">toque num dia pra ver ou marcar tarefas</span>
-    </div>
+  </main>
+
+  <!-- Drive: pasta das músicas -->
+  <main id="view-drive" class="view" hidden>
+    <section class="drive-head" hidden>
+      <div class="panel-actions">
+        <a id="drive-open" class="btn" href="#" target="_blank" rel="noopener">Abrir no Drive ↗</a>
+      </div>
+      <div class="drive-upload-box">
+        <button id="drive-upload" class="btn btn-primary" type="button">↑ Subir músicas</button>
+        <input id="drive-upload-input" type="file" accept=".wav,.mp3,.aif,.aiff,.flac,.m4a,audio/*" multiple hidden />
+        <span id="drive-status" class="hint"></span>
+        <button id="drive-disconnect" class="link-btn" type="button" hidden>sair do Google</button>
+      </div>
+      <div id="drive-uploads" class="list"></div>
+    </section>
+    <section>
+      <div class="drive-auth">
+        <button id="drive-login" class="btn btn-primary" type="button">Entrar com Google pra baixar</button>
+        <span id="drive-auth-status" class="hint"></span>
+        <button id="drive-logout" class="link-btn" type="button" hidden>sair do Google</button>
+      </div>
+      <div class="series-list">
+        <section id="drive-group" class="series demo-group is-open" style="--serie:var(--green-deep)">
+          <div id="drive-toggle" class="series-bar" role="button" tabindex="0" aria-expanded="true">
+            <span id="drive-chevron" class="chevron" aria-hidden="true">▾</span>
+            <span class="bar-main"><span class="bar-title">Arquivos na pasta</span></span>
+            <span id="drive-count" class="bar-count"></span>
+          </div>
+          <div id="drive-list" class="list demo-group-body"></div>
+        </section>
+      </div>
+    </section>
   </main>
 
   <!-- Demos -->
   <main id="view-demos" class="view" hidden>
-    <section class="demo-form">
-      <h2 id="demo-form-title" class="section-title">Nova demo</h2>
-      <div class="field-row">
-        <div class="field">
-          <label for="d-titulo">Nome da música</label>
-          <input id="d-titulo" type="text" placeholder="Ex.: Lua Cheia (BENO Edit)" autocomplete="off" />
-        </div>
-        <div class="field">
-          <label for="d-artista">Artista / produção</label>
-          <input id="d-artista" type="text" list="people" placeholder="Quem fez" autocomplete="off" />
-        </div>
+    <section class="demo-form" hidden>
+      <div class="demo-add">
+        <input id="d-titulo" type="text" placeholder="Nome da música" autocomplete="off" aria-label="Nome da música" />
+        <label class="btn file-btn" title="Escolher WAV (pode ser mais de um)">
+          <span id="d-file-label">Áudio</span>
+          <input id="d-file" type="file" accept=".wav,audio/wav,audio/x-wav,audio/*" multiple hidden />
+        </label>
+        <select id="d-destino" class="demo-move" aria-label="Pra onde vai"></select>
+        <button id="d-save" class="btn btn-primary" type="button">Adicionar</button>
       </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="d-link">Link (SoundCloud, Drive...)</label>
-          <input id="d-link" type="url" placeholder="opcional" autocomplete="off" />
-        </div>
-        <div class="field">
-          <label for="d-obs">Notas</label>
-          <input id="d-obs" type="text" placeholder="Ex.: falta mixdown" autocomplete="off" />
-        </div>
+    </section>
+
+    <!-- criar projeto (abre pelo "+ Criar projeto novo…" de qualquer seletor) -->
+    <div id="new-project" class="new-project" hidden>
+      <h3 class="sub-title">Projeto novo</h3>
+      <div class="field">
+        <label for="np-nome">Nome do projeto</label>
+        <input id="np-nome" type="text" placeholder="Ex.: Verão Tools Vol. 01" autocomplete="off" />
+      </div>
+      <div class="seg" role="radiogroup" aria-label="Formato">
+        <button type="button" class="seg-btn is-on" data-np-formato="EP">EP</button>
+        <button type="button" class="seg-btn" data-np-formato="LP">LP</button>
       </div>
       <div class="panel-actions">
-        <button id="d-save" class="btn btn-primary" type="button">+ Adicionar demo</button>
-        <button id="d-cancel" class="btn" type="button" hidden>Cancelar</button>
-        <button id="d-delete" class="btn btn-danger" type="button" hidden>Apagar</button>
+        <button id="np-create" class="btn btn-primary" type="button">Criar e mandar a música</button>
+        <button id="np-cancel" class="btn" type="button">Cancelar</button>
       </div>
-    </section>
+    </div>
 
-    <section>
-      <h2 class="section-title">Demos na fila <span id="demo-count" class="muted"></span></h2>
-      <div id="demo-list" class="list"></div>
-    </section>
+    <input id="audio-input" type="file" accept=".wav,audio/wav,audio/x-wav,audio/*" hidden />
 
-    <section>
-      <h2 class="section-title">Nos projetos em andamento</h2>
-      <p class="hint">Músicas já mandadas pra um projeto que ainda não saiu. Dá pra realocar ou devolver pra fila.</p>
-      <div id="demo-projects" class="list"></div>
-    </section>
+    <div id="demo-list" class="series-list demo-groups"></div>
   </main>
 
   <div id="backdrop" class="panel-backdrop" hidden></div>
@@ -144,8 +150,8 @@
         <h3 class="setlist-title">Set list</h3>
         <ol id="r-setlist" class="setlist"></ol>
         <div id="r-setlist-add" class="setlist-add">
-          <input id="sl-new" type="text" placeholder="Nome da faixa" autocomplete="off" />
-          <button id="sl-add" class="btn btn-primary" type="button">+ Faixa</button>
+          <input id="sl-new" type="text" placeholder="Nome da música" autocomplete="off" />
+          <button id="sl-add" class="btn btn-primary" type="button">Adicionar</button>
         </div>
         <select id="sl-pull" class="sl-pull" aria-label="Puxar uma demo"></select>
         <p id="sl-hint" class="hint" hidden>Salva o volume (em Detalhes) pra montar o set list.</p>
@@ -316,8 +322,28 @@
     </form>
   </div>
 
+  <!-- player das demos (aparece ao tocar uma música) -->
+  <div id="player-bar" class="player-bar" hidden>
+    <div class="pl-controls">
+      <button id="pl-prev" type="button" aria-label="Anterior">⏮</button>
+      <button id="pl-toggle" class="pl-toggle" type="button" aria-label="Tocar">▶</button>
+      <button id="pl-next" type="button" aria-label="Próxima">⏭</button>
+    </div>
+    <div class="pl-info">
+      <b id="pl-title"></b>
+      <span id="pl-sub"></span>
+      <div class="pl-seek">
+        <span id="pl-cur">0:00</span>
+        <input id="pl-seek" type="range" min="0" max="1000" value="0" aria-label="Posição" />
+        <span id="pl-dur">0:00</span>
+      </div>
+    </div>
+    <a id="pl-down" class="pl-btn" href="#" target="_blank" rel="noopener" download aria-label="Baixar o WAV" title="Baixar o WAV">⤓</a>
+    <button id="pl-close" class="pl-btn" type="button" aria-label="Fechar player">×</button>
+  </div>
+
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/bananagold.js?v=10"></script>
+  <script src="js/bananagold.js?v=39"></script>
 </body>
 </html>

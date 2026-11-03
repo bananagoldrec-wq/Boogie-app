@@ -1120,7 +1120,7 @@ function scrollToCurrent() {
   const h      = now.getHours(), rawMin = now.getMinutes();
   if (h < START_H || h > END_H) return;
   const wrapper  = q('#grid-wrapper');
-  const ROW_H    = 22;
+  const ROW_H    = q('.g-time')?.offsetHeight || 22;
   const slotIdx  = (h - START_H) * 2 + (rawMin >= 30 ? 1 : 0);
   wrapper.scrollTop = Math.max(0, slotIdx * ROW_H - wrapper.clientHeight / 3);
 }
