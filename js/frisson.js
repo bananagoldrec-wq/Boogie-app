@@ -188,7 +188,10 @@
 
   function refreshArtistNames() {
     const names = new Set(Object.keys(artists));
-    Object.values(data).forEach((e) => { if (e && e.artista) names.add(e.artista); });
+    Object.values(data).forEach((e) => {
+      if (e && e.artista) names.add(e.artista);
+      if (e && e.artista2) names.add(e.artista2);
+    });
     artistNamesSorted = [...names].sort((a, b) => a.localeCompare(b, "pt-BR"));
   }
 
@@ -733,6 +736,17 @@
   const sharePhotoBtn = document.getElementById("share-photo");
   const removePhotoBtn = document.getElementById("remove-photo");
 
+  /* Segundo artista (B2B) — opção extra discreta, escondida por padrão.
+     Reaproveita o mesmo cadastro/foto por nome usado pro artista principal. */
+  const toggleSecondArtistBtn = document.getElementById("toggle-second-artist");
+  const secondArtistSection = document.getElementById("second-artist-section");
+  const fArtista2 = document.getElementById("f-artista2");
+  const photoInput2 = document.getElementById("f-photo-input-2");
+  const photoPreview2 = document.getElementById("artist-photo-preview-2");
+  const pickPhotoBtn2 = document.getElementById("pick-photo-2");
+  const sharePhotoBtn2 = document.getElementById("share-photo-2");
+  const removePhotoBtn2 = document.getElementById("remove-photo-2");
+
   /* Busca o registro do artista ignorando acento e maiúscula/minúscula —
      "Antonio dal Bo" e "Antonio Dal Bó" apontam pro mesmo cadastro, mesmo
      que tenham sido digitados de formas diferentes em dias diferentes. */
@@ -771,20 +785,25 @@
     renderPhotoPreview(rec.foto || "");
   }
 
-  function renderPhotoPreview(dataUri) {
-    photoPreview.innerHTML = "";
+  function renderPhotoPreview(dataUri, previewEl = photoPreview, shareBtn = sharePhotoBtn, removeBtn = removePhotoBtn) {
+    previewEl.innerHTML = "";
     if (dataUri) {
       const img = document.createElement("img");
       img.src = dataUri;
       img.alt = "";
-      photoPreview.appendChild(img);
-      sharePhotoBtn.hidden = false;
-      removePhotoBtn.hidden = false;
+      previewEl.appendChild(img);
+      shareBtn.hidden = false;
+      removeBtn.hidden = false;
     } else {
-      photoPreview.textContent = "Sem foto";
-      sharePhotoBtn.hidden = true;
-      removePhotoBtn.hidden = true;
+      previewEl.textContent = "Sem foto";
+      shareBtn.hidden = true;
+      removeBtn.hidden = true;
     }
+  }
+
+  function populatePhoto2(artistName) {
+    const rec = findArtistRecord(artistName) || {};
+    renderPhotoPreview(rec.foto || "", photoPreview2, sharePhotoBtn2, removePhotoBtn2);
   }
 
   function fitDimensions(width, height, maxSize) {
@@ -886,6 +905,74 @@
     a.click();
   });
 
+  toggleSecondArtistBtn.addEventListener("click", () => {
+    const willShow = secondArtistSection.hidden;
+    secondArtistSection.hidden = !willShow;
+    toggleSecondArtistBtn.textContent = willShow ? "− Ocultar segundo artista" : "+ Segundo artista (B2B)";
+  });
+
+  pickPhotoBtn2.addEventListener("click", () => photoInput2.click());
+
+  photoInput2.addEventListener("change", async () => {
+    const file = photoInput2.files[0];
+    photoInput2.value = "";
+    if (!file) return;
+    const name = fArtista2.value.trim();
+    if (!name) {
+      showToast("Digite o nome do segundo artista antes de adicionar a foto.");
+      return;
+    }
+    if (!artistsCol) {
+      showToast("Sem conexão com a nuvem. Tenta de novo em instantes.");
+      return;
+    }
+    try {
+      const dataUri = await resizeImageFile(file, 900000);
+      renderPhotoPreview(dataUri, photoPreview2, sharePhotoBtn2, removePhotoBtn2);
+      await setDoc(doc(artistsCol, name), { foto: dataUri }, { merge: true });
+      showToast("Foto do segundo artista salva.");
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra salvar a foto. Tenta uma imagem menor.");
+    }
+  });
+
+  removePhotoBtn2.addEventListener("click", async () => {
+    const name = fArtista2.value.trim();
+    if (!name || !artistsCol) return;
+    try {
+      await setDoc(doc(artistsCol, name), { foto: "" }, { merge: true });
+      renderPhotoPreview("", photoPreview2, sharePhotoBtn2, removePhotoBtn2);
+      showToast("Foto removida.");
+    } catch (err) {
+      console.error(err);
+      showToast("Não deu pra remover. Tenta de novo.");
+    }
+  });
+
+  sharePhotoBtn2.addEventListener("click", async () => {
+    const name = fArtista2.value.trim();
+    const foto = (findArtistRecord(name) || {}).foto;
+    if (!foto) return;
+    try {
+      const blob = await (await fetch(foto)).blob();
+      const file = new File([blob], `${name}.jpg`, { type: blob.type || "image/jpeg" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: name });
+        return;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    const a = document.createElement("a");
+    a.href = foto;
+    a.download = `${name}.jpg`;
+    a.click();
+  });
+
+  fArtista2.addEventListener("input", () => populatePhoto2(fArtista2.value.trim()));
+  fArtista2.addEventListener("change", () => populatePhoto2(fArtista2.value.trim()));
+
   function openDayPanel(key) {
     activeDateKey = key;
     const entry = data[key] || {};
@@ -902,6 +989,11 @@
     fObs.value = entry.obs || "";
     populateBankFields(entry.artista || "");
     updateRenameButtonVisibility();
+
+    fArtista2.value = entry.artista2 || "";
+    populatePhoto2(entry.artista2 || "");
+    secondArtistSection.hidden = !entry.artista2;
+    toggleSecondArtistBtn.textContent = entry.artista2 ? "− Ocultar segundo artista" : "+ Segundo artista (B2B)";
 
     activeTemplateKey = "convite";
     renderWaTemplateChips();
@@ -922,6 +1014,7 @@
   function readDayForm() {
     return {
       artista: fArtista.value.trim(),
+      artista2: fArtista2.value.trim(),
       tipo: fTipo.value,
       status: fStatus.value,
       evento: fEvento.value.trim(),
