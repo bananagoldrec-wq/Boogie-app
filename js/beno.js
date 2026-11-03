@@ -258,6 +258,40 @@
   const AGENCIA = "Travel Blue Turismo · Alessandro (21) 98875-5873 · alessandro@travelblueturismo.com.br";
   const SEED_LOGISTICA_LOTES = [
     {
+      /* Viagem de novembro: Rio → Lisboa, pulo até Viena no meio, e volta
+         pro Rio. O Ryanair veio com tudo (número, horário, preço); o
+         Rio↔Lisboa veio de um cartão de resumo que só mostrava pontas e
+         horários — por isso esses dois estão sem número de voo, e a
+         duração sugere escala a confirmar. */
+      key: "beno_seed_logistica_v5",
+      itens: [
+        {
+          id: "seed-log-nov-giglis", tipo: "voo", companhia: "TAP", numero: "", localizador: "",
+          origem: "GIG", destino: "LIS", terminalOrigem: "", terminalDestino: "",
+          data: "2026-11-16", hora: "15:00", dataFim: "2026-11-17", horaFim: "06:20",
+          obs: "Ida pra Lisboa, chega na manhã do dia 17. Companhia lida pelo logo (TAP) — falta o número do voo. São 12h20 de porta a porta, umas 2h30 a mais que o direto Rio–Lisboa, então provavelmente tem escala. Confirmar na tela de detalhes da reserva.",
+        },
+        {
+          id: "seed-log-fr9705", tipo: "voo", companhia: "Ryanair", numero: "FR9705", localizador: "",
+          origem: "LIS", destino: "VIE", terminalOrigem: "", terminalDestino: "",
+          data: "2026-11-18", hora: "10:50", dataFim: "2026-11-18", horaFim: "15:20",
+          obs: "Confirmado. Direto, 3h30. Tarifa Basic € 148,99 + € 20,99 de Priority com 2 bagagens de mão. Sem bagagem despachada — Priority dá mala de cabine, não porão.",
+        },
+        {
+          id: "seed-log-fr4167-nov", tipo: "voo", companhia: "Ryanair", numero: "FR4167", localizador: "",
+          origem: "VIE", destino: "LIS", terminalOrigem: "", terminalDestino: "",
+          data: "2026-11-23", hora: "13:40", dataFim: "2026-11-23", horaFim: "16:25",
+          obs: "Confirmado. Direto, 3h45. Tarifa Basic € 59,27 + € 20,00 de Priority com 2 bagagens de mão. Mesmo número do voo de setembro, outra reserva.",
+        },
+        {
+          id: "seed-log-nov-lisgig", tipo: "voo", companhia: "TAP", numero: "", localizador: "",
+          origem: "LIS", destino: "GIG", terminalOrigem: "", terminalDestino: "",
+          data: "2026-11-24", hora: "08:50", dataFim: "2026-11-24", horaFim: "18:45",
+          obs: "Volta pro Rio, no dia seguinte à chegada de Viena. Companhia lida pelo logo (TAP) — falta o número do voo. São 12h55 de porta a porta, umas 2h30 a mais que o direto, então provavelmente tem escala. Confirmar na tela de detalhes da reserva.",
+        },
+      ],
+    },
+    {
       /* Zurique → Varsóvia → Amsterdã → Lisboa: o pedaço que faltava entre
          o show de Zurique (10/10) e a volta pro Rio (18/10). Duas reservas
          separadas, as duas ainda RESERVADAS e não emitidas quando entraram
