@@ -9,6 +9,8 @@ self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  // Only the app's own files: never cache third-party API responses (e.g. Google Agenda)
+  if (new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
     fetch(e.request)
       .then((res) => {
