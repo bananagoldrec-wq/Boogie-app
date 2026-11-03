@@ -6,7 +6,7 @@ Monograma "BC" em serifa: B vinho e C tinta sobre o creme do app."""
 import os
 from PIL import Image, ImageDraw, ImageFont
 
-PAPER = (243, 235, 221)
+PAPER = (250, 250, 248)
 INK = (29, 23, 20)
 WINE = (142, 31, 47)
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"
@@ -20,7 +20,7 @@ def render(size):
     d = ImageDraw.Draw(im)
     # disco fino em volta, lembrando um vinil
     m = int(S * 0.10)
-    d.ellipse([m, m, S - m, S - m], outline=INK, width=int(S * 0.022))
+    d.ellipse([m, m, S - m, S - m], outline=INK, width=int(S * 0.008))
     font = ImageFont.truetype(FONT, int(S * 0.36))
     bw = d.textlength("B", font=font)
     cw = d.textlength("C", font=font)

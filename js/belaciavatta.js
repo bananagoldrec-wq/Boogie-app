@@ -14,7 +14,7 @@
   /* BUILD tem que ser igual ao data-build do belaciavatta.html: suba os
      dois juntos com o ?v=. Se o HTML velho carregar o JS novo (cache),
      recarrega uma vez em vez de travar. */
-  const BUILD = "3";
+  const BUILD = "4";
   if (document.documentElement.dataset.build !== BUILD) {
     const tried = (() => { try { return sessionStorage.getItem("bc_build_reload") === BUILD; } catch (err) { return false; } })();
     if (!tried) {
@@ -458,16 +458,21 @@
   const uploads = {};          // id → % de upload em andamento
   const localUrls = new Map(); // id → blob: URL do áudio guardado no aparelho
 
+  /* na lista só o essencial: upload em andamento, sem áudio ou só no
+     aparelho. Nome do arquivo e tamanho ficam no menu ⋯ */
   function audioBadge(id, t) {
     if (uploads[id] != null) return `<span data-prog="${esc(id)}">${uploads[id]}%</span>`;
     const a = t.audio;
-    if (!a) return "sem áudio";
-    const bits = [esc(a.nome || "áudio")];
-    if (a.tamanho) bits.push(fmtSize(a.tamanho));
-    if (a.local) bits.push("<b>só neste aparelho</b>");
-    if (a.link) bits.push(a.origem === "dropbox" ? "Dropbox" : a.origem === "drive" ? "Drive" : "link");
-    return bits.join(" · ");
+    if (!a) return "<span>sem áudio</span>";
+    if (a.local) return "<b>só neste aparelho</b>";
+    return "";
   }
+  function audioInfo(t) {
+    const a = t.audio;
+    if (!a) return "";
+    return [a.nome, fmtSize(a.tamanho), a.origem === "dropbox" ? "Dropbox" : a.origem === "drive" ? "Google Drive" : a.link ? "link" : ""].filter(Boolean).map(esc).join(" · ");
+  }
+  const openTools = new Set();
 
   function renderDemos() {
     const list = albumOrder();
@@ -481,18 +486,20 @@
       const playing = player.id === id && !audio.paused;
       const todos = todosOf(t);
       const open = todos.filter((x) => !x.feito).length;
-      return `<li class="demo${player.id === id ? " is-playing" : ""}" data-id="${esc(id)}">
+      return `<li class="demo${player.id === id ? " is-playing" : ""}${openTools.has(id) ? " show-tools" : ""}" data-id="${esc(id)}">
         <span class="demo-num">${i + 1}</span>
         <button class="play-btn" type="button" data-act="play" ${can || (t.audio && t.audio.local) ? "" : "disabled"} aria-label="${playing ? "Pausar" : "Tocar"}">${playing ? "❚❚" : "▶"}</button>
         <div class="demo-main">
           <input class="demo-title" type="text" value="${esc(t.titulo)}" data-act="rename" aria-label="Nome da faixa" />
           <div class="demo-meta">
             <span class="stage" style="--st:${stageVar(t.etapa)}">${esc(STAGE_NAME[t.etapa] || "Demo")}</span>
-            <span>${audioBadge(id, t)}</span>
-            ${open ? `<span>· ${open} to-do</span>` : ""}
+            ${audioBadge(id, t)}
+            ${open ? `<span>${open} to-do</span>` : ""}
           </div>
         </div>
+        <button class="mini more-btn" type="button" data-act="more" aria-label="Mais opções" aria-expanded="${openTools.has(id)}">⋯</button>
         <div class="demo-tools">
+          ${t.audio ? `<span class="demo-file">${audioInfo(t)}</span>` : ""}
           <button class="mini" type="button" data-act="up" ${i === 0 ? "disabled" : ""} aria-label="Subir">↑</button>
           <button class="mini" type="button" data-act="down" ${i === list.length - 1 ? "disabled" : ""} aria-label="Descer">↓</button>
           <button class="mini" type="button" data-act="upload" title="${t.audio ? "Trocar o áudio" : "Subir áudio"}">${t.audio ? "trocar" : "+ áudio"}</button>
@@ -577,6 +584,11 @@
     else if (act === "upload") { uploadTarget = id; audioInput.click(); }
     else if (act === "link") linkAudio(id);
     else if (act === "delete") deleteTrack(id);
+    else if (act === "more") {
+      if (openTools.has(id)) openTools.delete(id); else openTools.add(id);
+      row.classList.toggle("show-tools");
+      btn.setAttribute("aria-expanded", row.classList.contains("show-tools"));
+    }
     else if (act === "todo") { openGroups.add(id); saveOpen(); setTab("todo"); renderTodo(); scrollToGroup(id); }
   });
   demoList.addEventListener("change", (e) => {
