@@ -129,7 +129,7 @@ function eventBody(act, date) {
     start: { dateTime: `${gymd(date)}T${act.startTime}:00`, timeZone: GCAL_TZ },
     end:   { dateTime: `${gymd(date)}T${end}:00`,           timeZone: GCAL_TZ },
     colorId: CAT_COLOR[act.category],
-    reminders: { useDefault: false, overrides: [...new Set([60, lead, 0])].map(minutes => ({ method: 'popup', minutes })) },
+    reminders: { useDefault: false, overrides: [...new Set([60, lead, 1, 0])].map(minutes => ({ method: 'popup', minutes })) },
     extendedProperties: { private: { cat: act.category, src: 'minha-rotina' } },
   };
 }
