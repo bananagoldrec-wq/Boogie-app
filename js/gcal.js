@@ -6,7 +6,7 @@
 
 // OAuth "Web application" client from Google Cloud Console. Redirect URI must be
 // this page's URL (https://bananagoldrec-wq.github.io/Boogie-app/tracker.html).
-const GCAL_CLIENT_ID = '';
+const GCAL_CLIENT_ID = '735980018099-rbe40eh2vmqsqfn94rjo2em3tmt7a03d.apps.googleusercontent.com';
 const GCAL_SCOPE     = 'https://www.googleapis.com/auth/calendar.events email';
 const GCAL_EVENTS    = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
 const GCAL_TOKEN_KEY = 'rotina-gtoken';
