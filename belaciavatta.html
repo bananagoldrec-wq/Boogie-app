@@ -7,36 +7,38 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="theme-color" content="#fafaf8" />
+  <meta name="theme-color" content="#f3ebdf" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Bela Ciavatta" />
-  <title>Bela Ciavatta · álbum</title>
+  <title>bela ciavatta · ponto de partida</title>
   <link rel="apple-touch-icon" href="icons/apple-touch-icon-belaciavatta.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-belaciavatta-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-belaciavatta-512.png" />
   <link rel="manifest" href="manifest-belaciavatta.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Archivo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/belaciavatta.css?v=7" />
+  <link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Mrs+Saint+Delafield&family=Archivo:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/belaciavatta.css?v=8" />
 </head>
 <body>
 
   <header class="topbar">
     <button id="back-btn" class="back-btn" type="button">← Voltar</button>
     <button id="home-btn" class="brand-btn" type="button" aria-label="Início">
-      <span class="brand-name">Bela Ciavatta</span>
+      <span class="brand-name"><span class="hand-ochre">bela ciavatta</span> ponto de partida</span>
     </button>
     <span class="topbar-spacer"></span>
     <span id="sync-dot" class="sync-dot" title="Sincronização"></span>
   </header>
 
-  <!-- Início: o nome e as quatro partes -->
-  <section class="home-hero" aria-hidden="true">
-    <div class="hero-title">Bela Ciavatta</div>
-    <div class="hero-sub">finalização do álbum</div>
+  <!-- Início: o nome, no estilo das capas, e as quatro partes -->
+  <section class="home-hero">
+    <div class="hero-band">
+      <div class="hero-title"><span class="hand-ochre">bela ciavatta</span><span class="hero-album">ponto de partida</span></div>
+      <div class="hero-sub">finalização do álbum</div>
+    </div>
     <div id="hero-progress" class="hero-progress"></div>
   </section>
 
@@ -46,6 +48,14 @@
     <button class="tab" type="button" data-tab="roadmap" role="tab"><span class="tab-ico">➝</span>Road map</button>
     <button class="tab" type="button" data-tab="todo" role="tab"><span class="tab-ico">✓</span>To-do</button>
   </nav>
+  <section class="home-covers" aria-label="Lançados">
+    <div class="covers-label">já lançados</div>
+    <div class="covers">
+      <figure><img src="img/belaciavatta/de-la.jpg" alt="Capa de De lá" loading="lazy" /><figcaption>de lá</figcaption></figure>
+      <figure><img src="img/belaciavatta/reparo.jpg" alt="Capa de Reparo" loading="lazy" /><figcaption class="script">Reparo</figcaption></figure>
+      <figure><img src="img/belaciavatta/te-dara.jpg" alt="Capa de Te dará" loading="lazy" /><figcaption>te dará</figcaption></figure>
+    </div>
+  </section>
   <button id="logout-btn" class="home-logout link-btn" type="button">sair</button>
 
   <!-- Demos: ouvir as faixas -->
@@ -208,7 +218,7 @@
   <!-- Trava de senha -->
   <div id="login-gate" class="login-gate" hidden>
     <form id="login-form" class="login-card">
-      <div class="login-brand">Bela Ciavatta</div>
+      <div class="login-brand"><span class="hand-ochre">bela ciavatta</span><span class="login-album">ponto de partida</span></div>
       <h2>Acesso</h2>
       <div class="field">
         <label for="login-password">Senha</label>
