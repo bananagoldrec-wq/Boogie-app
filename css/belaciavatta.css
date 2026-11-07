@@ -550,11 +550,3 @@ input[type="checkbox"] { accent-color: var(--terracota); }
 .player-bar { background: rgba(243, 235, 223, 0.95); }
 .topbar { background: rgba(243, 235, 223, 0.92); }
 
-.home-covers { max-width: 560px; margin: 34px auto 0; padding: 0 28px; }
-.covers-label { font-family: var(--hand); font-size: 1.5rem; color: var(--ink-dim); margin-bottom: 10px; }
-.covers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.covers figure { margin: 0; }
-.covers img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; border-radius: 3px; }
-.covers figcaption { font-family: var(--hand); font-size: 1.35rem; text-align: center; margin-top: 4px; color: var(--ink); line-height: 1; }
-.covers figcaption.script { font-family: var(--script); font-size: 1.7rem; color: var(--terracota); }
-body:not(.is-home) .home-covers { display: none; }
