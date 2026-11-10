@@ -412,3 +412,21 @@ ouvir. Ícones: `python3 tools/make_belaciavatta_icons.py`. Ao mexer em
 `js/belaciavatta.js`/`css/belaciavatta.css`, suba o `?v=` do
 `belaciavatta.html` e, junto, o `data-build` do `<html>` e o `BUILD` no topo do
 JS (os três iguais).
+
+# ✅ Tarefas
+
+Listas de tarefas simples, no jeitão do Notes. Abre em `tarefas.html`.
+
+- **Abas** no topo: Casa, Banana Gold, Produção Musical e DJ (o número na aba
+  é quanto falta fazer). O **+** cria uma lista nova; tocar de novo na aba
+  aberta (ou segurar) renomeia ou apaga.
+- Escreve em **Nova tarefa** e dá Enter: entra no topo e o cursor fica lá pra
+  emendar a próxima.
+- Toca na **bolinha** pra marcar como feita: ela desce pra "Feitas" riscada
+  (toca de novo pra voltar). "Limpar" tira as feitas daquela lista.
+- Toca no texto pra editar; apagar o texto todo (ou o ×) remove a tarefa.
+  Apagar sempre mostra **Desfazer** por 5 s.
+
+Fica salvo **só no aparelho** (`localStorage`, chave `tarefas-v1`) — sem
+login e sem nuvem, funciona offline. Ao mexer em `js/tarefas.js` ou
+`css/tarefas.css`, suba o `?v=` do `tarefas.html`.

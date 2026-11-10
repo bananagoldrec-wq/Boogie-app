@@ -1,0 +1,17 @@
+{
+  "name": "Tarefas",
+  "short_name": "Tarefas",
+  "description": "Listas de tarefas simples por assunto: Casa, Banana Gold, Produção Musical e DJ.",
+  "lang": "pt-BR",
+  "start_url": "./tarefas.html",
+  "scope": "./tarefas.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f3ec",
+  "theme_color": "#f6f3ec",
+  "icons": [
+    { "src": "icons/icon-tarefas-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-tarefas-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-tarefas-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
