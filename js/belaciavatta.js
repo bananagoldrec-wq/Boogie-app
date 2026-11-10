@@ -15,7 +15,7 @@
   /* BUILD tem que ser igual ao data-build do belaciavatta.html: suba os
      dois juntos com o ?v=. Se o HTML velho carregar o JS novo (cache),
      recarrega uma vez em vez de travar. */
-  const BUILD = "14";
+  const BUILD = "15";
   const ICON_PLAY = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7 4.9v14.2a.9.9 0 0 0 1.4.8l11-7.1a.9.9 0 0 0 0-1.6l-11-7.1A.9.9 0 0 0 7 4.9Z"/></svg>';
   const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>';
   if (document.documentElement.dataset.build !== BUILD) {
@@ -88,53 +88,89 @@
     "ISRC e metadados",
   ];
 
-  /* Road map: cronograma da semana de 9 a 12/11. Cada dia é uma etapa e
-     cada atividade um item marcável com o horário (os horários seguidos
-     com a mesma atividade viram um item só). O cronograma V1 de 7
-     semanas (30/10, do Dudu) foi apagado: os ids antigos ficam em OLD_SEED_MS pra
-     não voltarem da nuvem. */
-  const RM_TITULO = "Cronograma da semana";
-  const RM_SUB = "9 a 12/11";
+  /* Road map: "PONTO DE PARTIDA — cronograma de finalização V2 (10/11)".
+     Cada semana é uma etapa com checklist; os itens são agrupados por dia
+     ou por tipo, e tarefa que cobre várias faixas vira um item por faixa.
+     Siglas por extenso: PP = Ponto de Partida, TJN = Tem Jeito Não,
+     APD = Adeus Por Despedida. As versões anteriores (V1 de 7 semanas e a
+     agenda de 9 a 12/11) ficam em OLD_SEED_MS pra não voltarem. */
+  const RM_TITULO = "Cronograma de finalização";
+  const RM_SUB = "V2 · 10/11";
   const RM_COMBINADOS = [];
+  const cada = (grupo, faixas, fmt) => faixas.map((f) => [grupo, fmt ? fmt(f) : f]);
   const SEED_MILESTONES = {
-    "rm-d-0911": {
-      titulo: "Segunda-feira", inicio: "2026-11-09", data: "2026-11-09",
+    "rm2-s1": {
+      titulo: "Semana 1", inicio: "2026-11-10", data: "2026-11-13",
       passos: [
-        ["13h00–13h30", "Reunião de organização"],
-        ["13h30–14h30", "Gravação gritos \"Amor 1x\""],
-        ["14h30–16h00", "Gravação intro \"Moço\" e edição"],
-        ["16h00–17h00", "Gravação backings \"Romance\""],
+        ["ter 10/11", "Ponto de Partida pra mix"],
+        ["ter 10/11", "Olhar Tem Jeito Não com violão novo"],
+        ["ter 10/11", "Stems Tem Jeito Não"],
+        ["qua 11/11", "Bela: entender terapia"],
+        ["qua 11/11", "Gritinhos e áudio negadeza — Amor1x"],
+        ["qua 11/11", "Beno: Amor1x mix"],
+        ["qua 11/11", "Dudu: fechar arranjo Uma"],
+        ["qua 11/11", "Bela: melodia de contraponto Cartola"],
+        ["qui 12/11", "Guia intro Moço"],
+        ["qui 12/11", "Beno manda Moço pra mix"],
+        ["qui 12/11", "Dudu: fechar arranjo Cartola"],
+        ["sex 13/11", "Guias + beat — Uma"],
+        ["sex 13/11", "Guias + beat — Cartola"],
+        ["sex 13/11", "Confirmar gravações da semana que vem (Laila + Jotape + Frigideira + Chermont)"],
       ],
     },
-    "rm-d-1011": {
-      titulo: "Terça-feira", inicio: "2026-11-10", data: "2026-11-10",
+    "rm2-s2": {
+      titulo: "Semana 2", inicio: "2026-11-16", data: "2026-11-20",
       passos: [
-        ["13h00–14h00", "Pente fino em \"Ponto de Partida\""],
-        ["14h00–16h00", "Gravação do Guarnicê no Dudu"],
+        ["seg 16/11", "Adaptar arranjo Tem Jeito Não (Dudu e Bela)"],
+        ["Encaixar", "Gravar cavaco — Cartola (Bela fechando com Laila + Frigideira)"],
+        ...cada("Gravar no Chermont", ["Voz Romance", "Intro Moço valendo", "Guarnicê"]),
+        ["Encaixar", "Comp + afinar voz Romance"],
+        ["Encaixar", "Gravar bateria Tem Jeito Não"],
       ],
+      obs: "Sem Beno nesta semana.\nNo Chermont, além dessas, o que mais couber (…).",
     },
-    "rm-d-1111": {
-      titulo: "Quarta-feira", inicio: "2026-11-11", data: "2026-11-11",
+    "rm2-s3": {
+      titulo: "Semana 3", inicio: "2026-11-23", data: "2026-11-27",
       passos: [
-        ["13h00–15h00", "Edições e prep mix"],
+        ...cada("Encaixar no Beno", ["Uma", "Cartola"], (f) => `Gravar percs Bela — ${f}`),
+        ["Encaixar no Beno", "BV Romance"],
+        ["Encaixar no Beno", "Corinhos Nada + mix"],
+        ["Combinados", "Confirmar gravações da semana que vem"],
       ],
+      obs: "Beno a partir do dia 25.",
     },
-    "rm-d-1211": {
-      titulo: "Quinta-feira", inicio: "2026-11-12", data: "2026-11-12",
+    "rm2-s4": {
+      titulo: "Semana 4", inicio: "2026-11-30", data: "2026-12-04",
       passos: [
-        ["13h00–15h30", "Envio das faixas pra mix / arranjos e plano de gravação"],
+        ...cada("Violão (Quinto, início de dezembro)", ["Uma", "Cartola", "Adeus Por Despedida", "Tem Jeito Não"]),
+        ...cada("Sopros (Dudu Santana / nova, Dudu Rz, Moises)", ["Uma", "Cartola", "Tem Jeito Não"]),
+        ["Baixo + teclado", "Baixo (Giordano? Pablo Arruda? Alana?) + teclado (Dalbó) — Uma, no Beno"],
+        ["Encaixar", "Baixo e bateria — Tem Jeito Não"],
+        ["Encaixar", "Cavaco — Uma (???)"],
+        ["Encaixar", "Coro/BV — Uma (???)"],
+        ...cada("Encaixar · voz final", ["Uma", "Guarnicê", "Cartola"]),
+        ["Afinação", "Afinar sopros e vozes"],
       ],
+      obs: "Bela não trabalha dia 30.\nBeno viaja de 2/12 a 7/12.\nViolão: vinda do Quinto no início de dezembro — esperando ele confirmar horários pra bater com a Frigi.",
     },
+    "rm2-depois": {
+      titulo: "Depois · edits, mix…",
+      passos: [],
+    },
+    "rm2-meta-prod": { titulo: "META · Produção pronta — 2026", meta: true },
+    "rm2-meta-mix": { titulo: "META · Mix pronta — janeiro", meta: true },
+    "rm2-meta-master": { titulo: "META · Master — ?", meta: true },
   };
   Object.entries(SEED_MILESTONES).forEach(([id, m], i) => {
-    m.passos = (m.passos || []).map(([h, t], k) => ({ id: `${id}-${k + 1}`, h, t, feito: false }));
-    Object.assign(m, { status: "aberto", obs: "", ordem: i + 1, ...m });
+    m.passos = (m.passos || []).map(([g, t], k) => ({ id: `${id}-${k + 1}`, g, t, feito: false }));
+    Object.assign(m, { status: "aberto", obs: "", data: "", ordem: i + 1, ...m });
   });
   // marcos de versões anteriores (genéricos e o cronograma V1 de 7
   // semanas): se alguém editou, não voltam
   const OLD_SEED_MS = new Set([
     "ms-repertorio", "ms-preproducao", "ms-gravacao", "ms-mix", "ms-master", "ms-arte", "ms-distribuicao", "ms-divulgacao", "ms-lancamento",
     "rm-s1", "rm-s2", "rm-s3", "rm-s4", "rm-s5", "rm-s6", "rm-s7", "rm-meta-mix", "rm-meta-master", "rm-meta-limite",
+    "rm-d-0911", "rm-d-1011", "rm-d-1111", "rm-d-1211",
   ]);
 
   /* Faixas que já vêm no app: os bounces da pasta BOUNCES no Google Drive
@@ -1245,7 +1281,7 @@
       const late = m.data && !feito && m.data < todayKey;
       const now = m.inicio && m.data && m.inicio <= todayKey && todayKey <= m.data;
       const open = msOpen.has(id) || (now && !msClosed.has(id));
-      const quando = m.inicio && m.data && m.inicio !== m.data ? `${shortBr(m.inicio)} → ${shortBr(m.data)}` : m.data ? formatBr(m.data) : "sem prazo";
+      const quando = m.inicio && m.data && m.inicio !== m.data ? `${shortBr(m.inicio)} → ${shortBr(m.data)}` : m.data ? formatBr(m.data) : "";
       const sub = [
         quando,
         now ? (m.inicio === m.data ? "hoje" : "esta semana") : m.data && !feito ? countdown(m.inicio && m.inicio > todayKey ? m.inicio : m.data) : "",
@@ -1263,7 +1299,7 @@
           ${!passos.length ? `<input type="checkbox" data-act="meta-check" ${feito ? "checked" : ""} aria-label="Concluído" />` : ""}
           <div class="ms-bar-main">
             <div class="item-title">${esc(m.titulo)}</div>
-            <div class="item-sub">${esc(sub)}${late ? ` · <span class="late">atrasado</span>` : ""}</div>
+            ${sub || late ? `<div class="item-sub">${esc(sub)}${late ? ` · <span class="late">atrasado</span>` : ""}</div>` : ""}
           </div>
           ${passos.length ? `<span class="ms-count${done === passos.length ? " is-full" : ""}">${done}/${passos.length}</span><span class="chevron" aria-hidden="true">▾</span>` : ""}
         </div>
