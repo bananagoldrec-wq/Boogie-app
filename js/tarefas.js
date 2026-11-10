@@ -438,6 +438,50 @@
   render();
   onScroll();
 
+  /* ---------- atualização automática ----------
+     O app na tela inicial do iPhone às vezes segura uma cópia antiga. Ao abrir
+     (e ao voltar pro app), pergunta ao servidor qual é a versão publicada e,
+     se for outra, recarrega. BUILD tem que ser igual ao data-build do HTML. */
+  const BUILD = "5";
+  $("build").textContent = "v" + BUILD;
+
+  let checking = false;
+  async function checkForUpdate() {
+    if (checking || !navigator.onLine) return;
+    checking = true;
+    try {
+      const res = await fetch("tarefas.html?check=" + Date.now(), { cache: "no-store" });
+      const html = await res.text();
+      const m = html.match(/data-build="([^"]+)"/);
+      if (m && m[1] !== BUILD) {
+        let tries = 0;
+        try { tries = +sessionStorage.getItem("tarefas-reload") || 0; } catch (_) {}
+        if (tries < 2) {
+          try { sessionStorage.setItem("tarefas-reload", String(tries + 1)); } catch (_) {}
+          if ("serviceWorker" in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map((r) => r.update().catch(() => {})));
+          }
+          if (window.caches) {
+            const keys = await caches.keys();
+            await Promise.all(keys.filter((k) => k.startsWith("tarefas")).map((k) => caches.delete(k)));
+          }
+          location.replace("tarefas.html?v=" + m[1]);
+          return;
+        }
+      } else {
+        try { sessionStorage.removeItem("tarefas-reload"); } catch (_) {}
+      }
+    } catch (_) {
+      /* offline ou falhou: segue com a versão que está aberta */
+    }
+    checking = false;
+  }
+  checkForUpdate();
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") checkForUpdate();
+  });
+
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("sw-tarefas.js", { scope: "./tarefas.html" }).catch(() => {});

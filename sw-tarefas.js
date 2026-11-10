@@ -1,6 +1,6 @@
 /* Service worker network-first do app "Tarefas": busca a versão
    mais recente quando online, cai para o cache quando estiver offline. */
-const CACHE = "tarefas-v4";
+const CACHE = "tarefas-v5";
 const PRECACHE = [
   "./tarefas.html",
   "./css/tarefas.css",
