@@ -15,7 +15,7 @@
   /* BUILD tem que ser igual ao data-build do belaciavatta.html: suba os
      dois juntos com o ?v=. Se o HTML velho carregar o JS novo (cache),
      recarrega uma vez em vez de travar. */
-  const BUILD = "12";
+  const BUILD = "13";
   const ICON_PLAY = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7 4.9v14.2a.9.9 0 0 0 1.4.8l11-7.1a.9.9 0 0 0 0-1.6l-11-7.1A.9.9 0 0 0 7 4.9Z"/></svg>';
   const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>';
   if (document.documentElement.dataset.build !== BUILD) {
@@ -88,44 +88,14 @@
     "ISRC e metadados",
   ];
 
-  /* Road map: cronograma da semana de 9 a 12/11. Cada dia é uma etapa e
-     cada atividade um item marcável com o horário (os horários seguidos
-     com a mesma atividade viram um item só). O cronograma V1 de 7
-     semanas (30/10) foi apagado: os ids antigos ficam em OLD_SEED_MS pra
-     não voltarem da nuvem. */
-  const RM_TITULO = "Cronograma da semana";
-  const RM_SUB = "9 a 12/11";
+  /* Road map: começa vazio — a equipe cria os marcos no app. Os
+     cronogramas anteriores (V1 de 7 semanas e a semana de 9 a 12/11)
+     foram apagados; os ids ficam em OLD_SEED_MS pra não voltarem da
+     nuvem. */
+  const RM_TITULO = "Road map";
+  const RM_SUB = "";
   const RM_COMBINADOS = [];
-  const SEED_MILESTONES = {
-    "rm-d-0911": {
-      titulo: "Segunda-feira", inicio: "2026-11-09", data: "2026-11-09",
-      passos: [
-        ["13h00–13h30", "Reunião de organização"],
-        ["13h30–14h30", "Gravação gritos \"Amor 1x\""],
-        ["14h30–16h00", "Gravação intro \"Moço\" e edição"],
-        ["16h00–17h00", "Gravação backings \"Romance\""],
-      ],
-    },
-    "rm-d-1011": {
-      titulo: "Terça-feira", inicio: "2026-11-10", data: "2026-11-10",
-      passos: [
-        ["13h00–14h00", "Pente fino em \"Ponto de Partida\""],
-        ["14h00–16h00", "Gravação do Guarnicê no Dudu"],
-      ],
-    },
-    "rm-d-1111": {
-      titulo: "Quarta-feira", inicio: "2026-11-11", data: "2026-11-11",
-      passos: [
-        ["13h00–15h00", "Edições e prep mix"],
-      ],
-    },
-    "rm-d-1211": {
-      titulo: "Quinta-feira", inicio: "2026-11-12", data: "2026-11-12",
-      passos: [
-        ["13h00–15h30", "Envio das faixas pra mix / arranjos e plano de gravação"],
-      ],
-    },
-  };
+  const SEED_MILESTONES = {};
   Object.entries(SEED_MILESTONES).forEach(([id, m], i) => {
     m.passos = (m.passos || []).map(([h, t], k) => ({ id: `${id}-${k + 1}`, h, t, feito: false }));
     Object.assign(m, { status: "aberto", obs: "", ordem: i + 1, ...m });
@@ -135,6 +105,7 @@
   const OLD_SEED_MS = new Set([
     "ms-repertorio", "ms-preproducao", "ms-gravacao", "ms-mix", "ms-master", "ms-arte", "ms-distribuicao", "ms-divulgacao", "ms-lancamento",
     "rm-s1", "rm-s2", "rm-s3", "rm-s4", "rm-s5", "rm-s6", "rm-s7", "rm-meta-mix", "rm-meta-master", "rm-meta-limite",
+    "rm-d-0911", "rm-d-1011", "rm-d-1111", "rm-d-1211",
   ]);
 
   /* Faixas que já vêm no app: os bounces da pasta BOUNCES no Google Drive
@@ -1236,7 +1207,7 @@
     const comb = document.getElementById("rm-combinados");
     comb.innerHTML = RM_COMBINADOS.map((c) => `<li>${esc(c)}</li>`).join("");
     comb.hidden = !RM_COMBINADOS.length;
-    document.getElementById("rm-head").innerHTML = `${esc(RM_TITULO)} <span>${esc(RM_SUB)}</span>`;
+    document.getElementById("rm-head").innerHTML = `${esc(RM_TITULO)}${RM_SUB ? ` <span>${esc(RM_SUB)}</span>` : ""}`;
     const ms = msOrder();
     document.getElementById("rm-list").innerHTML = ms.map(([id, m], i) => {
       const passos = passosOf(m);
@@ -1291,7 +1262,7 @@
           </div>
         </div>
       </li>`;
-    }).join("") || `<li class="empty">Nenhum marco. Adicione abaixo.</li>`;
+    }).join("") || `<li class="empty">Nenhum marco ainda. Crie o primeiro abaixo.</li>`;
   }
 
   async function moveMs(id, dir) {
