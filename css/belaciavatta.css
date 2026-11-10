@@ -550,3 +550,4 @@ input[type="checkbox"] { accent-color: var(--terracota); }
 .player-bar { background: rgba(243, 235, 223, 0.95); }
 .topbar { background: rgba(243, 235, 223, 0.92); }
 
+.todo-time { flex: none; width: 92px; font-size: 0.78rem; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
