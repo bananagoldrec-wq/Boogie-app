@@ -11,7 +11,13 @@
     ["Banana Gold", "yellow"],
     ["Produção Musical", "purple"],
     ["DJ", "pink"],
+    ["Frisson", "blue"],
+    ["Burocracia", "brown"],
+    ["Santa Teresa", "green"],
+    ["Imóveis", "teal"],
   ];
+  // listas que já vinham no app antes de ganhar a lista "seeded"
+  const FIRST_DEFAULTS = ["Casa", "Banana Gold", "Produção Musical", "DJ"];
 
   const $ = (id) => document.getElementById(id);
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -19,7 +25,7 @@
   /* ---------- estado ---------- */
   function freshState() {
     const lists = DEFAULT_LISTS.map(([name, color]) => ({ id: uid(), name, color, items: [] }));
-    return { lists, active: lists[0].id, doneCollapsed: false };
+    return { lists, active: lists[0].id, doneCollapsed: false, seeded: DEFAULT_LISTS.map(([n]) => n) };
   }
 
   function load() {
@@ -33,6 +39,15 @@
             if (!COLORS.includes(l.color)) {
               const def = DEFAULT_LISTS.find(([n]) => n === l.name);
               l.color = def ? def[1] : COLORS[i % COLORS.length];
+            }
+          });
+          // listas padrão novas aparecem uma vez; se apagar, não voltam
+          if (!Array.isArray(s.seeded)) s.seeded = FIRST_DEFAULTS.slice();
+          DEFAULT_LISTS.forEach(([name, color]) => {
+            if (s.seeded.includes(name)) return;
+            s.seeded.push(name);
+            if (!s.lists.some((l) => l.name === name)) {
+              s.lists.push({ id: uid(), name, color, items: [] });
             }
           });
           return s;

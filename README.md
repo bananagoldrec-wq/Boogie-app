@@ -419,7 +419,10 @@ Listas de tarefas simples, com visual de app da Apple (Lembretes). Abre em
 `tarefas.html`.
 
 - **Abas** no topo: Casa (laranja), Banana Gold (amarelo), Produção Musical
-  (roxo) e DJ (rosa); o número é quanto falta fazer. O **+** cria uma lista
+  (roxo), DJ (rosa), Frisson (azul), Burocracia (marrom), Santa Teresa
+  (verde) e Imóveis (azul-piscina); o número é quanto falta fazer. Lista
+  padrão nova entra uma vez nos aparelhos que já usam o app (`seeded`); se
+  apagar, ela não volta. O **+** cria uma lista
   nova; tocar de novo na aba aberta (ou segurar) renomeia, troca a cor ou
   apaga.
 - **Nova tarefa** (na lista ou no botão de baixo) e Enter: entra no fim das
