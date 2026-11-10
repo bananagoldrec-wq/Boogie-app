@@ -415,16 +415,19 @@ JS (os três iguais).
 
 # ✅ Tarefas
 
-Listas de tarefas simples, no jeitão do Notes. Abre em `tarefas.html`.
+Listas de tarefas simples, com visual de app da Apple (Lembretes). Abre em
+`tarefas.html`.
 
-- **Abas** no topo: Casa, Banana Gold, Produção Musical e DJ (o número na aba
-  é quanto falta fazer). O **+** cria uma lista nova; tocar de novo na aba
-  aberta (ou segurar) renomeia ou apaga.
-- Escreve em **Nova tarefa** e dá Enter: entra no topo e o cursor fica lá pra
-  emendar a próxima.
-- Toca na **bolinha** pra marcar como feita: ela desce pra "Feitas" riscada
-  (toca de novo pra voltar). "Limpar" tira as feitas daquela lista.
-- Toca no texto pra editar; apagar o texto todo (ou o ×) remove a tarefa.
+- **Abas** no topo: Casa (laranja), Banana Gold (amarelo), Produção Musical
+  (roxo) e DJ (rosa); o número é quanto falta fazer. O **+** cria uma lista
+  nova; tocar de novo na aba aberta (ou segurar) renomeia, troca a cor ou
+  apaga.
+- **Nova tarefa** (na lista ou no botão de baixo) e Enter: entra no fim das
+  pendentes e o cursor fica lá pra emendar a próxima.
+- Toca na **bolinha** pra concluir: ela enche com a cor da lista e a tarefa
+  desce pra "concluídas" (toca de novo pra voltar). "Limpar" tira as
+  concluídas; "Ocultar/Mostrar" esconde a seção.
+- Toca no texto pra editar; apagar o texto todo (ou o ⓧ) remove a tarefa.
   Apagar sempre mostra **Desfazer** por 5 s.
 
 Fica salvo **só no aparelho** (`localStorage`, chave `tarefas-v1`) — sem

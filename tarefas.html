@@ -8,8 +8,8 @@
 
   <!-- PWA / atalho na tela inicial -->
   <link rel="manifest" href="manifest-tarefas.json" />
-  <meta name="theme-color" content="#f6f3ec" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#161513" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
 
   <!-- iOS: roda em tela cheia -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -22,48 +22,59 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-tarefas-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-tarefas-512.png" />
 
-  <link rel="stylesheet" href="css/tarefas.css?v=1" />
+  <link rel="stylesheet" href="css/tarefas.css?v=2" />
 </head>
 <body>
   <header class="top">
+    <nav id="tabs" class="tabs" role="tablist" aria-label="Listas"></nav>
     <div class="title-row">
       <h1 id="list-title">Tarefas</h1>
-      <span id="count" class="count"></span>
+      <span id="count" class="count" aria-label="pendentes"></span>
     </div>
-    <nav id="tabs" class="tabs" role="tablist" aria-label="Listas"></nav>
   </header>
 
   <main class="main">
+    <ul id="todo" class="list" aria-label="A fazer"></ul>
+
     <form id="add-form" class="add" autocomplete="off">
-      <span class="add-plus" aria-hidden="true">+</span>
+      <span class="add-plus" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg>
+      </span>
       <input id="add-input" type="text" placeholder="Nova tarefa" enterkeyhint="done" aria-label="Nova tarefa" />
     </form>
 
-    <ul id="todo" class="list" aria-label="A fazer"></ul>
-    <p id="empty" class="empty" hidden>Nada por aqui. Escreve aí em cima ☝️</p>
+    <p id="empty" class="empty" hidden>Nenhuma tarefa</p>
 
     <section id="done-wrap" class="done-wrap" hidden>
       <div class="done-head">
-        <button id="done-toggle" class="done-toggle" type="button" aria-expanded="true">
-          <span class="chev" aria-hidden="true">▾</span> Feitas <span id="done-count"></span>
-        </button>
-        <button id="clear-done" class="link" type="button">Limpar</button>
+        <span class="done-info"><span id="done-count"></span> · <button id="clear-done" class="link" type="button">Limpar</button></span>
+        <button id="done-toggle" class="link" type="button" aria-expanded="true">Ocultar</button>
       </div>
-      <ul id="done" class="list done" aria-label="Feitas"></ul>
+      <ul id="done" class="list done" aria-label="Concluídas"></ul>
     </section>
   </main>
 
-  <!-- Menu da aba (renomear / apagar) -->
-  <dialog id="tab-dialog" class="sheet">
+  <!-- Barra inferior, como nos apps da Apple -->
+  <footer class="toolbar">
+    <button id="new-btn" class="new-btn" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M12 7v10M7 12h10" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      Nova tarefa
+    </button>
+  </footer>
+
+  <!-- Editar / criar lista -->
+  <dialog id="tab-dialog" class="alert">
     <form method="dialog" id="tab-form">
-      <h2 id="tab-dialog-title">Lista</h2>
-      <input id="tab-name" type="text" maxlength="40" placeholder="Nome da lista" autocomplete="off" />
-      <div class="sheet-actions">
-        <button id="tab-delete" class="danger" type="button">Apagar lista</button>
-        <span class="grow"></span>
-        <button value="cancel" type="submit" class="ghost" formnovalidate>Cancelar</button>
-        <button id="tab-save" value="ok" type="submit" class="primary">Salvar</button>
+      <div class="alert-body">
+        <h2 id="tab-dialog-title">Lista</h2>
+        <input id="tab-name" type="text" maxlength="40" placeholder="Nome da lista" autocomplete="off" />
+        <div id="colors" class="colors" role="radiogroup" aria-label="Cor da lista"></div>
       </div>
+      <div class="alert-buttons">
+        <button value="cancel" type="submit" formnovalidate>Cancelar</button>
+        <button id="tab-save" value="ok" type="submit" class="strong">Salvar</button>
+      </div>
+      <button id="tab-delete" class="alert-delete" type="button">Apagar lista</button>
     </form>
   </dialog>
 
@@ -72,6 +83,6 @@
     <button id="toast-undo" type="button">Desfazer</button>
   </div>
 
-  <script src="js/tarefas.js?v=1"></script>
+  <script src="js/tarefas.js?v=2"></script>
 </body>
 </html>

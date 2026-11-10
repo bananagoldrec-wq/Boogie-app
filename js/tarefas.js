@@ -1,17 +1,24 @@
-/* Tarefas — listas simples por assunto, no estilo do Notes.
+/* Tarefas — listas simples por assunto, com visual de app da Apple.
    Tudo fica salvo no próprio aparelho (localStorage). */
 (() => {
   "use strict";
 
   const STORE_KEY = "tarefas-v1";
-  const DEFAULT_LISTS = ["Casa", "Banana Gold", "Produção Musical", "DJ"];
+  const COLORS = ["orange", "yellow", "purple", "pink", "blue", "green", "teal", "indigo", "red", "brown"];
+  const LIGHT_COLORS = new Set(["yellow"]); // cores claras pedem texto escuro
+  const DEFAULT_LISTS = [
+    ["Casa", "orange"],
+    ["Banana Gold", "yellow"],
+    ["Produção Musical", "purple"],
+    ["DJ", "pink"],
+  ];
 
   const $ = (id) => document.getElementById(id);
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
   /* ---------- estado ---------- */
   function freshState() {
-    const lists = DEFAULT_LISTS.map((name) => ({ id: uid(), name, items: [] }));
+    const lists = DEFAULT_LISTS.map(([name, color]) => ({ id: uid(), name, color, items: [] }));
     return { lists, active: lists[0].id, doneCollapsed: false };
   }
 
@@ -20,7 +27,16 @@
       const raw = localStorage.getItem(STORE_KEY);
       if (raw) {
         const s = JSON.parse(raw);
-        if (s && Array.isArray(s.lists) && s.lists.length) return s;
+        if (s && Array.isArray(s.lists) && s.lists.length) {
+          // listas antigas (sem cor): usa a cor padrão pelo nome, ou a próxima da roda
+          s.lists.forEach((l, i) => {
+            if (!COLORS.includes(l.color)) {
+              const def = DEFAULT_LISTS.find(([n]) => n === l.name);
+              l.color = def ? def[1] : COLORS[i % COLORS.length];
+            }
+          });
+          return s;
+        }
       }
     } catch (_) {}
     return freshState();
@@ -64,8 +80,12 @@
   });
 
   /* ---------- render ---------- */
-  const CHECK_SVG =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17l9-10"/></svg>';
+  const PLUS_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+  const XMARK_SVG =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"/></svg>';
+
+  const colorVar = (c) => "var(--c-" + c + ")";
 
   function renderTabs() {
     const nav = $("tabs");
@@ -73,12 +93,19 @@
     state.lists.forEach((list) => {
       const b = document.createElement("button");
       b.type = "button";
-      b.className = "tab";
+      b.className = "tab" + (LIGHT_COLORS.has(list.color) ? " on-light" : "");
+      b.style.setProperty("--c", colorVar(list.color));
       b.setAttribute("role", "tab");
       b.setAttribute("aria-selected", String(list.id === state.active));
       b.dataset.id = list.id;
+
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      const name = document.createElement("span");
+      name.textContent = list.name;
+      b.append(dot, name);
+
       const pending = list.items.filter((i) => !i.done).length;
-      b.textContent = list.name;
       if (pending) {
         const badge = document.createElement("span");
         badge.className = "badge";
@@ -90,14 +117,19 @@
     const add = document.createElement("button");
     add.type = "button";
     add.className = "tab add-tab";
-    add.textContent = "+";
+    add.innerHTML = PLUS_SVG;
     add.title = "Nova lista";
     add.setAttribute("aria-label", "Nova lista");
     add.dataset.action = "new";
     nav.appendChild(add);
 
     const sel = nav.querySelector('[aria-selected="true"]');
-    if (sel) sel.scrollIntoView({ block: "nearest", inline: "nearest" });
+    if (sel) {
+      const r = sel.getBoundingClientRect();
+      if (r.left < 0 || r.right > window.innerWidth) {
+        nav.scrollTo({ left: sel.offsetLeft - 16, behavior: "smooth" });
+      }
+    }
   }
 
   function itemEl(item) {
@@ -108,8 +140,12 @@
     const check = document.createElement("button");
     check.type = "button";
     check.className = "check";
-    check.setAttribute("aria-label", item.done ? "Desmarcar" : "Marcar como feita");
-    check.innerHTML = CHECK_SVG;
+    check.setAttribute("role", "checkbox");
+    check.setAttribute("aria-checked", String(item.done));
+    check.setAttribute("aria-label", "Concluída");
+
+    const body = document.createElement("div");
+    body.className = "body";
 
     const text = document.createElement("textarea");
     text.className = "text";
@@ -122,9 +158,12 @@
     del.type = "button";
     del.className = "del";
     del.setAttribute("aria-label", "Apagar");
-    del.textContent = "×";
+    del.innerHTML = XMARK_SVG;
+    // mantém o foco no texto ao tocar no ×, senão o blur re-renderiza antes do clique
+    del.addEventListener("pointerdown", (e) => e.preventDefault());
 
-    li.append(check, text, del);
+    body.append(text, del);
+    li.append(check, body);
     return li;
   }
 
@@ -136,6 +175,7 @@
   function render() {
     const list = activeList();
     state.active = list.id;
+    document.documentElement.style.setProperty("--tint", colorVar(list.color));
     renderTabs();
 
     $("list-title").textContent = list.name;
@@ -144,9 +184,7 @@
     const todo = list.items.filter((i) => !i.done);
     const done = list.items.filter((i) => i.done);
 
-    $("count").textContent = todo.length
-      ? todo.length + (todo.length === 1 ? " pendente" : " pendentes")
-      : "";
+    $("count").textContent = todo.length || "";
 
     const todoUl = $("todo");
     todoUl.innerHTML = "";
@@ -160,7 +198,8 @@
     $("done-wrap").hidden = done.length === 0;
     $("done-wrap").classList.toggle("collapsed", !!state.doneCollapsed);
     $("done-toggle").setAttribute("aria-expanded", String(!state.doneCollapsed));
-    $("done-count").textContent = "(" + done.length + ")";
+    $("done-toggle").textContent = state.doneCollapsed ? "Mostrar" : "Ocultar";
+    $("done-count").textContent = done.length + (done.length === 1 ? " concluída" : " concluídas");
 
     document.querySelectorAll(".text").forEach(autosize);
   }
@@ -168,17 +207,30 @@
   /* ---------- tarefas ---------- */
   const findItem = (id) => activeList().items.find((i) => i.id === id);
 
+  // posição entre as pendentes e as concluídas
+  const boundary = (items) => {
+    const i = items.findIndex((x) => x.done);
+    return i === -1 ? items.length : i;
+  };
+
   $("add-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const input = $("add-input");
     const text = input.value.trim();
     if (!text) return;
-    // novas tarefas entram no topo da lista
-    activeList().items.unshift({ id: uid(), text, done: false });
+    // nova tarefa entra no fim das pendentes, logo acima do campo
+    const items = activeList().items;
+    items.splice(boundary(items), 0, { id: uid(), text, done: false });
     input.value = "";
     save();
     render();
     input.focus();
+  });
+
+  $("new-btn").addEventListener("click", () => {
+    const input = $("add-input");
+    input.focus();
+    input.scrollIntoView({ block: "center", behavior: "smooth" });
   });
 
   function onListClick(e) {
@@ -188,16 +240,16 @@
     if (!item) return;
 
     if (e.target.closest(".check")) {
-      item.done = !item.done;
-      item.doneAt = item.done ? Date.now() : undefined;
-      // ao concluir, vai pro topo das feitas; ao desmarcar, volta pro fim das pendentes
       const items = activeList().items;
       items.splice(items.indexOf(item), 1);
-      // (os dois casos caem na fronteira entre pendentes e feitas)
-      const firstDone = items.findIndex((i) => i.done);
-      items.splice(firstDone === -1 ? items.length : firstDone, 0, item);
+      item.done = !item.done;
+      item.doneAt = item.done ? Date.now() : undefined;
+      // concluída vai pro topo das concluídas; desmarcada volta pro fim das pendentes
+      items.splice(boundary(items), 0, item);
+      li.classList.toggle("is-done", item.done);
       save();
-      render();
+      // deixa a bolinha preencher antes de mudar a tarefa de lugar
+      setTimeout(render, item.done ? 280 : 0);
     } else if (e.target.closest(".del")) {
       withUndo("Tarefa apagada", () => {
         const items = activeList().items;
@@ -258,14 +310,31 @@
     const list = activeList();
     const n = list.items.filter((i) => i.done).length;
     if (!n) return;
-    withUndo(n === 1 ? "1 feita removida" : n + " feitas removidas", () => {
+    withUndo(n === 1 ? "1 concluída removida" : n + " concluídas removidas", () => {
       list.items = list.items.filter((i) => !i.done);
     });
   });
 
-  /* ---------- abas ---------- */
+  /* ---------- listas (abas) ---------- */
   const dialog = $("tab-dialog");
   let editingId = null; // null = nova lista
+  let pickedColor = COLORS[0];
+
+  function renderSwatches() {
+    const box = $("colors");
+    box.innerHTML = "";
+    COLORS.forEach((c) => {
+      const s = document.createElement("button");
+      s.type = "button";
+      s.className = "swatch";
+      s.style.setProperty("--c", colorVar(c));
+      s.setAttribute("role", "radio");
+      s.setAttribute("aria-checked", String(c === pickedColor));
+      s.setAttribute("aria-label", c);
+      s.addEventListener("click", () => { pickedColor = c; renderSwatches(); });
+      box.appendChild(s);
+    });
+  }
 
   function openTabDialog(listId) {
     editingId = listId;
@@ -274,6 +343,11 @@
     $("tab-name").value = list ? list.name : "";
     $("tab-delete").hidden = !list || state.lists.length <= 1;
     $("tab-save").textContent = list ? "Salvar" : "Criar";
+    // lista nova ganha a primeira cor ainda não usada
+    const used = new Set(state.lists.map((l) => l.color));
+    pickedColor = list ? list.color : COLORS.find((c) => !used.has(c)) || COLORS[0];
+    renderSwatches();
+    dialog.returnValue = "";
     if (typeof dialog.showModal === "function") dialog.showModal();
     else dialog.setAttribute("open", "");
     setTimeout(() => $("tab-name").focus(), 30);
@@ -285,9 +359,9 @@
     if (!name) return;
     if (editingId) {
       const list = state.lists.find((l) => l.id === editingId);
-      if (list) list.name = name;
+      if (list) { list.name = name; list.color = pickedColor; }
     } else {
-      const list = { id: uid(), name, items: [] };
+      const list = { id: uid(), name, color: pickedColor, items: [] };
       state.lists.push(list);
       state.active = list.id;
     }
@@ -298,8 +372,7 @@
   $("tab-delete").addEventListener("click", () => {
     const list = state.lists.find((l) => l.id === editingId);
     if (!list) return;
-    dialog.returnValue = "cancel";
-    dialog.close();
+    dialog.close("cancel");
     withUndo("Lista “" + list.name + "” apagada", () => {
       const idx = state.lists.indexOf(list);
       state.lists.splice(idx, 1);
@@ -320,6 +393,7 @@
     longPressed = false;
     pressTimer = setTimeout(() => {
       longPressed = true;
+      if (navigator.vibrate) navigator.vibrate(10);
       openTabDialog(tab.dataset.id);
     }, 550);
   });
@@ -341,7 +415,13 @@
     window.scrollTo({ top: 0 });
   });
 
+  // linha fina sob a barra quando a lista rola, como no iOS
+  const top = document.querySelector(".top");
+  const onScroll = () => top.classList.toggle("scrolled", window.scrollY > 4);
+  window.addEventListener("scroll", onScroll, { passive: true });
+
   render();
+  onScroll();
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

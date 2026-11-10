@@ -6,6 +6,7 @@ on:
       - main
       - claude/english-conversation-coach-88mtqo
       - claude/disco-boogie-globe-app-fp48c2
+      - claude/practical-albattani-1dtr6u
   workflow_dispatch:
 
 permissions:
