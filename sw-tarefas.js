@@ -1,6 +1,6 @@
 /* Service worker network-first do app "Tarefas": busca a versão
    mais recente quando online, cai para o cache quando estiver offline. */
-const CACHE = "tarefas-v3";
+const CACHE = "tarefas-v4";
 const PRECACHE = [
   "./tarefas.html",
   "./css/tarefas.css",
@@ -22,7 +22,8 @@ self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
   e.respondWith(
-    fetch(e.request)
+    // "no-cache" revalida no servidor, então nunca fica preso na versão antiga
+    fetch(e.request, { cache: "no-cache" })
       .then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});

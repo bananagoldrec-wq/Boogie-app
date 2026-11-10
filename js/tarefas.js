@@ -440,7 +440,7 @@
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw-tarefas.js").catch(() => {});
+      navigator.serviceWorker.register("sw-tarefas.js", { scope: "./tarefas.html" }).catch(() => {});
     });
   }
 })();
