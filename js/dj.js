@@ -110,6 +110,12 @@
   const SEED_KEY = "dj_seed_agenda_v1";
   const SEED_SHOWS = [];
 
+  /* Shows fechados que chegaram depois do primeiro lote. Cada lote tem a
+     sua chave: um lote novo entra sem ressuscitar o que foi apagado de um
+     lote antigo, igual aos curadores e à logística. Aqui o show já vem com
+     cachê, então entra somando no total do mês. */
+  const SEED_SHOW_LOTES = [];
+
   /* Curadores iniciais, se houver. Cada um entra como contato e já abre
      uma negociação em "A contatar", pronta pro primeiro contato.
      Cada lote tem sua própria chave, pra que um lote novo entre sem
@@ -566,22 +572,35 @@
   }
 
   async function seedAgendaOnce() {
-    try {
-      if (localStorage.getItem(SEED_KEY)) return;
-      localStorage.setItem(SEED_KEY, "1");
-    } catch (err) {
-      return; // sem localStorage não dá pra saber se já rodou — não semeia
+    /* O primeiro lote é o original, sem chave própria no array; os
+       seguintes trazem a sua. Antes isto rodava uma vez e só: um show
+       novo acrescentado depois nunca entrava em quem já tinha semeado. */
+    const lotes = [{ key: SEED_KEY, shows: SEED_SHOWS }, ...SEED_SHOW_LOTES];
+    let semeou = false;
+
+    for (const lote of lotes) {
+      try {
+        if (localStorage.getItem(lote.key)) continue;
+        localStorage.setItem(lote.key, "1");
+      } catch (err) {
+        return; // sem localStorage não dá pra saber se já rodou — não semeia
+      }
+
+      for (const show of lote.shows) {
+        await persistDeal(makeDeal({
+          id: seedId(show.data, show.casa),
+          casa: show.casa,
+          bairro: show.bairro || "",
+          dataAlvo: show.data,
+          cache: show.cache || "",
+          etapa: "fechado",
+          notas: show.notas || (show.cortado ? "Nome veio cortado no print do Google Agenda — conferir." : ""),
+        }));
+      }
+      semeou = true;
     }
-    for (const show of SEED_SHOWS) {
-      await persistDeal(makeDeal({
-        id: seedId(show.data, show.casa),
-        casa: show.casa,
-        dataAlvo: show.data,
-        etapa: "fechado",
-        notas: show.cortado ? "Nome veio cortado no print do Google Agenda — conferir." : "",
-      }));
-    }
-    renderAll();
+
+    if (semeou) renderAll();
   }
 
   async function seedCuradoresOnce() {

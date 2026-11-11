@@ -109,6 +109,30 @@
     { data: "2026-10-10", casa: "Zurich" },
   ];
 
+  /* Shows fechados que chegaram depois do primeiro lote. Cada lote tem a
+     sua chave: um lote novo entra sem ressuscitar o que foi apagado de um
+     lote antigo, igual aos curadores e à logística. Aqui o show já vem com
+     cachê, então entra somando no total do mês. */
+  const SEED_SHOW_LOTES = [
+    {
+      key: "beno_seed_agenda_v2",
+      shows: [
+        {
+          data: "2026-12-02", casa: "Moleska Gastrobar", bairro: "Fortaleza", cache: 750,
+          notas: "Quarta Rara. Set das 20h às 23h. EM VINIL — levar as agulhas. R$ 750 de cachê + R$ 150 de consumação.",
+        },
+        {
+          data: "2026-12-05", casa: "Festa Lá em Cima", bairro: "Fortaleza", cache: 1000,
+          notas: "Set das 20h às 22h. R$ 1.000 de cachê + passagens por conta deles + R$ 150 de consumação, e cerveja liberada no palco.",
+        },
+        {
+          data: "2026-12-06", casa: "Órbita Blue", bairro: "Fortaleza", cache: 700,
+          notas: "Beach club. 4h de set, horário ainda a definir. R$ 700 de cachê; consumação a confirmar.",
+        },
+      ],
+    },
+  ];
+
   /* Curadores passados pelo Beno. Cada um entra como contato e já abre
      uma negociação em "A contatar", pronta pro primeiro contato.
      Cada lote tem sua própria chave, pra que um lote novo entre sem
@@ -748,22 +772,35 @@
   }
 
   async function seedAgendaOnce() {
-    try {
-      if (localStorage.getItem(SEED_KEY)) return;
-      localStorage.setItem(SEED_KEY, "1");
-    } catch (err) {
-      return; // sem localStorage não dá pra saber se já rodou — não semeia
+    /* O primeiro lote é o original, sem chave própria no array; os
+       seguintes trazem a sua. Antes isto rodava uma vez e só: um show
+       novo acrescentado depois nunca entrava em quem já tinha semeado. */
+    const lotes = [{ key: SEED_KEY, shows: SEED_SHOWS }, ...SEED_SHOW_LOTES];
+    let semeou = false;
+
+    for (const lote of lotes) {
+      try {
+        if (localStorage.getItem(lote.key)) continue;
+        localStorage.setItem(lote.key, "1");
+      } catch (err) {
+        return; // sem localStorage não dá pra saber se já rodou — não semeia
+      }
+
+      for (const show of lote.shows) {
+        await persistDeal(makeDeal({
+          id: seedId(show.data, show.casa),
+          casa: show.casa,
+          bairro: show.bairro || "",
+          dataAlvo: show.data,
+          cache: show.cache || "",
+          etapa: "fechado",
+          notas: show.notas || (show.cortado ? "Nome veio cortado no print do Google Agenda — conferir." : ""),
+        }));
+      }
+      semeou = true;
     }
-    for (const show of SEED_SHOWS) {
-      await persistDeal(makeDeal({
-        id: seedId(show.data, show.casa),
-        casa: show.casa,
-        dataAlvo: show.data,
-        etapa: "fechado",
-        notas: show.cortado ? "Nome veio cortado no print do Google Agenda — conferir." : "",
-      }));
-    }
-    renderAll();
+
+    if (semeou) renderAll();
   }
 
   async function seedCuradoresOnce() {
