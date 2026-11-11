@@ -6,7 +6,7 @@
 
 // OAuth "Web application" client from Google Cloud Console. Redirect URI must be
 // this page's URL (https://bananagoldrec-wq.github.io/Boogie-app/tracker.html).
-const GCAL_CLIENT_ID = '';
+const GCAL_CLIENT_ID = '735980018099-rbe40eh2vmqsqfn94rjo2em3tmt7a03d.apps.googleusercontent.com';
 const GCAL_SCOPE     = 'https://www.googleapis.com/auth/calendar.events email';
 const GCAL_EVENTS    = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
 const GCAL_TOKEN_KEY = 'rotina-gtoken';
@@ -129,7 +129,7 @@ function eventBody(act, date) {
     start: { dateTime: `${gymd(date)}T${act.startTime}:00`, timeZone: GCAL_TZ },
     end:   { dateTime: `${gymd(date)}T${end}:00`,           timeZone: GCAL_TZ },
     colorId: CAT_COLOR[act.category],
-    reminders: { useDefault: false, overrides: [...new Set([60, lead, 0])].map(minutes => ({ method: 'popup', minutes })) },
+    reminders: { useDefault: false, overrides: [...new Set([60, lead, 1, 0])].map(minutes => ({ method: 'popup', minutes })) },
     extendedProperties: { private: { cat: act.category, src: 'minha-rotina' } },
   };
 }

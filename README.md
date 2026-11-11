@@ -412,3 +412,27 @@ ouvir. Ícones: `python3 tools/make_belaciavatta_icons.py`. Ao mexer em
 `js/belaciavatta.js`/`css/belaciavatta.css`, suba o `?v=` do
 `belaciavatta.html` e, junto, o `data-build` do `<html>` e o `BUILD` no topo do
 JS (os três iguais).
+
+# ✅ Tarefas
+
+Listas de tarefas simples, com visual de app da Apple (Lembretes). Abre em
+`tarefas.html`.
+
+- **Abas** no topo: Casa (laranja), Banana Gold (amarelo), Produção Musical
+  (roxo), DJ (rosa), Frisson (azul), Burocracia (marrom), Santa Teresa
+  (verde) e Imóveis (azul-piscina); o número é quanto falta fazer. Lista
+  padrão nova entra uma vez nos aparelhos que já usam o app (`seeded`); se
+  apagar, ela não volta. O **+** cria uma lista
+  nova; tocar de novo na aba aberta (ou segurar) renomeia, troca a cor ou
+  apaga.
+- **Nova tarefa** (na lista ou no botão de baixo) e Enter: entra no fim das
+  pendentes e o cursor fica lá pra emendar a próxima.
+- Toca na **bolinha** pra concluir: ela enche com a cor da lista e a tarefa
+  desce pra "concluídas" (toca de novo pra voltar). "Limpar" tira as
+  concluídas; "Ocultar/Mostrar" esconde a seção.
+- Toca no texto pra editar; apagar o texto todo (ou o ⓧ) remove a tarefa.
+  Apagar sempre mostra **Desfazer** por 5 s.
+
+Fica salvo **só no aparelho** (`localStorage`, chave `tarefas-v1`) — sem
+login e sem nuvem, funciona offline. Ao mexer em `js/tarefas.js` ou
+`css/tarefas.css`, suba o `?v=` do `tarefas.html`.
