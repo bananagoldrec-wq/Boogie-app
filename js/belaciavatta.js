@@ -15,7 +15,7 @@
   /* BUILD tem que ser igual ao data-build do belaciavatta.html: suba os
      dois juntos com o ?v=. Se o HTML velho carregar o JS novo (cache),
      recarrega uma vez em vez de travar. */
-  const BUILD = "15";
+  const BUILD = "16";
   const ICON_PLAY = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7 4.9v14.2a.9.9 0 0 0 1.4.8l11-7.1a.9.9 0 0 0 0-1.6l-11-7.1A.9.9 0 0 0 7 4.9Z"/></svg>';
   const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>';
   if (document.documentElement.dataset.build !== BUILD) {
@@ -469,6 +469,40 @@
   }
   function milestonesOnDay(key) {
     return Object.entries(milestones).filter(([, m]) => m.data === key);
+  }
+  /* Tarefas (itens do road map e do to-do das faixas) podem ganhar dia e
+     horário: aí aparecem no calendário. ref = { src: "ms" | "tr", pid, iid } */
+  function taskListOf(src, pid) {
+    if (src === "ms") return milestones[pid] && Array.isArray(milestones[pid].passos) ? milestones[pid].passos : [];
+    return tracks[pid] ? todosOf(tracks[pid]) : [];
+  }
+  function taskParentTitle(src, pid) {
+    if (src === "ms") return milestones[pid] ? `Road map · ${milestones[pid].titulo}` : "Road map";
+    return tracks[pid] ? `To-do · ${trackNum(pid)}. ${tracks[pid].titulo}` : "To-do";
+  }
+  function scheduledTasks() {
+    const out = [];
+    Object.entries(milestones).forEach(([pid]) => taskListOf("ms", pid).forEach((x) => { if (x.dia) out.push({ src: "ms", pid, iid: x.id, x }); }));
+    Object.entries(tracks).forEach(([pid]) => taskListOf("tr", pid).forEach((x) => { if (x.dia) out.push({ src: "tr", pid, iid: x.id, x }); }));
+    return out;
+  }
+  function tasksOnDay(key) {
+    return scheduledTasks().filter((r) => r.x.dia === key).sort((a, b) => String(a.x.hora || "").localeCompare(String(b.x.hora || "")));
+  }
+  function whenLabel(x) {
+    if (!x.dia) return "";
+    const dt = dateFromKey(x.dia);
+    return `${WEEKDAY_SHORT[dt.getDay()]} ${dt.getDate()}/${dt.getMonth() + 1}${x.hora ? ` · ${x.hora}` : ""}`;
+  }
+  async function updateTask(src, pid, iid, patch) {
+    const list = taskListOf(src, pid).map((x) => (x.id === iid ? { ...x, ...patch } : x));
+    if (src === "ms") await savePassos(pid, list);
+    else await saveTrack(pid, { todos: list });
+  }
+  async function deleteTask(src, pid, iid) {
+    const list = taskListOf(src, pid).filter((x) => x.id !== iid);
+    if (src === "ms") await savePassos(pid, list);
+    else await saveTrack(pid, { todos: list });
   }
   function trackDoc(id, patch) {
     return { ...tracks[id], ...patch, atualizado: Date.now() };
@@ -1082,6 +1116,7 @@
       const chips = [
         ...milestonesOnDay(key).map(([, m]) => `<span class="cal-chip is-ms${m.status === "feito" ? " is-done" : ""}">◆ ${esc(m.titulo)}</span>`),
         ...eventsOnDay(key).map(([, e]) => `<span class="cal-chip${e.feito ? " is-done" : ""}">${e.hora ? esc(e.hora) + " " : ""}${esc(e.titulo)}</span>`),
+        ...tasksOnDay(key).map((r) => `<span class="cal-chip is-task${r.x.feito ? " is-done" : ""}">${r.x.hora ? esc(r.x.hora) + " " : ""}${esc(r.x.t)}</span>`),
       ];
       const more = chips.length > 3 ? `<span class="cal-chip">+${chips.length - 2}</span>` : "";
       cells.push(`<button type="button" class="cal-day${dt.getMonth() !== month - 1 ? " is-out" : ""}${key === todayKey ? " is-today" : ""}" data-day="${key}">
@@ -1129,16 +1164,33 @@
     </div>`;
   }
 
+  function taskRow(r) {
+    const x = r.x;
+    const dt = dateFromKey(x.dia);
+    const late = !x.feito && x.dia < todayKey;
+    const sub = [taskParentTitle(r.src, r.pid), x.hora, countdown(x.dia)].filter(Boolean).join(" · ");
+    return `<div class="item is-task${x.feito ? " is-done" : ""}" data-kind="task" data-src="${r.src}" data-pid="${esc(r.pid)}" data-iid="${esc(r.iid)}">
+      <div class="item-date">${dt.getDate()}<small>${MONTH_NAMES[dt.getMonth()].slice(0, 3)} · ${WEEKDAY_SHORT[dt.getDay()]}</small></div>
+      <button type="button" class="item-main" data-act="open" style="text-align:left">
+        <div class="item-title">${esc(x.t)}</div>
+        <div class="item-sub">${esc(sub)}</div>
+      </button>
+      <input type="checkbox" data-act="done" ${x.feito ? "checked" : ""} aria-label="Feito" />
+      ${late ? `<span class="badge is-late">atrasado</span>` : ""}
+    </div>`;
+  }
+
   function renderUpcoming() {
     const all = [
       ...Object.entries(events).filter(([, e]) => e.data).map(([id, e]) => ["ev", id, e, !!e.feito]),
       ...Object.entries(milestones).filter(([, m]) => m.data).map(([id, m]) => ["ms", id, m, m.status === "feito"]),
+      ...scheduledTasks().map((r) => ["task", r, { ...r.x, data: r.x.dia }, !!r.x.feito]),
     ].filter(([, , x, done]) => !done && (x.data >= todayKey || daysBetween(x.data, todayKey) <= 30))
       .sort((a, b) => a[2].data.localeCompare(b[2].data) || String(a[2].hora || "").localeCompare(String(b[2].hora || "")))
       .slice(0, 15);
     const el = document.getElementById("upcoming");
     el.innerHTML = all.length
-      ? all.map(([kind, id, x]) => itemRow(kind, id, x)).join("")
+      ? all.map(([kind, id, x]) => (kind === "task" ? taskRow(id) : itemRow(kind, id, x))).join("")
       : `<div class="empty">Nada marcado. Toque num dia do calendário pra marcar estúdio, ensaio, entrega...</div>`;
   }
 
@@ -1147,12 +1199,14 @@
     if (!row) return;
     const act = e.target.closest("[data-act]");
     if (!act || act.dataset.act !== "open") return;
-    if (row.dataset.kind === "ms") openMilestone(row.dataset.id);
+    if (row.dataset.kind === "task") openTask(row.dataset.src, row.dataset.pid, row.dataset.iid);
+    else if (row.dataset.kind === "ms") openMilestone(row.dataset.id);
     else { const ev = events[row.dataset.id]; if (ev) openDay(ev.data, row.dataset.id); }
   }
   function onItemsChange(e) {
     if (e.target.dataset.act !== "done") return;
     const row = e.target.closest("[data-kind]");
+    if (row.dataset.kind === "task") { updateTask(row.dataset.src, row.dataset.pid, row.dataset.iid, { feito: e.target.checked }); return; }
     const id = row.dataset.id;
     if (!events[id]) return;
     write({ events: { [id]: { ...events[id], feito: e.target.checked } } });
@@ -1167,14 +1221,17 @@
   const backdrop = document.getElementById("backdrop");
   const dayPanel = document.getElementById("day-panel");
   const msPanel = document.getElementById("ms-panel");
+  const taskPanel = document.getElementById("task-panel");
 
   function openPanel(panel) {
-    [dayPanel, msPanel].forEach((p) => { p.hidden = p !== panel; });
+    [dayPanel, msPanel, taskPanel].forEach((p) => { p.hidden = p !== panel; });
     backdrop.hidden = false;
   }
   function closePanels() {
     dayPanel.hidden = true;
     msPanel.hidden = true;
+    taskPanel.hidden = true;
+    activeTask = null;
     backdrop.hidden = true;
     activeDayKey = null;
     activeEventId = null;
@@ -1183,6 +1240,46 @@
   backdrop.addEventListener("click", closePanels);
   document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", closePanels));
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanels(); });
+
+  /* ── ficha da tarefa: texto, dia e horário ── */
+  let activeTask = null;
+  function openTask(src, pid, iid) {
+    const x = taskListOf(src, pid).find((it) => it.id === iid);
+    if (!x) return;
+    activeTask = { src, pid, iid };
+    document.getElementById("tk-sub").textContent = taskParentTitle(src, pid);
+    document.getElementById("tk-texto").value = x.t || "";
+    document.getElementById("tk-dia").value = x.dia || "";
+    document.getElementById("tk-hora").value = x.hora || "";
+    document.getElementById("tk-feito").checked = !!x.feito;
+    document.getElementById("tk-clear").hidden = !x.dia;
+    openPanel(taskPanel);
+  }
+  document.getElementById("tk-save").addEventListener("click", async () => {
+    if (!activeTask) return;
+    const { src, pid, iid } = activeTask;
+    const t = document.getElementById("tk-texto").value.trim();
+    const dia = document.getElementById("tk-dia").value;
+    const hora = dia ? document.getElementById("tk-hora").value : "";
+    if (!t) { showToast("Escreva a tarefa."); return; }
+    await updateTask(src, pid, iid, { t, dia, hora, feito: document.getElementById("tk-feito").checked });
+    showToast(dia ? `Na agenda: ${whenLabel({ dia, hora })}.` : "Tarefa salva.");
+    closePanels();
+  });
+  document.getElementById("tk-clear").addEventListener("click", async () => {
+    if (!activeTask) return;
+    const { src, pid, iid } = activeTask;
+    await updateTask(src, pid, iid, { dia: "", hora: "" });
+    showToast("Tirada da agenda.");
+    closePanels();
+  });
+  document.getElementById("tk-delete").addEventListener("click", async () => {
+    if (!activeTask || !window.confirm("Apagar essa tarefa?")) return;
+    const { src, pid, iid } = activeTask;
+    await deleteTask(src, pid, iid);
+    showToast("Tarefa apagada.");
+    closePanels();
+  });
 
   document.getElementById("e-tipo").innerHTML = EVENT_TYPES.map((t) => `<option value="${t.id}">${esc(t.nome)}</option>`).join("");
 
@@ -1196,6 +1293,7 @@
     const rows = [
       ...milestonesOnDay(key).map(([id, m]) => itemRow("ms", id, m)),
       ...eventsOnDay(key).map(([id, ev]) => itemRow("ev", id, ev)),
+      ...tasksOnDay(key).map(taskRow),
     ];
     document.getElementById("day-items").innerHTML = rows.join("") || `<div class="hint">Nada marcado nesse dia.</div>`;
   }
@@ -1310,7 +1408,7 @@
             ${g.itens.map((x) => `<div class="todo${x.feito ? " is-done" : ""}" data-passo="${esc(x.id)}">
               <input type="checkbox" data-act="check" ${x.feito ? "checked" : ""} aria-label="Feito" />
               ${x.h ? `<span class="todo-time">${esc(x.h)}</span>` : ""}
-              <span class="todo-text">${esc(x.t)}</span>
+              <button type="button" class="todo-text todo-open" data-act="edit-task">${esc(x.t)}${x.dia ? `<span class="todo-when">${esc(whenLabel(x))}</span>` : ""}</button>
               <button class="mini danger" type="button" data-act="del-passo" aria-label="Apagar item">×</button>
             </div>`).join("")}`).join("")}
           ${m.obs ? `<div class="ms-obs">${esc(m.obs).replace(/\n/g, "<br />")}</div>` : ""}
@@ -1395,6 +1493,7 @@
       saveMsOpen();
     }
     else if (a === "open") openMilestone(id);
+    else if (a === "edit-task") openTask("ms", id, e.target.closest("[data-passo]").dataset.passo);
     else if (a === "up") moveMs(id, -1);
     else if (a === "down") moveMs(id, 1);
     else if (a === "add-passo") addPasso(id, row.querySelector('[data-act="new-passo"]'));
@@ -1510,6 +1609,7 @@
           ${shown.map((x) => `<div class="todo${x.feito ? " is-done" : ""}" data-todo="${esc(x.id)}">
             <input type="checkbox" data-act="check" ${x.feito ? "checked" : ""} aria-label="Feito" />
             <input class="todo-text" type="text" data-act="edit" value="${esc(x.t)}" aria-label="Tarefa" />
+            <button class="mini when-btn${x.dia ? " has-date" : ""}" type="button" data-act="edit-task" title="Escolher dia e horário">${x.dia ? esc(whenLabel(x)) : "+ dia"}</button>
             <button class="mini danger" type="button" data-act="del" aria-label="Apagar tarefa">×</button>
           </div>`).join("")}
           ${!shown.length ? `<div class="hint">${todos.length ? "Tudo feito por aqui ✓" : "Nada no to-do dessa faixa."}</div>` : ""}
@@ -1562,6 +1662,7 @@
     } else if (a === "template") {
       saveTrack(id, { todos: TODO_TEMPLATE.map((t) => ({ id: newId("t"), t, feito: false })) }, "Checklist padrão adicionado.");
     } else if (a === "play") togglePlay(id);
+    else if (a === "edit-task") openTask("tr", id, e.target.closest("[data-todo]").dataset.todo);
   });
   todoList.addEventListener("keydown", (e) => {
     const g = e.target.closest(".tgroup");

@@ -551,3 +551,10 @@ input[type="checkbox"] { accent-color: var(--terracota); }
 .topbar { background: rgba(243, 235, 223, 0.92); }
 
 .todo-time { flex: none; width: 92px; font-size: 0.78rem; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+
+/* tarefa com dia: abre a ficha e aparece na agenda */
+.todo-open { text-align: left; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.todo-when, .when-btn.has-date { font-size: 0.72rem; color: var(--terracota); font-variant-numeric: tabular-nums; }
+.when-btn { flex: none; font-size: 0.72rem; color: var(--ink-dim); white-space: nowrap; }
+.cal-chip.is-task { background: none; border: 1px solid var(--hair); }
+.item.is-task .item-title { font-weight: 400; }

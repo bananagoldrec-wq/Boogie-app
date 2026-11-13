@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-build="15">
+<html lang="pt-BR" data-build="16">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Mrs+Saint+Delafield&family=Archivo:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/belaciavatta.css?v=10" />
+  <link rel="stylesheet" href="css/belaciavatta.css?v=11" />
 </head>
 <body>
 
@@ -207,6 +207,39 @@
     </div>
   </aside>
 
+  <!-- Tarefa: texto, dia e horário (vai pro calendário) -->
+  <aside id="task-panel" class="side-panel" hidden aria-label="Tarefa">
+    <div class="panel-head">
+      <div>
+        <h2>Tarefa</h2>
+        <div id="tk-sub" class="panel-sub"></div>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Fechar">×</button>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <label for="tk-texto">O que fazer</label>
+        <textarea id="tk-texto" rows="2"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="tk-dia">Dia (entra na agenda)</label>
+          <input id="tk-dia" type="date" />
+        </div>
+        <div class="field">
+          <label for="tk-hora">Horário</label>
+          <input id="tk-hora" type="time" />
+        </div>
+      </div>
+      <label class="check"><input id="tk-feito" type="checkbox" /> feito</label>
+      <div class="panel-actions">
+        <button id="tk-save" class="btn btn-primary" type="button">Salvar</button>
+        <button id="tk-clear" class="btn" type="button">Tirar da agenda</button>
+        <button id="tk-delete" class="btn btn-danger" type="button">Apagar</button>
+      </div>
+    </div>
+  </aside>
+
   <!-- Trava de senha -->
   <div id="login-gate" class="login-gate" hidden>
     <form id="login-form" class="login-card">
@@ -242,6 +275,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/belaciavatta.js?v=15"></script>
+  <script src="js/belaciavatta.js?v=16"></script>
 </body>
 </html>
