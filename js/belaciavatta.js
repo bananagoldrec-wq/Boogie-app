@@ -15,7 +15,7 @@
   /* BUILD tem que ser igual ao data-build do belaciavatta.html: suba os
      dois juntos com o ?v=. Se o HTML velho carregar o JS novo (cache),
      recarrega uma vez em vez de travar. */
-  const BUILD = "16";
+  const BUILD = "17";
   const ICON_PLAY = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7 4.9v14.2a.9.9 0 0 0 1.4.8l11-7.1a.9.9 0 0 0 0-1.6l-11-7.1A.9.9 0 0 0 7 4.9Z"/></svg>';
   const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>';
   if (document.documentElement.dataset.build !== BUILD) {
@@ -532,6 +532,7 @@
   function renderAll(force) {
     rebuild();
     if (!force && typing()) { renderDeferred = true; return; }
+    if (rmDrag) { renderDeferred = true; return; }
     safe("hero", renderHero);
     safe("demos", renderDemos);
     safe("calendar", renderCalendar);
@@ -1406,6 +1407,7 @@
           ${groups.map((g) => `
             ${g.nome ? `<div class="ms-group">${esc(g.nome)}</div>` : ""}
             ${g.itens.map((x) => `<div class="todo${x.feito ? " is-done" : ""}" data-passo="${esc(x.id)}">
+              <span class="drag-handle" data-drag aria-label="Arrastar" title="Arrastar pra outra posição ou semana">⋮⋮</span>
               <input type="checkbox" data-act="check" ${x.feito ? "checked" : ""} aria-label="Feito" />
               ${x.h ? `<span class="todo-time">${esc(x.h)}</span>` : ""}
               <button type="button" class="todo-text todo-open" data-act="edit-task">${esc(x.t)}${x.dia ? `<span class="todo-when">${esc(whenLabel(x))}</span>` : ""}</button>
@@ -1514,6 +1516,122 @@
       write({ milestones: { [id]: { ...milestones[id], status: e.target.checked ? "feito" : "aberto", atualizado: Date.now() } } });
     }
   });
+  /* ── arrastar itens entre posições e semanas ──────────────
+     Pela alça ⋮⋮ (funciona com dedo e mouse). Soltar sobre um item põe
+     antes/depois dele, no mesmo grupo; soltar sobre a barra de outra
+     semana põe no fim dela, num grupo "Veio da <semana>". Semana
+     fechada abre sozinha quando o item para em cima dela. */
+  let rmDrag = null;
+  function clearDropMarks() {
+    rmList.querySelectorAll(".drop-before, .drop-after, .drop-into").forEach((el) => el.classList.remove("drop-before", "drop-after", "drop-into"));
+  }
+  function dragFrame() {
+    if (!rmDrag) return;
+    const { y } = rmDrag;
+    const edge = 90;
+    if (y < edge) window.scrollBy(0, -Math.ceil((edge - y) / 6));
+    else if (y > window.innerHeight - edge) window.scrollBy(0, Math.ceil((y - (window.innerHeight - edge)) / 6));
+    findDropTarget();
+    rmDrag.raf = requestAnimationFrame(dragFrame);
+  }
+  function findDropTarget() {
+    const d = rmDrag;
+    d.ghost.style.transform = `translate(${d.x - d.offX}px, ${d.y - d.offY}px)`;
+    const el = document.elementFromPoint(d.x, d.y);
+    clearDropMarks();
+    d.target = null;
+    if (!el || !rmList.contains(el)) { clearTimeout(d.openTimer); d.hoverMs = null; return; }
+    const row = el.closest("[data-passo]");
+    const ms = el.closest(".ms[data-id]");
+    if (row && row !== d.row && ms) {
+      const r = row.getBoundingClientRect();
+      const before = d.y < r.top + r.height / 2;
+      row.classList.add(before ? "drop-before" : "drop-after");
+      d.target = { ms: ms.dataset.id, passo: row.dataset.passo, before };
+    } else if (ms && !row) {
+      ms.classList.add("drop-into");
+      d.target = { ms: ms.dataset.id };
+      // semana fechada: abre se o item ficar parado em cima
+      if (!ms.classList.contains("is-open") && d.hoverMs !== ms.dataset.id) {
+        d.hoverMs = ms.dataset.id;
+        clearTimeout(d.openTimer);
+        d.openTimer = setTimeout(() => {
+          if (!rmDrag || rmDrag.hoverMs !== ms.dataset.id) return;
+          ms.classList.add("is-open");
+          msOpen.add(ms.dataset.id); msClosed.delete(ms.dataset.id); saveMsOpen();
+        }, 550);
+      }
+      return;
+    }
+    if (!ms || ms.dataset.id !== d.hoverMs) { clearTimeout(d.openTimer); d.hoverMs = null; }
+  }
+  function endDrag(apply) {
+    const d = rmDrag;
+    if (!d) return;
+    cancelAnimationFrame(d.raf);
+    clearTimeout(d.openTimer);
+    d.ghost.remove();
+    d.row.classList.remove("is-dragging");
+    document.body.classList.remove("is-dragging");
+    clearDropMarks();
+    rmDrag = null;
+    if (apply && d.target) movePasso(d.fromMs, d.passo, d.target);
+    else if (renderDeferred) { renderDeferred = false; renderAll(); }
+  }
+  async function movePasso(fromId, pid, target) {
+    const from = milestones[fromId], to = milestones[target.ms];
+    if (!from || !to) return;
+    const item = passosOf(from).find((x) => x.id === pid);
+    if (!item) return;
+    const same = fromId === target.ms;
+    const srcList = passosOf(from).filter((x) => x.id !== pid);
+    const dstList = same ? srcList : passosOf(to).slice();
+    let moved = { ...item };
+    let at = dstList.length;
+    if (target.passo) {
+      const i = dstList.findIndex((x) => x.id === target.passo);
+      if (i >= 0) {
+        at = target.before ? i : i + 1;
+        moved.g = dstList[i].g;
+      }
+    } else if (!same) {
+      moved.g = `Veio da ${from.titulo}`;
+    }
+    dstList.splice(at, 0, moved);
+    const changes = { [target.ms]: { ...to, passos: dstList, status: statusFor(dstList, to.status), atualizado: Date.now() } };
+    if (!same) changes[fromId] = { ...from, passos: srcList, status: statusFor(srcList, from.status), atualizado: Date.now() };
+    await write({ milestones: changes });
+    if (!same) showToast(`Movido pra ${to.titulo}.`);
+  }
+  rmList.addEventListener("pointerdown", (e) => {
+    const h = e.target.closest("[data-drag]");
+    if (!h || rmDrag) return;
+    const row = h.closest("[data-passo]");
+    const ms = row && row.closest(".ms[data-id]");
+    if (!ms) return;
+    e.preventDefault();
+    const r = row.getBoundingClientRect();
+    const ghost = row.cloneNode(true);
+    ghost.classList.add("drag-ghost");
+    ghost.style.width = `${r.width}px`;
+    ghost.style.left = "0px";
+    ghost.style.top = "0px";
+    document.body.appendChild(ghost);
+    row.classList.add("is-dragging");
+    document.body.classList.add("is-dragging");
+    rmDrag = { fromMs: ms.dataset.id, passo: row.dataset.passo, row, ghost, x: e.clientX, y: e.clientY, offX: e.clientX - r.left, offY: e.clientY - r.top, target: null };
+    try { h.setPointerCapture(e.pointerId); } catch (err) {}
+    rmDrag.raf = requestAnimationFrame(dragFrame);
+  });
+  window.addEventListener("pointermove", (e) => {
+    if (!rmDrag) return;
+    e.preventDefault();
+    rmDrag.x = e.clientX;
+    rmDrag.y = e.clientY;
+  }, { passive: false });
+  window.addEventListener("pointerup", () => endDrag(true));
+  window.addEventListener("pointercancel", () => endDrag(false));
+
   rmList.addEventListener("keydown", (e) => {
     const row = e.target.closest(".ms[data-id]");
     if (!row) return;

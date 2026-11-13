@@ -558,3 +558,23 @@ input[type="checkbox"] { accent-color: var(--terracota); }
 .when-btn { flex: none; font-size: 0.72rem; color: var(--ink-dim); white-space: nowrap; }
 .cal-chip.is-task { background: none; border: 1px solid var(--hair); }
 .item.is-task .item-title { font-weight: 400; }
+
+/* arrastar itens do road map */
+.drag-handle {
+  flex: none; width: 22px; margin-left: -6px; text-align: center;
+  color: #c3b5a2; font-size: 0.9rem; letter-spacing: -2px; line-height: 1;
+  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+  padding: 8px 0;
+}
+.drag-handle:hover { color: var(--ink-dim); }
+body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+.todo.is-dragging { opacity: 0.3; }
+.drag-ghost {
+  position: fixed; z-index: 300; pointer-events: none;
+  background: var(--card); border-radius: 10px; padding: 6px 10px;
+  box-shadow: 0 10px 30px rgba(43, 31, 23, 0.22);
+  opacity: 0.96;
+}
+.todo.drop-before { box-shadow: inset 0 2px 0 var(--terracota); }
+.todo.drop-after { box-shadow: inset 0 -2px 0 var(--terracota); }
+.ms.drop-into > .ms-bar { background: var(--soft); border-radius: 8px; }
