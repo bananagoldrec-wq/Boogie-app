@@ -2,7 +2,7 @@
    online (evita o app instalado ficar preso numa versão antiga em cache).
    Cai para o cache só quando estiver offline. Só existe pra habilitar a
    instalação como app — a agenda em si sincroniza pelo Firestore quando online. */
-const CACHE = "belaciavatta-v1";
+const CACHE = "belaciavatta-v2";
 
 self.addEventListener("install", (e) => self.skipWaiting());
 
