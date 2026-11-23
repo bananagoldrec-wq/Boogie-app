@@ -114,6 +114,13 @@
         <h4>Entrada MIDI</h4>
         <select id="sel-input" class="sel wide"><option value="">— nenhuma —</option></select>
         <label class="chk"><input type="checkbox" id="chk-clear-play" /> Limpar a tela quando der play no Cycles</label>
+        <label class="row">Movimento da imagem
+          <select id="sel-motion" class="sel">
+            <option value="suave">Suave</option>
+            <option value="medio">Médio</option>
+            <option value="intenso">Intenso</option>
+          </select>
+        </label>
         <label class="chk"><input type="checkbox" id="chk-panel" /> Mostrar trilhas e medidores na tela</label>
         <label class="chk"><input type="checkbox" id="chk-onset" /> Sem MIDI: criar formas pelas batidas do áudio</label>
       </section>
@@ -167,7 +174,7 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles-analise.js?v=12"></script>
-  <script src="js/cycles.js?v=12"></script>
+  <script src="js/cycles-analise.js?v=13"></script>
+  <script src="js/cycles.js?v=13"></script>
 </body>
 </html>

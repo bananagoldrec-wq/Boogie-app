@@ -39,7 +39,10 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 12;
+  const APP_VERSION = 13;
+  // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
+  const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
+  const motionK = () => MOTION[settings.motion] ?? 0.4;
 
   // ---------- ajustes salvos ----------
   const settings = Object.assign(
@@ -53,6 +56,7 @@
       clearOnPlay: false,
       onset: true,
       style: "3d",
+      motion: "suave",
       showPanel: false,
       ref: "tudo",
       refFid: "media",
@@ -1029,7 +1033,7 @@
       for (let i = 0; i < bands; i++) {
         const h = Math.max(1, H * (0.004 + Math.random() * 0.05 * fx.glitch));
         const y = Math.random() * (H - h);
-        const dx = (Math.random() - 0.5) * W * 0.12 * fx.glitch;
+        const dx = (Math.random() - 0.5) * W * 0.12 * fx.glitch * (0.4 + 0.6 * motionK());
         pctx.drawImage(src, 0, y, W, h, dx, y, W, h);
       }
       fx.glitch *= 0.72;
@@ -1049,7 +1053,7 @@
     // realimentação: a imagem anterior volta levemente ampliada e girada → a tela escorre
     if (mode !== "pintura") {
       const avgSweep = tracks.reduce((a, tr) => a + n01(tr.sweep), 0) / tracks.length;
-      const z = 1 + 0.002 + fx.zoom;
+      const z = 1 + 0.002 + fx.zoom * motionK();
       pctx.save();
       pctx.globalAlpha = mode === "vivo" ? 0.4 : 0.6;
       pctx.translate(W / 2, H / 2);
@@ -1164,7 +1168,7 @@
   const PUNCH_ZOOM = { datamosh: 0.07, patch: 0.035, abstrato: 0.025, geometrico: 0.02, "3d": 0 };
   function applyPunch() {
     const k = lineVal(punch.k);
-    const z = k > 0.002 ? 1 + (PUNCH_ZOOM[settings.style] ?? 0.02) * k : 1;
+    const z = k > 0.002 ? 1 + (PUNCH_ZOOM[settings.style] ?? 0.02) * k * motionK() : 1;
     const tf = z === 1 ? "" : `scale(${z.toFixed(4)})`;
     if (paint.style.transform !== tf) paint.style.transform = tf;
   }
@@ -1378,7 +1382,7 @@
     pctx.restore();
   }
   function moshHit(s, tr) {
-    const v = n01(s.vel), U = Math.min(W, H) / 100; // U = 1% da tela
+    const v = n01(s.vel), U = (Math.min(W, H) / 100) * (0.35 + 0.65 * motionK()); // U = 1% da tela (× movimento)
     switch (s.m) {
       case 0: { // KICK: explosão radial forte e curta
         const sp = (2.5 + 6 * v) * U;
@@ -1491,7 +1495,7 @@
       gl3.tex = refs.cur;
       window.Cycles3D.setTexture(refs.cur ? (pal().dark ? refs.cur.smallLit : refs.cur.small) : null);
     }
-    window.Cycles3D.frame(dt, settings.mode);
+    window.Cycles3D.frame(dt, settings.mode, motionK());
   }
 
   // ---------- renderização ----------
@@ -1635,7 +1639,10 @@
   // ---------- tamanho do palco ----------
   function resize() {
     const rect = stage.getBoundingClientRect();
-    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    // resolução: no máximo 1,5× e ~2 milhões de pixels (no projetor não se nota; no celular pesa muito)
+    DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+    const px = rect.width * rect.height * DPR * DPR;
+    if (px > 2.0e6) DPR *= Math.sqrt(2.0e6 / px);
     const nw = Math.max(1, Math.round(rect.width * DPR));
     const nh = Math.max(1, Math.round(rect.height * DPR));
     if (nw === W && nh === H) return;
@@ -1669,7 +1676,8 @@
     const out = document.createElement("canvas");
     out.width = W; out.height = H;
     const o = out.getContext("2d");
-    o.drawImage(settings.style === "3d" && gl3.ok ? $("gl") : paint, 0, 0, W, H);
+    if (settings.style === "3d" && gl3.ok) window.Cycles3D.capture(o, W, H, settings.mode);
+    else o.drawImage(paint, 0, 0, W, H);
     if (settings.style === "geometrico" && settings.mode === "vivo") renderShapes(o, shapes, now());
     out.toBlob((blob) => {
       if (!blob) return toast("Não consegui gerar a imagem.");
@@ -2040,6 +2048,8 @@
       if (ev !== "pointermove" || Math.abs(e.movementX) + Math.abs(e.movementY) > 6) clearTimeout(pressT);
     }));
     document.addEventListener("webkitfullscreenchange", () => { if (!document.webkitFullscreenElement && show) leaveShow(); });
+    $("sel-motion").value = settings.motion;
+    $("sel-motion").addEventListener("change", (e) => { settings.motion = e.target.value; save(); });
     $("chk-panel").checked = settings.showPanel;
     $("chk-panel").addEventListener("change", (e) => { settings.showPanel = e.target.checked; save(); applyPanel(); });
     $("btn-midi").addEventListener("click", connectMidi);

@@ -21,8 +21,8 @@
   let renderer, scene, camera, fadeScene, fadeCam, fadeMat;
   let blob, blobWire, blobMat, wireMat, floor, floorMat, stars, starMat;
   let shards, shardData = [], rings = [], tori = [], ribbon, ribbonPts, ribbonMat;
-  let tex = null, ready = false, time = 0;
-  const env = { kick: 0, bass: 0, hat: 0, snare: 0, voice: 0, roll: 0, rollV: 0, ripple: 99, rippleA: 0 };
+  let tex = null, ready = false, time = 0, rt = null, blitScene, blitMat, scale3 = 1;
+  const env = { kickT: 0, kick: 0, bass: 0, hat: 0, snare: 0, voice: 0, roll: 0, rollV: 0, ripple: 99, rippleA: 0 };
   const lead = { y: 0, ty: 0, a: 0, ang: 0 };
   const col = { cur: null, target: null };
   let orbit = 0;
@@ -107,7 +107,8 @@
   function init(canvas) {
     T = window.THREE;
     if (!T) throw new Error("three.js não carregou");
-    renderer = new T.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true, alpha: false });
+    // sem preserveDrawingBuffer (caro no celular): o rastro usa uma textura que persiste
+    renderer = new T.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false, alpha: false, powerPreference: "high-performance" });
     renderer.setClearColor(0x000000, 1);
     renderer.autoClear = false;
     scene = new T.Scene();
@@ -119,6 +120,9 @@
     fadeCam = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     fadeMat = new T.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 1, depthTest: false, depthWrite: false });
     fadeScene.add(new T.Mesh(new T.PlaneGeometry(2, 2), fadeMat));
+    blitScene = new T.Scene();
+    blitMat = new T.MeshBasicMaterial({ map: null, depthTest: false, depthWrite: false });
+    blitScene.add(new T.Mesh(new T.PlaneGeometry(2, 2), blitMat));
 
     col.cur = new T.Color(0.55, 0.3, 1); col.target = col.cur.clone();
     const blank = new T.DataTexture(new Uint8Array([60, 30, 120, 255]), 1, 1, T.RGBAFormat); blank.needsUpdate = true;
@@ -127,7 +131,7 @@
       uTex: { value: blank }, uHasTex: { value: 0 }, uColor: { value: col.cur },
     };
     blobMat = new T.ShaderMaterial({ uniforms: uni, vertexShader: BLOB_VS, fragmentShader: BLOB_FS });
-    const geo = new T.IcosahedronGeometry(1.55, 5);
+    const geo = new T.IcosahedronGeometry(1.55, 4); // 4 já é liso; 5 quadruplicava o custo
     blob = new T.Mesh(geo, blobMat);
     scene.add(blob);
     wireMat = new T.ShaderMaterial({ uniforms: { ...uni, uScale: { value: 1.12 } }, vertexShader: BLOB_VS, fragmentShader: WIRE_FS,
@@ -137,9 +141,20 @@
 
     floorMat = new T.ShaderMaterial({
       uniforms: { uTime: uni.uTime, uBass: uni.uBass, uRip: { value: 99 }, uRipA: { value: 0 }, uColor: { value: col.cur } },
-      vertexShader: FLOOR_VS, fragmentShader: FLOOR_FS, wireframe: true, transparent: true, blending: T.AdditiveBlending, depthWrite: false,
+      vertexShader: FLOOR_VS, fragmentShader: FLOOR_FS, transparent: true, blending: T.AdditiveBlending, depthWrite: false,
     });
-    floor = new T.Mesh(new T.PlaneGeometry(44, 44, 70, 70), floorMat);
+    // grade só de linhas retas (sem as diagonais da malha em arame): ~6× menos linhas e mais limpa
+    const L = 36, NL = 37, SEG = 60, gp = [];
+    for (let i = 0; i < NL; i++) {
+      const c = -L / 2 + (i * L) / (NL - 1);
+      for (let j = 0; j < SEG; j++) {
+        const a0 = -L / 2 + (j * L) / SEG, a1 = -L / 2 + ((j + 1) * L) / SEG;
+        gp.push(c, a0, 0, c, a1, 0, a0, c, 0, a1, c, 0);
+      }
+    }
+    const fg = new T.BufferGeometry();
+    fg.setAttribute("position", new T.Float32BufferAttribute(gp, 3));
+    floor = new T.LineSegments(fg, floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = -2.3;
     scene.add(floor);
@@ -181,12 +196,19 @@
     ready = true;
   }
 
+  // resolução interna limitada (~1,2 milhão de pixels, ≈ 1460×820): no projetor
+  // não se nota e o celular agradece; a tela estica com CSS
   function resize(w, h) {
     if (!ready) return;
+    scale3 = Math.min(1, Math.sqrt(1.2e6 / (w * h)));
+    const rw = Math.max(2, Math.round(w * scale3)), rh = Math.max(2, Math.round(h * scale3));
     renderer.setPixelRatio(1);
-    renderer.setSize(w, h, false);
+    renderer.setSize(rw, rh, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    if (rt) rt.dispose();
+    rt = new T.WebGLRenderTarget(rw, rh, { depthBuffer: true });
+    blitMat.map = rt.texture; blitMat.needsUpdate = true;
   }
 
   function setTexture(canvas) {
@@ -212,7 +234,7 @@
     const v = ev.v, c = hsl(ev.c);
     switch (ev.m) {
       case 0: // KICK
-        env.kick = Math.max(env.kick, 0.5 + 0.5 * v);
+        env.kickT = Math.max(env.kickT, 0.5 + 0.5 * v);
         env.ripple = 2.2; env.rippleA = 0.5 + 0.5 * v; // a onda nasce em volta da escultura, não no meio
         ring(new T.Vector3(0, -2.25, 0), new T.Euler(-Math.PI / 2, 0, 0), 1.6, 9 + 6 * v, 1.1, c, 0.9);
         break;
@@ -248,18 +270,22 @@
         for (let i = 0; i < 2; i++) ring(new T.Vector3(0, -0.5 + i * 0.4, 0), new T.Euler(-Math.PI / 2, 0, 0), 2, 0.9 + i * 0.3, 2.2 + ev.life, c, 0.55);
         break;
       case 7: // EFEITOS
-        if (ev.kind === "impacto") { env.rollV += (Math.random() < 0.5 ? -1 : 1) * 4; env.kick = 1; env.ripple = 2.2; env.rippleA = 1.2; }
+        if (ev.kind === "impacto") { env.rollV += (Math.random() < 0.5 ? -1 : 1) * 4; env.kickT = 1; env.ripple = 2.2; env.rippleA = 1.2; }
         else env.bass = Math.max(env.bass, 0.5);
         break;
       default: break;
     }
   }
 
-  function frame(dt, mode) {
+  // motion: 0..1 (Suave ≈ 0,4) escala tudo que mexe a câmera
+  function frame(dt, mode, motion = 0.4) {
     if (!ready) return;
     time += dt;
-    const k = Math.exp(-dt * 9), kb = Math.exp(-dt * 3.5), kh = Math.exp(-dt * 12);
-    env.kick *= k; env.bass *= kb; env.hat *= kh; env.snare *= kh; env.voice *= kb;
+    const kb = Math.exp(-dt * 3.5), kh = Math.exp(-dt * 12);
+    // o kick sobe em ~30 ms (sem tranco seco) e desce devagar
+    env.kick += (env.kickT - env.kick) * (1 - Math.exp(-dt * 30));
+    env.kickT *= Math.exp(-dt * 7);
+    env.bass *= kb; env.hat *= kh; env.snare *= kh; env.voice *= kb;
     env.ripple += dt * 10; env.rippleA *= Math.exp(-dt * 1.5);
     env.roll += env.rollV * dt; env.rollV *= Math.exp(-dt * 2.5); env.roll *= Math.exp(-dt * 1.2);
     col.cur.lerp(col.target, 1 - Math.exp(-dt * 2));
@@ -269,15 +295,16 @@
     wireMat.uniforms.uTime.value = time; wireMat.uniforms.uKick.value = env.kick; wireMat.uniforms.uBass.value = env.bass;
     floorMat.uniforms.uRip.value = env.ripple; floorMat.uniforms.uRipA.value = env.rippleA;
     blob.rotation.y += dt * 0.15; blobWire.rotation.y = blob.rotation.y;
-    blob.scale.setScalar(1 + env.kick * 0.12); blobWire.scale.copy(blob.scale);
+    blob.scale.setScalar(1 + env.kick * 0.1); blobWire.scale.copy(blob.scale);
 
-    // câmera: órbita lenta; o kick dá um soco pra frente (FOV)
-    orbit += dt * 0.13;
-    const R = 7.2 - env.kick * 0.6;
-    camera.position.set(Math.cos(orbit) * R, 1.4 + Math.sin(orbit * 0.7) * 0.5, Math.sin(orbit) * R);
-    camera.up.set(Math.sin(env.roll * 0.35), Math.cos(env.roll * 0.35), 0);
+    // câmera: órbita lenta; o kick dá um soco pra frente (FOV) — tudo escalado pelo "movimento"
+    orbit += dt * (0.03 + 0.07 * motion);
+    const R = 7.2 - env.kick * 0.5 * motion;
+    camera.position.set(Math.cos(orbit) * R, 1.4 + Math.sin(orbit * 0.7) * 0.4 * motion, Math.sin(orbit) * R);
+    const roll = env.roll * 0.35 * motion;
+    camera.up.set(Math.sin(roll), Math.cos(roll), 0);
     camera.lookAt(0, 0, 0);
-    camera.fov = 58 - env.kick * 9;
+    camera.fov = 58 - env.kick * 8 * motion;
     camera.updateProjectionMatrix();
 
     starMat.size = 0.09 + env.hat * 0.16; starMat.opacity = 0.35 + env.hat * 0.65;
@@ -323,12 +350,30 @@
     ribbon.geometry.attributes.position.needsUpdate = true;
     ribbonMat.opacity = Math.min(1, lead.a * 1.4);
 
-    // vivo: limpa; rastro/pintura: véu preto fino (o que passou fica)
-    fadeMat.opacity = mode === "vivo" ? 1 : mode === "rastro" ? 0.16 : 0.03;
+    render(mode);
+  }
+  function render(mode) {
+    if (mode === "vivo" || !rt) {
+      renderer.setRenderTarget(null);
+      renderer.clear();
+      renderer.render(scene, camera);
+      return;
+    }
+    // rastro/pintura: véu preto fino numa textura que persiste, depois copia pra tela
+    fadeMat.opacity = mode === "rastro" ? 0.16 : 0.03;
+    renderer.setRenderTarget(rt);
     renderer.render(fadeScene, fadeCam);
     renderer.clearDepth();
     renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    renderer.render(blitScene, fadeCam);
+  }
+  // foto: renderiza e copia na mesma hora (sem preserveDrawingBuffer o quadro some depois)
+  function capture(ctx, w, h, mode) {
+    if (!ready) return;
+    render(mode);
+    ctx.drawImage(renderer.domElement, 0, 0, w, h);
   }
 
-  window.Cycles3D = { init, hit, frame, resize, setTexture, get ready() { return ready; } };
+  window.Cycles3D = { init, hit, frame, resize, setTexture, capture, get ready() { return ready; } };
 })();

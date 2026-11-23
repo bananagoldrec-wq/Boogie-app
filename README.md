@@ -474,7 +474,11 @@ o som em ecos e o reverb põe um véu de luz. Com o áudio ligado, o volume
 empurra o zoom e a frequência mexe na turbulência. O estilo **Geométrico** (a
 tabela acima) continua disponível no seletor ou na tecla **G**.
 
-**Estilos** (seletor ou tecla **G**; o número da versão aparece no ⚙). Em todos, o kick dá um "soco" de zoom
+**Estilos** (seletor ou tecla **G**; o número da versão aparece no ⚙).
+**Movimento da imagem** (⚙): Suave (padrão), Médio ou Intenso — escala a
+câmera do 3D, o soco de zoom do kick, o empurrão dos blocos do datamosh e o
+glitch. Pra ficar leve no celular, os desenhos 2D usam no máximo 1,5× e ~2
+milhões de pixels, e o 3D renderiza a ~1,2 milhão de pixels e estica. Em todos, o kick dá um "soco" de zoom
 na tela inteira.
 
 - **3D** (padrão) — cena WebGL pensada (three.js r128 embutido em
