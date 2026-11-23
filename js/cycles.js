@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 13;
+  const APP_VERSION = 14;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -253,6 +253,13 @@
   function tickMusic() {
     if (!music.timeline || !music.el || music.el.paused) return;
     const ct = music.el.currentTime;
+    if (music.bpm) {
+      const bar = Math.floor(ct / (240 / music.bpm));
+      if (bar !== music.lastBar) {
+        if (music.lastBar != null && bar > 0) { if (bar % 16 === 0) c3Chapter(); else if (bar % 8 === 0) c3Shape(); }
+        music.lastBar = bar;
+      }
+    }
     if (ct < music.lastT - 0.3) music.idx = 0; // deu a volta (loop) ou voltou
     const ev = music.timeline;
     while (music.idx < ev.length && ev[music.idx].t <= ct) {
@@ -261,6 +268,7 @@
         spawn(VOICE_TRACK[e.v], e.note, e.vel, "musica", { kind: e.kind });
         // no drop (impacto depois de um riser) nasce uma imagem nova
         if (e.kind === "impacto" && usesArt()) newArtRef();
+        if (e.kind === "impacto") c3Chapter();
       }
     }
     music.lastT = ct;
@@ -1489,8 +1497,25 @@
       setStyle("abstrato");
     });
   }
+  // capítulos e formas do 3D: mudam com a estrutura da música (16 e 8 compassos,
+  // drop, troca de pattern); sem pulsação conhecida, um relógio de reserva
+  const story = { lastCh: now(), lastSh: now() };
+  function c3Chapter(manual) {
+    if (!gl3.ok || settings.style !== "3d") return;
+    const name = window.Cycles3D.nextChapter();
+    story.lastCh = story.lastSh = now();
+    if (manual) hintOrToast("Cena: " + name);
+  }
+  function c3Shape() {
+    if (!gl3.ok || settings.style !== "3d") return;
+    window.Cycles3D.nextShape();
+    story.lastSh = now();
+  }
   function frame3D(dt) {
     if (!gl3.ok) return;
+    const t = now();
+    if (t - story.lastCh > 32) c3Chapter();
+    else if (t - story.lastSh > 15) c3Shape();
     if (refs.cur !== gl3.tex) {
       gl3.tex = refs.cur;
       window.Cycles3D.setTexture(refs.cur ? (pal().dark ? refs.cur.smallLit : refs.cur.small) : null);
@@ -1788,6 +1813,7 @@
     } else if (type === 0xc0) {
       log(`ch${ch} program change ${d[1]} (pattern)`);
       if (settings.refAuto !== false) nextRef();
+      c3Chapter();
     }
   }
 
@@ -1805,6 +1831,7 @@
       if (clock.ticks % 6 === 0) {
         clock.step++;
         if (clock.step % 256 === 0 && settings.refAuto !== false) nextRef(); // a cada 16 compassos
+        if (clock.step % 256 === 0) c3Chapter(); else if (clock.step % 128 === 0) c3Shape();
       }
       clock.times.push(t);
       if (clock.times.length > 49) clock.times.shift();
@@ -1978,7 +2005,7 @@
 
   // ---------- modo palco ----------
   let wakeLock = null, hintT = 0, idleT = 0;
-  const SHORTCUTS = "F tela cheia (Esc sai) · 1–6 trilhas · R próxima obra · N nova arte aleatória · G estilo · M modo · L composição · P paleta\nC limpar · S salvar imagem · D demo · A áudio · Espaço música · ? atalhos";
+  const SHORTCUTS = "F tela cheia (Esc sai) · 1–6 trilhas · R próxima obra · N nova arte aleatória · X próxima cena (3D) · G estilo · M modo · L composição · P paleta\nC limpar · S salvar imagem · D demo · A áudio · Espaço música · ? atalhos";
 
   function enterShow() {
     if (show) return;
@@ -2109,6 +2136,7 @@
       else if (k === "a") toggleAudio();
       else if (k === " " || k === "spacebar") { e.preventDefault(); toggleMusic(); }
       else if (k === "n") newArtRef(false);
+      else if (k === "x") { if (settings.style === "3d") c3Chapter(true); else hint("Cenas: só no estilo 3D", 1200); }
       else if (k === "r") { if (refs.list.length) nextRef(false); else hint("Sem referência escolhida", 1200); }
       else if (k === "?" || k === "h") hint(SHORTCUTS, 5000);
       else if (k === "escape") { if (show) leaveShow(); else closeSheet(); }

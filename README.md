@@ -492,6 +492,14 @@ na tela inteira.
   cor da cena muda e entra um anel gigante. Voz: halos que sobem. Drop: a
   câmera gira e a cena relampeia. Rastro/Pintura deixam o que passou na tela.
   Se o aparelho não tiver WebGL, volta pro Abstrato.
+  **A forma do centro se transforma** devagar (~5 s, sem corte) entre esfera,
+  cubo arredondado, toro, flor, rocha com espinhos e lente — a cada 8
+  compassos. **Capítulos** mudam a dinâmica da cena a cada 16 compassos, no
+  drop e na troca de pattern do Cycles (sem pulsação conhecida, a cada ~30 s),
+  passando por todos antes de repetir: Órbita, Rasante (câmera baixa), Zênite
+  (de cima), Vazio (sem chão), Túnel (o kick lança anéis na direção da
+  câmera) e Tempestade (câmera rápida, o dobro de estilhaços). Cada capítulo
+  gira a cor da cena. Tecla **X** pula de capítulo.
 - **Abstrato** — traços, grãos e manchas que escorrem num campo de fluxo (acima).
 - **Patch (Pure Data)** — formas mínimas e nítidas no preto, no espírito de um
   patch PD + GEM ligado ao Cycles por USB (`notein` por canal → `line` →
@@ -587,7 +595,7 @@ para. A tela também não apaga sozinha durante o show. **Esc**, dois toques ou 
 deixa esconder as barras dele: adicione à Tela de Início e abra pelo ícone.
 Fora da tela cheia a tela também fica limpa — trilhas e medidores só aparecem
 se ligar no ⚙. Tudo se controla
-pelo teclado sem abrir nada: **1–6** trilhas, **R** próxima obra, **N** arte aleatória nova, **G** estilo, **M** modo, **L** composição,
+pelo teclado sem abrir nada: **1–6** trilhas, **R** próxima obra, **N** arte aleatória nova, **X** próxima cena (3D), **G** estilo, **M** modo, **L** composição,
 **P** paleta, **C** limpar, **S** salvar imagem, **D** demo, **A** áudio, **Espaço** música,
 **?** mostra os atalhos. Ao apertar uma tecla aparece só um aviso pequeno no
 canto, que some em seguida. No palco o fundo é sempre preto (a paleta Papel

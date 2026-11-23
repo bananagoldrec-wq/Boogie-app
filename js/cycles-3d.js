@@ -24,6 +24,51 @@
   let tex = null, ready = false, time = 0, rt = null, blitScene, blitMat, scale3 = 1;
   const env = { kickT: 0, kick: 0, bass: 0, hat: 0, snare: 0, voice: 0, roll: 0, rollV: 0, ripple: 99, rippleA: 0 };
   const lead = { y: 0, ty: 0, a: 0, ang: 0 };
+
+  // ---- forma: troca natural (5 s, curva suave), uma de cada vez ----
+  const SHAPE_NAMES = ["esfera", "cubo", "toro", "flor", "rocha", "lente"];
+  const shape = { a: 0, b: 0, m: 1, dur: 5 };
+  let shapeBag = [];
+  function nextShape(id) {
+    if (shape.m < 1) return; // ainda transformando: espera terminar
+    let n = id;
+    if (n == null) {
+      if (!shapeBag.length) {
+        shapeBag = SHAPE_NAMES.map((_, i) => i).filter((i) => i !== shape.b);
+        for (let i = shapeBag.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [shapeBag[i], shapeBag[j]] = [shapeBag[j], shapeBag[i]]; }
+      }
+      n = shapeBag.shift();
+    }
+    shape.a = shape.b; shape.b = n; shape.m = 0;
+    return SHAPE_NAMES[n];
+  }
+
+  // ---- capítulos: a cena muda de dinâmica pra não ficar repetitiva ----
+  // cam: altura/distância/velocidade de órbita; lock = ângulo fixo (câmera de frente)
+  const CHAPTERS = [
+    { name: "Órbita", h: 1.4, dist: 7.2, speed: 1, floor: 1, stars: 1, look: 0 },
+    { name: "Rasante", h: -1.3, dist: 5.6, speed: 0.6, floor: 1, stars: 1, look: 0.6 },
+    { name: "Zênite", h: 7.5, dist: 4.2, speed: 0.5, floor: 1, stars: 0.6, look: 0 },
+    { name: "Vazio", h: 0.3, dist: 6.4, speed: 0, lock: Math.PI / 2, floor: 0, stars: 0.25, look: 0 },
+    { name: "Túnel", h: 0.1, dist: 6.8, speed: 0, lock: Math.PI / 2, floor: 0, stars: 0.6, look: 0, tunnel: true },
+    { name: "Tempestade", h: 2.6, dist: 8.6, speed: 2.4, floor: 1, stars: 1, look: 0, shards: 2 },
+  ];
+  let chapter = CHAPTERS[0], chIdx = 0;
+  const cam = { h: 1.4, dist: 7.2, speed: 1, floor: 1, stars: 1, look: 0 };
+  // sorteio "de saquinho": passa por todas as cenas antes de repetir alguma
+  let bag = [];
+  function nextChapter() {
+    if (!bag.length) {
+      bag = CHAPTERS.map((_, i) => i).filter((i) => i !== chIdx);
+      for (let i = bag.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [bag[i], bag[j]] = [bag[j], bag[i]]; }
+    }
+    const i = bag.shift();
+    chIdx = i; chapter = CHAPTERS[i];
+    // a cor da cena gira junto
+    if (col.target) { const h = {}; col.target.getHSL(h); col.target.setHSL((h.h + 0.15 + Math.random() * 0.25) % 1, Math.max(0.5, h.s), Math.max(0.45, h.l)); }
+    nextShape();
+    return chapter.name;
+  }
   const col = { cur: null, target: null };
   let orbit = 0;
 
@@ -52,11 +97,24 @@
     return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
   }`;
 
-  const BLOB_VS = NOISE + `
-  uniform float uTime, uKick, uBass, uScale;
+  // formas da escultura (a partir da direção de cada ponto da esfera); o shader
+  // calcula a forma atual e a próxima e mistura as duas (uM) — a troca é contínua
+  const SHAPES = `
+  vec3 shapePos(float id, vec3 n){
+    float th = atan(n.z, n.x); float ph = acos(clamp(n.y, -1.0, 1.0));
+    if (id < 0.5) return n;                                                     // esfera
+    if (id < 1.5) { vec3 a = abs(n); float d = pow(pow(a.x,6.0)+pow(a.y,6.0)+pow(a.z,6.0), 1.0/6.0); return n/d*0.8; } // cubo arredondado
+    if (id < 2.5) { float t = 2.0*ph; return vec3((0.82 + 0.36*cos(t))*cos(th), 0.36*sin(t), (0.82 + 0.36*cos(t))*sin(th)); } // toro
+    if (id < 3.5) return n*(0.92 + 0.3*sin(5.0*th)*sin(ph));                      // flor
+    if (id < 4.5) { float s = snoise(n*2.3 + 7.0); return n*(0.82 + 0.5*pow(max(s, 0.0), 1.6)); } // rocha com espinhos
+    return vec3(n.x*1.18, n.y*0.36, n.z*1.18);                                    // lente
+  }`;
+  const BLOB_VS = NOISE + SHAPES + `
+  uniform float uTime, uKick, uBass, uScale, uA, uB, uM;
   varying vec3 vN; varying vec3 vObjN; varying vec3 vView; varying float vD;
   void main(){
-    vec3 p = position;
+    vec3 dir = normalize(position);
+    vec3 p = mix(shapePos(uA, dir), shapePos(uB, dir), uM) * 1.55;
     float n = snoise(p*0.9 + vec3(0.0, uTime*0.35, 0.0));
     float n2 = snoise(p*2.6 - vec3(uTime*0.6));
     float d = n*(0.18 + uBass*0.7) + n2*0.07*(1.0 + uKick*3.0) + uKick*0.45;
@@ -100,7 +158,8 @@
   const FLOOR_FS = `
   uniform vec3 uColor;
   varying float vFade; varying float vH;
-  void main(){ gl_FragColor = vec4(uColor*clamp(0.28 + vH*0.9, 0.0, 1.1)*vFade, 1.0); }`;
+  uniform float uFloorA;
+  void main(){ gl_FragColor = vec4(uColor*clamp(0.28 + vH*0.9, 0.0, 1.1)*vFade*uFloorA, 1.0); }`;
 
   function hsl(c) { return new T.Color().setHSL(((c.h % 360) + 360) % 360 / 360, Math.min(1, c.s / 100), Math.min(0.8, Math.max(0.25, c.l / 100))); }
 
@@ -128,6 +187,7 @@
     const blank = new T.DataTexture(new Uint8Array([60, 30, 120, 255]), 1, 1, T.RGBAFormat); blank.needsUpdate = true;
     const uni = {
       uTime: { value: 0 }, uKick: { value: 0 }, uBass: { value: 0 }, uScale: { value: 1 },
+      uA: { value: 0 }, uB: { value: 0 }, uM: { value: 0 },
       uTex: { value: blank }, uHasTex: { value: 0 }, uColor: { value: col.cur },
     };
     blobMat = new T.ShaderMaterial({ uniforms: uni, vertexShader: BLOB_VS, fragmentShader: BLOB_FS });
@@ -140,7 +200,7 @@
     scene.add(blobWire);
 
     floorMat = new T.ShaderMaterial({
-      uniforms: { uTime: uni.uTime, uBass: uni.uBass, uRip: { value: 99 }, uRipA: { value: 0 }, uColor: { value: col.cur } },
+      uniforms: { uTime: uni.uTime, uBass: uni.uBass, uRip: { value: 99 }, uRipA: { value: 0 }, uColor: { value: col.cur }, uFloorA: { value: 1 } },
       vertexShader: FLOOR_VS, fragmentShader: FLOOR_FS, transparent: true, blending: T.AdditiveBlending, depthWrite: false,
     });
     // grade só de linhas retas (sem as diagonais da malha em arame): ~6× menos linhas e mais limpa
@@ -221,8 +281,9 @@
     blobMat.uniforms.uHasTex.value = 1;
   }
 
-  function ring(pos, rot, size, speed, life, color, op) {
+  function ring(pos, rot, size, speed, life, color, op, vel = null) {
     const r = rings.find((x) => x.life <= 0) || rings[0];
+    r.vel = vel;
     r.m.position.copy(pos); r.m.rotation.set(rot.x, rot.y, rot.z);
     r.size = size; r.speed = speed; r.life = life; r.age = 0; r.op = op;
     r.m.material.color.copy(color); r.m.visible = true;
@@ -236,12 +297,13 @@
       case 0: // KICK
         env.kickT = Math.max(env.kickT, 0.5 + 0.5 * v);
         env.ripple = 2.2; env.rippleA = 0.5 + 0.5 * v; // a onda nasce em volta da escultura, não no meio
-        ring(new T.Vector3(0, -2.25, 0), new T.Euler(-Math.PI / 2, 0, 0), 1.6, 9 + 6 * v, 1.1, c, 0.9);
+        if (chapter.tunnel) ring(new T.Vector3(0, 0, -26), new T.Euler(0, 0, 0), 2.6, 0, 2.2, c, 0.95, new T.Vector3(0, 0, 15 + 8 * v));
+        else ring(new T.Vector3(0, -2.25, 0), new T.Euler(-Math.PI / 2, 0, 0), 1.6, 9 + 6 * v, 1.1, c, 0.9);
         break;
       case 8: env.bass = Math.max(env.bass, 0.4 + 0.6 * v); break; // BAIXO
       case 1: { // SNARE: estilhaços
         env.snare = 1;
-        const n = 14 + Math.round(v * 30);
+        const n = Math.round((14 + v * 30) * (chapter.shards || 1));
         let made = 0;
         for (let i = 0; i < shardData.length && made < n; i++) {
           const d = shardData[i];
@@ -298,16 +360,29 @@
     blob.scale.setScalar(1 + env.kick * 0.1); blobWire.scale.copy(blob.scale);
 
     // câmera: órbita lenta; o kick dá um soco pra frente (FOV) — tudo escalado pelo "movimento"
-    orbit += dt * (0.03 + 0.07 * motion);
-    const R = 7.2 - env.kick * 0.5 * motion;
-    camera.position.set(Math.cos(orbit) * R, 1.4 + Math.sin(orbit * 0.7) * 0.4 * motion, Math.sin(orbit) * R);
+    // forma: avança a transformação com curva suave
+    if (shape.m < 1) shape.m = Math.min(1, shape.m + dt / shape.dur);
+    const sm = shape.m * shape.m * (3 - 2 * shape.m);
+    u.uA.value = shape.a; u.uB.value = shape.b; u.uM.value = sm;
+
+    // capítulo: a câmera e o cenário escorregam pros valores novos (~2–3 s)
+    const ease = 1 - Math.exp(-dt * 0.9);
+    for (const key of ["h", "dist", "speed", "floor", "stars", "look"]) cam[key] += (chapter[key] - cam[key]) * ease;
+    floorMat.uniforms.uFloorA.value = cam.floor;
+    if (chapter.lock != null) {
+      let d = chapter.lock + Math.sin(time * 0.25) * 0.25 * motion - orbit;
+      d = Math.atan2(Math.sin(d), Math.cos(d));
+      orbit += d * ease;
+    } else orbit += dt * (0.03 + 0.07 * motion) * cam.speed;
+    const R = cam.dist - env.kick * 0.5 * motion;
+    camera.position.set(Math.cos(orbit) * R, cam.h + Math.sin(orbit * 0.7) * 0.4 * motion, Math.sin(orbit) * R);
     const roll = env.roll * 0.35 * motion;
     camera.up.set(Math.sin(roll), Math.cos(roll), 0);
-    camera.lookAt(0, 0, 0);
+    camera.lookAt(0, cam.look, 0);
     camera.fov = 58 - env.kick * 8 * motion;
     camera.updateProjectionMatrix();
 
-    starMat.size = 0.09 + env.hat * 0.16; starMat.opacity = 0.35 + env.hat * 0.65;
+    starMat.size = 0.09 + env.hat * 0.16; starMat.opacity = (0.35 + env.hat * 0.65) * cam.stars;
     stars.rotation.y += dt * 0.01;
 
     // estilhaços
@@ -330,7 +405,8 @@
       r.age += dt; r.life -= dt;
       const s = r.size + r.age * r.speed;
       r.m.scale.setScalar(s);
-      if (r.speed < 3) r.m.position.y += dt * 0.5; // halos da voz sobem
+      if (r.vel) r.m.position.addScaledVector(r.vel, dt);       // túnel: vem na direção da câmera
+      else if (r.speed < 3) r.m.position.y += dt * 0.5;       // halos da voz sobem
       r.m.material.opacity = Math.max(0, r.op * (r.life / (r.life + r.age)));
       if (r.life <= 0) r.m.visible = false;
     }
@@ -375,5 +451,5 @@
     ctx.drawImage(renderer.domElement, 0, 0, w, h);
   }
 
-  window.Cycles3D = { init, hit, frame, resize, setTexture, capture, get ready() { return ready; } };
+  window.Cycles3D = { init, hit, frame, resize, setTexture, capture, nextChapter, nextShape, get ready() { return ready; }, get chapter() { return chapter.name; } };
 })();
