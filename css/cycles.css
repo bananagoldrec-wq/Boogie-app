@@ -118,3 +118,11 @@ button,select,input{font:inherit;color:inherit}
   #btn-save{margin-left:0;flex:1 1 100%}
   .hud-dom{max-width:100%}
 }
+
+/* modo palco (projeção): só a tela preta com as imagens */
+body.show,body.show .stage{background:#000}
+body.show .bar,body.show .dock,body.show .hud,body.show .empty,body.show .toast,body.show .sheet{display:none!important}
+body.show.idle,body.show.idle *{cursor:none}
+.stage-hint{position:absolute;left:16px;bottom:calc(14px + var(--safe-bottom));max-width:calc(100% - 32px);font-size:12px;line-height:1.6;
+  color:rgba(255,255,255,.5);pointer-events:none;white-space:pre-line;transition:opacity .6s}
+.stage-hint.fade{opacity:0}

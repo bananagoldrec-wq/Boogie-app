@@ -478,6 +478,17 @@ Livre (pan), Faixas (uma coluna por trilha), Radial e Grade (16 passos × 6
 trilhas, seguindo o clock). **Paletas:** Espectro, Neon, Boogie e Papel.
 **Salvar imagem** baixa um PNG e guarda a miniatura embaixo (só nesta sessão).
 
+**Palco (projeção):** o botão **Palco** (ou a tecla **F**, ou dois cliques na
+tela) entra em tela cheia só com o fundo preto e as imagens: sem barras,
+botões, textos nem contorno do "mais alto", e o cursor some quando o mouse
+para. A tela também não apaga sozinha durante o show. **Esc** sai. Tudo se controla
+pelo teclado sem abrir nada: **1–6** trilhas, **M** modo, **L** composição,
+**P** paleta, **C** limpar, **S** salvar imagem, **D** demo, **A** áudio,
+**?** mostra os atalhos. Ao apertar uma tecla aparece só um aviso pequeno no
+canto, que some em seguida. No palco o fundo é sempre preto (a paleta Papel
+vira Espectro). Com notebook + projetor: arraste a janela pro projetor (ou
+espelhe a tela) e aperte F.
+
 **Ajustes (⚙):** canal MIDI de cada trilha (padrão 1–6), número do CC de cada
 parâmetro com botão **Aprender** (mexe o knob e ele pega), e um monitor do MIDI
 que está chegando. Os CCs padrão vêm do mapa do Model:Cycles; se algum knob não

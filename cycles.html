@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-cycles-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-cycles-512.png" />
 
-  <link rel="stylesheet" href="css/cycles.css?v=1" />
+  <link rel="stylesheet" href="css/cycles.css?v=2" />
 </head>
 <body>
   <header class="bar">
@@ -27,9 +27,10 @@
       <span id="st-bpm" class="pill" hidden></span>
     </div>
     <div class="actions">
-      <button id="btn-midi" class="btn primary" type="button">Conectar MIDI</button>
+      <button id="btn-midi" class="btn" type="button">Conectar MIDI</button>
       <button id="btn-audio" class="btn" type="button" title="Use a entrada de linha/microfone com a saída do Cycles">Áudio</button>
       <button id="btn-demo" class="btn" type="button" title="Simula um padrão para testar sem o aparelho">Demo</button>
+      <button id="btn-show" class="btn primary" type="button" title="Tela cheia preta, só as imagens (tecla F)">Palco</button>
       <button id="btn-settings" class="btn icon" type="button" aria-label="Ajustes" title="Ajustes">⚙</button>
     </div>
   </header>
@@ -50,6 +51,8 @@
         <div class="band hz"><b id="b-hz">— Hz</b><span>pico</span></div>
       </div>
     </div>
+
+    <div class="stage-hint" id="stage-hint" hidden></div>
 
     <div class="empty" id="empty">
       <h2>Toque o Model:Cycles</h2>
@@ -124,6 +127,6 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles.js?v=1"></script>
+  <script src="js/cycles.js?v=2"></script>
 </body>
 </html>

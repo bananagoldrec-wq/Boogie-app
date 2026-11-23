@@ -106,7 +106,11 @@
       },
     },
   };
-  const pal = () => PALETTES[settings.palette] || PALETTES.espectro;
+  let show = false; // modo palco: tela preta, sem interface
+  function pal() {
+    const p = PALETTES[settings.palette] || PALETTES.espectro;
+    return show && !p.dark ? PALETTES.espectro : p; // no palco o fundo é sempre preto
+  }
   const hsla = (c, a, dl = 0) => `hsla(${c.h.toFixed(1)},${c.s.toFixed(1)}%,${Math.max(0, Math.min(100, c.l + dl)).toFixed(1)}%,${a.toFixed(3)})`;
 
   // ---------- utilidades ----------
@@ -422,7 +426,7 @@
     ctx.save();
     ctx.globalCompositeOperation = "source-over";
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = pal().bg;
+    ctx.fillStyle = show ? "#000" : pal().bg;
     ctx.fillRect(0, 0, W, H);
     ctx.restore();
   }
@@ -484,7 +488,7 @@
       }
       lctx.restore();
     }
-    if (dom && domE > 0.02) drawAura(lctx, dom, clamp(1 - (t - dom.born) / dom.life, 0, 1));
+    if (!show && dom && domE > 0.02) drawAura(lctx, dom, clamp(1 - (t - dom.born) / dom.life, 0, 1));
 
     // HUD
     const txt = dom && domE > 0.02
@@ -805,6 +809,7 @@
   }
   let toastT = 0;
   function toast(msg) {
+    if (show) return hint(msg);
     const el = $("toast");
     el.textContent = msg;
     el.hidden = false;
@@ -820,7 +825,59 @@
     if (m === "pintura") shapes.forEach((s) => (s.stamped = true)); // não recarimba o que já passou
   }
 
+  // ---------- modo palco ----------
+  let wakeLock = null, hintT = 0, idleT = 0;
+  const SHORTCUTS = "F palco (Esc sai) · 1–6 trilhas · M modo · L composição · P paleta\nC limpar · S salvar imagem · D demo · A áudio · ? atalhos";
+
+  function enterShow() {
+    if (show) return;
+    show = true;
+    closeSheet();
+    document.body.classList.add("show");
+    const el = document.documentElement;
+    if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+    if (navigator.wakeLock) navigator.wakeLock.request("screen").then((l) => (wakeLock = l)).catch(() => {});
+    restyle();
+    hint("Palco · Esc para sair · ? atalhos");
+    poke();
+  }
+  function leaveShow() {
+    if (!show) return;
+    show = false;
+    document.body.classList.remove("show", "idle");
+    $("stage-hint").hidden = true;
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+    restyle();
+  }
+  // troca o fundo/cores sem apagar o que já foi pintado (só no "ao vivo")
+  function restyle() {
+    shapes.forEach((s) => (s.color = pal().color(s.ft, tracks[s.tr], s.sat)));
+    if (settings.mode === "vivo") fillBg(pctx);
+  }
+  // aviso discreto no canto — só aparece quando você aperta algo
+  function hint(msg, ms = 1800) {
+    const el = $("stage-hint");
+    el.textContent = msg;
+    el.hidden = false;
+    el.classList.remove("fade");
+    clearTimeout(hintT);
+    hintT = setTimeout(() => el.classList.add("fade"), ms);
+  }
+  // esconde o cursor quando o mouse para
+  function poke() {
+    document.body.classList.remove("idle");
+    clearTimeout(idleT);
+    if (show) idleT = setTimeout(() => document.body.classList.add("idle"), 1200);
+  }
+  function cycle(list, cur) { return list[(list.indexOf(cur) + 1) % list.length]; }
+  const MODE_NAMES = { vivo: "Ao vivo", rastro: "Rastro", pintura: "Pintura" };
+
   function bind() {
+    $("btn-show").addEventListener("click", enterShow);
+    document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && show) leaveShow(); });
+    document.addEventListener("pointermove", poke);
+    stage.addEventListener("dblclick", () => (show ? leaveShow() : enterShow()));
     $("btn-midi").addEventListener("click", connectMidi);
     $("btn-audio").addEventListener("click", toggleAudio);
     $("btn-demo").addEventListener("click", toggleDemo);
@@ -839,15 +896,29 @@
     lay.addEventListener("change", () => { settings.layout = lay.value; gridStep = [0, 0, 0, 0, 0, 0]; save(); });
     palSel.addEventListener("change", () => {
       settings.palette = palSel.value; save();
-      shapes.forEach((s) => (s.color = pal().color(s.ft, tracks[s.tr], s.sat)));
-      fillBg(pctx);
+      restyle();
     });
     document.addEventListener("keydown", (e) => {
       if (e.target.closest("input,select,textarea")) return;
       if (e.key >= "1" && e.key <= "6") spawn(+e.key - 1, tracks[+e.key - 1].lastNote || 60, 100, "pad");
-      else if (e.key === "c") clearCanvas();
-      else if (e.key === "s") saveImage();
-      else if (e.key === "Escape") closeSheet();
+      const k = e.key.toLowerCase();
+      if (k === "c") { clearCanvas(); if (show) hint("Limpo", 900); }
+      else if (k === "s") saveImage();
+      else if (k === "f" || k === "enter") show ? leaveShow() : enterShow();
+      else if (k === "m") { setMode(cycle(["vivo", "rastro", "pintura"], settings.mode)); hint("Modo: " + MODE_NAMES[settings.mode], 1200); }
+      else if (k === "l") {
+        settings.layout = lay.value = cycle(["livre", "faixas", "radial", "grade"], settings.layout);
+        gridStep = [0, 0, 0, 0, 0, 0]; save();
+        hint("Composição: " + lay.selectedOptions[0].textContent, 1200);
+      } else if (k === "p") {
+        const list = show ? ["espectro", "neon", "boogie"] : ["espectro", "neon", "boogie", "papel"];
+        settings.palette = palSel.value = cycle(list, settings.palette);
+        save(); restyle();
+        hint("Paleta: " + palSel.selectedOptions[0].textContent, 1200);
+      } else if (k === "d") { toggleDemo(); hint(demo.on ? "Demo ligado" : "Demo desligado", 1200); }
+      else if (k === "a") toggleAudio();
+      else if (k === "?" || k === "h") hint(SHORTCUTS, 5000);
+      else if (k === "escape") { if (show) leaveShow(); else closeSheet(); }
     });
     new ResizeObserver(resize).observe(stage);
   }
