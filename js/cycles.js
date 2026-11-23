@@ -153,6 +153,19 @@
     if (audio.ctx.state === "suspended") audio.ctx.resume();
     return audio.ctx;
   }
+  // destrava o áudio dentro de um toque/clique (exigência do Safari/Chrome):
+  // retoma o contexto, toca um silêncio curtinho e, no iPhone, pede o modo
+  // "reprodução" pra tocar mesmo com a chave de silencioso ligada
+  function unlockAudio() {
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch { /* sem suporte */ }
+    const ctx = ensureCtx();
+    try {
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf; src.connect(ctx.destination); src.start(0);
+    } catch { /* ok */ }
+    return ctx.resume ? ctx.resume() : Promise.resolve();
+  }
   function audioStatus() {
     audio.on = !!(audio.stream || (music.el && !music.el.paused));
     $("bands").hidden = !audio.on;
@@ -190,7 +203,7 @@
 
   // ---------- música de teste (arquivo do aparelho) ----------
   const music = { el: null, src: null, url: "", name: "" };
-  function pickMusic() { $("inp-music").click(); }
+  function pickMusic() { unlockAudio(); $("inp-music").click(); }
   function loadMusic(file) {
     const ctx = ensureCtx();
     if (!music.el) {
@@ -201,7 +214,7 @@
       music.src.connect(audio.an);
       music.src.connect(ctx.destination); // e toca nas caixas
       ["play", "pause", "ended"].forEach((ev) => music.el.addEventListener(ev, audioStatus));
-      music.el.addEventListener("error", () => toast("Esse arquivo não tocou aqui. Tente MP3, M4A ou WAV."));
+      music.el.addEventListener("error", () => toast("Esse arquivo não abriu aqui. Tente MP3, M4A ou WAV (arquivo baixado no aparelho, não só na nuvem)."));
     }
     if (music.url) URL.revokeObjectURL(music.url);
     music.url = URL.createObjectURL(file);
@@ -209,13 +222,33 @@
     music.el.src = music.url;
     if (demo.on) stopDemo();
     $("empty").hidden = true;
-    music.el.play().then(() => toast(`Tocando: ${music.name}. Espaço pausa.`)).catch((e) => toast("Não deu pra tocar: " + (e.message || e)));
+    startMusic();
     audioStatus();
+  }
+  // tenta tocar; se o navegador barrar, mostra um botão grande pra um toque só
+  function startMusic() {
+    const ctx = ensureCtx();
+    ctx.resume().catch(() => {});
+    music.el.play().then(() => {
+      if (ctx.state !== "running") return askTap();
+      $("tap-play").hidden = true;
+      toast(`Tocando: ${music.name}. Espaço pausa.`);
+    }).catch(askTap);
+  }
+  function askTap() {
+    const b = $("tap-play");
+    b.hidden = false;
+    b.onclick = () => {
+      unlockAudio().finally(() => {
+        music.el.play().then(() => { b.hidden = true; audioStatus(); toast(`Tocando: ${music.name}`); })
+          .catch((e) => toast("O navegador não deixou tocar: " + (e.message || e)));
+      });
+    };
   }
   function toggleMusic() {
     if (!music.name) return pickMusic();
-    ensureCtx();
-    if (music.el.paused) music.el.play(); else music.el.pause();
+    unlockAudio();
+    if (music.el.paused) startMusic(); else music.el.pause();
     if (show) hint(music.el.paused ? "Música pausada" : "♪ " + music.name, 1200);
   }
 
@@ -1383,6 +1416,9 @@
     $("btn-midi").addEventListener("click", connectMidi);
     $("btn-audio").addEventListener("click", toggleAudio);
     $("btn-music").addEventListener("click", toggleMusic);
+    const wake = () => { if (audio.ctx && audio.ctx.state !== "running") audio.ctx.resume().catch(() => {}); };
+    document.addEventListener("pointerdown", wake, true);
+    document.addEventListener("keydown", wake, true);
     $("btn-music-pick").addEventListener("click", pickMusic);
     $("inp-music").addEventListener("change", (e) => { if (e.target.files[0]) loadMusic(e.target.files[0]); e.target.value = ""; });
     $("btn-demo").addEventListener("click", toggleDemo);
