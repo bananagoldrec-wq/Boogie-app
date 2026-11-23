@@ -96,7 +96,133 @@
      "artist": "Ismael Nery",
      "date": "",
      "license": "Domínio público no Brasil (artista morto em 1934)",
-     "source": "https://commons.wikimedia.org/wiki/File:Ismael_Nery_-_Auto-Retrato_(Homem_de_Chap%C3%A9u).jpg"
+     "source": "https://commons.wikimedia.org/wiki/Category:Ismael_Nery"
+    }
+   ]
+  },
+  {
+   "id": "gerativas",
+   "name": "Arte aleatória",
+   "items": [
+    {
+     "src": "refs/gerativas/arte-01.jpg",
+     "title": "Arte aleatória 1",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-02.jpg",
+     "title": "Arte aleatória 2",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-03.jpg",
+     "title": "Arte aleatória 3",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-04.jpg",
+     "title": "Arte aleatória 4",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-05.jpg",
+     "title": "Arte aleatória 5",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-06.jpg",
+     "title": "Arte aleatória 6",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-07.jpg",
+     "title": "Arte aleatória 7",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-08.jpg",
+     "title": "Arte aleatória 8",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-09.jpg",
+     "title": "Arte aleatória 9",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-10.jpg",
+     "title": "Arte aleatória 10",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-11.jpg",
+     "title": "Arte aleatória 11",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-12.jpg",
+     "title": "Arte aleatória 12",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-13.jpg",
+     "title": "Arte aleatória 13",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-14.jpg",
+     "title": "Arte aleatória 14",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-15.jpg",
+     "title": "Arte aleatória 15",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-16.jpg",
+     "title": "Arte aleatória 16",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-17.jpg",
+     "title": "Arte aleatória 17",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-18.jpg",
+     "title": "Arte aleatória 18",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-19.jpg",
+     "title": "Arte aleatória 19",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-20.jpg",
+     "title": "Arte aleatória 20",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-21.jpg",
+     "title": "Arte aleatória 21",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-22.jpg",
+     "title": "Arte aleatória 22",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-23.jpg",
+     "title": "Arte aleatória 23",
+     "artist": "tools/random-art.py"
+    },
+    {
+     "src": "refs/gerativas/arte-24.jpg",
+     "title": "Arte aleatória 24",
+     "artist": "tools/random-art.py"
     }
    ]
   },

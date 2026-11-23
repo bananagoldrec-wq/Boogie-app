@@ -490,6 +490,11 @@ Conjuntos em `refs/` (lista em `refs/refs.json`):
 - **Ismael Nery** — domínio público no Brasil desde 2005 (morreu em 1934);
   vem do Wikimedia Commons.
 - **Acervo (paredes)** — fotos das pinturas enviadas, recortadas e endireitadas.
+- **Arte aleatória** — 24 imagens de `tools/random-art.py` (árvore aleatória de
+  x, y, cor, sin, cos, +, −, ×, ÷; `python3 tools/random-art.py 24` gera mais) e
+  **infinitas ao vivo**: o mesmo gerador portado pra JS cria uma imagem nova a
+  cada troca nesse conjunto, a cada drop da música (impacto depois de um riser),
+  na tecla **N** ou no botão do ⚙. No "Tudo misturado" entra de vez em quando.
 
 Cada item do `refs.json` guarda título, data, licença e o link da fonte.
 
@@ -516,16 +521,21 @@ visual:
 
 | Voz | Como reconhece | Visual |
 | --- | --- | --- |
-| kick | ataque no sub cujo tom despenca e morre rápido (baixo não) | sopro de luz + a tela "puxa" |
-| snare/clap | ataque ruidoso com corpo em 1–3 kHz | grãos + glitch |
+| kick | ataque no grave com mais ataque, release menor, click do batedor, pouco harmônico e **queda da fundamental**; separado do baixo em dois grupos dentro da própria música, levando em conta que kick cai no tempo | sopro de luz + a tela "puxa" |
+| baixo | os ataques graves que não são kick (tom parado, com harmônicos, contratempo) | massa lenta perto do chão |
+| snare/clap | ataque ruidoso com corpo em 1–3 kHz, mais forte que o grave naquele instante; também procurado nos tempos da pulsação (2 e 4) | grãos + glitch |
 | hi-hat | ataque curto e ruidoso acima de 6 kHz | filamentos finos |
 | chords | mudança de harmonia com 3+ notas | manchas de cor |
 | lead | um tom que se destaca, cravado | fitas longas |
 | vocal | um tom que se destaca, oscilando (vibrato/deslize) | fumaça larga que sobe |
 | efeitos | subida/descida contínua de ruído (riser) e o impacto depois | rasgos e riscos na tela toda |
 
-Os limiares são relativos à própria música, então uma intro sem kick não
-dispara kick. Enquanto analisa (a etiqueta mostra "analisando %"), vale a
+A pulsação (BPM e onde cai o tempo) sai da autocorrelação dos ataques com
+cara de kick, conferida no dobro e no compasso. Os limiares são relativos à
+própria música, com pisos absolutos de volume, então uma intro sem kick não
+dispara kick e uma faixa só de baixo não inventa kick, caixa ou hi-hat.
+No ⚙, **"O que a análise da música encontrou"** mostra uma linha do tempo
+por instrumento com a agulha da música — bom pra apontar onde errou. Enquanto analisa (a etiqueta mostra "analisando %"), vale a
 detecção ao vivo. É estimativa, não separação de stems. **Espaço**
 pausa/continua; ⏏ troca a música; ela fica em loop. O resumo da análise
 aparece no monitor (⚙).
@@ -537,7 +547,7 @@ para. A tela também não apaga sozinha durante o show. **Esc**, dois toques ou 
 deixa esconder as barras dele: adicione à Tela de Início e abra pelo ícone.
 Fora da tela cheia a tela também fica limpa — trilhas e medidores só aparecem
 se ligar no ⚙. Tudo se controla
-pelo teclado sem abrir nada: **1–6** trilhas, **R** próxima obra, **G** estilo, **M** modo, **L** composição,
+pelo teclado sem abrir nada: **1–6** trilhas, **R** próxima obra, **N** arte aleatória nova, **G** estilo, **M** modo, **L** composição,
 **P** paleta, **C** limpar, **S** salvar imagem, **D** demo, **A** áudio, **Espaço** música,
 **?** mostra os atalhos. Ao apertar uma tecla aparece só um aviso pequeno no
 canto, que some em seguida. No palco o fundo é sempre preto (a paleta Papel

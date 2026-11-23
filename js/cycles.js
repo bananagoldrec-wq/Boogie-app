@@ -16,7 +16,7 @@
 
   // ---------- constantes ----------
   // 0–5 são as máquinas do Cycles; 6 e 7 só aparecem com música (voz e efeitos)
-  const MACHINES = ["KICK", "SNARE", "METAL", "PERC", "TONE", "CHORD", "VOZ", "FX"];
+  const MACHINES = ["KICK", "SNARE", "METAL", "PERC", "TONE", "CHORD", "VOZ", "FX", "BAIXO"];
   const TRACK_COLORS = ["--t1", "--t2", "--t3", "--t4", "--t5", "--t6"];
   // Mapeamento padrão de CCs do Model:Cycles. Confira no apêndice do manual;
   // dá pra corrigir no app com "Aprender".
@@ -80,6 +80,7 @@
   }));
   Object.assign(tracks[6], { decay: 95, reverb: 75, sweep: 55, color: 50 }); // voz: longa e com véu
   Object.assign(tracks[7], { decay: 70, reverb: 45, color: 100 });
+  Object.assign(tracks[8], { decay: 75, reverb: 25, sweep: 30, contour: 60 }); // baixo: massa lenta
 
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
@@ -213,8 +214,8 @@
 
   // ---------- música de teste (arquivo do aparelho) ----------
   const music = { el: null, src: null, url: "", name: "", timeline: null, idx: 0, lastT: 0, analysing: false, progress: 0, token: 0 };
-  const VOICE_TRACK = { kick: 0, snare: 1, hat: 2, lead: 4, chord: 5, vocal: 6, fx: 7 };
-  const VOICE_NAME = { kick: "kick", snare: "snare/clap", hat: "hi-hat", chord: "chords", lead: "lead", vocal: "vocal", fx: "efeitos" };
+  const VOICE_TRACK = { kick: 0, bass: 8, snare: 1, hat: 2, lead: 4, chord: 5, vocal: 6, fx: 7 };
+  const VOICE_NAME = { kick: "kick", bass: "baixo", snare: "snare/clap", hat: "hi-hat", chord: "chords", lead: "lead", vocal: "vocal", fx: "efeitos" };
 
   // analisa a faixa inteira (em segundo plano) e troca a detecção ao vivo pela linha do tempo
   async function analyseFile(file) {
@@ -228,10 +229,12 @@
       });
       if (token !== music.token) return;
       music.timeline = res.events;
+      music.duration = res.duration;
+      music.bpm = res.bpm;
       music.idx = 0;
       music.lastT = -1;
       const resumo = Object.keys(VOICE_NAME).filter((k) => res.count[k]).map((k) => `${VOICE_NAME[k]} ${res.count[k]}`).join(" · ");
-      log(`análise de "${music.name}": ${resumo}`);
+      log(`análise de "${music.name}"${res.bpm ? ` (${Math.round(res.bpm)} BPM)` : ""}: ${resumo}`);
       if (!show) toast("Música analisada — agora cada instrumento vira um tipo de imagem.");
     } catch (e) {
       if (token === music.token) { log("análise falhou: " + (e && e.message)); toast("Não consegui analisar a música; seguindo com a detecção ao vivo."); }
@@ -247,7 +250,11 @@
     const ev = music.timeline;
     while (music.idx < ev.length && ev[music.idx].t <= ct) {
       const e = ev[music.idx++];
-      if (ct - e.t < 0.25) spawn(VOICE_TRACK[e.v], e.note, e.vel, "musica", { kind: e.kind });
+      if (ct - e.t < 0.25) {
+        spawn(VOICE_TRACK[e.v], e.note, e.vel, "musica", { kind: e.kind });
+        // no drop (impacto depois de um riser) nasce uma imagem nova
+        if (e.kind === "impacto" && usesArt()) newArtRef();
+      }
     }
     music.lastT = ct;
   }
@@ -438,7 +445,7 @@
   // posição normalizada (0..1) conforme a composição escolhida
   function place(i, tr, ft) {
     const aspect = W / H || 1;
-    const NT = music.timeline ? 8 : 6;
+    const NT = music.timeline ? 9 : 6;
     switch (settings.layout) {
       case "faixas":
         return { x: (i + 0.5) / NT + gauss() * 0.03, y: 0.92 - ft * 0.84 + gauss() * 0.06 };
@@ -678,7 +685,7 @@
     if (!quiet) hintOrToast(`${item.title}${item.artist ? " — " + item.artist : ""}`);
     markRefGrid();
   }
-  const nextRef = (quiet = true) => showRef(refs.idx + 1, quiet);
+  const nextRef = (quiet = true) => advanceRef(quiet);
   function hintOrToast(msg) { show ? hint(msg, 2200) : toast(msg); }
 
   // cor da obra num ponto da tela (0..1), com recorte tipo "cover"
@@ -812,6 +819,79 @@
     $("ref-now").textContent = it ? `Agora: ${it.title}${it.artist ? " — " + it.artist : ""}` : "";
   }
 
+  // ---------- arte aleatória ao vivo ----------
+  // Porte do gerador em Python (tools/random-art.py): uma árvore aleatória de
+  // x, y, cor, sin, cos, +, −, × e ÷ (com piso no divisor). A árvore vira código
+  // JS (uma expressão por canal de cor), avaliado pixel a pixel.
+  function randomArtCanvas(seed, size = 160) {
+    for (let tries = 0; tries < 40; tries++) {
+      const R = rng(seed + tries * 7919);
+      let nodes = 0;
+      const build = (depth) => {
+        if (++nodes > 500) throw 0; // árvore grande demais: tenta outra
+        const opts = [];
+        if (depth >= 2) opts.push("c", "x", "y");
+        if (depth < 10) opts.push("sin", "cos", "add", "sub", "mul", "div");
+        const f = opts[(R() * opts.length) | 0];
+        if (f === "c") { const c = [R(), R(), R()]; return (ch) => c[ch].toFixed(4); }
+        if (f === "x" || f === "y") return () => f;
+        if (f === "sin" || f === "cos") { const a = build(depth + 1); return (ch) => `Math.${f}(${a(ch)})`; }
+        const a = build(depth + 1), b = build(depth + 1);
+        if (f === "div") return (ch) => `(${a(ch)})/Math.max(${b(ch)},0.001)`;
+        const op = { add: "+", sub: "-", mul: "*" }[f];
+        return (ch) => `(${a(ch)}${op}${b(ch)})`;
+      };
+      let tree;
+      try { tree = build(0); } catch { continue; }
+      // eslint-disable-next-line no-new-func
+      const fn = [0, 1, 2].map((ch) => new Function("x", "y", "return " + tree(ch)));
+      const c = document.createElement("canvas");
+      c.width = c.height = size;
+      const x2 = c.getContext("2d");
+      const img = x2.createImageData(size, size);
+      const d = img.data;
+      let sum = 0, sum2 = 0, sat = 0;
+      for (let py = 0; py < size; py++) {
+        const y = py / (size - 1);
+        for (let px = 0; px < size; px++) {
+          const x = px / (size - 1), o = (py * size + px) * 4;
+          let mx = 0, mn = 255;
+          for (let ch = 0; ch < 3; ch++) {
+            const v = fn[ch](x, y);
+            const b = v > 0 ? (v < 1 ? Math.round(v * 255) : 255) : 0; // NaN e negativos viram 0, como o clip do numpy
+            d[o + ch] = b; sum += b; sum2 += b * b;
+            if (b > mx) mx = b; if (b < mn) mn = b;
+          }
+          d[o + 3] = 255;
+          sat += mx - mn;
+        }
+      }
+      const n = size * size * 3, mean = sum / n, std = Math.sqrt(Math.max(0, sum2 / n - mean * mean));
+      if (std < 35 || sat / (size * size) / 255 < 0.22) continue; // chapada demais: tenta outra
+      x2.putImageData(img, 0, 0);
+      return c;
+    }
+    return null;
+  }
+  let artCount = 0;
+  // cria uma imagem nova, põe como a próxima da fila e já usa
+  async function newArtRef(quiet = true) {
+    await new Promise((r) => setTimeout(r, 0));
+    const c = randomArtCanvas((Math.random() * 1e9) | 0);
+    if (!c) return;
+    const item = { src: c.toDataURL("image/jpeg", 0.85), title: `Arte aleatória ao vivo ${++artCount}`, artist: "gerada agora" };
+    if (!refs.list.length) { refs.list = [item]; refs.idx = -1; }
+    else refs.list.splice(refs.idx + 1, 0, item);
+    renderRefGrid();
+    await showRef(refs.idx + 1, quiet);
+  }
+  const usesArt = () => settings.ref === "gerativas" || settings.ref === "tudo";
+  // trocar de obra: no conjunto "Arte aleatória" sempre nasce uma nova; no "Tudo", de vez em quando
+  function advanceRef(quiet = true) {
+    if (settings.ref === "gerativas" || (settings.ref === "tudo" && Math.random() < 0.3)) return newArtRef(quiet);
+    return showRef(refs.idx + 1, quiet);
+  }
+
   // ---------- estilo abstrato ----------
   // Nada de contorno: cada som solta "agentes" (traços, grãos, fumaça, manchas)
   // que escorrem por um campo de fluxo e vão deixando rastro na tela.
@@ -877,6 +957,13 @@
         const n = 4 + Math.round(v * 6);
         for (let i = 0; i < n; i++) push({ kind: "line", ...around(0.6), vx: (rand() - 0.5) * 0.02, vy: -0.05 - rand() * 0.05, speed: 0.05 + rand() * 0.06,
           inertia: 0.975, curl: curl * 0.5, w: 8 + rand() * 16, life: 1.2 + life * 1.2, a: 0.025 + 0.05 * v, c: tint(6), hueDrift: 25 * (rand() - 0.5) });
+        break;
+      }
+      case 8: { // BAIXO: massa grave e lenta que se arrasta perto do chão da tela
+        push({ kind: "bloom", x: X, y: Y, r0: R * 0.4, r1: R * (1.6 + s.contour), life: 0.4 + life * 0.7, a: 0.1 + 0.14 * v, c: tint(-4), drift: 0.015 });
+        const n = 3 + Math.round(v * 5);
+        for (let i = 0; i < n; i++) push({ kind: "line", ...around(0.8), vx: (rand() < 0.5 ? -1 : 1) * (0.05 + rand() * 0.06), vy: 0, speed: 0.04,
+          inertia: 0.985, w: 10 + rand() * 18, life: 0.5 + life, a: 0.035 + 0.05 * v, c: tint(-6) });
         break;
       }
       case 7: { // FX: a tela inteira reage — rasgos, zoom e riscos varrendo de lado a lado
@@ -1050,6 +1137,7 @@
   function frameBody() {
     const t = now();
     tickMusic();
+    drawTimeline();
     analyseAudio();
     drawBands();
     tickDemo(t);
@@ -1102,6 +1190,37 @@
     if (txt !== lastDomText) { $("hud-dom").textContent = txt; lastDomText = txt; }
     updatePads(dom);
 
+  }
+
+  // linha do tempo da análise (no ⚙): uma linha por instrumento e a agulha da música
+  let tlTick = 0;
+  function drawTimeline() {
+    const cv = $("timeline");
+    if (!cv || $("sheet").hidden || !music.timeline || ++tlTick % 6) return;
+    const rows = ["kick", "bass", "snare", "hat", "chord", "lead", "vocal", "fx"];
+    const w = cv.clientWidth * DPR, h = cv.clientHeight * DPR;
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    const x = cv.getContext("2d");
+    x.clearRect(0, 0, w, h);
+    const rh = h / rows.length, lab = 62 * DPR, dur = music.duration || 1;
+    x.font = `${10 * DPR}px system-ui, sans-serif`;
+    x.textBaseline = "middle";
+    rows.forEach((r, k) => {
+      x.fillStyle = "rgba(255,255,255,.55)";
+      x.fillText(VOICE_NAME[r], 0, rh * (k + 0.5));
+      x.fillStyle = "rgba(255,255,255,.06)";
+      x.fillRect(lab, rh * k + 1, w - lab, rh - 2);
+    });
+    const colors = ["#ff5a3c", "#9b6bff", "#ffb02e", "#e8e44a", "#3fb6ff", "#3fd68a", "#ff7ac8", "#ffffff"];
+    for (const e of music.timeline) {
+      const k = rows.indexOf(e.v);
+      if (k < 0) continue;
+      x.fillStyle = colors[k];
+      x.fillRect(lab + (e.t / dur) * (w - lab), rh * k + 2, Math.max(1, DPR), rh - 4);
+    }
+    const ct = music.el ? music.el.currentTime : 0;
+    x.fillStyle = "#ff6a2b";
+    x.fillRect(lab + (ct / dur) * (w - lab) - DPR, 0, 2 * DPR, h);
   }
 
   // ---------- tamanho do palco ----------
@@ -1438,7 +1557,7 @@
 
   // ---------- modo palco ----------
   let wakeLock = null, hintT = 0, idleT = 0;
-  const SHORTCUTS = "F tela cheia (Esc sai) · 1–6 trilhas · R próxima obra · G estilo · M modo · L composição · P paleta\nC limpar · S salvar imagem · D demo · A áudio · Espaço música · ? atalhos";
+  const SHORTCUTS = "F tela cheia (Esc sai) · 1–6 trilhas · R próxima obra · N nova arte aleatória · G estilo · M modo · L composição · P paleta\nC limpar · S salvar imagem · D demo · A áudio · Espaço música · ? atalhos";
 
   function enterShow() {
     if (show) return;
@@ -1532,6 +1651,7 @@
     $("sel-fid").addEventListener("change", (e) => { settings.refFid = e.target.value; save(); });
     $("chk-ref-auto").checked = settings.refAuto !== false;
     $("chk-ref-auto").addEventListener("change", (e) => { settings.refAuto = e.target.checked; save(); });
+    $("btn-new-art").addEventListener("click", () => newArtRef(false));
     $("inp-ref").addEventListener("change", (e) => { if (e.target.files.length) addUserImages([...e.target.files]); e.target.value = ""; });
     const lay = $("sel-layout"), palSel = $("sel-palette"), sty = $("sel-style");
     sty.value = settings.style;
@@ -1563,6 +1683,7 @@
       else if (k === "d") { toggleDemo(); hint(demo.on ? "Demo ligado" : "Demo desligado", 1200); }
       else if (k === "a") toggleAudio();
       else if (k === " " || k === "spacebar") { e.preventDefault(); toggleMusic(); }
+      else if (k === "n") newArtRef(false);
       else if (k === "r") { if (refs.list.length) nextRef(false); else hint("Sem referência escolhida", 1200); }
       else if (k === "?" || k === "h") hint(SHORTCUTS, 5000);
       else if (k === "escape") { if (show) leaveShow(); else closeSheet(); }

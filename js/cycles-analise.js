@@ -7,7 +7,7 @@
    batida (kick morre rápido; baixo sustenta).
 
    Saída: lista de eventos { t (s), v (voz), vel (1..127), note (midi) } com
-   v ∈ kick, snare, hat, chord, lead, vocal, fx. É uma estimativa por
+   v ∈ kick, bass, snare, hat, chord, lead, vocal, fx. É uma estimativa por
    heurística sobre o espectro — não é separação de stems. */
 (function () {
   "use strict";
@@ -126,14 +126,14 @@
     const FL = BANDS.map(() => new Float32Array(F));
     const chroma = new Float32Array(F * 12);
     const pitch = new Float32Array(F), prom = new Float32Array(F), mono = new Float32Array(F);
-    const lowC = new Float32Array(F); // centro de massa do grave (30–300 Hz): o kick "cai" de tom, o baixo não
+    const lowC = new Float32Array(F), lowPk = new Float32Array(F); // centro de massa e fundamental do grave // centro de massa do grave (30–300 Hz): o kick "cai" de tom, o baixo não
     const flatMid = new Float32Array(F), flatHigh = new Float32Array(F);
 
     for (let f = 0; f < F; f++) {
       const o = f * HOP;
       for (let i = 0; i < N; i++) { re[i] = x[o + i] * win[i]; im[i] = 0; }
       fft(re, im);
-      let pk = 0, pkI = 0, sumPL = 0, nPL = 0, lcw = 0, lcs = 0;
+      let pk = 0, pkI = 0, sumPL = 0, nPL = 0, lcw = 0, lcs = 0, lpk = 0, lpkI = 0;
       let gm = 0, am = 0, nm = 0, gh = 0, ah = 0, nh = 0;
       for (let k = 1; k < BINS; k++) {
         const mag = Math.hypot(re[k], im[k]) / N;
@@ -150,6 +150,7 @@
         if (pc >= 0) chroma[f * 12 + pc] += pw;
         const hz = k * binHz;
         if (hz >= 30 && hz <= 300) { lcw += pw * hz; lcs += pw; }
+        if (hz >= 30 && hz <= 250 && mag > lpk) { lpk = mag; lpkI = k; }
         if (hz >= 150 && hz <= 3000) { sumPL += mag; nPL++; if (mag > pk) { pk = mag; pkI = k; } }
         const l = Math.log(pw + 1e-12);
         if (hz >= 1000 && hz < 6000) { gm += l; am += pw; nm++; }
@@ -165,6 +166,11 @@
       }
       prom[f] = nPL ? pk / (sumPL / nPL + 1e-9) : 0;
       lowC[f] = lcs > 0 ? lcw / lcs : 0;
+      if (lpkI > 1) {
+        const a = Math.hypot(re[lpkI - 1], im[lpkI - 1]), b0 = Math.hypot(re[lpkI], im[lpkI]), c = Math.hypot(re[lpkI + 1], im[lpkI + 1]);
+        const den = a - 2 * b0 + c;
+        lowPk[f] = (lpkI + (den ? (0.5 * (a - c)) / den : 0)) * binHz;
+      }
       // segundo pico mais forte (longe do primeiro): acorde tem vários parecidos, lead/voz tem um que manda
       let sec = 0;
       for (let k = Math.ceil(150 / binHz); k <= Math.floor(3000 / binHz); k++) {
@@ -180,33 +186,182 @@
 
     const events = [];
     const T = (i) => i / FPS + N / 2 / SR;
+    // volume geral (pra pisos absolutos: um instrumento que não existe na música
+    // não pode "aparecer" só porque o limiar relativo a ele ficou baixo)
+    const Etot = new Float32Array(F);
+    for (let i = 0; i < F; i++) for (let b = 0; b < 6; b++) Etot[i] += E[b][i];
+    const tP = percentile(Etot, 0.9) || 1e-12;
+    const loud = (arr, i, frac) => {
+      let m = 0;
+      for (let j = i; j <= Math.min(F - 1, i + 3); j++) m = Math.max(m, arr[j]);
+      return m > tP * frac;
+    };
+    const E34 = new Float32Array(F);
+    for (let i = 0; i < F; i++) E34[i] = E[3][i] + E[4][i];
     const velOf = (v, ref) => Math.max(25, Math.min(127, Math.round(40 + 87 * Math.min(1, v / (ref || 1)))));
 
-    // ---- KICK: ataque no sub que morre rápido, forte em relação à música toda ----
-    const kickODF = FL[0];
-    const kP = percentile(kickODF, 0.995) || 1;
-    const kickIdx = peaks(kickODF, { k: 1.6, floor: kP * 0.33, gap: 0.16 }).filter((i) => {
+    // ---- KICK × BAIXO ----
+    // Os dois moram no grave. Pra cada ataque em 30–250 Hz mede o que separa um do
+    // outro: força do ataque, quanto já caiu em ~120 ms, o release (quanto tempo
+    // até sumir), o "click" do batedor em 1–6 kHz e a queda de tom. Depois divide
+    // em dois grupos DENTRO desta música (cada faixa tem seu kick e seu baixo) e,
+    // se houver uma pulsação clara, ainda considera que kick cai no tempo e o
+    // baixo costuma vir no contratempo.
+    const El = new Float32Array(F), lowODF = new Float32Array(F), clickODF = new Float32Array(F);
+    for (let i = 0; i < F; i++) { El[i] = E[0][i] + E[1][i]; lowODF[i] = FL[0][i] + FL[1][i]; clickODF[i] = FL[3][i] + FL[4][i]; }
+    const lP = percentile(lowODF, 0.995) || 1, cP = percentile(clickODF, 0.99) || 1;
+    const cand = peaks(lowODF, { k: 1.3, floor: lP * 0.2, gap: 0.09 }).map((i) => {
+      const at = (j) => El[Math.max(0, Math.min(F - 1, j))];
+      let pre = 0;
+      for (let j = i - 5; j <= i - 2; j++) pre += at(j);
+      pre /= 4;
       let top = 0;
-      for (let j = i; j < Math.min(F, i + 3); j++) top = Math.max(top, E[0][j]);
-      const later = E[0][Math.min(F - 1, i + 12)];
-      if (later > top * 0.75) return false; // não decai: baixo sustentado
-      // o tom do kick despenca logo depois do ataque; o do baixo fica parado.
-      // pula os 2 primeiros quadros (o estalo de qualquer ataque espalha o espectro)
-      const c0 = lowC[Math.min(F - 1, i + 2)], c1 = lowC[Math.min(F - 1, i + 8)];
-      return c0 > 0 && c1 > 0 && c0 / c1 > 1.2;
+      for (let j = i; j <= i + 3; j++) top = Math.max(top, at(j));
+      let rel = 0;
+      while (rel < 70 && at(i + 3 + rel) > top * 0.25) rel++;
+      // queda de tom pela fundamental (o pico do grave): no kick despenca; no baixo fica,
+      // mesmo quando a distorção some e o "centro" do som desce
+      const c0 = lowPk[Math.min(F - 1, i + 1)], c1 = lowPk[Math.min(F - 1, i + 8)];
+      return {
+        i,
+        att: Math.log((top + 1e-12) / (pre + 1e-12)),    // ataque: salto de energia
+        dec: Math.log((at(i + 10) + 1e-12) / (top + 1e-12)), // quanto caiu em ~120 ms (negativo = caiu)
+        rel,                                              // release em quadros (~12 ms)
+        click: clickODF[i] / cP,                          // batedor
+        glide: c0 > 0 && c1 > 0 ? Math.log(c0 / c1) : 0,  // queda de tom
+        harm: (() => {                                    // harmônicos em 250–1000 Hz depois do ataque: baixo tem, kick quase não
+          let h = 0, l = 0;
+          for (let j = i + 4; j <= i + 9; j++) { h += E[2][Math.min(F - 1, j)]; l += at(j); }
+          return Math.log((h + 1e-12) / (l + 1e-12));
+        })(),
+        str: lowODF[i] / lP,
+      };
     });
-    kickIdx.forEach((i) => events.push({ t: T(i), v: "kick", vel: velOf(kickODF[i], kP), note: 36 }));
+    const z = (key) => {
+      const v = cand.map((c) => c[key]);
+      const m = v.reduce((a, b) => a + b, 0) / (v.length || 1);
+      const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) * (b - m), 0) / (v.length || 1)) || 1;
+      return (c) => (c[key] - m) / sd;
+    };
+    const zAtt = z("att"), zDec = z("dec"), zRel = z("rel"), zClick = z("click"), zGlide = z("glide"), zHarm = z("harm");
+    cand.forEach((c) => {
+      c.score = 0.6 * zAtt(c) - 0.5 * zDec(c) - 0.5 * zRel(c) + 0.8 * zClick(c) + 1.0 * zGlide(c) - 0.8 * zHarm(c);
+    });
+
+    // pulsação: período pela autocorrelação dos ataques da música toda (70–180 BPM);
+    // fase: das duas posições fortes (tempo e contratempo), a que tem ataques mais "kick"
+    const grid = (() => {
+      // trem de impulsos dos ataques graves, pesado pelo quanto cada um parece kick
+      // (o kick marca o tempo; o baixo no contratempo confundiria o período)
+      const odf = new Float32Array(F);
+      cand.forEach((c) => { odf[c.i] += 1 / (1 + Math.exp(-1.5 * c.score)); });
+      const sm = new Float32Array(F);
+      for (let i = 2; i < F - 2; i++) sm[i] = 0.1 * odf[i - 2] + 0.2 * odf[i - 1] + 0.4 * odf[i] + 0.2 * odf[i + 1] + 0.1 * odf[i + 2];
+      odf.set(sm);
+      const m = odf.reduce((a, b) => a + b, 0) / (F || 1);
+      for (let i = 0; i < F; i++) odf[i] -= m;
+      const ac = (L) => { let s = 0; for (let i = 0; i + L < F; i++) s += odf[i] * odf[i + L]; return s; };
+      const lo = Math.round(FPS * 60 / 180), hi = Math.round(FPS * 60 / 70);
+      if (F < hi * 8) return null;
+      let best = 0, lag = 0;
+      for (let L = lo; L <= hi; L++) {
+        // o período certo também se repete no dobro e no compasso (4×)
+        let s = ac(L) + 0.6 * ac(2 * L) + 0.4 * ac(4 * L);
+        s *= Math.exp(-0.5 * Math.pow(Math.log2((60 * FPS / L) / 120) / 1.0, 2));
+        if (s > best) { best = s; lag = L; }
+      }
+      if (!lag || best <= 0) return null;
+      // refina o período (parábola entre os vizinhos do melhor atraso)
+      const y0 = ac(lag - 1), y1 = ac(lag), y2 = ac(lag + 1);
+      const den = y0 - 2 * y1 + y2;
+      const P = (lag + (den ? (0.5 * (y0 - y2)) / den : 0)) / FPS;
+      // pente: força dos ataques graves em cada fase
+      const comb = new Float32Array(lag);
+      const Pf = P * FPS;
+      for (let i = 0; i < F; i++) comb[Math.floor((i % Pf) / Pf * lag) % lag] += lowODF[i];
+      let ph1 = 0;
+      for (let k = 1; k < lag; k++) if (comb[k] > comb[ph1]) ph1 = k;
+      const ph2 = (ph1 + Math.round(lag / 2)) % lag;
+      // qual das duas fases é a do kick? a dos ataques com mais cara de kick
+      const kickness = (ph) => {
+        let s = 0, n = 0;
+        cand.forEach((c) => { const d = Math.abs(((c.i - ph) % Pf + Pf) % Pf); if (Math.min(d, Pf - d) <= 2) { s += c.score; n++; } });
+        return n ? s / n : -1e9;
+      };
+      const phI = kickness(ph1) >= kickness(ph2) ? ph1 : ph2;
+      return { P, phase: phI / FPS + N / 2 / SR };
+    })();
+    const onBeat = (t) => (grid ? Math.cos((2 * Math.PI * (t - grid.phase)) / grid.P) : 0); // 1 no tempo, −1 no contratempo
+    if (grid) cand.forEach((c) => (c.score += 1.2 * onBeat(T(c.i))));
+
+    // dois grupos (k-médias em 1D); se não separarem, decide pelo valor absoluto
+    let isKick = () => false;
+    if (cand.length) {
+      const sc = cand.map((c) => c.score).sort((a, b) => a - b);
+      let lo = sc[Math.floor(sc.length * 0.25)], hi = sc[Math.floor(sc.length * 0.75)];
+      for (let it = 0; it < 15; it++) {
+        const A = [], B = [];
+        sc.forEach((s) => (Math.abs(s - lo) < Math.abs(s - hi) ? A : B).push(s));
+        if (A.length) lo = A.reduce((a, b) => a + b, 0) / A.length;
+        if (B.length) hi = B.reduce((a, b) => a + b, 0) / B.length;
+      }
+      if (hi - lo > 1.2) {
+        const cut = (lo + hi) / 2;
+        isKick = (c) => c.score > cut;
+      } else {
+        const rels = cand.map((c) => c.rel).sort((a, b) => a - b), decs = cand.map((c) => c.dec).sort((a, b) => a - b);
+        const allKick = rels[rels.length >> 1] < 16 && decs[decs.length >> 1] < Math.log(0.5);
+        isKick = () => allKick;
+      }
+    }
+    const kickIdx = [];
+    cand.forEach((c) => {
+      // além de "mais kick que o resto desta música", precisa ter cara de kick em si:
+      // ataque e queda de tom (a fundamental despenca). Baixo, mesmo plucado, fica no tom.
+      const kickLike = c.att > 0.7 && c.glide > 0.15;
+      if (isKick(c) && kickLike) { kickIdx.push(c.i); events.push({ t: T(c.i), v: "kick", vel: velOf(c.str, 1), note: 36 }); }
+      else if (c.str > 0.25) events.push({ t: T(c.i), v: "bass", vel: velOf(c.str, 1), note: Math.round(69 + 12 * Math.log2(Math.max(30, lowC[Math.min(F - 1, c.i + 6)]) / 440)) });
+    });
     const kickSet = new Set();
     kickIdx.forEach((i) => { for (let d = -2; d <= 2; d++) kickSet.add(i + d); });
 
-    // ---- SNARE/CLAP: ataque ruidoso no médio + presença ----
+    // ---- SNARE/CLAP ----
+    // corpo em 1–3 kHz e mais ruído que o normal ali. Dois caminhos: ataques
+    // fortes em qualquer lugar e, havendo pulsação, os tempos em que o médio
+    // "estoura" mais que nos vizinhos (onde clap/caixa costumam cair: 2 e 4)
     const snODF = new Float32Array(F);
-    for (let i = 0; i < F; i++) snODF[i] = FL[3][i] + FL[4][i];
+    for (let i = 0; i < F; i++) snODF[i] = FL[3][i] + 0.6 * FL[4][i];
     const sP = percentile(snODF, 0.995) || 1;
-    const p3 = percentile(FL[3], 0.995) || 1;
-    // clap/caixa têm corpo em 1–3 kHz; o hi-hat mora acima de 6 kHz
-    const snIdx = peaks(snODF, { k: 1.5, floor: sP * 0.38, gap: 0.12 })
-      .filter((i) => (flatMid[i] > 0.12 || flatMid[i + 1] > 0.12) && FL[3][i] > p3 * 0.3 && FL[3][i] > FL[5][i] * 0.5);
+    const noisier = (i) => {
+      let base = 0;
+      for (let j = i - 8; j <= i - 3; j++) base += flatMid[Math.max(0, j)];
+      base /= 6;
+      return Math.max(flatMid[i], flatMid[Math.min(F - 1, i + 1)], flatMid[Math.min(F - 1, i + 2)]) > base * 1.15;
+    };
+    // fora da pulsação (onde mora o hi-hat aberto) só entra se for bem forte
+    const snIdx = peaks(snODF, { k: 1.4, floor: sP * 0.35, gap: 0.1 })
+      .filter((i) => FL[3][i] > FL[5][i] * 0.4 && (noisier(i) || flatMid[i] > 0.1))
+      // o médio-agudo precisa pesar perto do grave (ataque de baixo tem quase tudo embaixo)
+      .filter((i) => snODF[i] > 0.35 * (FL[0][i] + FL[1][i]) || kickSet.has(i))
+      .filter((i) => loud(E34, i, 0.01))
+      .filter((i) => !grid || onBeat(T(i)) > 0.5 || snODF[i] > sP * 0.75);
+    if (grid) {
+      const toI = (t) => Math.round((t - N / 2 / SR) * FPS);
+      const beats = [];
+      for (let t = grid.phase; t < F / FPS; t += grid.P) {
+        const c = toI(t);
+        let m = 0, mi = c;
+        for (let j = Math.max(0, c - 3); j <= Math.min(F - 1, c + 4); j++) if (snODF[j] > m) { m = snODF[j]; mi = j; }
+        beats.push({ m, mi });
+      }
+      beats.forEach((b, k) => {
+        const viz = beats.slice(Math.max(0, k - 8), k + 9).map((x) => x.m).sort((a, c) => a - c);
+        const med = viz[viz.length >> 1] || 0;
+        if (b.m > med * 1.45 && b.m > sP * 0.15 && FL[3][b.mi] > FL[5][b.mi] * 0.3 && !snIdx.some((i) => Math.abs(i - b.mi) < 8) &&
+            (snODF[b.mi] > 0.35 * (FL[0][b.mi] + FL[1][b.mi]) || kickSet.has(b.mi)) && loud(E34, b.mi, 0.01)) snIdx.push(b.mi);
+      });
+      snIdx.sort((a, b) => a - b);
+    }
     snIdx.forEach((i) => events.push({ t: T(i), v: "snare", vel: velOf(snODF[i], sP), note: 50 }));
     const snSet = new Set();
     snIdx.forEach((i) => { for (let d = -2; d <= 2; d++) snSet.add(i + d); });
@@ -214,7 +369,7 @@
     // ---- HI-HAT: ataque curto no agudo, ruidoso ----
     const hP = percentile(FL[5], 0.995) || 1;
     peaks(FL[5], { k: 1.2, floor: hP * 0.25, gap: 0.05 })
-      .filter((i) => !snSet.has(i) && flatHigh[i] > 0.1)
+      .filter((i) => !snSet.has(i) && flatHigh[i] > 0.1 && loud(E[5], i, 0.002))
       .forEach((i) => events.push({ t: T(i), v: "hat", vel: velOf(FL[5][i], hP), note: 90 }));
     onProgress(0.9); await pause();
 
@@ -232,7 +387,7 @@
     const hP90 = percentile(H, 0.9) || 1;
     let lastChord = -1e9;
     for (let i = LAG; i < F; i++) {
-      if (H[i] < hP90 * 0.25) continue;
+      if (H[i] < hP90 * 0.25 || H[i] < tP * 0.05 * (S + 1)) continue;
       let dot = 0, na = 0, nb = 0, mx = 0, root = 0;
       for (let p = 0; p < 12; p++) {
         const a = cs[i * 12 + p], b = cs[(i - LAG) * 12 + p];
@@ -270,7 +425,7 @@
     };
     for (let i = 1; i < F; i++) {
       if (kickSet.has(i)) continue; // o kick borra o espectro: pula sem cortar a nota
-      const active = prom[i] > 7 && mono[i] > 1.4 && midE[i] > mP * 0.15;
+      const active = prom[i] > 7 && mono[i] > 1.4 && midE[i] > mP * 0.15 && midE[i] > tP * 0.02;
       if (!active) { closeSeg(i); continue; }
       if (!seg) seg = { start: i, energy: 0 };
       else if (Math.abs(pitch[i] - pitch[i - 1]) > 0.8) { closeSeg(i); seg = { start: i, energy: 0 }; }
@@ -297,7 +452,7 @@
       const r0 = hi[i - R], r1 = hi[i - 3 * Q], r2 = hi[i - 2 * Q], r3 = hi[i - Q], r4 = hi[i];
       const rising = r1 > r0 * 1.12 && r2 > r1 * 1.12 && r3 > r2 * 1.12 && r4 > r3 * 1.12 && r4 > hiP * 0.5;
       const falling = r1 < r0 * 0.88 && r2 < r1 * 0.88 && r3 < r2 * 0.88 && r4 < r3 * 0.88 && r0 > hiP * 0.5;
-      if ((rising || falling) && fl[i] > 0.2 && i - lastFx > 0.25 * FPS) {
+      if ((rising || falling) && fl[i] > 0.2 && Math.max(r0, r4) > tP * 0.005 * (SM + 1) && i - lastFx > 0.25 * FPS) {
         events.push({ t: T(i), v: "fx", vel: rising ? Math.min(127, 60 + Math.round((r4 / (r0 + 1e-12)) * 8)) : 60, note: 84, kind: rising ? "sobe" : "desce" });
         lastFx = i;
         if (rising) riseEnd = i;
@@ -316,7 +471,7 @@
     onProgress(1);
     const count = {};
     events.forEach((e) => (count[e.v] = (count[e.v] || 0) + 1));
-    return { events, count, duration: x.length / SR };
+    return { events, count, duration: x.length / SR, bpm: grid ? 60 / grid.P : 0 };
   }
 
   window.CyclesAnalise = { analyse };

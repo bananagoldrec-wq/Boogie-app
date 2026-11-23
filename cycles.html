@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-cycles-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-cycles-512.png" />
 
-  <link rel="stylesheet" href="css/cycles.css?v=7" />
+  <link rel="stylesheet" href="css/cycles.css?v=8" />
 </head>
 <body>
   <header class="bar">
@@ -127,6 +127,7 @@
         </label>
         <label class="chk"><input type="checkbox" id="chk-ref-auto" /> Trocar de obra sozinho (16 compassos / pattern)</label>
         <p class="muted" id="ref-now"></p>
+        <button id="btn-new-art" class="btn small" type="button">Gerar arte aleatória nova (N)</button>
         <div class="ref-grid" id="ref-grid"></div>
         <label class="btn small file">Adicionar imagens minhas…<input type="file" id="inp-ref" accept="image/*" multiple hidden /></label>
         <p class="muted">Ficam só neste aparelho, em "Minhas imagens".</p>
@@ -147,6 +148,13 @@
       </section>
 
       <section>
+        <h4>O que a análise da música encontrou</h4>
+        <p class="muted">Cada risco é um instrumento detectado; a linha laranja é onde a música está. Se algo não bater
+        (ex.: kick onde é baixo), me conta o trecho.</p>
+        <canvas id="timeline" class="timeline"></canvas>
+      </section>
+
+      <section>
         <h4>Monitor MIDI</h4>
         <pre id="monitor" class="monitor">Nada recebido ainda.</pre>
       </section>
@@ -155,7 +163,7 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles-analise.js?v=1"></script>
-  <script src="js/cycles.js?v=8"></script>
+  <script src="js/cycles-analise.js?v=2"></script>
+  <script src="js/cycles.js?v=9"></script>
 </body>
 </html>
