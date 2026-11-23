@@ -474,9 +474,20 @@ o som em ecos e o reverb põe um véu de luz. Com o áudio ligado, o volume
 empurra o zoom e a frequência mexe na turbulência. O estilo **Geométrico** (a
 tabela acima) continua disponível no seletor ou na tecla **G**.
 
-**Estilos** (seletor ou tecla **G**). Em todos, o kick dá um "soco" de zoom
+**Estilos** (seletor ou tecla **G**; o número da versão aparece no ⚙). Em todos, o kick dá um "soco" de zoom
 na tela inteira.
 
+- **3D** (padrão) — cena WebGL pensada (three.js r128 embutido em
+  `js/vendor/`, carregado só quando o estilo é usado; código em
+  `js/cycles-3d.js`). No centro, uma escultura orgânica que respira (esfera
+  deformada por ruído no shader) vestida com a obra do banco; chão de malha;
+  estrelas; câmera em órbita lenta. Kick: soco de câmera (FOV), a escultura
+  incha e uma onda de choque corre pelo chão. Baixo: o chão ondula e a
+  escultura deforma por dentro. Snare: estilhaços 3D girando + clarão. Hi-hat:
+  as estrelas piscam. Lead: fita de luz orbitando na altura da nota. Chord: a
+  cor da cena muda e entra um anel gigante. Voz: halos que sobem. Drop: a
+  câmera gira e a cena relampeia. Rastro/Pintura deixam o que passou na tela.
+  Se o aparelho não tiver WebGL, volta pro Abstrato.
 - **Abstrato** — traços, grãos e manchas que escorrem num campo de fluxo (acima).
 - **Patch (Pure Data)** — formas mínimas e nítidas no preto, no espírito de um
   patch PD + GEM ligado ao Cycles por USB (`notein` por canal → `line` →

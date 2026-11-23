@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-cycles-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-cycles-512.png" />
 
-  <link rel="stylesheet" href="css/cycles.css?v=8" />
+  <link rel="stylesheet" href="css/cycles.css?v=12" />
 </head>
 <body>
   <header class="bar">
@@ -40,6 +40,7 @@
 
   <main class="stage" id="stage">
     <canvas id="paint"></canvas>
+    <canvas id="gl" hidden></canvas>
     <canvas id="live"></canvas>
 
     <div class="hud" id="hud">
@@ -76,6 +77,7 @@
         <button data-v="pintura" type="button">Pintura</button>
       </div>
       <select id="sel-style" class="sel" aria-label="Estilo">
+        <option value="3d">3D</option>
         <option value="abstrato">Abstrato</option>
         <option value="patch">Patch (Pure Data)</option>
         <option value="datamosh">Datamosh</option>
@@ -104,7 +106,7 @@
   <div class="sheet" id="sheet" hidden>
     <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
       <div class="sheet-head">
-        <h3 id="sheet-title">Ajustes</h3>
+        <h3 id="sheet-title">Ajustes <small id="ver" class="muted"></small></h3>
         <button id="sheet-close" class="btn icon" type="button" aria-label="Fechar">✕</button>
       </div>
 
@@ -165,7 +167,7 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles-analise.js?v=2"></script>
-  <script src="js/cycles.js?v=11"></script>
+  <script src="js/cycles-analise.js?v=12"></script>
+  <script src="js/cycles.js?v=12"></script>
 </body>
 </html>

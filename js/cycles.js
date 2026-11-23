@@ -39,6 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
+  const APP_VERSION = 12;
 
   // ---------- ajustes salvos ----------
   const settings = Object.assign(
@@ -51,7 +52,7 @@
       inputId: "",
       clearOnPlay: false,
       onset: true,
-      style: "abstrato",
+      style: "3d",
       showPanel: false,
       ref: "tudo",
       refFid: "media",
@@ -59,6 +60,8 @@
     load()
   );
   settings.cc = Object.assign({ ...DEFAULT_CC }, settings.cc);
+  // versão 12: o estilo 3D chega e vira o padrão (uma vez só; depois vale a escolha)
+  if ((settings.ver || 0) < 12) { settings.style = "3d"; settings.ver = 12; }
 
   const store = {
     get(k) { try { return localStorage.getItem("cycles-" + k); } catch { return null; } },
@@ -429,6 +432,11 @@
       sh.color = refBaseColor(x, y, sh.ou, sh.ov, sh.color);
     }
     if (sh.m === 0) lineGo(punch.k, [[0.4 + 0.6 * n01(vel), 12], [0, 220]]); // soco do kick
+    if (settings.style === "3d") {
+      if (gl3.ok) window.Cycles3D.hit({ m: sh.m, v: n01(vel), y: sh.y, c: sh.color, life: sh.life, kind: extra.kind });
+      if (sh.m === 1) lineGo(punch.s, [[0.18 + 0.15 * n01(vel), 10], [0, 140]]);
+      if (extra.kind === "impacto") lineGo(punch.s, [[0.8, 10], [0, 450]]);
+    }
     if (settings.style === "patch") patchHit(sh, tr);
     else if (settings.style === "datamosh") moshHit(sh, tr);
     if (settings.style !== "geometrico") {
@@ -1153,10 +1161,10 @@
   };
   // envelopes de impacto (todos os estilos): kick = soco de zoom; snare = clarão
   const punch = { k: mkLine(0), s: mkLine(0) };
-  const PUNCH_ZOOM = { datamosh: 0.07, patch: 0.035, abstrato: 0.025, geometrico: 0.02 };
+  const PUNCH_ZOOM = { datamosh: 0.07, patch: 0.035, abstrato: 0.025, geometrico: 0.02, "3d": 0 };
   function applyPunch() {
     const k = lineVal(punch.k);
-    const z = k > 0.002 ? 1 + (PUNCH_ZOOM[settings.style] || 0.02) * k : 1;
+    const z = k > 0.002 ? 1 + (PUNCH_ZOOM[settings.style] ?? 0.02) * k : 1;
     const tf = z === 1 ? "" : `scale(${z.toFixed(4)})`;
     if (paint.style.transform !== tf) paint.style.transform = tf;
   }
@@ -1452,8 +1460,38 @@
       const dim = (hasKick ? 0.42 : 0.12) * (1 - k);
       if (dim > 0.01) { lctx.fillStyle = `rgba(0,0,0,${dim.toFixed(3)})`; lctx.fillRect(0, 0, W, H); }
     }
-    const sF = lineVal(punch.s);
-    if (sF > 0.01) { lctx.fillStyle = `rgba(255,255,255,${(sF * 0.5).toFixed(3)})`; lctx.fillRect(0, 0, W, H); }
+  }
+
+  // ---------- estilo 3D (WebGL; carrega three.js embutido só quando usado) ----------
+  const gl3 = { loading: null, ok: false, tex: undefined };
+  function load3D() {
+    if (gl3.loading) return gl3.loading;
+    const add = (src) => new Promise((ok, no) => {
+      const s = document.createElement("script");
+      s.src = src; s.onload = ok; s.onerror = () => no(new Error("não carregou " + src));
+      document.head.appendChild(s);
+    });
+    gl3.loading = (window.THREE ? Promise.resolve() : add("js/vendor/three-r128.min.js"))
+      .then(() => (window.Cycles3D ? null : add("js/cycles-3d.js?v=" + APP_VERSION)))
+      .then(() => { window.Cycles3D.init($("gl")); gl3.ok = true; window.Cycles3D.resize(W, H); });
+    return gl3.loading;
+  }
+  function show3D(on) {
+    $("gl").hidden = !on;
+    paint.style.visibility = on ? "hidden" : "";
+    if (on) load3D().catch((e) => {
+      log("3D: " + (e && e.message));
+      toast("O 3D não funcionou neste aparelho (WebGL). Voltando pro Abstrato.");
+      setStyle("abstrato");
+    });
+  }
+  function frame3D(dt) {
+    if (!gl3.ok) return;
+    if (refs.cur !== gl3.tex) {
+      gl3.tex = refs.cur;
+      window.Cycles3D.setTexture(refs.cur ? (pal().dark ? refs.cur.smallLit : refs.cur.small) : null);
+    }
+    window.Cycles3D.frame(dt, settings.mode);
   }
 
   // ---------- renderização ----------
@@ -1516,7 +1554,9 @@
       if (e.vel > 8) spawn(e.tr, e.note, e.vel, "eco");
     }
     applyPunch();
-    if (settings.style === "abstrato") {
+    if (settings.style === "3d") {
+      frame3D(dtF);
+    } else if (settings.style === "abstrato") {
       frameAbstract(t);
     } else if (settings.style === "patch") {
       framePatch(t, dtF);
@@ -1547,6 +1587,10 @@
       lctx.restore();
     }
     if (!show && settings.style === "geometrico" && dom && domE > 0.02) drawAura(lctx, dom, clamp(1 - (t - dom.born) / dom.life, 0, 1));
+
+    // clarão (snare/drop) por cima de qualquer estilo
+    const sF = lineVal(punch.s);
+    if (sF > 0.01) { lctx.fillStyle = `rgba(255,255,255,${(sF * 0.5).toFixed(3)})`; lctx.fillRect(0, 0, W, H); }
 
     // HUD
     const txt = dom && domE > 0.02
@@ -1603,6 +1647,7 @@
     }
     paint.width = live.width = W = nw;
     paint.height = live.height = H = nh;
+    if (gl3.ok) window.Cycles3D.resize(W, H);
     fillBg(pctx);
     if (keep) pctx.drawImage(keep, 0, 0, W, H);
   }
@@ -1624,7 +1669,7 @@
     const out = document.createElement("canvas");
     out.width = W; out.height = H;
     const o = out.getContext("2d");
-    o.drawImage(paint, 0, 0);
+    o.drawImage(settings.style === "3d" && gl3.ok ? $("gl") : paint, 0, 0, W, H);
     if (settings.style === "geometrico" && settings.mode === "vivo") renderShapes(o, shapes, now());
     out.toBlob((blob) => {
       if (!blob) return toast("Não consegui gerar a imagem.");
@@ -1978,6 +2023,7 @@
     save();
     clearCanvas();
     mosh.base = null;
+    show3D(v === "3d");
   }
   function cycle(list, cur) { return list[(list.indexOf(cur) + 1) % list.length]; }
   const MODE_NAMES = { vivo: "Ao vivo", rastro: "Rastro", pintura: "Pintura" };
@@ -2048,7 +2094,7 @@
         settings.palette = palSel.value = cycle(list, settings.palette);
         save(); restyle();
         hint("Paleta: " + palSel.selectedOptions[0].textContent, 1200);
-      } else if (k === "g") { setStyle(cycle(["abstrato", "patch", "datamosh", "geometrico"], settings.style)); hint("Estilo: " + sty.selectedOptions[0].textContent, 1200); }
+      } else if (k === "g") { setStyle(cycle(["3d", "abstrato", "patch", "datamosh", "geometrico"], settings.style)); hint("Estilo: " + sty.selectedOptions[0].textContent, 1200); }
       else if (k === "d") { toggleDemo(); hint(demo.on ? "Demo ligado" : "Demo desligado", 1200); }
       else if (k === "a") toggleAudio();
       else if (k === " " || k === "spacebar") { e.preventDefault(); toggleMusic(); }
@@ -2063,6 +2109,8 @@
   // ---------- início ----------
   bind();
   applyPanel();
+  $("ver").textContent = "versão " + APP_VERSION;
+  if (settings.style === "3d") show3D(true);
   loadManifest();
   resize();
   setMode(settings.mode);
