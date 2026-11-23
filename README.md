@@ -474,7 +474,8 @@ o som em ecos e o reverb põe um véu de luz. Com o áudio ligado, o volume
 empurra o zoom e a frequência mexe na turbulência. O estilo **Geométrico** (a
 tabela acima) continua disponível no seletor ou na tecla **G**.
 
-**Estilos** (seletor ou tecla **G**):
+**Estilos** (seletor ou tecla **G**). Em todos, o kick dá um "soco" de zoom
+na tela inteira.
 
 - **Abstrato** — traços, grãos e manchas que escorrem num campo de fluxo (acima).
 - **Patch (Pure Data)** — formas mínimas e nítidas no preto, no espírito de um
@@ -486,13 +487,16 @@ tabela acima) continua disponível no seletor ou na tecla **G**.
   desliza até a altura da nota. Chord: cubo em arame girando em 3D (sweep =
   velocidade). Voz: círculos concêntricos. Baixo: barra no chão. Efeitos:
   linhas de varredura e glitch.
-- **Datamosh** — uma obra do banco vira o quadro-chave e depois só se move em
-  blocos, como vídeo que perdeu os quadros-chave. Kick empurra os blocos pra
-  fora, baixo derrete pra baixo, lead arrasta na horizontal, voz gira, snare
-  inverte a cor de blocos, hi-hat treme, chord deixa a obra "sangrar" de
-  volta. Trocar de obra (R, pattern, 16 compassos, drop) mistura a nova imagem
-  com o movimento da anterior. No Ao vivo a obra vai se recompondo; na
-  Pintura nunca.
+- **Datamosh** — uma obra do banco vira o quadro-chave e se move em blocos
+  guiados pelo som. O que dá impacto é o contraste: entre as batidas a obra
+  fica parada, nítida e um pouco escura; cada batida é um gesto curto que se
+  recompõe em menos de um segundo. Kick: a tela acende, dá um soco de zoom e
+  os blocos explodem pra fora. Snare/clap: clarão + blocos grandes com a cor
+  invertida. Baixo: derrete só o terço de baixo. Lead: arrasta uma faixa na
+  altura da nota. Voz: gira o miolo. Chord: a obra "sangra" de volta. Drop:
+  tudo explode e uma obra nova entra no meio do movimento. Hi-hat quase não
+  mexe (é o que mais toca). Funciona melhor com obras cheias de detalhe (Van
+  Gogh, acervo) do que com as artes aleatórias lisas.
 - **Geométrico** — o estilo original de formas por trilha.
 
 **Banco de referências:** pinturas viram a "tinta" do estilo abstrato. Cada

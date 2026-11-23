@@ -428,6 +428,7 @@
       sh.ou = (Math.random() - 0.5) * j; sh.ov = (Math.random() - 0.5) * j;
       sh.color = refBaseColor(x, y, sh.ou, sh.ov, sh.color);
     }
+    if (sh.m === 0) lineGo(punch.k, [[0.4 + 0.6 * n01(vel), 12], [0, 220]]); // soco do kick
     if (settings.style === "patch") patchHit(sh, tr);
     else if (settings.style === "datamosh") moshHit(sh, tr);
     if (settings.style !== "geometrico") {
@@ -1150,6 +1151,15 @@
     bass: { h: mkLine(0), c: { h: 200, s: 70, l: 50 } },
     squares: [], bars: [], cubes: [], rings: [], hlines: [], rects: [],
   };
+  // envelopes de impacto (todos os estilos): kick = soco de zoom; snare = clarão
+  const punch = { k: mkLine(0), s: mkLine(0) };
+  const PUNCH_ZOOM = { datamosh: 0.07, patch: 0.035, abstrato: 0.025, geometrico: 0.02 };
+  function applyPunch() {
+    const k = lineVal(punch.k);
+    const z = k > 0.002 ? 1 + (PUNCH_ZOOM[settings.style] || 0.02) * k : 1;
+    const tf = z === 1 ? "" : `scale(${z.toFixed(4)})`;
+    if (paint.style.transform !== tf) paint.style.transform = tf;
+  }
   const CUBE_V = [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]];
   const CUBE_E = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
 
@@ -1310,12 +1320,15 @@
   }
 
   // ---------- estilo Datamosh ----------
-  // Uma obra do banco vira o "quadro-chave"; depois a imagem só se move em
-  // blocos (como um vídeo que perdeu os quadros-chave), e o som dá a direção:
-  // kick empurra pra fora, baixo derrete pra baixo, lead arrasta na horizontal,
-  // voz gira, snare inverte cores, hi-hat treme. Trocar de obra mistura a nova
-  // imagem com o movimento da antiga.
-  const mosh = { cols: 24, rows: 14, vx: null, vy: null, base: null, heal: 0 };
+  // Uma obra do banco vira o "quadro-chave" e se move em blocos guiados pelo som.
+  // O que dá impacto é o CONTRASTE: entre as batidas a obra fica parada, nítida
+  // e um pouco escura; cada batida é um gesto curto e claro que logo se recompõe.
+  //   kick  → a tela acende, dá um soco de zoom e os blocos explodem pra fora
+  //   snare → clarão + blocos grandes com a cor invertida
+  //   baixo → derrete só o terço de baixo · lead → arrasta uma faixa na altura da nota
+  //   voz   → gira o miolo · chord → a obra "sangra" de volta · drop → obra nova entra no meio do movimento
+  //   hi-hat quase não mexe (é o que mais toca; mexendo sempre, vira bagunça)
+  const mosh = { cols: 16, rows: 9, vx: null, vy: null, base: null, lastHat: 0, lastKick: -99 };
   function moshInit() {
     const n = mosh.cols * mosh.rows;
     if (!mosh.vx || mosh.vx.length !== n) { mosh.vx = new Float32Array(n); mosh.vy = new Float32Array(n); }
@@ -1334,54 +1347,93 @@
     pctx.restore();
     return true;
   }
-  function moshField(fn) {
+  // soma um campo de movimento; `where` limita a região (devolve 0..1 de peso)
+  function moshField(fn, where = () => 1) {
     moshInit();
     for (let r = 0; r < mosh.rows; r++) for (let c = 0; c < mosh.cols; c++) {
-      const k = r * mosh.cols + c;
-      const [vx, vy] = fn((c + 0.5) / mosh.cols, (r + 0.5) / mosh.rows);
-      mosh.vx[k] += vx; mosh.vy[k] += vy;
+      const x = (c + 0.5) / mosh.cols, y = (r + 0.5) / mosh.rows, w = where(x, y);
+      if (w <= 0) continue;
+      const k = r * mosh.cols + c, [vx, vy] = fn(x, y);
+      mosh.vx[k] += vx * w; mosh.vy[k] += vy * w;
     }
   }
+  function invertBlocks(n, color) {
+    const bw = W / mosh.cols, bh = H / mosh.rows;
+    pctx.save();
+    pctx.globalCompositeOperation = "difference";
+    pctx.fillStyle = color;
+    for (let i = 0; i < n; i++) {
+      const cw = 2 + ((Math.random() * 5) | 0), ch = 1 + ((Math.random() * 2) | 0);
+      const c0 = (Math.random() * (mosh.cols - cw + 1)) | 0, r0 = (Math.random() * (mosh.rows - ch + 1)) | 0;
+      pctx.fillRect(c0 * bw, r0 * bh, cw * bw, ch * bh);
+    }
+    pctx.restore();
+  }
   function moshHit(s, tr) {
-    const v = n01(s.vel), sp = (2 + 10 * v) * DPR;
+    const v = n01(s.vel), U = Math.min(W, H) / 100; // U = 1% da tela
     switch (s.m) {
-      case 0: moshField((x, y) => { const dx = x - 0.5, dy = y - 0.5, d = Math.hypot(dx, dy) + 0.05; return [(dx / d) * sp, (dy / d) * sp]; }); break; // kick: pra fora
-      case 8: moshField((x, y) => [0, sp * 0.6 * (0.5 + Math.random())]); break;                                                        // baixo: derrete
-      case 4: { const yy = s.y, dir = Math.random() < 0.5 ? -1 : 1; moshField((x, y) => [Math.abs(y - yy) < 0.12 ? dir * sp * 1.4 : 0, 0]); break; } // lead: arrasta
-      case 6: { const cx = s.x, cy = s.y; moshField((x, y) => { const dx = x - cx, dy = y - cy; return [-dy * sp * 2, dx * sp * 2]; }); break; } // voz: gira
-      case 1: // snare: blocos com a cor invertida + empurrões aleatórios
-        moshInit();
-        pctx.save(); pctx.globalCompositeOperation = "difference";
-        for (let i = 0; i < 4 + v * 10; i++) {
-          const k = (Math.random() * mosh.vx.length) | 0;
-          mosh.vx[k] += (Math.random() - 0.5) * sp * 4; mosh.vy[k] += (Math.random() - 0.5) * sp * 4;
-          const bw = W / mosh.cols, bh = H / mosh.rows;
-          pctx.fillStyle = hsla(s.color, 0.9);
-          pctx.fillRect((k % mosh.cols) * bw, Math.floor(k / mosh.cols) * bh, bw * (1 + ((Math.random() * 3) | 0)), bh);
-        }
-        pctx.restore();
+      case 0: { // KICK: explosão radial forte e curta
+        const sp = (2.5 + 6 * v) * U;
+        moshField((x, y) => { const dx = x - 0.5, dy = (y - 0.5) * (H / W), d = Math.hypot(dx, dy) + 0.04; return [(dx / d) * sp, (dy / d) * sp]; });
+        mosh.lastKick = now();
         break;
-      case 2: moshInit(); for (let i = 0; i < 6 + v * 10; i++) { const k = (Math.random() * mosh.vx.length) | 0; mosh.vx[k] += (Math.random() - 0.5) * sp; mosh.vy[k] += (Math.random() - 0.5) * sp; } break; // hat: treme
-      case 5: moshKeyframe(0.12 + 0.2 * v); break;   // chords: a obra volta um pouco (cores sangram)
-      case 7: fx.glitch = Math.max(fx.glitch, 0.6 + 0.4 * v); moshField(() => [(Math.random() - 0.5) * sp * 3, (Math.random() - 0.5) * sp]); break;
-      default: moshField(() => [(Math.random() - 0.5) * sp, (Math.random() - 0.5) * sp]);
+      }
+      case 1: // SNARE/CLAP: clarão + blocos invertidos grandes
+        invertBlocks(2 + Math.round(v * 4), "#fff");
+        lineGo(punch.s, [[0.35 + 0.4 * v, 10], [0, 160]]);
+        break;
+      case 2: // HI-HAT: só os fortes, no máximo 4 por segundo, e pouquinho
+        if (v > 0.7 && now() - mosh.lastHat > 0.25) {
+          mosh.lastHat = now();
+          moshInit();
+          const k = (Math.random() * mosh.vx.length) | 0;
+          mosh.vx[k] += (Math.random() - 0.5) * 3 * U;
+        }
+        break;
+      case 8: { // BAIXO: derrete o terço de baixo
+        const sp = (1 + 3 * v) * U;
+        moshField(() => [0, sp * (0.6 + Math.random() * 0.8)], (x, y) => (y > 0.62 ? (y - 0.62) / 0.38 + 0.3 : 0));
+        break;
+      }
+      case 4: { // LEAD: arrasta uma faixa na altura da nota
+        const yy = s.y, dir = Math.random() < 0.5 ? -1 : 1, sp = (2 + 4 * v) * U;
+        moshField(() => [dir * sp, 0], (x, y) => Math.max(0, 1 - Math.abs(y - yy) / 0.12));
+        break;
+      }
+      case 6: { // VOZ: gira o miolo
+        const sp = (2 + 3 * v) * U;
+        moshField((x, y) => [-(y - 0.5) * sp * 4, (x - 0.5) * sp * 4], (x, y) => Math.max(0, 1 - Math.hypot(x - 0.5, (y - 0.5) * (H / W)) / 0.3));
+        break;
+      }
+      case 5: moshKeyframe(0.25 + 0.2 * v); break; // CHORD: a obra sangra de volta
+      case 7: // EFEITOS: no drop, tudo explode e uma obra nova entra no meio do movimento
+        if (s.kind === "impacto") {
+          moshField((x, y) => { const dx = x - 0.5, dy = y - 0.5, d = Math.hypot(dx, dy) + 0.04; return [(dx / d) * 9 * U, (dy / d) * 9 * U]; });
+          lineGo(punch.s, [[0.9, 10], [0, 400]]);
+          if (!usesArt()) nextRef();
+        } else {
+          fx.glitch = Math.max(fx.glitch, 0.3 + 0.4 * v);
+        }
+        break;
+      default: break; // PERC e outros: nada (menos é mais)
     }
   }
   function frameMosh(t, dt) {
     moshInit();
     // obra nova: entra misturada, carregando o movimento que já existia (o "mosh")
     if (refs.cur && refs.cur !== mosh.base) {
-      moshKeyframe(mosh.base && mosh.base !== "esperando" ? 0.55 : 1);
+      moshKeyframe(mosh.base && mosh.base !== "esperando" ? 0.6 : 1);
       mosh.base = refs.cur;
     }
     if (!refs.cur && !mosh.base) { fillBg(pctx, 1); newArtRef(); mosh.base = "esperando"; }
     const mode = settings.mode;
-    // "cura": a obra vai voltando aos poucos (no ao vivo mais rápido; na pintura nunca)
-    const heal = mode === "vivo" ? 0.025 : mode === "rastro" ? 0.008 : 0;
-    if (heal && mosh.base && mosh.base !== "esperando") moshKeyframe(heal);
+    // cura: a obra volta rápido no ao vivo (é o que faz a próxima batida aparecer); na pintura nunca
+    const heal = (mode === "vivo" ? 0.07 : mode === "rastro" ? 0.02 : 0) * dt * 60;
+    if (heal && mosh.base && mosh.base !== "esperando") moshKeyframe(Math.min(1, heal));
     const bw = W / mosh.cols, bh = H / mosh.rows;
     const src = snapshot();
-    const decay = Math.pow(mode === "vivo" ? 0.9 : mode === "rastro" ? 0.94 : 0.965, dt * 60);
+    // movimento curto: some em ~0,2 s no ao vivo
+    const decay = Math.pow(mode === "vivo" ? 0.8 : mode === "rastro" ? 0.88 : 0.93, dt * 60);
     for (let r = 0; r < mosh.rows; r++) for (let c = 0; c < mosh.cols; c++) {
       const k = r * mosh.cols + c;
       const vx = mosh.vx[k], vy = mosh.vy[k];
@@ -1394,6 +1446,14 @@
       mosh.vx[k] = vx * decay; mosh.vy[k] = vy * decay;
     }
     applyGlitch();
+    // respiração: em repouso a obra fica mais escura; o kick acende (só se a música tem kick)
+    if (mode !== "pintura") {
+      const k = lineVal(punch.k), hasKick = t - mosh.lastKick < 3;
+      const dim = (hasKick ? 0.42 : 0.12) * (1 - k);
+      if (dim > 0.01) { lctx.fillStyle = `rgba(0,0,0,${dim.toFixed(3)})`; lctx.fillRect(0, 0, W, H); }
+    }
+    const sF = lineVal(punch.s);
+    if (sF > 0.01) { lctx.fillStyle = `rgba(255,255,255,${(sF * 0.5).toFixed(3)})`; lctx.fillRect(0, 0, W, H); }
   }
 
   // ---------- renderização ----------
@@ -1455,6 +1515,7 @@
       const e = echoQueue.shift();
       if (e.vel > 8) spawn(e.tr, e.note, e.vel, "eco");
     }
+    applyPunch();
     if (settings.style === "abstrato") {
       frameAbstract(t);
     } else if (settings.style === "patch") {
