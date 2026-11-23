@@ -508,12 +508,19 @@ Livre (pan), Faixas (uma coluna por trilha), Radial e Grade (16 passos × 6
 trilhas, seguindo o clock). **Paletas:** Espectro, Neon, Boogie e Papel.
 **Salvar imagem** baixa um PNG e guarda a miniatura embaixo (só nesta sessão).
 
+**Música de teste:** o botão **Música** toca um arquivo do aparelho (MP3,
+M4A, WAV…) e gera as imagens a partir dele, sem precisar do Cycles. Cada
+faixa de frequência tem seu detector de batidas: grave vira KICK, médio vira
+SNARE/PERC (ou TONE quando tem nota definida), agudo vira METAL, e grave + médio
+juntos de vez em quando viram CHORD. A cor vem da nota mais forte daquela
+faixa. **Espaço** pausa/continua; ⏏ troca a música. Ela fica em loop.
+
 **Palco (projeção):** o botão **Palco** (ou a tecla **F**, ou dois cliques na
 tela) entra em tela cheia só com o fundo preto e as imagens: sem barras,
 botões, textos nem contorno do "mais alto", e o cursor some quando o mouse
 para. A tela também não apaga sozinha durante o show. **Esc** sai. Tudo se controla
 pelo teclado sem abrir nada: **1–6** trilhas, **R** próxima obra, **G** estilo, **M** modo, **L** composição,
-**P** paleta, **C** limpar, **S** salvar imagem, **D** demo, **A** áudio,
+**P** paleta, **C** limpar, **S** salvar imagem, **D** demo, **A** áudio, **Espaço** música,
 **?** mostra os atalhos. Ao apertar uma tecla aparece só um aviso pequeno no
 canto, que some em seguida. No palco o fundo é sempre preto (a paleta Papel
 vira Espectro). Com notebook + projetor: arraste a janela pro projetor (ou

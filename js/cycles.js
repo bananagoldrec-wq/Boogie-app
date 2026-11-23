@@ -141,37 +141,82 @@
     rms: 0, slow: 0, hz: 0, bands: [0, 0, 0], tonal: 0, lastOnset: 0,
   };
 
+  // um só AudioContext + analisador; entram nele o microfone/linha e/ou uma música
+  function ensureCtx() {
+    if (!audio.ctx) {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const an = ctx.createAnalyser();
+      an.fftSize = 2048;
+      an.smoothingTimeConstant = 0.5;
+      Object.assign(audio, { ctx, an, td: new Float32Array(an.fftSize), fd: new Float32Array(an.frequencyBinCount) });
+    }
+    if (audio.ctx.state === "suspended") audio.ctx.resume();
+    return audio.ctx;
+  }
+  function audioStatus() {
+    audio.on = !!(audio.stream || (music.el && !music.el.paused));
+    $("bands").hidden = !audio.on;
+    if (music.el && !music.el.paused) setPill("st-audio", "♪ " + music.name, "on");
+    else if (audio.stream) setPill("st-audio", "Áudio ligado", "on");
+    else setPill("st-audio", music.name ? "♪ pausada" : "Áudio desligado", "");
+    $("btn-audio").classList.toggle("on", !!audio.stream);
+    $("btn-music").classList.toggle("on", !!(music.el && !music.el.paused));
+    $("btn-music").textContent = !music.name ? "Música" : music.el.paused ? "▶ Música" : "❚❚ Música";
+    $("btn-music-pick").hidden = !music.name;
+  }
+
   async function toggleAudio() {
-    if (audio.on) {
+    if (audio.stream) {
       audio.stream.getTracks().forEach((t) => t.stop());
-      audio.ctx.close();
-      audio.on = false;
-      $("bands").hidden = true;
-      setPill("st-audio", "Áudio desligado", "");
-      $("btn-audio").classList.remove("on");
+      audio.mic.disconnect();
+      audio.stream = null;
+      audioStatus();
       return;
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
       });
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const src = ctx.createMediaStreamSource(stream);
-      const an = ctx.createAnalyser();
-      an.fftSize = 2048;
-      an.smoothingTimeConstant = 0.5;
-      src.connect(an);
-      Object.assign(audio, {
-        on: true, ctx, an, stream,
-        td: new Float32Array(an.fftSize), fd: new Float32Array(an.frequencyBinCount),
-      });
-      $("bands").hidden = false;
-      setPill("st-audio", "Áudio ligado", "on");
-      $("btn-audio").classList.add("on");
+      const ctx = ensureCtx();
+      audio.mic = ctx.createMediaStreamSource(stream);
+      audio.mic.connect(audio.an); // só analisa, não toca de volta (sem microfonia)
+      audio.stream = stream;
+      audioStatus();
       toast("Áudio ligado: ligue a saída do Cycles na entrada de linha (ou deixe o microfone ouvir).");
     } catch (err) {
       toast("Não deu pra abrir o áudio: " + (err.message || err));
     }
+  }
+
+  // ---------- música de teste (arquivo do aparelho) ----------
+  const music = { el: null, src: null, url: "", name: "" };
+  function pickMusic() { $("inp-music").click(); }
+  function loadMusic(file) {
+    const ctx = ensureCtx();
+    if (!music.el) {
+      music.el = new Audio();
+      music.el.loop = true;
+      music.el.preload = "auto";
+      music.src = ctx.createMediaElementSource(music.el);
+      music.src.connect(audio.an);
+      music.src.connect(ctx.destination); // e toca nas caixas
+      ["play", "pause", "ended"].forEach((ev) => music.el.addEventListener(ev, audioStatus));
+      music.el.addEventListener("error", () => toast("Esse arquivo não tocou aqui. Tente MP3, M4A ou WAV."));
+    }
+    if (music.url) URL.revokeObjectURL(music.url);
+    music.url = URL.createObjectURL(file);
+    music.name = file.name.replace(/\.[^.]+$/, "");
+    music.el.src = music.url;
+    if (demo.on) stopDemo();
+    $("empty").hidden = true;
+    music.el.play().then(() => toast(`Tocando: ${music.name}. Espaço pausa.`)).catch((e) => toast("Não deu pra tocar: " + (e.message || e)));
+    audioStatus();
+  }
+  function toggleMusic() {
+    if (!music.name) return pickMusic();
+    ensureCtx();
+    if (music.el.paused) music.el.play(); else music.el.pause();
+    if (show) hint(music.el.paused ? "Música pausada" : "♪ " + music.name, 1200);
   }
 
   function analyseAudio() {
@@ -187,29 +232,50 @@
     an.getFloatFrequencyData(fd);
     const binHz = audio.ctx.sampleRate / an.fftSize;
     let peak = 0, peakI = 0, total = 0;
-    const b = [0, 0, 0];
+    const b = [0, 0, 0], bp = [0, 0, 0], bpi = [1, 1, 1];
     for (let i = 1; i < fd.length; i++) {
       const hz = i * binHz;
       if (hz < 25 || hz > 12000) continue;
       const p = Math.pow(10, fd[i] / 10);
       total += p;
       if (p > peak) { peak = p; peakI = i; }
-      b[hz < 250 ? 0 : hz < 2000 ? 1 : 2] += p;
+      const k = hz < 250 ? 0 : hz < 2000 ? 1 : 2;
+      b[k] += p;
+      if (p > bp[k]) { bp[k] = p; bpi[k] = i; }
     }
     audio.hz = peakI * binHz;
     audio.tonal = total ? peak / total : 0;
     const max = Math.max(b[0], b[1], b[2], 1e-12);
     audio.bands = b.map((v) => v / max);
 
-    // batidas pelo áudio, quando não chega MIDI
+    // batidas pelo áudio (quando não chega MIDI): cada faixa de frequência tem
+    // seu próprio detector — grave vira KICK, médio vira SNARE/PERC/TONE, agudo vira METAL
     const t = now();
-    if (settings.onset && t - lastMidiNote > 3 && t - audio.lastOnset > 0.09 &&
-        rms > 0.02 && rms > audio.slow * 1.8) {
-      audio.lastOnset = t;
-      const top = audio.bands.indexOf(1);
-      let tr = top === 0 ? 0 : top === 2 ? 2 : (audio.hz < 900 ? 3 : 1);
-      if (audio.tonal > 0.12 && top !== 0) tr = 4;
-      spawn(tr, null, clamp(Math.round(rms * 380), 20, 127), "audio");
+    const playing = music.el && !music.el.paused;
+    if (!(settings.onset || playing) || t - lastMidiNote < 3 || rms < 0.008) {
+      audio.bandSlow = audio.bandSlow || [0, 0, 0];
+      return;
+    }
+    const e = b.map(Math.sqrt);
+    const slow = audio.bandSlow || (audio.bandSlow = e.slice());
+    const last = audio.bandLast || (audio.bandLast = [0, 0, 0]);
+    const TH = [1.35, 1.4, 1.5], REF = [0.2, 0.12, 0.09];
+    const hit = [false, false, false];
+    for (let i = 0; i < 3; i++) {
+      const ratio = slow[i] > 0 ? e[i] / slow[i] : 0;
+      if (ratio > TH[i] && t - last[i] > REF[i]) {
+        hit[i] = true;
+        last[i] = t;
+        const vel = clamp(Math.round(35 + (ratio - 1) * 110 + rms * 160), 20, 127);
+        const note = 69 + 12 * Math.log2(Math.max(20, bpi[i] * binHz) / 440);
+        let tr = i === 0 ? 0 : i === 2 ? 2 : audio.tonal > 0.1 ? 4 : bpi[1] * binHz < 900 ? 3 : 1;
+        spawn(tr, note, vel, "audio");
+      }
+      slow[i] = slow[i] * 0.94 + e[i] * 0.06;
+    }
+    // grave + médio juntos e com tom definido → um acorde (mancha de cor) de vez em quando
+    if (hit[0] && hit[1] && audio.tonal > 0.05 && Math.random() < 0.5) {
+      spawn(5, 69 + 12 * Math.log2(Math.max(40, audio.hz) / 440), 80, "audio");
     }
   }
 
@@ -238,7 +304,7 @@
 
     const effNote = note + (tr.pitch - 64) / 2.5;
     let hz = noteHz(effNote);
-    if (audio.on && audio.rms > 0.01 && audio.hz) hz = audio.hz;
+    if (source === "midi" && audio.on && audio.rms > 0.01 && audio.hz) hz = audio.hz; // o Cycles soando de verdade
     const ft = hzT(hz);
 
     const v = n01(vel);
@@ -1258,7 +1324,7 @@
 
   // ---------- modo palco ----------
   let wakeLock = null, hintT = 0, idleT = 0;
-  const SHORTCUTS = "F palco (Esc sai) · 1–6 trilhas · R próxima obra · G estilo · M modo · L composição · P paleta\nC limpar · S salvar imagem · D demo · A áudio · ? atalhos";
+  const SHORTCUTS = "F palco (Esc sai) · 1–6 trilhas · R próxima obra · G estilo · M modo · L composição · P paleta\nC limpar · S salvar imagem · D demo · A áudio · Espaço música · ? atalhos";
 
   function enterShow() {
     if (show) return;
@@ -1316,6 +1382,9 @@
     stage.addEventListener("dblclick", () => (show ? leaveShow() : enterShow()));
     $("btn-midi").addEventListener("click", connectMidi);
     $("btn-audio").addEventListener("click", toggleAudio);
+    $("btn-music").addEventListener("click", toggleMusic);
+    $("btn-music-pick").addEventListener("click", pickMusic);
+    $("inp-music").addEventListener("change", (e) => { if (e.target.files[0]) loadMusic(e.target.files[0]); e.target.value = ""; });
     $("btn-demo").addEventListener("click", toggleDemo);
     $("btn-settings").addEventListener("click", openSheet);
     $("sheet-close").addEventListener("click", closeSheet);
@@ -1362,6 +1431,7 @@
       } else if (k === "g") { setStyle(settings.style === "abstrato" ? "geometrico" : "abstrato"); hint("Estilo: " + sty.selectedOptions[0].textContent, 1200); }
       else if (k === "d") { toggleDemo(); hint(demo.on ? "Demo ligado" : "Demo desligado", 1200); }
       else if (k === "a") toggleAudio();
+      else if (k === " " || k === "spacebar") { e.preventDefault(); toggleMusic(); }
       else if (k === "r") { if (refs.list.length) nextRef(false); else hint("Sem referência escolhida", 1200); }
       else if (k === "?" || k === "h") hint(SHORTCUTS, 5000);
       else if (k === "escape") { if (show) leaveShow(); else closeSheet(); }
