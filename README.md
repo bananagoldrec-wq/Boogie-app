@@ -436,3 +436,51 @@ Listas de tarefas simples, com visual de app da Apple (Lembretes). Abre em
 Fica salvo **só no aparelho** (`localStorage`, chave `tarefas-v1`) — sem
 login e sem nuvem, funciona offline. Ao mexer em `js/tarefas.js` ou
 `css/tarefas.css`, suba o `?v=` do `tarefas.html`.
+
+---
+
+# 🎛️ Cycles Visual
+
+Transforma o que você toca no **Elektron Model:Cycles** em imagens. Abre em
+`cycles.html`. Precisa de **Chrome ou Edge** (computador ou Android), porque
+usa Web MIDI; Safari/iPhone não tem.
+
+**Ligar:** Cycles no USB → *Settings → MIDI Config → Port Config*: *Output To*
+USB, *Output CC/NRPN* ligado (pra mandar os knobs). No app, **Conectar MIDI**
+(acha o Cycles sozinho) e dá play. Sem o aparelho, **Demo** toca um padrão
+de teste, e os pads 1–6 (ou as teclas 1–6) disparam cada trilha.
+
+**Como o som vira imagem** — cada trig é uma forma:
+
+| Do Cycles | Na imagem |
+| --- | --- |
+| Trilha / máquina | formato: KICK círculo com anéis · SNARE quadrado com grãos · METAL estrela · PERC polígono · TONE anel ondulado · CHORD três formas sobrepostas |
+| Velocity × track level × volume | tamanho e opacidade |
+| Frequência (nota + pitch, ou o pico real do áudio) | cor (grave = quente, agudo = frio) e altura na tela |
+| Decay | quanto tempo a forma dura |
+| Color / Shape | detalhes (grãos, nº de pontas/lados, ondas) |
+| Sweep / Contour | giro / anéis |
+| Pan | posição horizontal (composição "Livre") |
+| Reverb / Delay send | brilho / ecos |
+
+A forma com mais energia ganha um contorno tracejado e aparece em **"Mais alto
+agora"**, com trilha, velocity, Hz e nota.
+
+**Áudio (opcional):** o MIDI não leva o som, só as notas. Ligue a saída do
+Cycles na entrada de linha do computador e toque em **Áudio**: o tamanho passa
+a seguir o volume real, a cor segue a frequência de pico de verdade, e aparecem
+as barras Graves/Médios/Agudos destacando a mais alta. Sem MIDI chegando, o
+app também cria formas pelas batidas do áudio (dá pra desligar nos ajustes).
+
+**Modos:** *Ao vivo* (formas aparecem e somem), *Rastro* (deixam rastro) e
+*Pintura* (cada trig fica carimbado: a música vira um quadro). **Composição:**
+Livre (pan), Faixas (uma coluna por trilha), Radial e Grade (16 passos × 6
+trilhas, seguindo o clock). **Paletas:** Espectro, Neon, Boogie e Papel.
+**Salvar imagem** baixa um PNG e guarda a miniatura embaixo (só nesta sessão).
+
+**Ajustes (⚙):** canal MIDI de cada trilha (padrão 1–6), número do CC de cada
+parâmetro com botão **Aprender** (mexe o knob e ele pega), e um monitor do MIDI
+que está chegando. Os CCs padrão vêm do mapa do Model:Cycles; se algum knob não
+reagir, use Aprender. Ajustes ficam no aparelho (`localStorage`, chave
+`cycles-visual-v1`). Ao mexer em `js/cycles.js` ou `css/cycles.css`, suba o
+`?v=` do `cycles.html`.
