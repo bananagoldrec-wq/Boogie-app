@@ -463,7 +463,18 @@ de teste, e os pads 1–6 (ou as teclas 1–6) disparam cada trilha.
 | Pan | posição horizontal (composição "Livre") |
 | Reverb / Delay send | brilho / ecos |
 
-A forma com mais energia ganha um contorno tracejado e aparece em **"Mais alto
+**Estilo Abstrato (padrão):** em vez de formas, cada som solta traços, grãos,
+fumaça e manchas de luz sem borda, que escorrem por um campo de fluxo. A tela
+inteira se realimenta: a imagem anterior volta levemente ampliada e girada, então
+tudo escorre. KICK = sopro de luz e a tela "puxa" pra frente · SNARE = grãos e
+rasgos de glitch na imagem · METAL = filamentos finíssimos · PERC = manchas de
+tinta · TONE = fitas longas que se enrolam · CHORD = lavagens de cor. Shape deixa
+o fluxo mais turbulento, sweep enrola, color espalha as cores, o delay devolve
+o som em ecos e o reverb põe um véu de luz. Com o áudio ligado, o volume
+empurra o zoom e a frequência mexe na turbulência. O estilo **Geométrico** (a
+tabela acima) continua disponível no seletor ou na tecla **G**.
+
+No estilo Geométrico, a forma com mais energia ganha um contorno tracejado e aparece em **"Mais alto
 agora"**, com trilha, velocity, Hz e nota.
 
 **Áudio (opcional):** o MIDI não leva o som, só as notas. Ligue a saída do
@@ -482,7 +493,7 @@ trilhas, seguindo o clock). **Paletas:** Espectro, Neon, Boogie e Papel.
 tela) entra em tela cheia só com o fundo preto e as imagens: sem barras,
 botões, textos nem contorno do "mais alto", e o cursor some quando o mouse
 para. A tela também não apaga sozinha durante o show. **Esc** sai. Tudo se controla
-pelo teclado sem abrir nada: **1–6** trilhas, **M** modo, **L** composição,
+pelo teclado sem abrir nada: **1–6** trilhas, **G** estilo, **M** modo, **L** composição,
 **P** paleta, **C** limpar, **S** salvar imagem, **D** demo, **A** áudio,
 **?** mostra os atalhos. Ao apertar uma tecla aparece só um aviso pequeno no
 canto, que some em seguida. No palco o fundo é sempre preto (a paleta Papel

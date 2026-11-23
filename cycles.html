@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-cycles-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-cycles-512.png" />
 
-  <link rel="stylesheet" href="css/cycles.css?v=2" />
+  <link rel="stylesheet" href="css/cycles.css?v=3" />
 </head>
 <body>
   <header class="bar">
@@ -71,6 +71,10 @@
         <button data-v="rastro" type="button">Rastro</button>
         <button data-v="pintura" type="button">Pintura</button>
       </div>
+      <select id="sel-style" class="sel" aria-label="Estilo">
+        <option value="abstrato">Abstrato</option>
+        <option value="geometrico">Geométrico</option>
+      </select>
       <select id="sel-layout" class="sel" aria-label="Composição">
         <option value="livre">Livre (pan)</option>
         <option value="faixas">Faixas</option>
@@ -127,6 +131,6 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles.js?v=2"></script>
+  <script src="js/cycles.js?v=3"></script>
 </body>
 </html>

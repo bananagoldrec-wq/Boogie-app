@@ -50,6 +50,7 @@
       inputId: "",
       clearOnPlay: false,
       onset: true,
+      style: "abstrato",
     },
     load()
   );
@@ -259,6 +260,15 @@
       seed: (Math.random() * 1e9) | 0,
       stamped: false,
     });
+    if (settings.style === "abstrato") {
+      abstractBurst(shapes[shapes.length - 1], tr);
+      // delay send: o som "volta" em ecos mais fracos, em outro lugar da tela
+      if (source !== "eco" && tr.delay > 10 && vel > 25) {
+        const gap = clock.bpm ? (60 / clock.bpm) * 0.75 : 0.28;
+        const n = 1 + Math.round(n01(tr.delay) * 2);
+        for (let i = 1; i <= n; i++) echoQueue.push({ at: t + gap * i, tr: trIndex, note, vel: Math.round(vel * Math.pow(0.55, i)) });
+      }
+    }
     if (shapes.length > 600) shapes.splice(0, shapes.length - 600);
     flashPad(trIndex, vel);
     $("empty").hidden = true;
@@ -421,6 +431,176 @@
     ctx.restore();
   }
 
+  // ---------- estilo abstrato ----------
+  // Nada de contorno: cada som solta "agentes" (traços, grãos, fumaça, manchas)
+  // que escorrem por um campo de fluxo e vão deixando rastro na tela.
+  let agents = [];
+  let echoQueue = [];
+  const fx = { zoom: 0, glitch: 0 };
+
+  function flowAngle(x, y, t, turb) {
+    const f = 1.5 + turb * 7;
+    return Math.sin(x * f + t * 0.35) * 2.4 + Math.cos(y * f * 1.3 - t * 0.27) * 2.4 + Math.sin((x - y) * f * 0.7 + t * 0.15) * 1.6;
+  }
+
+  function abstractBurst(s, tr) {
+    const rand = rng(s.seed);
+    const v = n01(s.vel);
+    const md = Math.min(W, H);
+    const X = s.x * W, Y = s.y * H, R = s.r * md * 1.7;
+    const spread = 20 + s.sat * 100; // color → quanto as cores se espalham
+    const life = s.life;
+    const curl = (n01(tr.sweep) - 0.3) * 2.2;
+    const tint = (dl = 0) => ({ h: s.color.h + (rand() - 0.5) * spread, s: s.color.s, l: clamp(s.color.l + dl + (rand() - 0.5) * 14, 5, 95) });
+    const around = (k) => ({ x: X + (rand() - 0.5) * R * k, y: Y + (rand() - 0.5) * R * k });
+    const push = (o) => agents.push(Object.assign({ age: 0, vx: 0, vy: 0, inertia: 0.9, curl, turb: s.shape }, o));
+    const dir = (sp) => { const a = rand() * Math.PI * 2; return { vx: Math.cos(a) * sp, vy: Math.sin(a) * sp }; };
+
+    switch (s.m) {
+      case 0: { // KICK: um sopro de luz sem borda + fumaça; a tela inteira "puxa"
+        push({ kind: "bloom", x: X, y: Y, r0: R * 0.2, r1: R * (2 + s.contour * 2.5), life: life * 0.7 + 0.35, a: 0.16 + 0.3 * v, c: tint(), drift: 0.02 });
+        const n = 8 + Math.round(v * 26);
+        for (let i = 0; i < n; i++) push({ kind: "line", ...around(0.5), ...dir(0.04 + rand() * 0.1), speed: 0.06 + rand() * 0.1, inertia: 0.9,
+          w: 2 + rand() * 6 * (0.4 + s.contour), life: 0.8 + life * (0.6 + rand()), a: 0.05 + 0.1 * v, c: tint(-5) });
+        fx.zoom = Math.min(0.05, fx.zoom + 0.014 * v);
+        break;
+      }
+      case 1: { // SNARE: estouro de grãos + rasgos (glitch) na imagem
+        const n = 70 + Math.round(v * 230);
+        for (let i = 0; i < n; i++) push({ kind: "dot", ...around(0.4), ...dir(0.05 + rand() * 0.3), speed: 0.12, inertia: 0.9,
+          w: 0.6 + rand() * 1.8, life: 0.2 + rand() * (0.3 + life * 0.6), a: 0.3 + 0.6 * v * rand(), c: tint(10) });
+        fx.glitch = Math.max(fx.glitch, (0.3 + 0.7 * v) * (0.4 + s.sat * 0.8));
+        break;
+      }
+      case 2: { // METAL: filamentos finíssimos e rápidos
+        const n = 18 + Math.round(v * 50);
+        for (let i = 0; i < n; i++) push({ kind: "line", ...around(0.6), speed: 0.4 + rand() * 0.7, inertia: 0.55, turb: 0.6 + s.shape * 0.4,
+          w: 0.4 + rand() * 0.9, life: 0.12 + rand() * (0.25 + life * 0.4), a: 0.35 + 0.5 * v, c: tint(18) });
+        break;
+      }
+      case 3: { // PERC: manchas de tinta irregulares
+        const n = 3 + Math.round(v * 5);
+        for (let i = 0; i < n; i++) push({ kind: "bloom", ...around(0.9), r0: R * 0.05, r1: R * (0.25 + rand() * 0.6), life: 0.3 + life * 0.6, a: 0.18 + 0.25 * v, c: tint(), drift: 0.06 });
+        for (let i = 0; i < 10 + v * 14; i++) push({ kind: "line", ...around(0.5), speed: 0.1 + rand() * 0.2, inertia: 0.85,
+          w: 1 + rand() * 2.5, life: 0.3 + rand() * life, a: 0.12 + 0.2 * v, c: tint(-8) });
+        break;
+      }
+      case 4: { // TONE: fitas longas que fluem e se enrolam
+        const n = 3 + Math.round(v * 7);
+        for (let i = 0; i < n; i++) push({ kind: "line", ...around(0.35), speed: 0.07 + rand() * 0.14, inertia: 0.96,
+          curl: curl * 2.5, w: (3 + rand() * 12) * (0.5 + s.contour), life: 1 + life * 1.5, a: 0.04 + 0.08 * v, c: tint(), hueDrift: 40 * (rand() - 0.5) });
+        break;
+      }
+      default: { // CHORD: lavagens de cor enormes, três tons
+        for (let j = 0; j < 3; j++) {
+          const c = { h: s.color.h + j * (25 + s.sat * 40), s: s.color.s, l: s.color.l };
+          push({ kind: "bloom", ...around(1.4), r0: R * 0.5, r1: R * (2.5 + rand() * 1.5), life: 0.8 + life * 1.2, a: 0.07 + 0.08 * v, c, drift: 0.04 });
+          for (let i = 0; i < 4; i++) push({ kind: "line", ...around(1), speed: 0.05 + rand() * 0.08, inertia: 0.97,
+            w: 6 + rand() * 14, life: 1.5 + life, a: 0.025 + 0.04 * v, c: { ...c, h: c.h + (rand() - 0.5) * 20 } });
+        }
+      }
+    }
+    // reverb: um véu de luz por cima de tudo
+    if (s.reverb > 0.25) push({ kind: "bloom", x: X, y: Y, r0: R, r1: R * (2 + s.reverb * 3), life: 0.5 + s.reverb * 2.5, a: 0.04 + 0.08 * s.reverb, c: tint(8), drift: 0.01 });
+    if (agents.length > 2600) agents.splice(0, agents.length - 2600);
+  }
+
+  let lastT = 0;
+  function frameAbstract(t) {
+    const dt = clamp(t - (lastT || t), 0, 0.05);
+    lastT = t;
+    const md = Math.min(W, H);
+    const mode = settings.mode;
+
+    echoQueue.sort((a, b) => a.at - b.at);
+    while (echoQueue.length && echoQueue[0].at <= t) {
+      const e = echoQueue.shift();
+      if (e.vel > 8) spawn(e.tr, e.note, e.vel, "eco");
+    }
+
+    if (audio.on) fx.zoom = Math.max(fx.zoom, audio.rms * 0.025);
+
+    // realimentação: a imagem anterior volta levemente ampliada e girada → a tela escorre
+    if (mode !== "pintura") {
+      const avgSweep = tracks.reduce((a, tr) => a + n01(tr.sweep), 0) / 6;
+      const z = 1 + 0.002 + fx.zoom;
+      pctx.save();
+      pctx.globalAlpha = mode === "vivo" ? 0.4 : 0.6;
+      pctx.translate(W / 2, H / 2);
+      pctx.rotate((avgSweep - 0.3) * 0.006);
+      pctx.scale(z, z);
+      pctx.translate(-W / 2, -H / 2);
+      pctx.drawImage(paint, 0, 0);
+      pctx.restore();
+      fillBg(pctx, mode === "vivo" ? 0.12 : 0.03);
+    } else {
+      fillBg(pctx, 0.004); // pintura: apaga quase nada, só o bastante pra nunca virar uma tela branca
+    }
+    fx.zoom *= 0.88;
+
+    // glitch: faixas da imagem deslocadas para os lados
+    if (fx.glitch > 0.05) {
+      const bands = 1 + Math.round(fx.glitch * 5);
+      for (let i = 0; i < bands; i++) {
+        const h = Math.max(1, H * (0.004 + Math.random() * 0.05 * fx.glitch));
+        const y = Math.random() * (H - h);
+        const dx = (Math.random() - 0.5) * W * 0.12 * fx.glitch;
+        pctx.drawImage(paint, 0, y, W, h, dx, y, W, h);
+      }
+      fx.glitch *= 0.72;
+    }
+
+    const persist = mode === "vivo" ? 0.16 : mode === "rastro" ? 0.06 : 0.025;
+    const turbG = audio.on && audio.rms > 0.01 ? hzT(audio.hz) : 0.4;
+    pctx.save();
+    pctx.globalCompositeOperation = pal().dark ? "lighter" : "multiply";
+    pctx.lineCap = "round";
+    const keep = [];
+    for (const a of agents) {
+      a.age += dt;
+      const k = 1 - a.age / a.life;
+      if (k <= 0) continue;
+      const turb = a.turb * 0.7 + turbG * 0.3;
+      if (a.kind === "bloom") {
+        const ang = flowAngle(a.x / W, a.y / H, t, turb);
+        a.x += Math.cos(ang) * a.drift * md * dt;
+        a.y += Math.sin(ang) * a.drift * md * dt;
+        const p = a.age / a.life;
+        const r = Math.max(1, a.r0 + (a.r1 - a.r0) * (1 - Math.pow(1 - p, 3)));
+        // a mancha é redesenhada todo quadro: a intensidade por quadro acompanha
+        // o quanto a tela apaga, senão tudo estoura pro branco
+        const al = a.a * k * persist * Math.min(1, a.age * 20);
+        const g = pctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, r);
+        g.addColorStop(0, hsla(a.c, al));
+        g.addColorStop(0.45, hsla(a.c, al * 0.4));
+        g.addColorStop(1, hsla(a.c, 0));
+        pctx.fillStyle = g;
+        pctx.fillRect(a.x - r, a.y - r, r * 2, r * 2);
+      } else {
+        const ang = flowAngle(a.x / W, a.y / H, t, turb) + a.curl * a.age;
+        a.vx = a.vx * a.inertia + Math.cos(ang) * a.speed * (1 - a.inertia);
+        a.vy = a.vy * a.inertia + Math.sin(ang) * a.speed * (1 - a.inertia);
+        const nx = a.x + a.vx * md * dt, ny = a.y + a.vy * md * dt;
+        const c = a.hueDrift ? { ...a.c, h: a.c.h + a.hueDrift * a.age } : a.c;
+        const al = a.a * Math.pow(k, 0.7) * (mode === "pintura" ? 0.55 : 1);
+        if (a.kind === "dot") {
+          pctx.fillStyle = hsla(c, al);
+          const w = a.w * DPR;
+          pctx.fillRect(nx - w / 2, ny - w / 2, w, w);
+        } else {
+          pctx.strokeStyle = hsla(c, al);
+          pctx.lineWidth = Math.max(0.3, a.w * DPR * Math.sqrt(k));
+          pctx.beginPath(); pctx.moveTo(a.x, a.y); pctx.lineTo(nx, ny); pctx.stroke();
+        }
+        a.x = nx; a.y = ny;
+        if (nx < -W * 0.2 || nx > W * 1.2 || ny < -H * 0.2 || ny > H * 1.2) continue;
+      }
+      keep.push(a);
+    }
+    agents = keep;
+    pctx.restore();
+  }
+
   // ---------- renderização ----------
   function fillBg(ctx, alpha = 1) {
     ctx.save();
@@ -451,7 +631,7 @@
     drawBands();
     tickDemo(t);
 
-    shapes = shapes.filter((s) => t - s.born < s.life || (settings.mode === "pintura" && !s.stamped));
+    shapes = shapes.filter((s) => t - s.born < s.life || (settings.style !== "abstrato" && settings.mode === "pintura" && !s.stamped));
 
     // energia de cada trilha → "mais alto agora"
     let dom = null, domE = 0;
@@ -464,7 +644,9 @@
     }
 
     lctx.clearRect(0, 0, W, H);
-    if (settings.mode === "vivo") {
+    if (settings.style === "abstrato") {
+      frameAbstract(t);
+    } else if (settings.mode === "vivo") {
       renderShapes(lctx, shapes, t);
     } else if (settings.mode === "rastro") {
       fillBg(pctx, 0.06);
@@ -488,7 +670,7 @@
       }
       lctx.restore();
     }
-    if (!show && dom && domE > 0.02) drawAura(lctx, dom, clamp(1 - (t - dom.born) / dom.life, 0, 1));
+    if (!show && settings.style !== "abstrato" && dom && domE > 0.02) drawAura(lctx, dom, clamp(1 - (t - dom.born) / dom.life, 0, 1));
 
     // HUD
     const txt = dom && domE > 0.02
@@ -521,6 +703,8 @@
 
   function clearCanvas() {
     shapes = [];
+    agents = [];
+    echoQueue = [];
     gridStep = [0, 0, 0, 0, 0, 0];
     fillBg(pctx);
     lctx.clearRect(0, 0, W, H);
@@ -532,7 +716,7 @@
     out.width = W; out.height = H;
     const o = out.getContext("2d");
     o.drawImage(paint, 0, 0);
-    if (settings.mode === "vivo") renderShapes(o, shapes, now());
+    if (settings.style !== "abstrato" && settings.mode === "vivo") renderShapes(o, shapes, now());
     out.toBlob((blob) => {
       if (!blob) return toast("Não consegui gerar a imagem.");
       const url = URL.createObjectURL(blob);
@@ -827,7 +1011,7 @@
 
   // ---------- modo palco ----------
   let wakeLock = null, hintT = 0, idleT = 0;
-  const SHORTCUTS = "F palco (Esc sai) · 1–6 trilhas · M modo · L composição · P paleta\nC limpar · S salvar imagem · D demo · A áudio · ? atalhos";
+  const SHORTCUTS = "F palco (Esc sai) · 1–6 trilhas · G estilo · M modo · L composição · P paleta\nC limpar · S salvar imagem · D demo · A áudio · ? atalhos";
 
   function enterShow() {
     if (show) return;
@@ -870,6 +1054,11 @@
     clearTimeout(idleT);
     if (show) idleT = setTimeout(() => document.body.classList.add("idle"), 1200);
   }
+  function setStyle(v) {
+    settings.style = $("sel-style").value = v;
+    save();
+    clearCanvas();
+  }
   function cycle(list, cur) { return list[(list.indexOf(cur) + 1) % list.length]; }
   const MODE_NAMES = { vivo: "Ao vivo", rastro: "Rastro", pintura: "Pintura" };
 
@@ -891,7 +1080,9 @@
     $("chk-onset").addEventListener("change", (e) => { settings.onset = e.target.checked; save(); });
     $("btn-cc-reset").addEventListener("click", () => { settings.cc = { ...DEFAULT_CC }; save(); renderCcGrid(); });
     document.querySelectorAll("#seg-mode button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.v)));
-    const lay = $("sel-layout"), palSel = $("sel-palette");
+    const lay = $("sel-layout"), palSel = $("sel-palette"), sty = $("sel-style");
+    sty.value = settings.style;
+    sty.addEventListener("change", () => setStyle(sty.value));
     lay.value = settings.layout; palSel.value = settings.palette;
     lay.addEventListener("change", () => { settings.layout = lay.value; gridStep = [0, 0, 0, 0, 0, 0]; save(); });
     palSel.addEventListener("change", () => {
@@ -915,7 +1106,8 @@
         settings.palette = palSel.value = cycle(list, settings.palette);
         save(); restyle();
         hint("Paleta: " + palSel.selectedOptions[0].textContent, 1200);
-      } else if (k === "d") { toggleDemo(); hint(demo.on ? "Demo ligado" : "Demo desligado", 1200); }
+      } else if (k === "g") { setStyle(settings.style === "abstrato" ? "geometrico" : "abstrato"); hint("Estilo: " + sty.selectedOptions[0].textContent, 1200); }
+      else if (k === "d") { toggleDemo(); hint(demo.on ? "Demo ligado" : "Demo desligado", 1200); }
       else if (k === "a") toggleAudio();
       else if (k === "?" || k === "h") hint(SHORTCUTS, 5000);
       else if (k === "escape") { if (show) leaveShow(); else closeSheet(); }
