@@ -15,7 +15,8 @@
   "use strict";
 
   // ---------- constantes ----------
-  const MACHINES = ["KICK", "SNARE", "METAL", "PERC", "TONE", "CHORD"];
+  // 0–5 são as máquinas do Cycles; 6 e 7 só aparecem com música (voz e efeitos)
+  const MACHINES = ["KICK", "SNARE", "METAL", "PERC", "TONE", "CHORD", "VOZ", "FX"];
   const TRACK_COLORS = ["--t1", "--t2", "--t3", "--t4", "--t5", "--t6"];
   // Mapeamento padrão de CCs do Model:Cycles. Confira no apêndice do manual;
   // dá pra corrigir no app com "Aprender".
@@ -51,6 +52,7 @@
       clearOnPlay: false,
       onset: true,
       style: "abstrato",
+      showPanel: false,
       ref: "tudo",
       refFid: "media",
     },
@@ -58,6 +60,11 @@
   );
   settings.cc = Object.assign({ ...DEFAULT_CC }, settings.cc);
 
+  const store = {
+    get(k) { try { return localStorage.getItem("cycles-" + k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem("cycles-" + k, v); } catch { /* sem storage */ } },
+  };
+  function applyPanel() { document.body.classList.toggle("clean", !settings.showPanel); }
   function load() {
     try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; }
   }
@@ -71,6 +78,8 @@
     sweep: 40, contour: 40, pan: 64, delay: 0, reverb: 20,
     lastVel: 0, lastNote: 60, energy: 0,
   }));
+  Object.assign(tracks[6], { decay: 95, reverb: 75, sweep: 55, color: 50 }); // voz: longa e com véu
+  Object.assign(tracks[7], { decay: 70, reverb: 45, color: 100 });
 
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
@@ -169,7 +178,8 @@
   function audioStatus() {
     audio.on = !!(audio.stream || (music.el && !music.el.paused));
     $("bands").hidden = !audio.on;
-    if (music.el && !music.el.paused) setPill("st-audio", "♪ " + music.name, "on");
+    if (music.analysing) setPill("st-audio", `♪ analisando ${Math.round(music.progress * 100)}%`, "warn");
+    else if (music.el && !music.el.paused) setPill("st-audio", "♪ " + music.name, "on");
     else if (audio.stream) setPill("st-audio", "Áudio ligado", "on");
     else setPill("st-audio", music.name ? "♪ pausada" : "Áudio desligado", "");
     $("btn-audio").classList.toggle("on", !!audio.stream);
@@ -202,7 +212,45 @@
   }
 
   // ---------- música de teste (arquivo do aparelho) ----------
-  const music = { el: null, src: null, url: "", name: "" };
+  const music = { el: null, src: null, url: "", name: "", timeline: null, idx: 0, lastT: 0, analysing: false, progress: 0, token: 0 };
+  const VOICE_TRACK = { kick: 0, snare: 1, hat: 2, lead: 4, chord: 5, vocal: 6, fx: 7 };
+  const VOICE_NAME = { kick: "kick", snare: "snare/clap", hat: "hi-hat", chord: "chords", lead: "lead", vocal: "vocal", fx: "efeitos" };
+
+  // analisa a faixa inteira (em segundo plano) e troca a detecção ao vivo pela linha do tempo
+  async function analyseFile(file) {
+    const token = ++music.token;
+    music.timeline = null;
+    if (!window.CyclesAnalise) return;
+    music.analysing = true; music.progress = 0; audioStatus();
+    try {
+      const res = await window.CyclesAnalise.analyse(await file.arrayBuffer(), (p) => {
+        if (token === music.token) { music.progress = p; audioStatus(); }
+      });
+      if (token !== music.token) return;
+      music.timeline = res.events;
+      music.idx = 0;
+      music.lastT = -1;
+      const resumo = Object.keys(VOICE_NAME).filter((k) => res.count[k]).map((k) => `${VOICE_NAME[k]} ${res.count[k]}`).join(" · ");
+      log(`análise de "${music.name}": ${resumo}`);
+      if (!show) toast("Música analisada — agora cada instrumento vira um tipo de imagem.");
+    } catch (e) {
+      if (token === music.token) { log("análise falhou: " + (e && e.message)); toast("Não consegui analisar a música; seguindo com a detecção ao vivo."); }
+    } finally {
+      if (token === music.token) { music.analysing = false; audioStatus(); }
+    }
+  }
+  // dispara os instrumentos da linha do tempo no tempo da música
+  function tickMusic() {
+    if (!music.timeline || !music.el || music.el.paused) return;
+    const ct = music.el.currentTime;
+    if (ct < music.lastT - 0.3) music.idx = 0; // deu a volta (loop) ou voltou
+    const ev = music.timeline;
+    while (music.idx < ev.length && ev[music.idx].t <= ct) {
+      const e = ev[music.idx++];
+      if (ct - e.t < 0.25) spawn(VOICE_TRACK[e.v], e.note, e.vel, "musica", { kind: e.kind });
+    }
+    music.lastT = ct;
+  }
   function pickMusic() { unlockAudio(); $("inp-music").click(); }
   function loadMusic(file) {
     const ctx = ensureCtx();
@@ -220,6 +268,7 @@
     music.url = URL.createObjectURL(file);
     music.name = file.name.replace(/\.[^.]+$/, "");
     music.el.src = music.url;
+    analyseFile(file);
     if (demo.on) stopDemo();
     $("empty").hidden = true;
     startMusic();
@@ -285,7 +334,7 @@
     // seu próprio detector — grave vira KICK, médio vira SNARE/PERC/TONE, agudo vira METAL
     const t = now();
     const playing = music.el && !music.el.paused;
-    if (!(settings.onset || playing) || t - lastMidiNote < 3 || rms < 0.008) {
+    if (!(settings.onset || playing) || (playing && music.timeline) || t - lastMidiNote < 3 || rms < 0.008) {
       audio.bandSlow = audio.bandSlow || [0, 0, 0];
       return;
     }
@@ -328,10 +377,13 @@
   let gridStep = [0, 0, 0, 0, 0, 0];
   let lastMidiNote = -99;
 
-  function spawn(trIndex, note, vel, source = "midi") {
+  function spawn(trIndex, note, vel, source = "midi", extra = {}) {
     const tr = tracks[trIndex];
+    if (!tr) return;
+    vel = clamp(Math.round(vel) || 64, 1, 127);
     const t = now();
     if (note == null) note = audio.on && audio.hz ? 69 + 12 * Math.log2(audio.hz / 440) : 60;
+    if (!isFinite(note)) note = 60;
     tr.lastVel = vel;
     tr.lastNote = note;
 
@@ -360,6 +412,7 @@
       color: pal().color(ft, tr, n01(tr.color)),
       ou: 0, ov: 0,
       seed: (Math.random() * 1e9) | 0,
+      kind: extra.kind,
       stamped: false,
     });
     const sh = shapes[shapes.length - 1];
@@ -385,19 +438,20 @@
   // posição normalizada (0..1) conforme a composição escolhida
   function place(i, tr, ft) {
     const aspect = W / H || 1;
+    const NT = music.timeline ? 8 : 6;
     switch (settings.layout) {
       case "faixas":
-        return { x: (i + 0.5) / 6 + gauss() * 0.03, y: 0.92 - ft * 0.84 + gauss() * 0.06 };
+        return { x: (i + 0.5) / NT + gauss() * 0.03, y: 0.92 - ft * 0.84 + gauss() * 0.06 };
       case "radial": {
-        const ang = (i / 6) * Math.PI * 2 - Math.PI / 2 + gauss() * 0.3;
+        const ang = (i / NT) * Math.PI * 2 - Math.PI / 2 + gauss() * 0.3;
         const rad = 0.05 + ft * 0.4 + gauss() * 0.03;
         const sx = aspect > 1 ? 1 / aspect : 1, sy = aspect > 1 ? 1 : aspect;
         return { x: 0.5 + Math.cos(ang) * rad * sx, y: 0.5 + Math.sin(ang) * rad * sy };
       }
       case "grade": {
         const col = (clock.running ? clock.step : gridStep[i]++) % 16;
-        const cellPx = Math.min(W / 16, H / 6) * 0.48;
-        return { x: (col + 0.5) / 16, y: (i + 0.5) / 6, cell: cellPx / Math.min(W, H) };
+        const cellPx = Math.min(W / 16, H / NT) * 0.48;
+        return { x: (col + 0.5) / 16, y: (i + 0.5) / NT, cell: cellPx / Math.min(W, H) };
       }
       default: // livre: pan define o x, a frequência define a altura
         return {
@@ -818,12 +872,30 @@
           curl: curl * 2.5, w: (3 + rand() * 12) * (0.5 + s.contour), life: 1 + life * 1.5, a: 0.04 + 0.08 * v, c: tint(), hueDrift: 40 * (rand() - 0.5) });
         break;
       }
+      case 6: { // VOZ: fumaça larga e lenta que sobe, respirando
+        push({ kind: "bloom", x: X, y: Y, r0: R * 0.3, r1: R * 2.2, life: 0.6 + life, a: 0.08 + 0.12 * v, c: tint(4), drift: 0.03 });
+        const n = 4 + Math.round(v * 6);
+        for (let i = 0; i < n; i++) push({ kind: "line", ...around(0.6), vx: (rand() - 0.5) * 0.02, vy: -0.05 - rand() * 0.05, speed: 0.05 + rand() * 0.06,
+          inertia: 0.975, curl: curl * 0.5, w: 8 + rand() * 16, life: 1.2 + life * 1.2, a: 0.025 + 0.05 * v, c: tint(6), hueDrift: 25 * (rand() - 0.5) });
+        break;
+      }
+      case 7: { // FX: a tela inteira reage — rasgos, zoom e riscos varrendo de lado a lado
+        const impact = s.kind === "impacto";
+        fx.glitch = Math.max(fx.glitch, (impact ? 0.9 : 0.4) + 0.4 * v);
+        fx.zoom = clamp(fx.zoom + (s.kind === "desce" ? -0.012 : 0.02) * v, -0.03, 0.06);
+        const n = 14 + Math.round(v * 36);
+        const dirX = rand() < 0.5 ? -1 : 1;
+        for (let i = 0; i < n; i++) push({ kind: "line", x: rand() * W, y: rand() * H, vx: dirX * (0.5 + rand() * 0.6), vy: (rand() - 0.5) * 0.05,
+          speed: 0.2, inertia: 0.985, w: 0.6 + rand() * 1.6, life: 0.25 + rand() * 0.6, a: 0.2 + 0.35 * v, c: tint(20) });
+        if (impact) push({ kind: "bloom", x: W / 2, y: H / 2, r0: md * 0.2, r1: md * 1.2, life: 0.9, a: 0.3, c: tint(15), drift: 0 });
+        break;
+      }
       default: { // CHORD: lavagens de cor enormes, três tons
         for (let j = 0; j < 3; j++) {
           const c = { h: s.color.h + j * (25 + s.sat * 40), s: s.color.s, l: s.color.l };
-          push({ kind: "bloom", ...around(1.4), r0: R * 0.5, r1: R * (2.5 + rand() * 1.5), life: 0.8 + life * 1.2, a: 0.07 + 0.08 * v, c, drift: 0.04 });
+          push({ kind: "bloom", ...around(1.4), r0: R * 0.5, r1: R * (2.5 + rand() * 1.5), life: 0.8 + life * 1.2, a: 0.2 + 0.18 * v, c, drift: 0.04 });
           for (let i = 0; i < 4; i++) push({ kind: "line", ...around(1), speed: 0.05 + rand() * 0.08, inertia: 0.97,
-            w: 6 + rand() * 14, life: 1.5 + life, a: 0.025 + 0.04 * v, c: { ...c, h: c.h + (rand() - 0.5) * 20 } });
+            w: 6 + rand() * 14, life: 1.5 + life, a: 0.06 + 0.07 * v, c: { ...c, h: c.h + (rand() - 0.5) * 20 } });
         }
       }
     }
@@ -849,7 +921,7 @@
 
     // realimentação: a imagem anterior volta levemente ampliada e girada → a tela escorre
     if (mode !== "pintura") {
-      const avgSweep = tracks.reduce((a, tr) => a + n01(tr.sweep), 0) / 6;
+      const avgSweep = tracks.reduce((a, tr) => a + n01(tr.sweep), 0) / tracks.length;
       const z = 1 + 0.002 + fx.zoom;
       pctx.save();
       pctx.globalAlpha = mode === "vivo" ? 0.4 : 0.6;
@@ -894,6 +966,7 @@
         a.y += Math.sin(ang) * a.drift * md * dt;
         const p = a.age / a.life;
         const r = Math.max(1, a.r0 + (a.r1 - a.r0) * (1 - Math.pow(1 - p, 3)));
+        if (!isFinite(a.x + a.y + r)) continue; // nunca deixar um número inválido travar o desenho
         // a mancha é redesenhada todo quadro: a intensidade por quadro acompanha
         // o quanto a tela apaga, senão tudo estoura pro branco
         const al = a.a * k * persist * Math.min(1, a.age * 20);
@@ -922,6 +995,7 @@
         a.vx = a.vx * a.inertia + Math.cos(ang) * a.speed * (1 - a.inertia);
         a.vy = a.vy * a.inertia + Math.sin(ang) * a.speed * (1 - a.inertia);
         const nx = a.x + a.vx * md * dt, ny = a.y + a.vy * md * dt;
+        if (!isFinite(nx + ny)) continue;
         const c = a.hueDrift ? { ...a.c, h: a.c.h + a.hueDrift * a.age } : a.c;
         const al = a.a * Math.pow(k, 0.7) * (mode === "pintura" ? 0.55 : 1) * (refs.cur ? 1.35 : 1);
         if (a.kind === "dot") {
@@ -965,9 +1039,17 @@
     ctx.restore();
   }
 
-  let lastDomText = "";
+  let lastDomText = "", frameErr = 0;
+  // o laço de desenho nunca pode morrer: se algo der erro num quadro, registra e segue
   function frame() {
+    requestAnimationFrame(frame);
+    try { frameBody(); } catch (e) {
+      if (frameErr++ < 3) { log("erro no desenho: " + (e && e.message)); console.error(e); }
+    }
+  }
+  function frameBody() {
     const t = now();
+    tickMusic();
     analyseAudio();
     drawBands();
     tickDemo(t);
@@ -1020,7 +1102,6 @@
     if (txt !== lastDomText) { $("hud-dom").textContent = txt; lastDomText = txt; }
     updatePads(dom);
 
-    requestAnimationFrame(frame);
   }
 
   // ---------- tamanho do palco ----------
@@ -1260,7 +1341,7 @@
   function renderPads() {
     const box = $("pads");
     if (!box.children.length) {
-      box.innerHTML = tracks.map((_, i) =>
+      box.innerHTML = tracks.slice(0, 6).map((_, i) =>
         `<button class="pad" type="button" data-i="${i}" style="--c:var(${TRACK_COLORS[i]})"><b></b><small></small><i class="lvl"></i></button>`).join("");
       box.querySelectorAll(".pad").forEach((el) => {
         el.addEventListener("pointerdown", (ev) => {
@@ -1296,7 +1377,7 @@
   // ---------- ajustes (painel) ----------
   const labelOf = (k) => (PARAMS.find((p) => p[0] === k) || [k, k])[1];
   function renderChanGrid() {
-    $("chan-grid").innerHTML = tracks.map((_, i) =>
+    $("chan-grid").innerHTML = tracks.slice(0, 6).map((_, i) =>
       `<label>T${i + 1}<input type="number" min="1" max="16" value="${settings.channels[i]}" data-i="${i}" /></label>`).join("");
     $("chan-grid").querySelectorAll("input").forEach((inp) =>
       inp.addEventListener("change", () => {
@@ -1357,7 +1438,7 @@
 
   // ---------- modo palco ----------
   let wakeLock = null, hintT = 0, idleT = 0;
-  const SHORTCUTS = "F palco (Esc sai) · 1–6 trilhas · R próxima obra · G estilo · M modo · L composição · P paleta\nC limpar · S salvar imagem · D demo · A áudio · Espaço música · ? atalhos";
+  const SHORTCUTS = "F tela cheia (Esc sai) · 1–6 trilhas · R próxima obra · G estilo · M modo · L composição · P paleta\nC limpar · S salvar imagem · D demo · A áudio · Espaço música · ? atalhos";
 
   function enterShow() {
     if (show) return;
@@ -1366,9 +1447,14 @@
     document.body.classList.add("show");
     const el = document.documentElement;
     if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+    else if (el.webkitRequestFullscreen) try { el.webkitRequestFullscreen(); } catch { /* iPad antigo */ }
     if (navigator.wakeLock) navigator.wakeLock.request("screen").then((l) => (wakeLock = l)).catch(() => {});
     restyle();
-    hint("Palco · Esc para sair · ? atalhos");
+    const canFS = !!(el.requestFullscreen || el.webkitRequestFullscreen);
+    if (!canFS && !navigator.standalone && !matchMedia("(display-mode: standalone)").matches && !store.get("dica-ios")) {
+      store.set("dica-ios", 1);
+      hint("Tela cheia · toque duas vezes pra sair\nNo iPhone, pra sumir com as barras do Safari: Compartilhar → Adicionar à Tela de Início, e abra pelo ícone.", 7000);
+    } else hint("Tela cheia · toque duas vezes (ou Esc) pra sair · ? atalhos");
     poke();
   }
   function leaveShow() {
@@ -1413,6 +1499,15 @@
     document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && show) leaveShow(); });
     document.addEventListener("pointermove", poke);
     stage.addEventListener("dblclick", () => (show ? leaveShow() : enterShow()));
+    // segurar o dedo na tela também sai da tela cheia (no celular não tem Esc)
+    let pressT = 0;
+    stage.addEventListener("pointerdown", () => { clearTimeout(pressT); if (show) pressT = setTimeout(leaveShow, 900); });
+    ["pointerup", "pointercancel", "pointermove"].forEach((ev) => stage.addEventListener(ev, (e) => {
+      if (ev !== "pointermove" || Math.abs(e.movementX) + Math.abs(e.movementY) > 6) clearTimeout(pressT);
+    }));
+    document.addEventListener("webkitfullscreenchange", () => { if (!document.webkitFullscreenElement && show) leaveShow(); });
+    $("chk-panel").checked = settings.showPanel;
+    $("chk-panel").addEventListener("change", (e) => { settings.showPanel = e.target.checked; save(); applyPanel(); });
     $("btn-midi").addEventListener("click", connectMidi);
     $("btn-audio").addEventListener("click", toggleAudio);
     $("btn-music").addEventListener("click", toggleMusic);
@@ -1477,6 +1572,7 @@
 
   // ---------- início ----------
   bind();
+  applyPanel();
   loadManifest();
   resize();
   setMode(settings.mode);

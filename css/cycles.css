@@ -135,3 +135,4 @@ body.show.idle,body.show.idle *{cursor:none}
 .btn.file{display:inline-block}
 .tap-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;border:0;border-radius:14px;
   padding:18px 26px;font-size:18px;font-weight:700;background:var(--accent);color:var(--accent-ink);cursor:pointer;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+body.clean .pads,body.clean .hud{display:none!important}

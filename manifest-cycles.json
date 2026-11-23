@@ -5,7 +5,7 @@
   "lang": "pt-BR",
   "start_url": "./cycles.html",
   "scope": "./cycles.html",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "any",
   "background_color": "#0d0d10",
   "theme_color": "#0d0d10",

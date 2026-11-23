@@ -509,16 +509,34 @@ trilhas, seguindo o clock). **Paletas:** Espectro, Neon, Boogie e Papel.
 **Salvar imagem** baixa um PNG e guarda a miniatura embaixo (só nesta sessão).
 
 **Música de teste:** o botão **Música** toca um arquivo do aparelho (MP3,
-M4A, WAV…) e gera as imagens a partir dele, sem precisar do Cycles. Cada
-faixa de frequência tem seu detector de batidas: grave vira KICK, médio vira
-SNARE/PERC (ou TONE quando tem nota definida), agudo vira METAL, e grave + médio
-juntos de vez em quando viram CHORD. A cor vem da nota mais forte daquela
-faixa. **Espaço** pausa/continua; ⏏ troca a música. Ela fica em loop.
+M4A, WAV…) e gera as imagens a partir dele, sem precisar do Cycles. Antes,
+o app **analisa a faixa inteira** (`js/cycles-analise.js`, ~1 s por minuto de
+música) e separa, por heurística no espectro, sete vozes — cada uma com seu
+visual:
 
-**Palco (projeção):** o botão **Palco** (ou a tecla **F**, ou dois cliques na
-tela) entra em tela cheia só com o fundo preto e as imagens: sem barras,
+| Voz | Como reconhece | Visual |
+| --- | --- | --- |
+| kick | ataque no sub cujo tom despenca e morre rápido (baixo não) | sopro de luz + a tela "puxa" |
+| snare/clap | ataque ruidoso com corpo em 1–3 kHz | grãos + glitch |
+| hi-hat | ataque curto e ruidoso acima de 6 kHz | filamentos finos |
+| chords | mudança de harmonia com 3+ notas | manchas de cor |
+| lead | um tom que se destaca, cravado | fitas longas |
+| vocal | um tom que se destaca, oscilando (vibrato/deslize) | fumaça larga que sobe |
+| efeitos | subida/descida contínua de ruído (riser) e o impacto depois | rasgos e riscos na tela toda |
+
+Os limiares são relativos à própria música, então uma intro sem kick não
+dispara kick. Enquanto analisa (a etiqueta mostra "analisando %"), vale a
+detecção ao vivo. É estimativa, não separação de stems. **Espaço**
+pausa/continua; ⏏ troca a música; ela fica em loop. O resumo da análise
+aparece no monitor (⚙).
+
+**Tela cheia (projeção):** o botão **Tela cheia** (ou a tecla **F**, ou dois
+cliques na tela) entra em tela cheia só com o fundo preto e as imagens: sem barras,
 botões, textos nem contorno do "mais alto", e o cursor some quando o mouse
-para. A tela também não apaga sozinha durante o show. **Esc** sai. Tudo se controla
+para. A tela também não apaga sozinha durante o show. **Esc**, dois toques ou segurar o dedo na tela saem. No iPhone o Safari não
+deixa esconder as barras dele: adicione à Tela de Início e abra pelo ícone.
+Fora da tela cheia a tela também fica limpa — trilhas e medidores só aparecem
+se ligar no ⚙. Tudo se controla
 pelo teclado sem abrir nada: **1–6** trilhas, **R** próxima obra, **G** estilo, **M** modo, **L** composição,
 **P** paleta, **C** limpar, **S** salvar imagem, **D** demo, **A** áudio, **Espaço** música,
 **?** mostra os atalhos. Ao apertar uma tecla aparece só um aviso pequeno no
