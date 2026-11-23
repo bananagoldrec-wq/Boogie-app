@@ -51,6 +51,8 @@
       clearOnPlay: false,
       onset: true,
       style: "abstrato",
+      ref: "tudo",
+      refFid: "media",
     },
     load()
   );
@@ -257,11 +259,18 @@
       sat: n01(tr.color), shape: n01(tr.shape), contour: n01(tr.contour),
       delay: n01(tr.delay), reverb: n01(tr.reverb),
       color: pal().color(ft, tr, n01(tr.color)),
+      ou: 0, ov: 0,
       seed: (Math.random() * 1e9) | 0,
       stamped: false,
     });
+    const sh = shapes[shapes.length - 1];
+    if (refs.cur) {
+      const j = fid().jitter;
+      sh.ou = (Math.random() - 0.5) * j; sh.ov = (Math.random() - 0.5) * j;
+      sh.color = refBaseColor(x, y, sh.ou, sh.ov, sh.color);
+    }
     if (settings.style === "abstrato") {
-      abstractBurst(shapes[shapes.length - 1], tr);
+      abstractBurst(sh, tr);
       // delay send: o som "volta" em ecos mais fracos, em outro lugar da tela
       if (source !== "eco" && tr.delay > 10 && vel > 25) {
         const gap = clock.bpm ? (60 / clock.bpm) * 0.75 : 0.28;
@@ -431,6 +440,225 @@
     ctx.restore();
   }
 
+  // ---------- banco de referências ----------
+  // Pinturas (Van Gogh, Ismael Nery, acervo de fotos, e imagens que você
+  // adiciona) viram "tinta": as pinceladas pegam a cor da obra no ponto da tela
+  // por onde passam e seguem os contornos dela. A fidelidade decide o quanto a
+  // obra aparece — na baixa, cada som pega um fragmento solto de outro lugar.
+  const FID = {
+    baixa: { mix: 0.55, jitter: 1, edge: 0.25 },
+    media: { mix: 0.75, jitter: 0.18, edge: 0.45 },
+    alta: { mix: 0.92, jitter: 0, edge: 0.7 },
+  };
+  const refs = { manifest: null, sets: {}, list: [], idx: 0, cur: null, loading: new Map() };
+
+  async function loadManifest() {
+    try {
+      const r = await fetch("refs/refs.json", { cache: "no-cache" });
+      refs.manifest = await r.json();
+    } catch { refs.manifest = { sets: [] }; }
+    refs.manifest.sets.push({ id: "minhas", name: "Minhas imagens", items: await userRefs() });
+    renderRefOptions();
+    await chooseRefSet(settings.ref, true);
+  }
+
+  function setItems(id) {
+    const sets = refs.manifest ? refs.manifest.sets : [];
+    if (id === "tudo") return sets.flatMap((s) => s.items.map((it) => ({ ...it, set: s.name })));
+    const s = sets.find((x) => x.id === id);
+    return s ? s.items.map((it) => ({ ...it, set: s.name })) : [];
+  }
+
+  async function chooseRefSet(id, quiet) {
+    settings.ref = id; save();
+    refs.list = id === "nenhuma" ? [] : shuffle(setItems(id));
+    refs.idx = 0;
+    refs.cur = null;
+    if (refs.list.length) await showRef(0, quiet);
+    renderRefGrid();
+  }
+
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+
+  // carrega a obra numa tela pequena e guarda os pixels pra consultar a cor
+  function loadRef(item) {
+    if (refs.loading.has(item.src)) return refs.loading.get(item.src);
+    const p = new Promise((res) => {
+      const img = new Image();
+      img.onload = () => {
+        const k = 220 / Math.max(img.width, img.height);
+        const w = Math.max(2, Math.round(img.width * k)), h = Math.max(2, Math.round(img.height * k));
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        const x = c.getContext("2d", { willReadFrequently: true });
+        x.drawImage(img, 0, 0, w, h);
+        const data = x.getImageData(0, 0, w, h).data;
+        // versão "acesa" pra projetar no preto: óleo escuro e terroso some na projeção,
+        // então sobe saturação e luz guardando a relação entre as cores
+        const lit = new Uint8ClampedArray(data.length);
+        for (let i = 0; i < data.length; i += 4) {
+          const c = rgbToHsl([data[i], data[i + 1], data[i + 2]]);
+          c.s = Math.min(100, c.s * 1.5 + 12);
+          c.l = clamp(c.l * 0.75 + 30, 30, 82);
+          const o = hslToRgb(c);
+          lit[i] = o[0]; lit[i + 1] = o[1]; lit[i + 2] = o[2]; lit[i + 3] = 255;
+        }
+        res({ ...item, w, h, data, lit });
+      };
+      img.onerror = () => res(null);
+      img.src = item.src;
+    });
+    refs.loading.set(item.src, p);
+    return p;
+  }
+
+  async function showRef(i, quiet) {
+    if (!refs.list.length) return;
+    refs.idx = ((i % refs.list.length) + refs.list.length) % refs.list.length;
+    const item = refs.list[refs.idx];
+    const r = await loadRef(item);
+    if (r && refs.list[refs.idx] === item) refs.cur = r;
+    loadRef(refs.list[(refs.idx + 1) % refs.list.length]); // já deixa a próxima pronta
+    if (!quiet) hintOrToast(`${item.title}${item.artist ? " — " + item.artist : ""}`);
+    markRefGrid();
+  }
+  const nextRef = (quiet = true) => showRef(refs.idx + 1, quiet);
+  function hintOrToast(msg) { show ? hint(msg, 2200) : toast(msg); }
+
+  // cor da obra num ponto da tela (0..1), com recorte tipo "cover"
+  function refPixel(nx, ny) {
+    const r = refs.cur;
+    if (!r) return null;
+    const A = W / H, B = r.w / r.h;
+    let u = nx, v = ny;
+    if (A > B) v = 0.5 + (ny - 0.5) * (B / A);
+    else u = 0.5 + (nx - 0.5) * (A / B);
+    u = u - Math.floor(u); v = v - Math.floor(v); // fragmentos dão a volta
+    const px = Math.min(r.w - 1, (u * r.w) | 0), py = Math.min(r.h - 1, (v * r.h) | 0);
+    return { r, px, py, i: (py * r.w + px) * 4 };
+  }
+  function refRGB(nx, ny) {
+    const p = refPixel(nx, ny);
+    if (!p) return null;
+    const d = pal().dark ? p.r.lit : p.r.data;
+    return [d[p.i], d[p.i + 1], d[p.i + 2]];
+  }
+  // direção do contorno da obra naquele ponto (perpendicular ao gradiente de luz)
+  function refEdge(nx, ny) {
+    const p = refPixel(nx, ny);
+    if (!p) return null;
+    const { r, px, py } = p, d = r.data;
+    const L = (x, y) => {
+      x = clamp(x, 0, r.w - 1); y = clamp(y, 0, r.h - 1);
+      const j = (y * r.w + x) * 4;
+      return d[j] * 0.3 + d[j + 1] * 0.59 + d[j + 2] * 0.11;
+    };
+    const gx = L(px + 1, py) - L(px - 1, py), gy = L(px, py + 1) - L(px, py - 1);
+    const mag = Math.hypot(gx, gy);
+    return mag < 6 ? null : { ang: Math.atan2(gy, gx) + Math.PI / 2, mag: Math.min(1, mag / 80) };
+  }
+
+  function hslToRgb({ h, s, l }) {
+    h = ((h % 360) + 360) % 360 / 360; s /= 100; l /= 100;
+    const f = (n) => {
+      const k = (n + h * 12) % 12;
+      return 255 * (l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1)));
+    };
+    return [f(0), f(8), f(4)];
+  }
+  function rgbToHsl([r, g, b]) {
+    r /= 255; g /= 255; b /= 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+    let h = 0, s = 0;
+    if (mx !== mn) {
+      const d = mx - mn;
+      s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+      h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      h *= 60;
+    }
+    return { h, s: s * 100, l: l * 100 };
+  }
+  function mixRGB(a, b, m) { return [a[0] * m + b[0] * (1 - m), a[1] * m + b[1] * (1 - m), a[2] * m + b[2] * (1 - m)]; }
+  const rgba = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a.toFixed(3)})`;
+  const fid = () => FID[settings.refFid] || FID.media;
+
+  // cor de partida de um som: a obra naquele ponto, misturada com a cor do som
+  function refBaseColor(x, y, ou, ov, soundColor) {
+    const p = refRGB(x + ou, y + ov);
+    if (!p) return soundColor;
+    const c = rgbToHsl(mixRGB(p, hslToRgb(soundColor), fid().mix));
+    if (pal().dark) c.l = Math.max(c.l, 38); // no fundo preto, nada some de tão escuro
+    return c;
+  }
+
+  // ---- imagens suas (ficam só neste aparelho, no IndexedDB) ----
+  function idb() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open("cycles-visual-refs", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("img", { keyPath: "id" });
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  }
+  async function userRefs() {
+    try {
+      const db = await idb();
+      const all = await new Promise((res) => {
+        const q = db.transaction("img").objectStore("img").getAll();
+        q.onsuccess = () => res(q.result || []);
+        q.onerror = () => res([]);
+      });
+      return all.map((x) => ({ id: x.id, src: URL.createObjectURL(x.blob), title: x.name, artist: "Minhas imagens" }));
+    } catch { return []; }
+  }
+  async function addUserImages(files) {
+    try {
+      const db = await idb();
+      for (const f of files) {
+        const id = Date.now() + "-" + Math.random().toString(36).slice(2, 7);
+        await new Promise((res, rej) => {
+          const tx = db.transaction("img", "readwrite");
+          tx.objectStore("img").put({ id, name: f.name.replace(/\.[^.]+$/, ""), blob: f });
+          tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+        });
+      }
+      const mine = refs.manifest.sets.find((s) => s.id === "minhas");
+      mine.items = await userRefs();
+      toast(`${files.length} imagem(ns) adicionada(s) em "Minhas imagens".`);
+      await chooseRefSet(settings.ref === "nenhuma" ? "minhas" : settings.ref, true);
+      $("sel-ref").value = settings.ref;
+    } catch (e) { toast("Não deu pra guardar as imagens: " + (e.message || e)); }
+  }
+
+  function renderRefOptions() {
+    const sel = $("sel-ref");
+    const sets = refs.manifest.sets.filter((s) => s.items.length || s.id === "minhas");
+    sel.innerHTML = `<option value="nenhuma">Sem referência</option>` +
+      sets.map((s) => `<option value="${esc(s.id)}">${esc(s.name)} (${s.items.length})</option>`).join("") +
+      `<option value="tudo">Tudo misturado</option>`;
+    if (![...sel.options].some((o) => o.value === settings.ref)) settings.ref = "tudo";
+    sel.value = settings.ref;
+  }
+  function renderRefGrid() {
+    const g = $("ref-grid");
+    if (!g) return;
+    g.innerHTML = refs.list.length
+      ? refs.list.map((it, i) => `<button type="button" data-i="${i}" title="${esc(it.title)}${it.artist ? " — " + esc(it.artist) : ""}"><img loading="lazy" src="${esc(it.src)}" alt="${esc(it.title)}" /></button>`).join("")
+      : `<p class="muted">Sem referência: as cores vêm só do som.</p>`;
+    g.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => showRef(+b.dataset.i)));
+    markRefGrid();
+  }
+  function markRefGrid() {
+    const g = $("ref-grid");
+    if (!g) return;
+    [...g.children].forEach((b, i) => b.classList && b.classList.toggle("on", i === refs.idx));
+    const it = refs.list[refs.idx];
+    $("ref-now").textContent = it ? `Agora: ${it.title}${it.artist ? " — " + it.artist : ""}` : "";
+  }
+
   // ---------- estilo abstrato ----------
   // Nada de contorno: cada som solta "agentes" (traços, grãos, fumaça, manchas)
   // que escorrem por um campo de fluxo e vão deixando rastro na tela.
@@ -453,7 +681,7 @@
     const curl = (n01(tr.sweep) - 0.3) * 2.2;
     const tint = (dl = 0) => ({ h: s.color.h + (rand() - 0.5) * spread, s: s.color.s, l: clamp(s.color.l + dl + (rand() - 0.5) * 14, 5, 95) });
     const around = (k) => ({ x: X + (rand() - 0.5) * R * k, y: Y + (rand() - 0.5) * R * k });
-    const push = (o) => agents.push(Object.assign({ age: 0, vx: 0, vy: 0, inertia: 0.9, curl, turb: s.shape }, o));
+    const push = (o) => agents.push(Object.assign({ age: 0, vx: 0, vy: 0, inertia: 0.9, curl, turb: s.shape, ou: s.ou, ov: s.ov }, o));
     const dir = (sp) => { const a = rand() * Math.PI * 2; return { vx: Math.cos(a) * sp, vy: Math.sin(a) * sp }; };
 
     switch (s.m) {
@@ -577,18 +805,32 @@
         pctx.fillStyle = g;
         pctx.fillRect(a.x - r, a.y - r, r * 2, r * 2);
       } else {
-        const ang = flowAngle(a.x / W, a.y / H, t, turb) + a.curl * a.age;
+        let ang = flowAngle(a.x / W, a.y / H, t, turb) + a.curl * a.age;
+        let ink = null;
+        if (refs.cur) {
+          // segue o contorno da obra (pincelada) e pega a tinta dela
+          const nx0 = a.x / W + a.ou, ny0 = a.y / H + a.ov;
+          const e = refEdge(nx0, ny0);
+          if (e) {
+            const w = fid().edge * e.mag;
+            const d = Math.atan2(Math.sin(e.ang - ang), Math.cos(e.ang - ang));
+            // contorno não tem sentido: escolhe o lado mais próximo do fluxo
+            ang += (Math.abs(d) > Math.PI / 2 ? d - Math.sign(d) * Math.PI : d) * w;
+          }
+          const p = refRGB(nx0, ny0);
+          if (p) { ink = mixRGB(p, a.rgb || (a.rgb = hslToRgb(a.c)), fid().mix); }
+        }
         a.vx = a.vx * a.inertia + Math.cos(ang) * a.speed * (1 - a.inertia);
         a.vy = a.vy * a.inertia + Math.sin(ang) * a.speed * (1 - a.inertia);
         const nx = a.x + a.vx * md * dt, ny = a.y + a.vy * md * dt;
         const c = a.hueDrift ? { ...a.c, h: a.c.h + a.hueDrift * a.age } : a.c;
-        const al = a.a * Math.pow(k, 0.7) * (mode === "pintura" ? 0.55 : 1);
+        const al = a.a * Math.pow(k, 0.7) * (mode === "pintura" ? 0.55 : 1) * (refs.cur ? 1.35 : 1);
         if (a.kind === "dot") {
-          pctx.fillStyle = hsla(c, al);
+          pctx.fillStyle = ink ? rgba(ink, al) : hsla(c, al);
           const w = a.w * DPR;
           pctx.fillRect(nx - w / 2, ny - w / 2, w, w);
         } else {
-          pctx.strokeStyle = hsla(c, al);
+          pctx.strokeStyle = ink ? rgba(ink, al) : hsla(c, al);
           pctx.lineWidth = Math.max(0.3, a.w * DPR * Math.sqrt(k));
           pctx.beginPath(); pctx.moveTo(a.x, a.y); pctx.lineTo(nx, ny); pctx.stroke();
         }
@@ -825,6 +1067,7 @@
       log(`ch${ch} CC ${num} = ${val}${param ? " → T" + (tr + 1) + " " + labelOf(param) : ""}`);
     } else if (type === 0xc0) {
       log(`ch${ch} program change ${d[1]} (pattern)`);
+      if (settings.refAuto !== false) nextRef();
     }
   }
 
@@ -839,7 +1082,10 @@
     const t = now();
     if (st === 0xf8) {
       clock.ticks++;
-      if (clock.ticks % 6 === 0) clock.step++;
+      if (clock.ticks % 6 === 0) {
+        clock.step++;
+        if (clock.step % 256 === 0 && settings.refAuto !== false) nextRef(); // a cada 16 compassos
+      }
       clock.times.push(t);
       if (clock.times.length > 49) clock.times.shift();
       if (clock.times.length >= 25 && clock.ticks % 24 === 0) {
@@ -906,6 +1152,7 @@
       if (s === 0 && bar % 2 === 0) spawn(5, 55 + SCALE[bar % 6], 95);
       clock.step = was; clock.running = run;
       demo.step++;
+      if (demo.step % 128 === 0) nextRef();
       demo.next += 0.125;
     }
   }
@@ -1011,7 +1258,7 @@
 
   // ---------- modo palco ----------
   let wakeLock = null, hintT = 0, idleT = 0;
-  const SHORTCUTS = "F palco (Esc sai) · 1–6 trilhas · G estilo · M modo · L composição · P paleta\nC limpar · S salvar imagem · D demo · A áudio · ? atalhos";
+  const SHORTCUTS = "F palco (Esc sai) · 1–6 trilhas · R próxima obra · G estilo · M modo · L composição · P paleta\nC limpar · S salvar imagem · D demo · A áudio · ? atalhos";
 
   function enterShow() {
     if (show) return;
@@ -1080,6 +1327,12 @@
     $("chk-onset").addEventListener("change", (e) => { settings.onset = e.target.checked; save(); });
     $("btn-cc-reset").addEventListener("click", () => { settings.cc = { ...DEFAULT_CC }; save(); renderCcGrid(); });
     document.querySelectorAll("#seg-mode button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.v)));
+    $("sel-ref").addEventListener("change", (e) => chooseRefSet(e.target.value));
+    $("sel-fid").value = settings.refFid;
+    $("sel-fid").addEventListener("change", (e) => { settings.refFid = e.target.value; save(); });
+    $("chk-ref-auto").checked = settings.refAuto !== false;
+    $("chk-ref-auto").addEventListener("change", (e) => { settings.refAuto = e.target.checked; save(); });
+    $("inp-ref").addEventListener("change", (e) => { if (e.target.files.length) addUserImages([...e.target.files]); e.target.value = ""; });
     const lay = $("sel-layout"), palSel = $("sel-palette"), sty = $("sel-style");
     sty.value = settings.style;
     sty.addEventListener("change", () => setStyle(sty.value));
@@ -1109,6 +1362,7 @@
       } else if (k === "g") { setStyle(settings.style === "abstrato" ? "geometrico" : "abstrato"); hint("Estilo: " + sty.selectedOptions[0].textContent, 1200); }
       else if (k === "d") { toggleDemo(); hint(demo.on ? "Demo ligado" : "Demo desligado", 1200); }
       else if (k === "a") toggleAudio();
+      else if (k === "r") { if (refs.list.length) nextRef(false); else hint("Sem referência escolhida", 1200); }
       else if (k === "?" || k === "h") hint(SHORTCUTS, 5000);
       else if (k === "escape") { if (show) leaveShow(); else closeSheet(); }
     });
@@ -1117,6 +1371,7 @@
 
   // ---------- início ----------
   bind();
+  loadManifest();
   resize();
   setMode(settings.mode);
   renderPads();

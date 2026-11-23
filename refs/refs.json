@@ -1,0 +1,143 @@
+{
+ "sets": [
+  {
+   "id": "vangogh",
+   "name": "Van Gogh",
+   "items": [
+    {
+     "src": "refs/vangogh/the-bedroom.jpg",
+     "title": "The Bedroom",
+     "artist": "Vincent van Gogh",
+     "date": "1889",
+     "license": "Domínio público (Art Institute of Chicago, acesso aberto)",
+     "source": "https://www.artic.edu/artworks/28560"
+    },
+    {
+     "src": "refs/vangogh/self-portrait.jpg",
+     "title": "Self-Portrait",
+     "artist": "Vincent van Gogh",
+     "date": "1887",
+     "license": "Domínio público (Art Institute of Chicago, acesso aberto)",
+     "source": "https://www.artic.edu/artworks/80607"
+    },
+    {
+     "src": "refs/vangogh/the-poet-s-garden.jpg",
+     "title": "The Poet's Garden",
+     "artist": "Vincent van Gogh",
+     "date": "1888",
+     "license": "Domínio público (Art Institute of Chicago, acesso aberto)",
+     "source": "https://www.artic.edu/artworks/14586"
+    },
+    {
+     "src": "refs/vangogh/a-peasant-woman-digging-in-front-of-her-cottage.jpg",
+     "title": "A Peasant Woman Digging in Front of Her Cottage",
+     "artist": "Vincent van Gogh",
+     "date": "c. 1885",
+     "license": "Domínio público (Art Institute of Chicago, acesso aberto)",
+     "source": "https://www.artic.edu/artworks/28862"
+    },
+    {
+     "src": "refs/vangogh/the-drinkers.jpg",
+     "title": "The Drinkers",
+     "artist": "Vincent van Gogh",
+     "date": "1890",
+     "license": "Domínio público (Art Institute of Chicago, acesso aberto)",
+     "source": "https://www.artic.edu/artworks/79349"
+    },
+    {
+     "src": "refs/vangogh/fishing-in-spring-the-pont-de-clichy-asni-res.jpg",
+     "title": "Fishing in Spring, the Pont de Clichy (Asnières)",
+     "artist": "Vincent van Gogh",
+     "date": "1887",
+     "license": "Domínio público (Art Institute of Chicago, acesso aberto)",
+     "source": "https://www.artic.edu/artworks/109314"
+    },
+    {
+     "src": "refs/vangogh/madame-roulin-rocking-the-cradle-la-berceuse.jpg",
+     "title": "Madame Roulin Rocking the Cradle (La berceuse)",
+     "artist": "Vincent van Gogh",
+     "date": "1889",
+     "license": "Domínio público (Art Institute of Chicago, acesso aberto)",
+     "source": "https://www.artic.edu/artworks/27949"
+    },
+    {
+     "src": "refs/vangogh/terrace-and-observation-deck-at-the-moulin-de-blute-fin-mont.jpg",
+     "title": "Terrace and Observation Deck at the Moulin de Blute-Fin, Montmartre",
+     "artist": "Vincent van Gogh",
+     "date": "Early 1887",
+     "license": "Domínio público (Art Institute of Chicago, acesso aberto)",
+     "source": "https://www.artic.edu/artworks/27954"
+    },
+    {
+     "src": "refs/vangogh/grapes-lemons-pears-and-apples.jpg",
+     "title": "Grapes, Lemons, Pears, and Apples",
+     "artist": "Vincent van Gogh",
+     "date": "1887",
+     "license": "Domínio público (Art Institute of Chicago, acesso aberto)",
+     "source": "https://www.artic.edu/artworks/64957"
+    },
+    {
+     "src": "refs/vangogh/still-life-melon-fish-jar.jpg",
+     "title": "Still Life: Melon, Fish Jar",
+     "artist": "Vincent van Gogh",
+     "date": "c. 1888",
+     "license": "Domínio público (Art Institute of Chicago, acesso aberto)",
+     "source": "https://www.artic.edu/artworks/27952"
+    }
+   ]
+  },
+  {
+   "id": "nery",
+   "name": "Ismael Nery",
+   "items": []
+  },
+  {
+   "id": "acervo",
+   "name": "Acervo (paredes)",
+   "items": [
+    {
+     "src": "refs/acervo/espirais.jpg",
+     "title": "Espirais azuis",
+     "artist": "Acervo",
+     "source": "foto enviada pelo usuário"
+    },
+    {
+     "src": "refs/acervo/respingos.jpg",
+     "title": "Respingos",
+     "artist": "Acervo",
+     "source": "foto enviada pelo usuário"
+    },
+    {
+     "src": "refs/acervo/massa.jpg",
+     "title": "Massa de cor",
+     "artist": "Acervo",
+     "source": "foto enviada pelo usuário"
+    },
+    {
+     "src": "refs/acervo/rostos.jpg",
+     "title": "Rostos",
+     "artist": "Acervo",
+     "source": "foto enviada pelo usuário"
+    },
+    {
+     "src": "refs/acervo/cidade-azul.jpg",
+     "title": "Cidade azul",
+     "artist": "Acervo",
+     "source": "foto enviada pelo usuário"
+    },
+    {
+     "src": "refs/acervo/festa-vermelha.jpg",
+     "title": "Festa vermelha",
+     "artist": "Acervo",
+     "source": "foto enviada pelo usuário"
+    },
+    {
+     "src": "refs/acervo/transa.jpg",
+     "title": "Colagem Transa",
+     "artist": "Acervo",
+     "source": "foto enviada pelo usuário"
+    }
+   ]
+  }
+ ]
+}

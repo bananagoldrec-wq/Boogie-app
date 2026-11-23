@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-cycles-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-cycles-512.png" />
 
-  <link rel="stylesheet" href="css/cycles.css?v=3" />
+  <link rel="stylesheet" href="css/cycles.css?v=4" />
 </head>
 <body>
   <header class="bar">
@@ -81,6 +81,7 @@
         <option value="radial">Radial</option>
         <option value="grade">Grade</option>
       </select>
+      <select id="sel-ref" class="sel" aria-label="Referência"><option value="nenhuma">Sem referência</option></select>
       <select id="sel-palette" class="sel" aria-label="Paleta">
         <option value="espectro">Espectro</option>
         <option value="neon">Neon</option>
@@ -109,6 +110,24 @@
       </section>
 
       <section>
+        <h4>Banco de referências</h4>
+        <p class="muted">As pinceladas pegam a cor da obra no ponto onde passam e seguem os contornos dela.
+        Troca sozinha a cada 16 compassos e quando você muda de pattern; tecla <b>R</b> passa pra próxima. Toque numa obra pra usar agora.</p>
+        <label class="row">Fidelidade
+          <select id="sel-fid" class="sel">
+            <option value="baixa">Baixa — fragmentos soltos</option>
+            <option value="media">Média</option>
+            <option value="alta">Alta — a obra aparece mais</option>
+          </select>
+        </label>
+        <label class="chk"><input type="checkbox" id="chk-ref-auto" /> Trocar de obra sozinho (16 compassos / pattern)</label>
+        <p class="muted" id="ref-now"></p>
+        <div class="ref-grid" id="ref-grid"></div>
+        <label class="btn small file">Adicionar imagens minhas…<input type="file" id="inp-ref" accept="image/*" multiple hidden /></label>
+        <p class="muted">Ficam só neste aparelho, em "Minhas imagens".</p>
+      </section>
+
+      <section>
         <h4>Canal MIDI de cada trilha</h4>
         <p class="muted">No Cycles: <i>Settings → MIDI Config → Channels</i>. O padrão é 1 a 6.</p>
         <div class="chan-grid" id="chan-grid"></div>
@@ -131,6 +150,6 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles.js?v=3"></script>
+  <script src="js/cycles.js?v=4"></script>
 </body>
 </html>

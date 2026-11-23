@@ -474,6 +474,25 @@ o som em ecos e o reverb põe um véu de luz. Com o áudio ligado, o volume
 empurra o zoom e a frequência mexe na turbulência. O estilo **Geométrico** (a
 tabela acima) continua disponível no seletor ou na tecla **G**.
 
+**Banco de referências:** pinturas viram a "tinta" do estilo abstrato. Cada
+pincelada pega a cor da obra no ponto da tela por onde passa e segue os
+contornos dela (o gradiente de luz da pintura), misturada com a cor do som. A
+obra nunca aparece inteira. Na **fidelidade** baixa cada som pega um fragmento
+solto de outro lugar da obra; na alta, no modo Pintura, ela vai se
+insinuando. As cores das obras são "acesas" pra projetar no preto. A obra troca
+sozinha a cada 16 compassos e quando você muda de pattern no Cycles (program
+change); tecla **R** pula pra próxima. No ⚙ dá pra ver o banco, tocar numa obra
+pra usar agora e **adicionar imagens suas** (ficam só no aparelho, IndexedDB).
+Conjuntos em `refs/` (lista em `refs/refs.json`):
+
+- **Van Gogh** — pinturas em domínio público do acervo aberto do Art Institute
+  of Chicago (e do Wikimedia Commons, quando disponível).
+- **Ismael Nery** — domínio público no Brasil desde 2005 (morreu em 1934);
+  vem do Wikimedia Commons.
+- **Acervo (paredes)** — fotos das pinturas enviadas, recortadas e endireitadas.
+
+Cada item do `refs.json` guarda título, data, licença e o link da fonte.
+
 No estilo Geométrico, a forma com mais energia ganha um contorno tracejado e aparece em **"Mais alto
 agora"**, com trilha, velocity, Hz e nota.
 
@@ -493,7 +512,7 @@ trilhas, seguindo o clock). **Paletas:** Espectro, Neon, Boogie e Papel.
 tela) entra em tela cheia só com o fundo preto e as imagens: sem barras,
 botões, textos nem contorno do "mais alto", e o cursor some quando o mouse
 para. A tela também não apaga sozinha durante o show. **Esc** sai. Tudo se controla
-pelo teclado sem abrir nada: **1–6** trilhas, **G** estilo, **M** modo, **L** composição,
+pelo teclado sem abrir nada: **1–6** trilhas, **R** próxima obra, **G** estilo, **M** modo, **L** composição,
 **P** paleta, **C** limpar, **S** salvar imagem, **D** demo, **A** áudio,
 **?** mostra os atalhos. Ao apertar uma tecla aparece só um aviso pequeno no
 canto, que some em seguida. No palco o fundo é sempre preto (a paleta Papel
