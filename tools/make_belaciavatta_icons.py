@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Gera os ícones do app Bela Ciavatta (precisa do Pillow).
-Saída: icons/icon-belaciavatta-192.png, icons/icon-belaciavatta-512.png,
-       icons/apple-touch-icon-belaciavatta.png (180).
+Saída: icons/icon-belaciavatta-192-v2.png, icons/icon-belaciavatta-512-v2.png,
+       icons/apple-touch-icon-belaciavatta-v2.png (180).
 No estilo da capa de "De lá": azul do céu com "bc" escrito à mão em ocre
 (Reenie Beanie, em tools/fonts — licença SIL OFL)."""
 import os
@@ -24,6 +24,6 @@ def render(size):
     return im.resize((size, size), Image.LANCZOS)
 
 
-for name, size in [("icon-belaciavatta-192.png", 192), ("icon-belaciavatta-512.png", 512), ("apple-touch-icon-belaciavatta.png", 180)]:
+for name, size in [("icon-belaciavatta-192-v2.png", 192), ("icon-belaciavatta-512-v2.png", 512), ("apple-touch-icon-belaciavatta-v2.png", 180)]:
     render(size).save(os.path.join(ROOT, name))
     print(name)
