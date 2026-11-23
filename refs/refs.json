@@ -89,7 +89,16 @@
   {
    "id": "nery",
    "name": "Ismael Nery",
-   "items": []
+   "items": [
+    {
+     "src": "refs/nery/auto-retrato-homem-de-chap-u.jpg",
+     "title": "Auto-Retrato (Homem de Chapéu)",
+     "artist": "Ismael Nery",
+     "date": "",
+     "license": "Domínio público no Brasil (artista morto em 1934)",
+     "source": "https://commons.wikimedia.org/wiki/File:Ismael_Nery_-_Auto-Retrato_(Homem_de_Chap%C3%A9u).jpg"
+    }
+   ]
   },
   {
    "id": "acervo",
