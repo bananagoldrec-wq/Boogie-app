@@ -428,8 +428,10 @@
       sh.ou = (Math.random() - 0.5) * j; sh.ov = (Math.random() - 0.5) * j;
       sh.color = refBaseColor(x, y, sh.ou, sh.ov, sh.color);
     }
-    if (settings.style === "abstrato") {
-      abstractBurst(sh, tr);
+    if (settings.style === "patch") patchHit(sh, tr);
+    else if (settings.style === "datamosh") moshHit(sh, tr);
+    if (settings.style !== "geometrico") {
+      if (settings.style === "abstrato") abstractBurst(sh, tr);
       // delay send: o som "volta" em ecos mais fracos, em outro lugar da tela
       if (source !== "eco" && tr.delay > 10 && vel > 25) {
         const gap = clock.bpm ? (60 / clock.bpm) * 0.75 : 0.28;
@@ -481,9 +483,14 @@
     const rand = rng(s.seed);
 
     ctx.save();
-    if (pal().dark && s.reverb > 0.05) {
-      ctx.shadowColor = hsla(c, Math.min(1, a * 1.2), 10);
-      ctx.shadowBlur = s.reverb * R * 0.9 * DPR;
+    // reverb = halo de luz atrás da forma (degradê; a sombra borrada do canvas é lentíssima)
+    if (pal().dark && s.reverb > 0.05 && !opts.echo) {
+      const hr = R * (1.3 + s.reverb);
+      const g = ctx.createRadialGradient(x, y, R * 0.3, x, y, hr);
+      g.addColorStop(0, hsla(c, a * 0.35 * s.reverb, 10));
+      g.addColorStop(1, hsla(c, 0, 10));
+      ctx.fillStyle = g;
+      ctx.fillRect(x - hr, y - hr, hr * 2, hr * 2);
     }
     ctx.translate(x, y);
 
@@ -666,7 +673,11 @@
           const o = hslToRgb(c);
           lit[i] = o[0]; lit[i + 1] = o[1]; lit[i + 2] = o[2]; lit[i + 3] = 255;
         }
-        res({ ...item, w, h, data, lit });
+        // versões pequenas pra desenhar (o datamosh usa os pixels grandes de propósito)
+        const litC = document.createElement("canvas");
+        litC.width = w; litC.height = h;
+        litC.getContext("2d").putImageData(new ImageData(lit, w, h), 0, 0);
+        res({ ...item, w, h, data, lit, small: c, smallLit: litC });
       };
       img.onerror = () => res(null);
       img.src = item.src;
@@ -991,6 +1002,31 @@
     if (agents.length > 2600) agents.splice(0, agents.length - 2600);
   }
 
+  // cópia do quadro anterior: desenhar a tela nela mesma bloco a bloco faz o
+  // navegador copiar a tela inteira a cada chamada (lento); copia uma vez só
+  const snap = document.createElement("canvas");
+  function snapshot() {
+    if (snap.width !== W || snap.height !== H) { snap.width = W; snap.height = H; }
+    const x = snap.getContext("2d");
+    x.globalCompositeOperation = "copy";
+    x.drawImage(paint, 0, 0);
+    return snap;
+  }
+  // glitch: faixas da imagem deslocadas para os lados
+  function applyGlitch() {
+    if (fx.glitch > 0.05) {
+      const src = snapshot();
+      const bands = 1 + Math.round(fx.glitch * 5);
+      for (let i = 0; i < bands; i++) {
+        const h = Math.max(1, H * (0.004 + Math.random() * 0.05 * fx.glitch));
+        const y = Math.random() * (H - h);
+        const dx = (Math.random() - 0.5) * W * 0.12 * fx.glitch;
+        pctx.drawImage(src, 0, y, W, h, dx, y, W, h);
+      }
+      fx.glitch *= 0.72;
+    }
+  }
+
   let lastT = 0;
   function frameAbstract(t) {
     const dt = clamp(t - (lastT || t), 0, 0.05);
@@ -998,11 +1034,6 @@
     const md = Math.min(W, H);
     const mode = settings.mode;
 
-    echoQueue.sort((a, b) => a.at - b.at);
-    while (echoQueue.length && echoQueue[0].at <= t) {
-      const e = echoQueue.shift();
-      if (e.vel > 8) spawn(e.tr, e.note, e.vel, "eco");
-    }
 
     if (audio.on) fx.zoom = Math.max(fx.zoom, audio.rms * 0.025);
 
@@ -1024,17 +1055,7 @@
     }
     fx.zoom *= 0.88;
 
-    // glitch: faixas da imagem deslocadas para os lados
-    if (fx.glitch > 0.05) {
-      const bands = 1 + Math.round(fx.glitch * 5);
-      for (let i = 0; i < bands; i++) {
-        const h = Math.max(1, H * (0.004 + Math.random() * 0.05 * fx.glitch));
-        const y = Math.random() * (H - h);
-        const dx = (Math.random() - 0.5) * W * 0.12 * fx.glitch;
-        pctx.drawImage(paint, 0, y, W, h, dx, y, W, h);
-      }
-      fx.glitch *= 0.72;
-    }
+    applyGlitch();
 
     const persist = mode === "vivo" ? 0.16 : mode === "rastro" ? 0.06 : 0.025;
     const turbG = audio.on && audio.rms > 0.01 ? hzT(audio.hz) : 0.4;
@@ -1103,6 +1124,278 @@
     pctx.restore();
   }
 
+  // ---------- estilo Patch (no espírito do Pure Data + GEM) ----------
+  // Formas mínimas e nítidas no preto. Como no PD, cada valor que chega não
+  // "pula": vai até o alvo numa rampa linear (o objeto `line`), e pode emendar
+  // várias rampas — ex.: o anel do kick abre em 30 ms e fecha no tempo do decay.
+  function mkLine(v = 0) { return { a: v, b: v, t0: 0, d: 0, q: [] }; }
+  function lineVal(L) {
+    const t = now();
+    for (;;) {
+      const k = L.d > 0 ? (t - L.t0) / L.d : 1;
+      if (k < 1) return L.a + (L.b - L.a) * k;
+      if (!L.q.length) return L.b;
+      const [to, ms] = L.q.shift();
+      L.a = L.b; L.t0 += L.d; L.b = to; L.d = ms / 1000;
+    }
+  }
+  function lineGo(L, segs) {
+    L.a = lineVal(L);
+    const [to, ms] = segs[0];
+    L.b = to; L.t0 = now(); L.d = ms / 1000; L.q = segs.slice(1);
+  }
+  const patch = {
+    ring: { r: mkLine(0.05), a: mkLine(0), c: { h: 280, s: 80, l: 60 } },
+    lead: { y: mkLine(0.5), a: mkLine(0), c: { h: 290, s: 90, l: 60 } },
+    bass: { h: mkLine(0), c: { h: 200, s: 70, l: 50 } },
+    squares: [], bars: [], cubes: [], rings: [], hlines: [], rects: [],
+  };
+  const CUBE_V = [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]];
+  const CUBE_E = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
+
+  function patchHit(s, tr) {
+    const v = n01(s.vel), md = Math.min(W, H), t = now();
+    const life = s.life, c = s.color;
+    const cap = (arr, n) => { if (arr.length > n) arr.splice(0, arr.length - n); };
+    switch (s.m) {
+      case 0: { // KICK: o anel central abre e fecha (line: abre em 30 ms, volta no decay)
+        lineGo(patch.ring.r, [[0.1 + 0.28 * v, 30], [0.05, 120 + life * 500]]);
+        lineGo(patch.ring.a, [[0.6 + 0.4 * v, 20], [0.12, 150 + life * 600]]);
+        patch.ring.c = c;
+        for (let i = 0; i < 4 + v * 10; i++) {
+          const a = Math.random() * Math.PI * 2, sp = 0.2 + Math.random() * 0.5;
+          patch.squares.push({ x: 0.5, y: 0.5, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: 0, size: 3 + Math.random() * 6, c, born: t, life: 0.4 + life * 0.5 });
+        }
+        break;
+      }
+      case 1: { // SNARE/CLAP: quadradinhos espirram pra cima e caem (gravidade)
+        const n = 12 + Math.round(v * (20 + s.shape * 40));
+        const x0 = s.x, y0 = Math.min(0.85, s.y + 0.1);
+        for (let i = 0; i < n; i++) {
+          const hue = [140, 280, 185][(Math.random() * 3) | 0];
+          patch.squares.push({ x: x0 + (Math.random() - 0.5) * 0.08, y: y0, vx: (Math.random() - 0.5) * 0.6, vy: -(0.4 + Math.random() * 0.9) * (0.5 + v),
+            g: 1.3, size: 4 + Math.random() * 12 * (0.4 + v), c: refs.cur ? c : { h: hue + (Math.random() - 0.5) * 20, s: 75, l: 60 }, born: t, life: 0.8 + life * 0.6 });
+        }
+        break;
+      }
+      case 2: // HI-HAT: barras brancas finas e altas que piscam
+        for (let i = 0; i < 1 + Math.round(v * 2); i++) {
+          const L = mkLine(0);
+          lineGo(L, [[0.25 + 0.6 * v, 25], [0, 90 + life * 200]]);
+          patch.bars.push({ x: Math.random(), w: 2 + Math.random() * 10 * v, h: L, c: { h: c.h, s: 10, l: 92 }, born: t, life: 0.15 + life * 0.25 });
+        }
+        break;
+      case 3: { // PERC: retângulo cheio que gira e some
+        const L = mkLine(0);
+        lineGo(L, [[0.04 + 0.1 * v, 40], [0, 200 + life * 400]]);
+        patch.rects.push({ x: s.x, y: s.y, s: L, rot: Math.random() * Math.PI, spin: (n01(tr.sweep) - 0.3) * 6, c, born: t, life: 0.3 + life * 0.5 });
+        break;
+      }
+      case 4: // LEAD/TONE: a linha neon desliza até a altura da nota (line 150 ms)
+        lineGo(patch.lead.y, [[s.y, 150]]);
+        lineGo(patch.lead.a, [[0.5 + 0.5 * v, 20], [0, 250 + life * 700]]);
+        patch.lead.c = c;
+        patch.hlines.push({ y: s.y + (Math.random() - 0.5) * 0.04, a: 0.35 * v, th: 1 + 3 * v, c, born: t, life: 0.25 + life * 0.4 });
+        break;
+      case 5: { // CHORD: cubo em arame girando (rotateXYZ), tamanho pela velocity
+        const L = mkLine(0);
+        lineGo(L, [[0.08 + 0.14 * v, 120], [0.06, 400 + life * 800]]);
+        const spin = 0.5 + n01(tr.sweep) * 2.5;
+        patch.cubes.push({ x: s.x, y: s.y, s: L, rx: Math.random() * 6, ry: Math.random() * 6, rz: 0, sx: spin * (Math.random() - 0.5) * 2, sy: spin, sz: spin * 0.3,
+          c, born: t, life: 1 + life * 1.5 });
+        cap(patch.cubes, 8);
+        break;
+      }
+      case 6: // VOZ: círculos concêntricos que abrem devagar
+        for (let i = 0; i < 3; i++) {
+          const L = mkLine(0.01 + i * 0.02);
+          lineGo(L, [[0.12 + 0.18 * v + i * 0.05, 600 + life * 900]]);
+          patch.rings.push({ x: s.x, y: s.y, r: L, c, born: t, life: 0.7 + life * 1.2, th: 1.5 });
+        }
+        break;
+      case 8: // BAIXO: barra no chão que sobe e desce
+        lineGo(patch.bass.h, [[0.04 + 0.12 * v, 30], [0.01, 150 + life * 500]]);
+        patch.bass.c = c;
+        break;
+      default: { // FX: rasgos e linhas de varredura na tela toda
+        fx.glitch = Math.max(fx.glitch, 0.5 + 0.5 * v);
+        for (let i = 0; i < 6 + v * 14; i++) patch.hlines.push({ y: Math.random(), a: 0.25 + 0.5 * v, th: 1 + Math.random() * 3, c, born: t, life: 0.15 + Math.random() * 0.4 });
+      }
+    }
+    cap(patch.squares, 900); cap(patch.bars, 60); cap(patch.rects, 40); cap(patch.rings, 40); cap(patch.hlines, 80);
+  }
+
+  function framePatch(t, dt) {
+    const mode = settings.mode, md = Math.min(W, H), ctx = pctx;
+    fillBg(ctx, mode === "vivo" ? 1 : mode === "rastro" ? 0.16 : 0.015);
+    applyGlitch();
+    ctx.save();
+    ctx.globalCompositeOperation = pal().dark ? "lighter" : "multiply";
+    const alive = (o) => t - o.born < o.life;
+    // no rastro/pintura tudo é redesenhado por cima do quadro anterior: formas grandes
+    // somariam luz até estourar, então entram mais fracas (as pequenas deixam rastro)
+    const big = mode === "vivo" ? 1 : mode === "rastro" ? 0.22 : 0.05;
+    const small = mode === "vivo" ? 1 : mode === "rastro" ? 0.6 : 0.3;
+    const fade = (o) => clamp(1 - (t - o.born) / o.life, 0, 1);
+
+    // anel do kick (sempre lá, respirando com o line)
+    const rr = lineVal(patch.ring.r) * md, ra = lineVal(patch.ring.a) * big;
+    if (ra > 0.01) {
+      ctx.lineWidth = 2.5 * DPR;
+      ctx.strokeStyle = hsla(patch.ring.c, ra * 0.3, 10);
+      ctx.beginPath(); ctx.arc(W / 2, H / 2, rr + 4 * DPR, 0, Math.PI * 2); ctx.lineWidth = 9 * DPR; ctx.stroke();
+      ctx.strokeStyle = hsla(patch.ring.c, ra, 15);
+      ctx.lineWidth = 2.5 * DPR;
+      ctx.beginPath(); ctx.arc(W / 2, H / 2, rr, 0, Math.PI * 2); ctx.stroke();
+    }
+    // linha do lead
+    const la = lineVal(patch.lead.a) * big;
+    if (la > 0.01) {
+      const y = lineVal(patch.lead.y) * H;
+      ctx.fillStyle = hsla(patch.lead.c, la * 0.25, 10); ctx.fillRect(0, y - 5 * DPR, W, 10 * DPR);
+      ctx.fillStyle = hsla(patch.lead.c, la, 20); ctx.fillRect(0, y - 1.5 * DPR, W, 3 * DPR);
+    }
+    // barra do baixo
+    const bh = lineVal(patch.bass.h) * H;
+    if (bh > 1) { ctx.fillStyle = hsla(patch.bass.c, 0.55 * big); ctx.fillRect(0, H - bh, W, bh); }
+
+    patch.hlines = patch.hlines.filter(alive);
+    for (const o of patch.hlines) { ctx.fillStyle = hsla(o.c, o.a * fade(o) * big, 15); ctx.fillRect(0, o.y * H, W, o.th * DPR); }
+    patch.bars = patch.bars.filter(alive);
+    for (const o of patch.bars) {
+      const h = lineVal(o.h) * H;
+      ctx.fillStyle = hsla(o.c, 0.9 * fade(o) * big);
+      ctx.fillRect(o.x * W - (o.w * DPR) / 2, H / 2 - h / 2, o.w * DPR, h);
+    }
+    patch.rects = patch.rects.filter(alive);
+    for (const o of patch.rects) {
+      const sz = lineVal(o.s) * md;
+      ctx.save(); ctx.translate(o.x * W, o.y * H); ctx.rotate(o.rot + o.spin * (t - o.born));
+      ctx.fillStyle = hsla(o.c, 0.8 * fade(o) * big); ctx.fillRect(-sz / 2, -sz / 2, sz, sz); ctx.restore();
+    }
+    patch.rings = patch.rings.filter(alive);
+    ctx.lineWidth = 1.5 * DPR;
+    for (const o of patch.rings) {
+      ctx.strokeStyle = hsla(o.c, 0.8 * fade(o) * small, 10);
+      ctx.beginPath(); ctx.arc(o.x * W, o.y * H, lineVal(o.r) * md, 0, Math.PI * 2); ctx.stroke();
+    }
+    // cubos em arame (rotação 3D + perspectiva)
+    patch.cubes = patch.cubes.filter(alive);
+    for (const o of patch.cubes) {
+      o.rx += o.sx * dt; o.ry += o.sy * dt; o.rz += o.sz * dt;
+      const size = lineVal(o.s) * md, cx = o.x * W, cy = o.y * H;
+      const [sx, cxr, sy, cyr, sz, czr] = [Math.sin(o.rx), Math.cos(o.rx), Math.sin(o.ry), Math.cos(o.ry), Math.sin(o.rz), Math.cos(o.rz)];
+      const P = CUBE_V.map(([x, y, z]) => {
+        let y1 = y * cxr - z * sx, z1 = y * sx + z * cxr;          // X
+        let x2 = x * cyr + z1 * sy, z2 = -x * sy + z1 * cyr;       // Y
+        let x3 = x2 * czr - y1 * sz, y3 = x2 * sz + y1 * czr;      // Z
+        const p = 4 / (4 + z2);
+        return [cx + x3 * size * p, cy + y3 * size * p];
+      });
+      ctx.strokeStyle = hsla(o.c, 0.9 * fade(o) * small, 20);
+      ctx.lineWidth = 1.4 * DPR;
+      ctx.beginPath();
+      for (const [a, b] of CUBE_E) { ctx.moveTo(P[a][0], P[a][1]); ctx.lineTo(P[b][0], P[b][1]); }
+      ctx.stroke();
+    }
+    // quadradinhos com gravidade
+    patch.squares = patch.squares.filter(alive);
+    for (const o of patch.squares) {
+      o.vy += o.g * dt; o.x += o.vx * dt * (H / W); o.y += o.vy * dt;
+      const sz = o.size * DPR;
+      ctx.fillStyle = hsla(o.c, 0.9 * fade(o) * small, 5);
+      ctx.fillRect(o.x * W - sz / 2, o.y * H - sz / 2, sz, sz);
+    }
+    ctx.restore();
+  }
+
+  // ---------- estilo Datamosh ----------
+  // Uma obra do banco vira o "quadro-chave"; depois a imagem só se move em
+  // blocos (como um vídeo que perdeu os quadros-chave), e o som dá a direção:
+  // kick empurra pra fora, baixo derrete pra baixo, lead arrasta na horizontal,
+  // voz gira, snare inverte cores, hi-hat treme. Trocar de obra mistura a nova
+  // imagem com o movimento da antiga.
+  const mosh = { cols: 24, rows: 14, vx: null, vy: null, base: null, heal: 0 };
+  function moshInit() {
+    const n = mosh.cols * mosh.rows;
+    if (!mosh.vx || mosh.vx.length !== n) { mosh.vx = new Float32Array(n); mosh.vy = new Float32Array(n); }
+  }
+  function moshKeyframe(alpha) {
+    const r = refs.cur;
+    if (!r || !r.small) return false;
+    const A = W / H, B = r.w / r.h;
+    let dw = W, dh = H;
+    if (A > B) dh = W / B; else dw = H * B;
+    pctx.save();
+    pctx.globalCompositeOperation = "source-over";
+    pctx.globalAlpha = alpha;
+    pctx.imageSmoothingEnabled = false; // pixels grandes, cara de compressão
+    pctx.drawImage(pal().dark ? r.smallLit : r.small, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    pctx.restore();
+    return true;
+  }
+  function moshField(fn) {
+    moshInit();
+    for (let r = 0; r < mosh.rows; r++) for (let c = 0; c < mosh.cols; c++) {
+      const k = r * mosh.cols + c;
+      const [vx, vy] = fn((c + 0.5) / mosh.cols, (r + 0.5) / mosh.rows);
+      mosh.vx[k] += vx; mosh.vy[k] += vy;
+    }
+  }
+  function moshHit(s, tr) {
+    const v = n01(s.vel), sp = (2 + 10 * v) * DPR;
+    switch (s.m) {
+      case 0: moshField((x, y) => { const dx = x - 0.5, dy = y - 0.5, d = Math.hypot(dx, dy) + 0.05; return [(dx / d) * sp, (dy / d) * sp]; }); break; // kick: pra fora
+      case 8: moshField((x, y) => [0, sp * 0.6 * (0.5 + Math.random())]); break;                                                        // baixo: derrete
+      case 4: { const yy = s.y, dir = Math.random() < 0.5 ? -1 : 1; moshField((x, y) => [Math.abs(y - yy) < 0.12 ? dir * sp * 1.4 : 0, 0]); break; } // lead: arrasta
+      case 6: { const cx = s.x, cy = s.y; moshField((x, y) => { const dx = x - cx, dy = y - cy; return [-dy * sp * 2, dx * sp * 2]; }); break; } // voz: gira
+      case 1: // snare: blocos com a cor invertida + empurrões aleatórios
+        moshInit();
+        pctx.save(); pctx.globalCompositeOperation = "difference";
+        for (let i = 0; i < 4 + v * 10; i++) {
+          const k = (Math.random() * mosh.vx.length) | 0;
+          mosh.vx[k] += (Math.random() - 0.5) * sp * 4; mosh.vy[k] += (Math.random() - 0.5) * sp * 4;
+          const bw = W / mosh.cols, bh = H / mosh.rows;
+          pctx.fillStyle = hsla(s.color, 0.9);
+          pctx.fillRect((k % mosh.cols) * bw, Math.floor(k / mosh.cols) * bh, bw * (1 + ((Math.random() * 3) | 0)), bh);
+        }
+        pctx.restore();
+        break;
+      case 2: moshInit(); for (let i = 0; i < 6 + v * 10; i++) { const k = (Math.random() * mosh.vx.length) | 0; mosh.vx[k] += (Math.random() - 0.5) * sp; mosh.vy[k] += (Math.random() - 0.5) * sp; } break; // hat: treme
+      case 5: moshKeyframe(0.12 + 0.2 * v); break;   // chords: a obra volta um pouco (cores sangram)
+      case 7: fx.glitch = Math.max(fx.glitch, 0.6 + 0.4 * v); moshField(() => [(Math.random() - 0.5) * sp * 3, (Math.random() - 0.5) * sp]); break;
+      default: moshField(() => [(Math.random() - 0.5) * sp, (Math.random() - 0.5) * sp]);
+    }
+  }
+  function frameMosh(t, dt) {
+    moshInit();
+    // obra nova: entra misturada, carregando o movimento que já existia (o "mosh")
+    if (refs.cur && refs.cur !== mosh.base) {
+      moshKeyframe(mosh.base && mosh.base !== "esperando" ? 0.55 : 1);
+      mosh.base = refs.cur;
+    }
+    if (!refs.cur && !mosh.base) { fillBg(pctx, 1); newArtRef(); mosh.base = "esperando"; }
+    const mode = settings.mode;
+    // "cura": a obra vai voltando aos poucos (no ao vivo mais rápido; na pintura nunca)
+    const heal = mode === "vivo" ? 0.025 : mode === "rastro" ? 0.008 : 0;
+    if (heal && mosh.base && mosh.base !== "esperando") moshKeyframe(heal);
+    const bw = W / mosh.cols, bh = H / mosh.rows;
+    const src = snapshot();
+    const decay = Math.pow(mode === "vivo" ? 0.9 : mode === "rastro" ? 0.94 : 0.965, dt * 60);
+    for (let r = 0; r < mosh.rows; r++) for (let c = 0; c < mosh.cols; c++) {
+      const k = r * mosh.cols + c;
+      const vx = mosh.vx[k], vy = mosh.vy[k];
+      if (Math.abs(vx) + Math.abs(vy) > 0.3) {
+        const x = c * bw, y = r * bh;
+        // puxa o bloco de onde ele "vem" (sem sair da tela: o Safari não desenha fora)
+        const sx = clamp(x - vx, 0, W - bw), sy = clamp(y - vy, 0, H - bh);
+        pctx.drawImage(src, sx, sy, bw, bh, x, y, bw, bh);
+      }
+      mosh.vx[k] = vx * decay; mosh.vy[k] = vy * decay;
+    }
+    applyGlitch();
+  }
+
   // ---------- renderização ----------
   function fillBg(ctx, alpha = 1) {
     ctx.save();
@@ -1142,7 +1435,7 @@
     drawBands();
     tickDemo(t);
 
-    shapes = shapes.filter((s) => t - s.born < s.life || (settings.style !== "abstrato" && settings.mode === "pintura" && !s.stamped));
+    shapes = shapes.filter((s) => t - s.born < s.life || (settings.style === "geometrico" && settings.mode === "pintura" && !s.stamped));
 
     // energia de cada trilha → "mais alto agora"
     let dom = null, domE = 0;
@@ -1155,8 +1448,19 @@
     }
 
     lctx.clearRect(0, 0, W, H);
+    const dtF = clamp(t - (frameBody.last || t), 0, 0.05);
+    frameBody.last = t;
+    echoQueue.sort((a, b) => a.at - b.at);
+    while (echoQueue.length && echoQueue[0].at <= t) {
+      const e = echoQueue.shift();
+      if (e.vel > 8) spawn(e.tr, e.note, e.vel, "eco");
+    }
     if (settings.style === "abstrato") {
       frameAbstract(t);
+    } else if (settings.style === "patch") {
+      framePatch(t, dtF);
+    } else if (settings.style === "datamosh") {
+      frameMosh(t, dtF);
     } else if (settings.mode === "vivo") {
       renderShapes(lctx, shapes, t);
     } else if (settings.mode === "rastro") {
@@ -1181,7 +1485,7 @@
       }
       lctx.restore();
     }
-    if (!show && settings.style !== "abstrato" && dom && domE > 0.02) drawAura(lctx, dom, clamp(1 - (t - dom.born) / dom.life, 0, 1));
+    if (!show && settings.style === "geometrico" && dom && domE > 0.02) drawAura(lctx, dom, clamp(1 - (t - dom.born) / dom.life, 0, 1));
 
     // HUD
     const txt = dom && domE > 0.02
@@ -1247,6 +1551,9 @@
     agents = [];
     echoQueue = [];
     gridStep = [0, 0, 0, 0, 0, 0];
+    ["squares", "bars", "cubes", "rings", "hlines", "rects"].forEach((k) => (patch[k] = []));
+    if (mosh.vx) { mosh.vx.fill(0); mosh.vy.fill(0); }
+    mosh.base = null; // no datamosh, limpar traz a obra de volta inteira
     fillBg(pctx);
     lctx.clearRect(0, 0, W, H);
   }
@@ -1257,7 +1564,7 @@
     out.width = W; out.height = H;
     const o = out.getContext("2d");
     o.drawImage(paint, 0, 0);
-    if (settings.style !== "abstrato" && settings.mode === "vivo") renderShapes(o, shapes, now());
+    if (settings.style === "geometrico" && settings.mode === "vivo") renderShapes(o, shapes, now());
     out.toBlob((blob) => {
       if (!blob) return toast("Não consegui gerar a imagem.");
       const url = URL.createObjectURL(blob);
@@ -1609,6 +1916,7 @@
     settings.style = $("sel-style").value = v;
     save();
     clearCanvas();
+    mosh.base = null;
   }
   function cycle(list, cur) { return list[(list.indexOf(cur) + 1) % list.length]; }
   const MODE_NAMES = { vivo: "Ao vivo", rastro: "Rastro", pintura: "Pintura" };
@@ -1679,7 +1987,7 @@
         settings.palette = palSel.value = cycle(list, settings.palette);
         save(); restyle();
         hint("Paleta: " + palSel.selectedOptions[0].textContent, 1200);
-      } else if (k === "g") { setStyle(settings.style === "abstrato" ? "geometrico" : "abstrato"); hint("Estilo: " + sty.selectedOptions[0].textContent, 1200); }
+      } else if (k === "g") { setStyle(cycle(["abstrato", "patch", "datamosh", "geometrico"], settings.style)); hint("Estilo: " + sty.selectedOptions[0].textContent, 1200); }
       else if (k === "d") { toggleDemo(); hint(demo.on ? "Demo ligado" : "Demo desligado", 1200); }
       else if (k === "a") toggleAudio();
       else if (k === " " || k === "spacebar") { e.preventDefault(); toggleMusic(); }

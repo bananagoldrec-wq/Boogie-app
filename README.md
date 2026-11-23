@@ -474,6 +474,27 @@ o som em ecos e o reverb põe um véu de luz. Com o áudio ligado, o volume
 empurra o zoom e a frequência mexe na turbulência. O estilo **Geométrico** (a
 tabela acima) continua disponível no seletor ou na tecla **G**.
 
+**Estilos** (seletor ou tecla **G**):
+
+- **Abstrato** — traços, grãos e manchas que escorrem num campo de fluxo (acima).
+- **Patch (Pure Data)** — formas mínimas e nítidas no preto, no espírito de um
+  patch PD + GEM ligado ao Cycles por USB (`notein` por canal → `line` →
+  forma). Cada valor vai até o alvo numa rampa, como o objeto `line`, e pode
+  emendar rampas. Kick: anel central que abre em 30 ms e fecha no tempo do
+  decay. Snare/clap: quadradinhos que espirram e caem com gravidade. Hi-hat:
+  barras brancas finas. Perc: retângulo que gira. Lead/tone: linha neon que
+  desliza até a altura da nota. Chord: cubo em arame girando em 3D (sweep =
+  velocidade). Voz: círculos concêntricos. Baixo: barra no chão. Efeitos:
+  linhas de varredura e glitch.
+- **Datamosh** — uma obra do banco vira o quadro-chave e depois só se move em
+  blocos, como vídeo que perdeu os quadros-chave. Kick empurra os blocos pra
+  fora, baixo derrete pra baixo, lead arrasta na horizontal, voz gira, snare
+  inverte a cor de blocos, hi-hat treme, chord deixa a obra "sangrar" de
+  volta. Trocar de obra (R, pattern, 16 compassos, drop) mistura a nova imagem
+  com o movimento da anterior. No Ao vivo a obra vai se recompondo; na
+  Pintura nunca.
+- **Geométrico** — o estilo original de formas por trilha.
+
 **Banco de referências:** pinturas viram a "tinta" do estilo abstrato. Cada
 pincelada pega a cor da obra no ponto da tela por onde passa e segue os
 contornos dela (o gradiente de luz da pintura), misturada com a cor do som. A
