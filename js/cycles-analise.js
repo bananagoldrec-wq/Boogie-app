@@ -7,7 +7,7 @@
    batida (kick morre rápido; baixo sustenta).
 
    Saída: lista de eventos { t (s), v (voz), vel (1..127), note (midi) } com
-   v ∈ kick, bass, snare, hat, chord, lead, vocal, fx. É uma estimativa por
+   v ∈ kick, bass, snare, clap, hat, chord, lead, vocal, fx, accent. É uma estimativa por
    heurística sobre o espectro — não é separação de stems. */
 (function () {
   "use strict";
@@ -72,6 +72,7 @@
   }
 
   const pause = () => new Promise((r) => setTimeout(r, 0));
+  const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : isFinite(v) ? v : 0);
 
   function percentile(arr, q) {
     const step = Math.max(1, Math.floor(arr.length / 4000));
@@ -319,16 +320,20 @@
       // além de "mais kick que o resto desta música", precisa ter cara de kick em si:
       // ataque e queda de tom (a fundamental despenca). Baixo, mesmo plucado, fica no tom.
       const kickLike = c.att > 0.7 && c.glide > 0.15;
-      if (isKick(c) && kickLike) { kickIdx.push(c.i); events.push({ t: T(c.i), v: "kick", vel: velOf(c.str, 1), note: 36 }); }
+      // queda de tom forte é assinatura de kick, mesmo fora do tempo (breaks)
+      if ((isKick(c) && kickLike) || (c.att > 0.7 && c.glide > 0.35)) { kickIdx.push(c.i); events.push({ t: T(c.i), v: "kick", vel: velOf(c.str, 1), note: 36 }); }
       else if (c.str > 0.25) events.push({ t: T(c.i), v: "bass", vel: velOf(c.str, 1), note: Math.round(69 + 12 * Math.log2(Math.max(30, lowC[Math.min(F - 1, c.i + 6)]) / 440)) });
     });
     const kickSet = new Set();
     kickIdx.forEach((i) => { for (let d = -2; d <= 2; d++) kickSet.add(i + d); });
 
-    // ---- SNARE/CLAP ----
-    // corpo em 1–3 kHz e mais ruído que o normal ali. Dois caminhos: ataques
-    // fortes em qualquer lugar e, havendo pulsação, os tempos em que o médio
-    // "estoura" mais que nos vizinhos (onde clap/caixa costumam cair: 2 e 4)
+    // ---- SNARE e CLAP ----
+    // 1) candidatos com limiar baixo (pra não perder acentuação), exigindo corpo
+    //    em 1–3 kHz e o médio pesando perto do grave;
+    // 2) havendo pulsação, as posições do groove onde esses ataques costumam cair
+    //    (ex.: 2 e 4) aceitam ataques mais fracos; fora delas só entra o que é forte;
+    // 3) snare × clap: o clap são 2–3 estalos colados (~10–30 ms, o "flam") e quase
+    //    sem corpo grave; a caixa é um ataque só, com o corpo da pele em 110–250 Hz.
     const snODF = new Float32Array(F);
     for (let i = 0; i < F; i++) snODF[i] = FL[3][i] + 0.6 * FL[4][i];
     const sP = percentile(snODF, 0.995) || 1;
@@ -336,16 +341,34 @@
       let base = 0;
       for (let j = i - 8; j <= i - 3; j++) base += flatMid[Math.max(0, j)];
       base /= 6;
-      return Math.max(flatMid[i], flatMid[Math.min(F - 1, i + 1)], flatMid[Math.min(F - 1, i + 2)]) > base * 1.15;
+      return Math.max(flatMid[i], flatMid[Math.min(F - 1, i + 1)], flatMid[Math.min(F - 1, i + 2)]) > base * 1.1;
     };
-    // fora da pulsação (onde mora o hi-hat aberto) só entra se for bem forte
-    const snIdx = peaks(snODF, { k: 1.4, floor: sP * 0.35, gap: 0.1 })
-      .filter((i) => FL[3][i] > FL[5][i] * 0.4 && (noisier(i) || flatMid[i] > 0.1))
-      // o médio-agudo precisa pesar perto do grave (ataque de baixo tem quase tudo embaixo)
-      .filter((i) => snODF[i] > 0.35 * (FL[0][i] + FL[1][i]) || kickSet.has(i))
-      .filter((i) => loud(E34, i, 0.01))
-      .filter((i) => !grid || onBeat(T(i)) > 0.5 || snODF[i] > sP * 0.75);
+    // fração do médio (1–6 kHz) frente ao agudo (>6 kHz) logo no ataque: hi-hat mora lá em cima
+    const midShare = (i) => {
+      let m = 0, h = 0;
+      for (let j = i; j <= Math.min(F - 1, i + 2); j++) { m += E[3][j] + E[4][j]; h += E[5][j]; }
+      return m / (m + h + 1e-12);
+    };
+    // cauda: clap e caixa ainda soam ~45 ms depois; hi-hat fechado já sumiu
+    const tail = (i) => {
+      let top = 0;
+      for (let j = i; j <= Math.min(F - 1, i + 2); j++) top = Math.max(top, E34[j]);
+      return Math.max(E34[Math.min(F - 1, i + 4)], E34[Math.min(F - 1, i + 5)]) / (top + 1e-12);
+    };
+    let snCand = peaks(snODF, { k: 1.25, floor: sP * 0.16, gap: 0.08 })
+      .filter((i) => midShare(i) > 0.45 && tail(i) > 0.06)
+      .filter((i) => snODF[i] > 0.25 * (FL[0][i] + FL[1][i]) || kickSet.has(i))
+      .filter((i) => loud(E34, i, 0.006));
+    let snIdx;
     if (grid) {
+      // força dos candidatos por posição dentro do tempo (8 fatias)
+      const bins = new Float32Array(8);
+      const binOf = (i) => Math.floor(((((T(i) - grid.phase) / grid.P) % 1) + 1) % 1 * 8) % 8;
+      snCand.forEach((i) => (bins[binOf(i)] += snODF[i]));
+      const bmax = Math.max(...bins) || 1;
+      const groove = (i) => bins[binOf(i)] >= bmax * 0.5;
+      snIdx = snCand.filter((i) => (groove(i) && snODF[i] > sP * 0.16) || (snODF[i] > sP * 0.45 && (noisier(i) || flatMid[i] > 0.1)));
+      // tempos em que o médio "estoura" mais que nos vizinhos (acentos no tempo)
       const toI = (t) => Math.round((t - N / 2 / SR) * FPS);
       const beats = [];
       for (let t = grid.phase; t < F / FPS; t += grid.P) {
@@ -357,14 +380,78 @@
       beats.forEach((b, k) => {
         const viz = beats.slice(Math.max(0, k - 8), k + 9).map((x) => x.m).sort((a, c) => a - c);
         const med = viz[viz.length >> 1] || 0;
-        if (b.m > med * 1.45 && b.m > sP * 0.15 && FL[3][b.mi] > FL[5][b.mi] * 0.3 && !snIdx.some((i) => Math.abs(i - b.mi) < 8) &&
-            (snODF[b.mi] > 0.35 * (FL[0][b.mi] + FL[1][b.mi]) || kickSet.has(b.mi)) && loud(E34, b.mi, 0.01)) snIdx.push(b.mi);
+        if (b.m > med * 1.35 && b.m > sP * 0.12 && FL[3][b.mi] > FL[5][b.mi] * 0.3 && !snIdx.some((i) => Math.abs(i - b.mi) < 8) &&
+            (snODF[b.mi] > 0.3 * (FL[0][b.mi] + FL[1][b.mi]) || kickSet.has(b.mi)) && loud(E34, b.mi, 0.006)) snIdx.push(b.mi);
       });
       snIdx.sort((a, b) => a - b);
+    } else {
+      snIdx = snCand.filter((i) => snODF[i] > sP * 0.3 && (noisier(i) || flatMid[i] > 0.1));
     }
-    snIdx.forEach((i) => events.push({ t: T(i), v: "snare", vel: velOf(snODF[i], sP), note: 50 }));
+
+    // estalos colados (flam): envelope do agudo no tempo, em resolução de ~1 ms
+    const flam = (i) => {
+      const center = Math.round(T(i) * SR);
+      const s0 = Math.max(1, center - Math.round(0.04 * SR)), s1 = Math.min(x.length - 1, center + Math.round(0.07 * SR));
+      // energia do "estalo" (diferença entre amostras ≈ agudo) em média móvel de 2,5 ms:
+      // tira o chiado do ruído e deixa só os golpes
+      const Wn = Math.max(4, Math.round(0.0025 * SR));
+      const d2 = new Float32Array(s1 - s0);
+      for (let n = s0; n < s1; n++) { const d = x[n] - x[n - 1]; d2[n - s0] = d * d; }
+      const env = new Float32Array(d2.length);
+      let acc = 0;
+      for (let n = 0; n < d2.length; n++) { acc += d2[n]; if (n >= Wn) acc -= d2[n - Wn]; env[n] = Math.sqrt(acc / Wn); }
+      // suaviza de leve e acha os picos fortes com um vale entre eles
+      let mx = 0;
+      for (let n = 0; n < env.length; n++) mx = Math.max(mx, env[n]);
+      if (mx <= 0) return 1;
+      const minGap = Math.round(0.005 * SR), span = Math.round(0.045 * SR);
+      const pk = [];
+      for (let n = 2; n < env.length - 2; n++) {
+        if (env[n] >= mx * 0.35 && env[n] >= env[n - 1] && env[n] > env[n + 1] && env[n] >= env[n - 2] && env[n] > env[n + 2]) {
+          if (pk.length && n - pk[pk.length - 1] < minGap) { if (env[n] > env[pk[pk.length - 1]]) pk[pk.length - 1] = n; continue; }
+          pk.push(n);
+        }
+      }
+      if (!pk.length) return 1;
+      let count = 1;
+      for (let k = 1; k < pk.length; k++) {
+        if (pk[k] - pk[0] > span) break;
+        let valley = Infinity;
+        for (let n = pk[k - 1]; n <= pk[k]; n++) valley = Math.min(valley, env[n]);
+        if (valley < Math.min(env[pk[k - 1]], env[pk[k]]) * 0.7) count++;
+      }
+      return count;
+    };
+    // corpo da pele (110–1000 Hz logo depois do ataque). Se cai junto com um kick,
+    // compara com o que um kick SOZINHO tem nessa faixa (mediana dos kicks sem caixa)
+    const bodyE = (i) => { let e = 0; for (let j = i + 1; j <= Math.min(F - 1, i + 4); j++) e += E[1][j] + E[2][j]; return e; };
+    const snNear = new Set(); snIdx.forEach((i) => { for (let d = -3; d <= 3; d++) snNear.add(i + d); });
+    const kickAlone = kickIdx.filter((i) => !snNear.has(i)).map(bodyE).sort((a, b) => a - b);
+    const kickBody = kickAlone.length ? kickAlone[kickAlone.length >> 1] : 0;
+    const epsB = tP * 0.004; // piso: silêncio antes não pode inflar a conta
+    const body = (i) => {
+      if (kickSet.has(i)) return Math.log((bodyE(i) + epsB) / (kickBody + epsB)); // excesso sobre o kick
+      let pre = 0;
+      for (let j = i - 6; j <= i - 3; j++) pre += E[1][Math.max(0, j)] + E[2][Math.max(0, j)];
+      return Math.log((bodyE(i) / 4 + epsB) / (pre / 4 + epsB));
+    };
+    const bright = (i) => 1 - midShare(i); // esteira da caixa chega a 8–10 kHz; o clap para em ~5 kHz
+    const sc = snIdx.map((i) => ({ i, f: flam(i), b: body(i), br: bright(i) }));
+    // regras absolutas (as faixas costumam ter só um dos dois, então não dá pra
+    // depender de comparar um com o outro):
+    //   clap  = escuro (quase nada acima de 6 kHz) — ou estalos colados e não muito brilhante
+    //   caixa = tem corpo (grave logo depois do ataque)
+    //   o resto (brilhante e sem corpo) é hi-hat/percussão: fica de fora
+    sc.forEach((c) => {
+      // corpo: sozinha, a caixa sobe muito o grave (> ~7×); em cima de um kick, soma ~20%+ ao kick
+      const hasBody = kickSet.has(c.i) ? c.b > 0.18 : c.b > 2.0;
+      c.kind = c.br < 0.25 || (c.f >= 2 && c.br < 0.3 && !hasBody) ? "clap" : hasBody ? "snare" : null;
+    });
+    const isClap = (c) => c.kind === "clap";
+    const kept = sc.filter((c) => c.kind);
+    kept.forEach((c) => events.push({ t: T(c.i), v: isClap(c) ? "clap" : "snare", vel: velOf(snODF[c.i], sP * 0.6), note: 50 }));
     const snSet = new Set();
-    snIdx.forEach((i) => { for (let d = -2; d <= 2; d++) snSet.add(i + d); });
+    kept.forEach((c) => { for (let d = -2; d <= 2; d++) snSet.add(c.i + d); });
 
     // ---- HI-HAT: ataque curto no agudo, ruidoso ----
     const hP = percentile(FL[5], 0.995) || 1;
@@ -466,6 +553,22 @@
     peaks(all, { k: 1.8, floor: aP * 0.6, gap: 1.5 })
       .filter((i) => rises.some((t) => T(i) - t > 0 && T(i) - t < 1.2))
       .forEach((i) => events.push({ t: T(i), v: "fx", vel: 127, note: 60, kind: "impacto" }));
+
+    // ---- ACENTOS: ataques gerais que se destacam do entorno (o que "pesa" na música) ----
+    // não importa o instrumento: o que sobressai em relação aos ~2 s ao redor
+    // compara cada batida com as batidas em volta (±2 s): acento é o que sai bem acima delas
+    const pk = peaks(all, { k: 1.3, win: 0.5, floor: aP * 0.3, gap: 0.1 });
+    const W2 = Math.round(2 * FPS);
+    pk.forEach((i, n) => {
+      const viz = [];
+      for (let m = n - 1; m >= 0 && i - pk[m] <= W2; m--) viz.push(all[pk[m]]);
+      for (let m = n + 1; m < pk.length && pk[m] - i <= W2; m++) viz.push(all[pk[m]]);
+      if (viz.length < 3) return;
+      viz.sort((a, b) => a - b);
+      // compara com as batidas MAIS FORTES em volta (90%), não com a média (que inclui os hi-hats)
+      const med = viz[Math.min(viz.length - 1, Math.floor(viz.length * 0.9))];
+      if (all[i] > med * 1.3 && all[i] > aP * 0.7) events.push({ t: T(i), v: "accent", vel: velOf(all[i] / med, 2.5), note: 60 });
+    });
 
     events.sort((a, b) => a.t - b.t);
     onProgress(1);

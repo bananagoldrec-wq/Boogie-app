@@ -441,170 +441,100 @@ login e sem nuvem, funciona offline. Ao mexer em `js/tarefas.js` ou
 
 # 🎛️ Cycles Visual
 
-Transforma o que você toca no **Elektron Model:Cycles** em imagens. Abre em
-`cycles.html`. Precisa de **Chrome ou Edge** (computador ou Android), porque
-usa Web MIDI; Safari/iPhone não tem.
+Uma experiência 3D que conta uma história com o que você toca no **Elektron
+Model:Cycles** (ou com uma música do aparelho). Abre em `cycles.html`.
+Chrome ou Edge no computador/Android pra MIDI; no iPhone funciona com música
+e microfone (sem MIDI, a Apple não deixa).
 
-**Ligar:** Cycles no USB → *Settings → MIDI Config → Port Config*: *Output To*
-USB, *Output CC/NRPN* ligado (pra mandar os knobs). No app, **Conectar MIDI**
-(acha o Cycles sozinho) e dá play. Sem o aparelho, **Demo** toca um padrão
-de teste, e os pads 1–6 (ou as teclas 1–6) disparam cada trilha.
+**Ligar:** Cycles no USB → *Settings → MIDI Config → Port Config*: saída USB e
+*Output CC/NRPN* ligados. No app, **Conectar MIDI** e play. Sem o aparelho:
+**Música** (toca um arquivo e analisa) ou **Demo**. **Tela cheia** (F; dois
+toques, segurar o dedo ou Esc saem) deixa só a imagem.
 
-**Como o som vira imagem** — cada trig é uma forma:
+## A história
 
-| Do Cycles | Na imagem |
+No centro, uma escultura que respira e se transforma devagar (esfera, cubo,
+toro, flor, rocha, lente), vestida com uma obra do banco. A apresentação anda
+por **atos**, cada um com câmera, cor, cenário e formas próprios, e as trocas
+escorregam em ~3 s:
+
+1. **Gênese** — no escuro, a forma pequena e quieta, quase sem estrelas.
+2. **Despertar** — ela cresce, as estrelas aparecem, a câmera começa a girar.
+3. **Terra** — o chão surge; câmera rasante, olhando de baixo.
+4. **Travessia** — túnel: o círculo do kick vem na sua direção.
+5. **Tempestade** — o clímax: câmera rápida, cor quente, estilhaços.
+6. **Dissolução** — vista de cima, a forma vira lente, tudo esfria.
+
+Com **música de arquivo**, a análise vira um roteiro: blocos de 8 compassos;
+os mais intensos da música são Tempestade, um fim calmo é Dissolução e o resto
+anda pra frente em ordem (Gênese → Travessia). Ex.: intro → Gênese, drop →
+Tempestade, breakdown → Terra, drop 2 → Tempestade, final → Dissolução. **Ao
+vivo**, cada 16 compassos ou troca de pattern no Cycles é um ato novo (sem
+clock, a cada ~40 s). A forma muda a cada 4 compassos. Tecla **X** avança o ato.
+
+## O papel de cada instrumento (em qualquer ato)
+
+| Instrumento | Na imagem |
 | --- | --- |
-| Trilha / máquina | formato: KICK círculo com anéis · SNARE quadrado com grãos · METAL estrela · PERC polígono · TONE anel ondulado · CHORD três formas sobrepostas |
-| Velocity × track level × volume | tamanho e opacidade |
-| Frequência (nota + pitch, ou o pico real do áudio) | cor (grave = quente, agudo = frio) e altura na tela |
-| Decay | quanto tempo a forma dura |
-| Color / Shape | detalhes (grãos, nº de pontas/lados, ondas) |
-| Sweep / Contour | giro / anéis |
-| Pan | posição horizontal (composição "Livre") |
-| Reverb / Delay send | brilho / ecos |
+| **kick** | sempre um **círculo** de luz em volta da forma (no túnel, vindo até você) |
+| **snare** | distorção: uma onda circular atravessa a imagem, empurrando e separando as cores |
+| **clap** | outra distorção: rasgos horizontais em 2–3 estalos rápidos (o "flam" do clap) |
+| baixo | o chão ondula e a forma deforma por dentro |
+| hi-hat | as estrelas piscam |
+| lead | fita de luz na altura da nota |
+| chord | a cor do ato varia e entra um anel gigante |
+| voz | halos que sobem |
+| acentos | a imagem acende (o que se destaca do entorno, seja qual for o instrumento) |
+| drop | estilhaços, círculo grande e a câmera gira |
 
-**Estilo Abstrato (padrão):** em vez de formas, cada som solta traços, grãos,
-fumaça e manchas de luz sem borda, que escorrem por um campo de fluxo. A tela
-inteira se realimenta: a imagem anterior volta levemente ampliada e girada, então
-tudo escorre. KICK = sopro de luz e a tela "puxa" pra frente · SNARE = grãos e
-rasgos de glitch na imagem · METAL = filamentos finíssimos · PERC = manchas de
-tinta · TONE = fitas longas que se enrolam · CHORD = lavagens de cor. Shape deixa
-o fluxo mais turbulento, sweep enrola, color espalha as cores, o delay devolve
-o som em ecos e o reverb põe um véu de luz. Com o áudio ligado, o volume
-empurra o zoom e a frequência mexe na turbulência. O estilo **Geométrico** (a
-tabela acima) continua disponível no seletor ou na tecla **G**.
+No Cycles, a trilha **SNARE** faz a distorção do snare e a **PERC** a do clap.
 
-**Estilos** (seletor ou tecla **G**; o número da versão aparece no ⚙).
-**Movimento da imagem** (⚙): Suave (padrão), Médio ou Intenso — escala a
-câmera do 3D, o soco de zoom do kick, o empurrão dos blocos do datamosh e o
-glitch. Pra ficar leve no celular, os desenhos 2D usam no máximo 1,5× e ~2
-milhões de pixels, e o 3D renderiza a ~1,2 milhão de pixels e estica. Em todos, o kick dá um "soco" de zoom
-na tela inteira.
+## Análise da música (`js/cycles-analise.js`)
 
-- **3D** (padrão) — cena WebGL pensada (three.js r128 embutido em
-  `js/vendor/`, carregado só quando o estilo é usado; código em
-  `js/cycles-3d.js`). No centro, uma escultura orgânica que respira (esfera
-  deformada por ruído no shader) vestida com a obra do banco; chão de malha;
-  estrelas; câmera em órbita lenta. Kick: soco de câmera (FOV), a escultura
-  incha e uma onda de choque corre pelo chão. Baixo: o chão ondula e a
-  escultura deforma por dentro. Snare: estilhaços 3D girando + clarão. Hi-hat:
-  as estrelas piscam. Lead: fita de luz orbitando na altura da nota. Chord: a
-  cor da cena muda e entra um anel gigante. Voz: halos que sobem. Drop: a
-  câmera gira e a cena relampeia. Rastro/Pintura deixam o que passou na tela.
-  Se o aparelho não tiver WebGL, volta pro Abstrato.
-  **A forma do centro se transforma** devagar (~5 s, sem corte) entre esfera,
-  cubo arredondado, toro, flor, rocha com espinhos e lente — a cada 8
-  compassos. **Capítulos** mudam a dinâmica da cena a cada 16 compassos, no
-  drop e na troca de pattern do Cycles (sem pulsação conhecida, a cada ~30 s),
-  passando por todos antes de repetir: Órbita, Rasante (câmera baixa), Zênite
-  (de cima), Vazio (sem chão), Túnel (o kick lança anéis na direção da
-  câmera) e Tempestade (câmera rápida, o dobro de estilhaços). Cada capítulo
-  gira a cor da cena. Tecla **X** pula de capítulo.
-- **Abstrato** — traços, grãos e manchas que escorrem num campo de fluxo (acima).
-- **Patch (Pure Data)** — formas mínimas e nítidas no preto, no espírito de um
-  patch PD + GEM ligado ao Cycles por USB (`notein` por canal → `line` →
-  forma). Cada valor vai até o alvo numa rampa, como o objeto `line`, e pode
-  emendar rampas. Kick: anel central que abre em 30 ms e fecha no tempo do
-  decay. Snare/clap: quadradinhos que espirram e caem com gravidade. Hi-hat:
-  barras brancas finas. Perc: retângulo que gira. Lead/tone: linha neon que
-  desliza até a altura da nota. Chord: cubo em arame girando em 3D (sweep =
-  velocidade). Voz: círculos concêntricos. Baixo: barra no chão. Efeitos:
-  linhas de varredura e glitch.
-- **Datamosh** — uma obra do banco vira o quadro-chave e se move em blocos
-  guiados pelo som. O que dá impacto é o contraste: entre as batidas a obra
-  fica parada, nítida e um pouco escura; cada batida é um gesto curto que se
-  recompõe em menos de um segundo. Kick: a tela acende, dá um soco de zoom e
-  os blocos explodem pra fora. Snare/clap: clarão + blocos grandes com a cor
-  invertida. Baixo: derrete só o terço de baixo. Lead: arrasta uma faixa na
-  altura da nota. Voz: gira o miolo. Chord: a obra "sangra" de volta. Drop:
-  tudo explode e uma obra nova entra no meio do movimento. Hi-hat quase não
-  mexe (é o que mais toca). Funciona melhor com obras cheias de detalhe (Van
-  Gogh, acervo) do que com as artes aleatórias lisas.
-- **Geométrico** — o estilo original de formas por trilha.
+A faixa inteira é analisada antes de tocar (~1 s por minuto), com limiares
+relativos à própria música e pisos de volume:
 
-**Banco de referências:** pinturas viram a "tinta" do estilo abstrato. Cada
-pincelada pega a cor da obra no ponto da tela por onde passa e segue os
-contornos dela (o gradiente de luz da pintura), misturada com a cor do som. A
-obra nunca aparece inteira. Na **fidelidade** baixa cada som pega um fragmento
-solto de outro lugar da obra; na alta, no modo Pintura, ela vai se
-insinuando. As cores das obras são "acesas" pra projetar no preto. A obra troca
-sozinha a cada 16 compassos e quando você muda de pattern no Cycles (program
-change); tecla **R** pula pra próxima. No ⚙ dá pra ver o banco, tocar numa obra
-pra usar agora e **adicionar imagens suas** (ficam só no aparelho, IndexedDB).
-Conjuntos em `refs/` (lista em `refs/refs.json`):
+- **kick × baixo** — ataque, release, click, harmônicos e queda da
+  fundamental (o kick despenca de tom, o baixo não), separados dentro da
+  própria música e usando a pulsação (kick no tempo, baixo no contratempo).
+- **snare × clap** — candidatos com limiar baixo pra não perder acentuação; as
+  posições do groove onde eles caem (ex.: 2 e 4) aceitam ataques mais fracos.
+  Hi-hat sai pela cauda curta e por morar acima de 6 kHz. **Clap** = escuro
+  (quase nada acima de 6 kHz) e com estalos colados; **caixa** = tem corpo
+  (grave logo depois do ataque — mesmo em cima de um kick, comparando com um
+  kick sozinho).
+- **acentos** — batidas bem acima das mais fortes em volta (±2 s).
+- hi-hat, chords, lead × vocal (a voz oscila), efeitos (riser e impacto).
 
-- **Van Gogh** — pinturas em domínio público do acervo aberto do Art Institute
-  of Chicago (e do Wikimedia Commons, quando disponível).
-- **Ismael Nery** — domínio público no Brasil desde 2005 (morreu em 1934);
-  vem do Wikimedia Commons.
-- **Acervo (paredes)** — fotos das pinturas enviadas, recortadas e endireitadas.
-- **Arte aleatória** — 24 imagens de `tools/random-art.py` (árvore aleatória de
-  x, y, cor, sin, cos, +, −, ×, ÷; `python3 tools/random-art.py 24` gera mais) e
-  **infinitas ao vivo**: o mesmo gerador portado pra JS cria uma imagem nova a
-  cada troca nesse conjunto, a cada drop da música (impacto depois de um riser),
-  na tecla **N** ou no botão do ⚙. No "Tudo misturado" entra de vez em quando.
+Testes com faixas sintéticas com gabarito: house com clap (kick 63/64, clap
+32/32, 0 falsos), break com caixa e pratos (kick 31/32, caixa 32/32, acentos
+3/4), caixa e clap juntos (16/16 cada, sem confundir um com o outro), e uma
+faixa só de baixo (nenhum kick inventado). No ⚙, **"O que a análise da música
+encontrou"** mostra a linha do tempo por instrumento e o roteiro dos atos
+aparece no monitor.
 
-Cada item do `refs.json` guarda título, data, licença e o link da fonte.
+## Ajustes (⚙)
 
-No estilo Geométrico, a forma com mais energia ganha um contorno tracejado e aparece em **"Mais alto
-agora"**, com trilha, velocity, Hz e nota.
+- **Sincronia da imagem** (−300 a +300 ms): o app já desconta o atraso de
+  saída do áudio que o navegador informa; se ainda vier antes do som (caixa
+  Bluetooth), puxe pra esquerda.
+- **Movimento da imagem**: Suave (padrão), Médio, Intenso.
+- **Modo**: Ao vivo (limpa), Rastro, Pintura (acumula; **C** limpa).
+- Canal MIDI de cada trilha, CCs com **Aprender**, monitor MIDI.
 
-**Áudio (opcional):** o MIDI não leva o som, só as notas. Ligue a saída do
-Cycles na entrada de linha do computador e toque em **Áudio**: o tamanho passa
-a seguir o volume real, a cor segue a frequência de pico de verdade, e aparecem
-as barras Graves/Médios/Agudos destacando a mais alta. Sem MIDI chegando, o
-app também cria formas pelas batidas do áudio (dá pra desligar nos ajustes).
+## Banco de referências (`refs/`)
 
-**Modos:** *Ao vivo* (formas aparecem e somem), *Rastro* (deixam rastro) e
-*Pintura* (cada trig fica carimbado: a música vira um quadro). **Composição:**
-Livre (pan), Faixas (uma coluna por trilha), Radial e Grade (16 passos × 6
-trilhas, seguindo o clock). **Paletas:** Espectro, Neon, Boogie e Papel.
-**Salvar imagem** baixa um PNG e guarda a miniatura embaixo (só nesta sessão).
+A obra que veste a escultura. Conjuntos em `refs/refs.json`: **Van Gogh**
+(domínio público, Art Institute of Chicago), **Ismael Nery** (domínio público
+no Brasil; Wikimedia Commons), **Arte aleatória** (`tools/random-art.py` e o
+mesmo gerador ao vivo em JS — tecla **N**, e a cada drop), **Acervo (paredes)**
+e **Minhas imagens** (adicionadas no ⚙, ficam só no aparelho). Troca a cada 16
+compassos, na troca de pattern e no drop; **R** pula.
 
-**Música de teste:** o botão **Música** toca um arquivo do aparelho (MP3,
-M4A, WAV…) e gera as imagens a partir dele, sem precisar do Cycles. Antes,
-o app **analisa a faixa inteira** (`js/cycles-analise.js`, ~1 s por minuto de
-música) e separa, por heurística no espectro, sete vozes — cada uma com seu
-visual:
+## Técnica
 
-| Voz | Como reconhece | Visual |
-| --- | --- | --- |
-| kick | ataque no grave com mais ataque, release menor, click do batedor, pouco harmônico e **queda da fundamental**; separado do baixo em dois grupos dentro da própria música, levando em conta que kick cai no tempo | sopro de luz + a tela "puxa" |
-| baixo | os ataques graves que não são kick (tom parado, com harmônicos, contratempo) | massa lenta perto do chão |
-| snare/clap | ataque ruidoso com corpo em 1–3 kHz, mais forte que o grave naquele instante; também procurado nos tempos da pulsação (2 e 4) | grãos + glitch |
-| hi-hat | ataque curto e ruidoso acima de 6 kHz | filamentos finos |
-| chords | mudança de harmonia com 3+ notas | manchas de cor |
-| lead | um tom que se destaca, cravado | fitas longas |
-| vocal | um tom que se destaca, oscilando (vibrato/deslize) | fumaça larga que sobe |
-| efeitos | subida/descida contínua de ruído (riser) e o impacto depois | rasgos e riscos na tela toda |
-
-A pulsação (BPM e onde cai o tempo) sai da autocorrelação dos ataques com
-cara de kick, conferida no dobro e no compasso. Os limiares são relativos à
-própria música, com pisos absolutos de volume, então uma intro sem kick não
-dispara kick e uma faixa só de baixo não inventa kick, caixa ou hi-hat.
-No ⚙, **"O que a análise da música encontrou"** mostra uma linha do tempo
-por instrumento com a agulha da música — bom pra apontar onde errou. Enquanto analisa (a etiqueta mostra "analisando %"), vale a
-detecção ao vivo. É estimativa, não separação de stems. **Espaço**
-pausa/continua; ⏏ troca a música; ela fica em loop. O resumo da análise
-aparece no monitor (⚙).
-
-**Tela cheia (projeção):** o botão **Tela cheia** (ou a tecla **F**, ou dois
-cliques na tela) entra em tela cheia só com o fundo preto e as imagens: sem barras,
-botões, textos nem contorno do "mais alto", e o cursor some quando o mouse
-para. A tela também não apaga sozinha durante o show. **Esc**, dois toques ou segurar o dedo na tela saem. No iPhone o Safari não
-deixa esconder as barras dele: adicione à Tela de Início e abra pelo ícone.
-Fora da tela cheia a tela também fica limpa — trilhas e medidores só aparecem
-se ligar no ⚙. Tudo se controla
-pelo teclado sem abrir nada: **1–6** trilhas, **R** próxima obra, **N** arte aleatória nova, **X** próxima cena (3D), **G** estilo, **M** modo, **L** composição,
-**P** paleta, **C** limpar, **S** salvar imagem, **D** demo, **A** áudio, **Espaço** música,
-**?** mostra os atalhos. Ao apertar uma tecla aparece só um aviso pequeno no
-canto, que some em seguida. No palco o fundo é sempre preto (a paleta Papel
-vira Espectro). Com notebook + projetor: arraste a janela pro projetor (ou
-espelhe a tela) e aperte F.
-
-**Ajustes (⚙):** canal MIDI de cada trilha (padrão 1–6), número do CC de cada
-parâmetro com botão **Aprender** (mexe o knob e ele pega), e um monitor do MIDI
-que está chegando. Os CCs padrão vêm do mapa do Model:Cycles; se algum knob não
-reagir, use Aprender. Ajustes ficam no aparelho (`localStorage`, chave
-`cycles-visual-v1`). Ao mexer em `js/cycles.js` ou `css/cycles.css`, suba o
-`?v=` do `cycles.html`.
+three.js r128 embutido em `js/vendor/` (MIT), cena em `js/cycles-3d.js`: a
+cena é renderizada numa textura e um passe final aplica as distorções (snare,
+clap, acento). Resolução interna ~1,2 Mpx. Ajustes no aparelho
+(`localStorage`, chave `cycles-visual-v1`). Ao mexer nos arquivos, suba o
+`?v=` no `cycles.html` e o `APP_VERSION` em `js/cycles.js` (aparece no ⚙).

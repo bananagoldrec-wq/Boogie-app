@@ -39,8 +39,7 @@
   </header>
 
   <main class="stage" id="stage">
-    <canvas id="paint"></canvas>
-    <canvas id="gl" hidden></canvas>
+    <canvas id="gl"></canvas>
     <canvas id="live"></canvas>
 
     <div class="hud" id="hud">
@@ -61,9 +60,7 @@
 
     <div class="empty" id="empty">
       <h2>Toque o Model:Cycles</h2>
-      <p>Ligue o Cycles por USB, toque em <b>Conectar MIDI</b> e dê play.<br />
-      Cada trig vira uma forma: a <b>trilha/máquina</b> define o formato, a <b>velocity e o nível</b> o tamanho,
-      a <b>frequência</b> a cor e a altura, o <b>decay</b> quanto ela dura.</p>
+      <p>Ligue o Cycles por USB, toque em <b>Conectar MIDI</b> e dê play — a história começa no primeiro trig.</p>
       <p class="muted">Sem o aparelho à mão? Toque em <b>Música</b> e escolha uma música sua, ou em <b>Demo</b>.</p>
     </div>
   </main>
@@ -76,27 +73,7 @@
         <button data-v="rastro" type="button">Rastro</button>
         <button data-v="pintura" type="button">Pintura</button>
       </div>
-      <select id="sel-style" class="sel" aria-label="Estilo">
-        <option value="3d">3D</option>
-        <option value="abstrato">Abstrato</option>
-        <option value="patch">Patch (Pure Data)</option>
-        <option value="datamosh">Datamosh</option>
-        <option value="geometrico">Geométrico</option>
-      </select>
-      <select id="sel-layout" class="sel" aria-label="Composição">
-        <option value="livre">Livre (pan)</option>
-        <option value="faixas">Faixas</option>
-        <option value="radial">Radial</option>
-        <option value="grade">Grade</option>
-      </select>
       <select id="sel-ref" class="sel" aria-label="Referência"><option value="nenhuma">Sem referência</option></select>
-      <select id="sel-palette" class="sel" aria-label="Paleta">
-        <option value="espectro">Espectro</option>
-        <option value="neon">Neon</option>
-        <option value="boogie">Boogie</option>
-        <option value="papel">Papel</option>
-      </select>
-      <button id="btn-clear" class="btn" type="button">Limpar</button>
       <button id="btn-save" class="btn primary" type="button">Salvar imagem</button>
     </div>
     <div class="gallery" id="gallery" hidden></div>
@@ -121,6 +98,9 @@
             <option value="intenso">Intenso</option>
           </select>
         </label>
+        <label class="row">Sincronia da imagem <small id="sync-val" class="muted"></small></label>
+        <input type="range" id="rng-sync" min="-300" max="300" step="10" class="wide" aria-label="Sincronia da imagem em milissegundos" />
+        <p class="muted">Se a imagem vier antes do som (caixa Bluetooth), puxe pra esquerda; se vier depois, pra direita.</p>
         <label class="chk"><input type="checkbox" id="chk-panel" /> Mostrar trilhas e medidores na tela</label>
         <label class="chk"><input type="checkbox" id="chk-onset" /> Sem MIDI: criar formas pelas batidas do áudio</label>
       </section>
@@ -174,7 +154,7 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles-analise.js?v=14"></script>
-  <script src="js/cycles.js?v=14"></script>
+  <script src="js/cycles-analise.js?v=15"></script>
+  <script src="js/cycles.js?v=15"></script>
 </body>
 </html>

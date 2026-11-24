@@ -138,3 +138,4 @@ body.show.idle,body.show.idle *{cursor:none}
 body.clean .pads,body.clean .hud{display:none!important}
 .timeline{display:block;width:100%;height:150px;background:var(--bg);border:1px solid var(--line);border-radius:8px}
 #btn-new-art{margin-bottom:8px}
+input[type=range].wide{width:100%;accent-color:var(--accent);margin:4px 0}
