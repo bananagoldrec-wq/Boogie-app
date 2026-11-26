@@ -144,3 +144,10 @@ input[type=range].wide{width:100%;accent-color:var(--accent);margin:4px 0}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:6px 0 0;font-size:13px}
 .keys dt{font:600 12px/1.6 ui-monospace,Menlo,Consolas,monospace;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:0 7px;justify-self:start}
 .keys dd{margin:0;color:#c9c8c2;line-height:1.7}
+.ports{margin:8px 0;display:flex;flex-direction:column;gap:4px}
+.ports .port{display:flex;justify-content:space-between;gap:10px;background:var(--panel-2);border-radius:8px;padding:6px 9px;font-size:13px}
+.ports .port span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ports .good{color:#7fe6b0}.ports .bad{color:#ffb36b}
+.help{margin:6px 0 4px;font-size:13px;color:#c9c8c2}
+.help summary{cursor:pointer;color:var(--text);font-weight:600}
+.help ol{padding-left:18px;margin:6px 0}.help li{margin:4px 0}

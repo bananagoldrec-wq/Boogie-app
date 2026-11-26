@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 16;
+  const APP_VERSION = 17;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -909,6 +909,7 @@
   // linha do tempo da análise (no ⚙): uma linha por instrumento e a agulha da música
   let tlTick = 0;
   function drawTimeline() {
+    if (!$("sheet").hidden && ++portsTick % 30 === 0) renderPorts();
     const cv = $("timeline");
     if (!cv || $("sheet").hidden || !music.timeline || ++tlTick % 6) return;
     const rows = ["kick", "bass", "snare", "clap", "hat", "accent", "chord", "lead", "vocal", "fx"];
@@ -987,64 +988,111 @@
   }
 
   // ---------- MIDI ----------
+  // Escuta TODAS as entradas ao mesmo tempo (padrão): o Cycles pode aparecer com
+  // outro nome, atrás de uma interface ou de uma porta virtual. Cada porta é aberta
+  // explicitamente: no Windows um aparelho MIDI só pode estar aberto em UM programa
+  // por vez — se o Ableton estiver com o Cycles, a porta falha e o app avisa.
   let midi = null;
   const clock = { running: false, ticks: 0, step: 0, times: [], bpm: 0 };
   let learning = null;
   const monitorLines = [];
+  const ports = new Map(); // id → { input, status: "ok" | "ocupada" | "desligada", last: 0, count: 0 }
+  const isWindows = /Windows/i.test(navigator.userAgent);
 
   async function connectMidi() {
     if (!navigator.requestMIDIAccess) {
-      toast("Este navegador não tem Web MIDI. Use Chrome ou Edge (computador ou Android).");
-      setPill("st-midi", "Sem Web MIDI", "warn");
+      toast("Este navegador não tem MIDI. Use o Chrome ou o Edge no computador (no Safari/iPhone não existe).");
+      setPill("st-midi", "Sem MIDI neste navegador", "warn");
       return;
     }
     try {
       midi = await navigator.requestMIDIAccess({ sysex: false });
     } catch (err) {
-      toast("Acesso ao MIDI negado: " + (err.message || err));
+      setPill("st-midi", "MIDI bloqueado", "warn");
+      toast("O navegador bloqueou o MIDI. Clique no cadeado ao lado do endereço → MIDI → Permitir, e recarregue.");
+      log("acesso ao MIDI negado: " + (err.message || err));
       return;
     }
-    midi.onstatechange = refreshInputs;
-    refreshInputs();
+    midi.onstatechange = () => refreshInputs();
+    await refreshInputs(true);
   }
 
-  function refreshInputs() {
+  async function refreshInputs(first) {
     if (!midi) return;
     const inputs = [...midi.inputs.values()];
     const sel = $("sel-input");
-    sel.innerHTML = '<option value="">— nenhuma —</option>' +
+    const prev = settings.inputId || "todas";
+    sel.innerHTML = '<option value="todas">Todas as entradas (recomendado)</option>' +
       inputs.map((i) => `<option value="${esc(i.id)}">${esc(i.name || "Entrada MIDI")}</option>`).join("");
-    let chosen = inputs.find((i) => i.id === settings.inputId) ||
-      inputs.find((i) => /cycles/i.test(i.name || "")) ||
-      inputs.find((i) => /elektron/i.test(i.name || "")) ||
-      inputs[0];
-    inputs.forEach((i) => (i.onmidimessage = null));
-    if (chosen) {
-      chosen.onmidimessage = onMidi;
-      sel.value = chosen.id;
-      settings.inputId = chosen.id;
-      save();
-      setPill("st-midi", "MIDI: " + (chosen.name || "conectado"), "on");
-      $("btn-midi").textContent = "MIDI ✓";
-    } else {
+    sel.value = inputs.some((i) => i.id === prev) ? prev : "todas";
+    settings.inputId = sel.value;
+    save();
+    // fecha o que não é pra escutar, abre o que é
+    for (const i of inputs) {
+      const want = sel.value === "todas" || sel.value === i.id;
+      const p = ports.get(i.id) || { input: i, status: "desligada", last: 0, count: 0 };
+      p.input = i;
+      ports.set(i.id, p);
+      if (!want) { i.onmidimessage = null; p.status = "desligada"; continue; }
+      i.onmidimessage = (e) => { p.last = now(); p.count++; if (p.status !== "ok") p.status = "ok"; onMidi(e, i); };
+      try {
+        await i.open();
+        p.status = i.connection === "open" ? "ok" : "ocupada";
+      } catch (err) {
+        p.status = "ocupada";
+        log(`porta "${i.name}" não abriu: ${err.name || ""} ${err.message || err}`);
+      }
+    }
+    for (const id of [...ports.keys()]) if (!inputs.some((i) => i.id === id)) ports.delete(id);
+    renderPorts();
+    const open = [...ports.values()].filter((p) => p.status === "ok");
+    const busy = [...ports.values()].filter((p) => p.status === "ocupada");
+    $("btn-midi").textContent = open.length ? "MIDI ✓" : "Conectar MIDI";
+    if (!inputs.length) {
       setPill("st-midi", "Nenhum aparelho MIDI", "warn");
-      toast("Nenhuma entrada MIDI. Ligue o Cycles por USB e confira se o MIDI está ativo nele.");
+      if (first) toast("Nenhuma entrada MIDI. Ligue o Cycles por USB (cabo de dados) e confira o MIDI dele.");
+    } else if (!open.length && busy.length) {
+      setPill("st-midi", "MIDI ocupado por outro programa", "warn");
+      toast(isWindows
+        ? "O Cycles está ocupado por outro programa (Ableton?). No Windows só um programa por vez abre o aparelho — veja o ⚙ → Entrada MIDI."
+        : "A porta MIDI está ocupada por outro programa. Feche-o ou veja o ⚙ → Entrada MIDI.");
+    } else {
+      const cyc = open.find((p) => /cycles|elektron/i.test(p.input.name || ""));
+      setPill("st-midi", cyc ? "MIDI: " + cyc.input.name : `MIDI: ${open.length} entrada(s)`, "on");
+      if (first && !cyc) toast("Escutando todas as entradas MIDI. Dê play no Cycles e veja no ⚙ qual porta recebe.");
     }
   }
 
   function selectInput(id) {
-    if (!midi) return;
-    [...midi.inputs.values()].forEach((i) => (i.onmidimessage = null));
-    const inp = id && midi.inputs.get(id);
-    settings.inputId = id || "";
+    settings.inputId = id || "todas";
     save();
-    if (inp) {
-      inp.onmidimessage = onMidi;
-      setPill("st-midi", "MIDI: " + (inp.name || "conectado"), "on");
-    } else setPill("st-midi", "MIDI sem entrada", "warn");
+    refreshInputs();
   }
 
-  function onMidi(e) {
+  // lista das portas no ⚙, com o estado de cada uma (e se está recebendo agora)
+  let portsTick = 0;
+  function renderPorts() {
+    const box = $("midi-ports");
+    if (!box) return;
+    if (!midi) { box.innerHTML = `<p class="muted">Toque em <b>Conectar MIDI</b>.</p>`; return; }
+    if (!ports.size) { box.innerHTML = `<p class="muted">Nenhuma entrada MIDI encontrada.</p>`; return; }
+    const t = now();
+    box.innerHTML = [...ports.values()].map((p) => {
+      const rec = t - p.last < 1.5;
+      const st = p.status === "ocupada" ? `<b class="bad">ocupada por outro programa</b>`
+        : p.status === "desligada" ? `<span class="muted">não escutando</span>`
+        : rec ? `<b class="good">recebendo ●</b>` : p.count ? `ok · ${p.count} mensagens` : `aberta · esperando`;
+      return `<div class="port"><span>${esc(p.input.name || "Entrada MIDI")}</span>${st}</div>`;
+    }).join("") + ([...ports.values()].some((p) => p.status === "ocupada") ? `
+      <p class="muted">${isWindows
+        ? `No Windows, um aparelho MIDI só pode estar aberto em <b>um programa por vez</b>. Pra usar com o Ableton aberto:
+           (1) no Ableton, <i>Preferências → Link, Tempo & MIDI</i>, desligue <b>Track/Sync/Remote</b> da entrada do Cycles; ou
+           (2) instale o <b>loopMIDI</b> (gratuito), crie uma porta, e no Ableton mande o MIDI do Cycles pra ela (uma faixa MIDI com
+           entrada = Cycles, monitor = In, saída = loopMIDI) — o app escuta a porta do loopMIDI. Ou feche o Ableton e recarregue.`
+        : `Feche o outro programa que está usando a porta e recarregue a página.`}</p>` : "");
+  }
+
+  function onMidi(e, port) {
     const d = e.data;
     const st = d[0];
     if (st >= 0xf0) return onRealtime(st);
@@ -1232,6 +1280,7 @@
       }));
   }
   function openSheet() {
+    renderPorts();
     renderChanGrid(); renderCcGrid();
     $("chk-clear-play").checked = settings.clearOnPlay;
     $("chk-onset").checked = settings.onset;

@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-cycles-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-cycles-512.png" />
 
-  <link rel="stylesheet" href="css/cycles.css?v=16" />
+  <link rel="stylesheet" href="css/cycles.css?v=17" />
 </head>
 <body>
   <header class="bar">
@@ -108,7 +108,20 @@
 
       <section>
         <h4>Entrada MIDI</h4>
-        <select id="sel-input" class="sel wide"><option value="">— nenhuma —</option></select>
+        <select id="sel-input" class="sel wide"><option value="todas">Todas as entradas (recomendado)</option></select>
+        <div id="midi-ports" class="ports"><p class="muted">Toque em <b>Conectar MIDI</b>.</p></div>
+        <details class="help">
+          <summary>O Cycles não aparece ou não manda nada?</summary>
+          <ol>
+            <li>Use o <b>Chrome</b> ou o <b>Edge</b> (Safari e Firefox não servem) e aceite o pedido de MIDI. Se recusou: cadeado ao lado do endereço → MIDI → Permitir.</li>
+            <li>No Cycles: <i>Settings → MIDI Config → Port Config</i>: <b>Output to</b> = USB (ou MIDI+USB) e <b>Output CC/NRPN</b> ligado.
+              Em <i>Sync</i>, <b>Clock send</b> ligado. Em <i>Channels</i>, as trilhas nos canais 1–6.</li>
+            <li>Dê play no Cycles: a porta dele tem que ficar <b>"recebendo ●"</b> aqui em cima.</li>
+            <li><b>Windows + Ableton aberto:</b> o Windows só deixa um programa por vez abrir o aparelho. Feche o Ableton,
+              ou desligue <i>Track/Sync/Remote</i> do Cycles nas preferências MIDI dele, ou use o <b>loopMIDI</b> pra repassar.</li>
+            <li>Cabo USB de dados (não só de carga) e, se usar hub, teste direto no computador.</li>
+          </ol>
+        </details>
         <label class="chk"><input type="checkbox" id="chk-clear-play" /> Limpar a tela quando der play no Cycles</label>
         <label class="row">Movimento da imagem
           <select id="sel-motion" class="sel">
@@ -173,7 +186,7 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles-analise.js?v=16"></script>
-  <script src="js/cycles.js?v=16"></script>
+  <script src="js/cycles-analise.js?v=17"></script>
+  <script src="js/cycles.js?v=17"></script>
 </body>
 </html>

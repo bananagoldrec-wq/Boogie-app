@@ -464,6 +464,19 @@ internet, se atualiza sozinho. O MIDI pede permissão uma vez. O ajudante
 offline (`sw-cycles.js`) só cuida do `cycles.html`, sem mexer nos outros apps
 do site. Atalhos de teclado listados no ⚙.
 
+## MIDI que não chega
+
+O app escuta **todas as entradas MIDI** ao mesmo tempo (o Cycles pode aparecer
+com outro nome, atrás de uma interface ou de porta virtual) e abre cada porta
+explicitamente. No ⚙ → *Entrada MIDI* cada porta mostra o estado: *recebendo
+●*, *aberta · esperando* ou **ocupada por outro programa**. No **Windows**, um
+aparelho MIDI só pode estar aberto em um programa por vez: com o Ableton
+usando o Cycles, a porta fica ocupada. Saídas: fechar o Ableton; desligar
+*Track/Sync/Remote* da entrada do Cycles nas preferências MIDI do Ableton; ou
+repassar pelo **loopMIDI** (faixa MIDI no Ableton com entrada = Cycles,
+monitor = In, saída = porta do loopMIDI). No Mac o MIDI é compartilhado e os
+dois funcionam juntos.
+
 ## A história
 
 No centro, uma escultura que respira e se transforma devagar (esfera, cubo,
