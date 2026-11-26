@@ -137,9 +137,15 @@
         </div>
       </div>
 
-      <div class="field">
-        <label for="f-evento">Evento (opcional)</label>
-        <input id="f-evento" type="text" placeholder="Ex.: After Doce Mara" autocomplete="off" />
+      <div class="field-row">
+        <div class="field">
+          <label for="f-evento">Evento (opcional)</label>
+          <input id="f-evento" type="text" placeholder="Ex.: After Doce Mara" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="f-valor">Valor (R$)</label>
+          <input id="f-valor" type="number" min="600" step="50" inputmode="numeric" />
+        </div>
       </div>
 
       <div class="field">
@@ -288,6 +294,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script type="module" src="js/frisson.js?v=33"></script>
+  <script type="module" src="js/frisson.js?v=34"></script>
 </body>
 </html>
