@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 20;
+  const APP_VERSION = 21;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -163,7 +163,7 @@
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const an = ctx.createAnalyser();
       an.fftSize = 2048;
-      an.smoothingTimeConstant = 0.5;
+      an.smoothingTimeConstant = 0.15; // pouca suavização: precisa ver o ataque e o decaimento de cada batida
       Object.assign(audio, { ctx, an, td: new Float32Array(an.fftSize), fd: new Float32Array(an.frequencyBinCount) });
     }
     if (audio.ctx.state === "suspended") audio.ctx.resume();
@@ -349,6 +349,7 @@
     const binHz = audio.ctx.sampleRate / an.fftSize;
     let peak = 0, peakI = 0, total = 0;
     const b = [0, 0, 0], bp = [0, 0, 0], bpi = [1, 1, 1];
+    let lowE = 0, lowPk = 0, lowPkI = 1, clickE = 0; // grave (30–160 Hz), seu pico, e o "click" (2–6 kHz)
     for (let i = 1; i < fd.length; i++) {
       const hz = i * binHz;
       if (hz < 25 || hz > 12000) continue;
@@ -358,7 +359,11 @@
       const k = hz < 250 ? 0 : hz < 2000 ? 1 : 2;
       b[k] += p;
       if (p > bp[k]) { bp[k] = p; bpi[k] = i; }
+      if (hz >= 30 && hz < 160) lowE += p;
+      if (hz >= 30 && hz < 220 && p > lowPk) { lowPk = p; lowPkI = i; }
+      if (hz >= 2000 && hz < 6000) clickE += p;
     }
+    const lowHz = lowPkI * binHz;
     audio.hz = peakI * binHz;
     audio.tonal = total ? peak / total : 0;
     const max = Math.max(b[0], b[1], b[2], 1e-12);
@@ -374,6 +379,26 @@
     }
     const e = b.map(Math.sqrt);
     const slow = audio.bandSlow || (audio.bandSlow = e.slice());
+    audio.clickSlow = (audio.clickSlow ?? clickE) * 0.95 + clickE * 0.05;
+
+    // KICK × BAIXO ao vivo: uma batida grave fica "em análise" por ~75 ms.
+    // Kick: a nota despenca logo depois do ataque. Baixo: a nota fica parada.
+    // Só o kick vira o círculo.
+    const pend = audio.lowPend;
+    if (pend) {
+      const age = t - pend.t0;
+      if (age < 0.03) pend.peak = Math.max(pend.peak, lowE);
+      if (pend.f0 == null && age >= 0.012) pend.f0 = lowHz;
+      if (age >= 0.075) {
+        audio.lowPend = null;
+        const decay = lowE / (pend.peak + 1e-12);
+        const glide = pend.f0 && lowHz ? pend.f0 / lowHz : 1;
+        // a queda de tom é o que separa: o kick despenca (1,3–2×), o baixo fica parado —
+        // mesmo um baixo plucado, que também some rápido e tem estalo
+        const isKick = glide > 1.2;
+        spawn(isKick ? 0 : 8, pend.note, pend.vel, "audio");
+      }
+    }
     const last = audio.bandLast || (audio.bandLast = [0, 0, 0]);
     const TH = [1.35, 1.4, 1.5], REF = [0.2, 0.12, 0.09];
     const hit = [false, false, false];
@@ -384,7 +409,13 @@
         last[i] = t;
         const vel = clamp(Math.round(35 + (ratio - 1) * 110 + rms * 160), 20, 127);
         const note = 69 + 12 * Math.log2(Math.max(20, bpi[i] * binHz) / 440);
-        let tr = i === 0 ? 0 : i === 2 ? 2 : audio.tonal > 0.1 ? 4 : bpi[1] * binHz < 900 ? 3 : 1;
+        if (i === 0) {
+          // grave: decide kick ou baixo daqui a ~75 ms
+          if (!audio.lowPend) audio.lowPend = { t0: t, peak: lowE, f0: null, click: clickE / (audio.clickSlow + 1e-12), vel, note };
+          slow[i] = slow[i] * 0.94 + e[i] * 0.06;
+          continue;
+        }
+        const tr = i === 2 ? 2 : audio.tonal > 0.1 ? 4 : bpi[1] * binHz < 900 ? 3 : 1;
         spawn(tr, note, vel, "audio");
       }
       slow[i] = slow[i] * 0.94 + e[i] * 0.06;
