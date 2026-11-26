@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 21;
+  const APP_VERSION = 22;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -485,8 +485,8 @@
       sh.color = refBaseColor(x, y, sh.ou, sh.ov, sh.color);
     }
     if (sh.m === 0) kickRings.push({ born: t, v: n01(vel) }); // kick = círculo 2D nascendo
-    if (gl3.ok) window.Cycles3D.hit({ m: sh.m, v: n01(vel), y: sh.y, c: sh.color, life: sh.life, kind: extra.kind });
-    if (extra.kind === "impacto") lineGo(punch.s, [[0.8, 10], [0, 450]]);
+    // TELA ZERADA: por enquanto só o kick tem imagem (o círculo). Cada instrumento
+    // novo entra aqui, um de cada vez, com um significado definido.
     if (shapes.length > 600) shapes.splice(0, shapes.length - 600);
     flashPad(trIndex, vel);
     $("empty").hidden = true;
@@ -923,7 +923,6 @@
     lctx.clearRect(0, 0, W, H);
     const dtF = clamp(t - (frameBody.last || t), 0, 0.05);
     frameBody.last = t;
-    frame3D(dtF);
     drawKickRings(t);
 
     // clarão do drop por cima
@@ -1016,8 +1015,8 @@
     const out = document.createElement("canvas");
     out.width = W; out.height = H;
     const o = out.getContext("2d");
-    if (!gl3.ok) return toast("O 3D ainda não carregou.");
-    window.Cycles3D.capture(o, W, H, settings.mode);
+    o.fillStyle = "#000";
+    o.fillRect(0, 0, W, H);
     o.drawImage(live, 0, 0, W, H); // o círculo do kick fica por cima
     out.toBlob((blob) => {
       if (!blob) return toast("Não consegui gerar a imagem.");
@@ -1530,7 +1529,7 @@
   bind();
   applyPanel();
   $("ver").textContent = "versão " + APP_VERSION;
-  start3D();
+  $("gl").hidden = true; // tela zerada: a cena 3D fica desligada
   loadManifest();
   resize();
   setMode(settings.mode);
