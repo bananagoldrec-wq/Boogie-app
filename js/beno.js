@@ -282,6 +282,27 @@
   const AGENCIA = "Travel Blue Turismo · Alessandro (21) 98875-5873 · alessandro@travelblueturismo.com.br";
   const SEED_LOGISTICA_LOTES = [
     {
+      /* Fortaleza em dezembro: os três shows (2, 5 e 6/12) com a passagem
+         da GOL já emitida e paga. Tarifa LIGHT nos dois trechos, que é
+         justamente a que não leva bagagem despachada — e um dos sets é
+         em vinil, então isso está escrito em cada voo. */
+      key: "beno_seed_logistica_v6",
+      itens: [
+        {
+          id: "seed-log-g32050", tipo: "voo", companhia: "GOL", numero: "G32050", localizador: "OODCFY",
+          origem: "GIG", destino: "FOR", terminalOrigem: "2", terminalDestino: "",
+          data: "2026-12-02", hora: "09:55", dataFim: "2026-12-02", horaFim: "13:10",
+          obs: "Confirmado, bilhete emitido. Direto, 3h15, Boeing 737 MAX, Econômica (classe N), tarifa LIGHT. SEM BAGAGEM DESPACHADA — a LIGHT só dá bagagem de mão, e o set do Moleska nesse mesmo dia é em vinil: ou compra despacho, ou os discos vão na mão. Chega 13:10 e o show é 20h, dá folga. Assento não marcado. Bilhete 1272315483604.",
+        },
+        {
+          id: "seed-log-g32043", tipo: "voo", companhia: "GOL", numero: "G32043", localizador: "OODCFY",
+          origem: "FOR", destino: "GIG", terminalOrigem: "", terminalDestino: "2",
+          data: "2026-12-07", hora: "22:05", dataFim: "2026-12-08", horaFim: "01:20",
+          obs: "Confirmado, bilhete emitido. Direto, 3h15, Boeing 737-800, Econômica (classe B), tarifa LIGHT, também sem bagagem despachada. Sai na segunda à noite, um dia inteiro depois do último show — chega no Galeão 01:20 de terça. Os dois trechos saíram por R$ 1.555,67 (tarifa R$ 1.459,80 + R$ 95,87 de embarque), no cartão final 0470. A Festa Lá em Cima prometeu passagens: cobrar o reembolso. Bilhete não endossável nem transferível.",
+        },
+      ],
+    },
+    {
       /* Viagem de novembro: Rio → Lisboa, pulo até Viena no meio, e volta
          pro Rio. O Ryanair veio com tudo (número, horário, preço); o
          Rio↔Lisboa veio de um cartão de resumo que só mostrava pontas e
