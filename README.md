@@ -451,6 +451,19 @@ e microfone (sem MIDI, a Apple não deixa).
 **Música** (toca um arquivo e analisa) ou **Demo**. **Tela cheia** (F; dois
 toques, segurar o dedo ou Esc saem) deixa só a imagem.
 
+## No computador (instalado, sem internet)
+
+No **Chrome** ou no **Edge** (Windows ou Mac), abra o link e toque em
+**Instalar no computador** (ou menu ⋮ → *Instalar Cycles Visual*; no Chrome há
+também o ícone de instalar na barra de endereço). Ele vira um programa: ícone
+no menu Iniciar / Aplicativos / Dock, janela própria, **F** pra tela cheia no
+projetor. Na primeira abertura com internet, o app guarda tudo no computador
+(código, 3D, análise e as obras do banco) — o ⚙ mostra "Pronto pra usar sem
+internet ✓" — e daí em diante abre e funciona **sem rede**; quando houver
+internet, se atualiza sozinho. O MIDI pede permissão uma vez. O ajudante
+offline (`sw-cycles.js`) só cuida do `cycles.html`, sem mexer nos outros apps
+do site. Atalhos de teclado listados no ⚙.
+
 ## A história
 
 No centro, uma escultura que respira e se transforma devagar (esfera, cubo,

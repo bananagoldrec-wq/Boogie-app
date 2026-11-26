@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-cycles-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-cycles-512.png" />
 
-  <link rel="stylesheet" href="css/cycles.css?v=12" />
+  <link rel="stylesheet" href="css/cycles.css?v=16" />
 </head>
 <body>
   <header class="bar">
@@ -27,6 +27,7 @@
       <span id="st-bpm" class="pill" hidden></span>
     </div>
     <div class="actions">
+      <button id="btn-install" class="btn primary" type="button" hidden title="Instala como programa no computador e funciona sem internet">Instalar no computador</button>
       <button id="btn-midi" class="btn" type="button">Conectar MIDI</button>
       <button id="btn-audio" class="btn" type="button" title="Use a entrada de linha/microfone com a saída do Cycles">Áudio</button>
       <button id="btn-music" class="btn" type="button" title="Tocar uma música do aparelho pra testar (Espaço pausa)">Música</button>
@@ -88,6 +89,24 @@
       </div>
 
       <section>
+        <h4>Neste computador</h4>
+        <p class="offline" id="offline-status">—</p>
+        <p class="muted">Instalado (Chrome ou Edge: botão <b>Instalar no computador</b>, ou menu ⋮ → Instalar), o Cycles Visual abre como
+        programa, em janela própria, e funciona sem internet — bom pra show em lugar com rede ruim.</p>
+        <h4>Atalhos de teclado</h4>
+        <dl class="keys">
+          <dt>F</dt><dd>tela cheia (Esc sai)</dd>
+          <dt>Espaço</dt><dd>toca/pausa a música</dd>
+          <dt>X</dt><dd>próximo ato da história</dd>
+          <dt>R</dt><dd>próxima obra · <b>N</b> arte aleatória nova</dd>
+          <dt>M</dt><dd>modo (ao vivo · rastro · pintura)</dd>
+          <dt>C</dt><dd>limpa a tela · <b>S</b> salva a imagem</dd>
+          <dt>1–6</dt><dd>dispara cada trilha</dd>
+          <dt>D</dt><dd>demo · <b>A</b> áudio (microfone/linha)</dd>
+        </dl>
+      </section>
+
+      <section>
         <h4>Entrada MIDI</h4>
         <select id="sel-input" class="sel wide"><option value="">— nenhuma —</option></select>
         <label class="chk"><input type="checkbox" id="chk-clear-play" /> Limpar a tela quando der play no Cycles</label>
@@ -107,8 +126,8 @@
 
       <section>
         <h4>Banco de referências</h4>
-        <p class="muted">As pinceladas pegam a cor da obra no ponto onde passam e seguem os contornos dela.
-        Troca sozinha a cada 16 compassos e quando você muda de pattern; tecla <b>R</b> passa pra próxima. Toque numa obra pra usar agora.</p>
+        <p class="muted">A obra que veste a escultura. Troca sozinha a cada 16 compassos, quando você muda de pattern e no drop;
+        tecla <b>R</b> passa pra próxima. Toque numa obra pra usar agora.</p>
         <label class="row">Fidelidade
           <select id="sel-fid" class="sel">
             <option value="baixa">Baixa — fragmentos soltos</option>
@@ -154,7 +173,7 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles-analise.js?v=15"></script>
-  <script src="js/cycles.js?v=15"></script>
+  <script src="js/cycles-analise.js?v=16"></script>
+  <script src="js/cycles.js?v=16"></script>
 </body>
 </html>

@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 15;
+  const APP_VERSION = 16;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -1329,6 +1329,7 @@
     $("chk-panel").checked = settings.showPanel;
     $("chk-panel").addEventListener("change", (e) => { settings.showPanel = e.target.checked; save(); applyPanel(); });
     $("btn-midi").addEventListener("click", connectMidi);
+    $("btn-install").addEventListener("click", installApp);
     $("btn-audio").addEventListener("click", toggleAudio);
     $("btn-music").addEventListener("click", toggleMusic);
     const wake = () => { if (audio.ctx && audio.ctx.state !== "running") audio.ctx.resume().catch(() => {}); };
@@ -1373,6 +1374,56 @@
     new ResizeObserver(resize).observe(stage);
   }
 
+  // ---------- versão pra computador: instalar como programa e funcionar sem internet ----------
+  let installEvt = null;
+  const installed = () => matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches || navigator.standalone;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    installEvt = e;
+    if (!installed()) $("btn-install").hidden = false;
+  });
+  window.addEventListener("appinstalled", () => {
+    $("btn-install").hidden = true;
+    toast("Instalado! Abra o Cycles Visual pelo menu Iniciar / Aplicativos / Dock.");
+  });
+  async function installApp() {
+    if (!installEvt) {
+      toast("Use o Chrome ou o Edge no computador: menu ⋮ → Instalar Cycles Visual.");
+      return;
+    }
+    installEvt.prompt();
+    const r = await installEvt.userChoice.catch(() => null);
+    if (r && r.outcome === "accepted") $("btn-install").hidden = true;
+    installEvt = null;
+  }
+  function offlineStatus(text, ok) {
+    const el = $("offline-status");
+    el.textContent = text;
+    el.classList.toggle("ok", !!ok);
+  }
+  async function setupOffline() {
+    if (!("serviceWorker" in navigator)) return offlineStatus("Este navegador não guarda o app pra usar sem internet.");
+    try {
+      // versões antigas registravam o ajudante pro site todo; agora é só pro Cycles
+      for (const r of await navigator.serviceWorker.getRegistrations()) {
+        const w = r.active || r.waiting || r.installing;
+        if (w && /sw-cycles\.js/.test(w.scriptURL) && !/cycles\.html$/.test(r.scope)) await r.unregister();
+      }
+      await navigator.serviceWorker.register("sw-cycles.js", { scope: "./cycles.html" });
+      offlineStatus("Guardando o app neste aparelho…");
+      const reg = await navigator.serviceWorker.ready;
+      navigator.serviceWorker.addEventListener("message", (e) => {
+        if (e.data && e.data.type === "status") {
+          offlineStatus(e.data.files >= 40 ? `Pronto pra usar sem internet ✓ (${e.data.files} arquivos guardados)` : `Guardando… (${e.data.files} arquivos)`, e.data.files >= 40);
+        }
+      });
+      const ask = () => (navigator.serviceWorker.controller || reg.active) && (navigator.serviceWorker.controller || reg.active).postMessage("status");
+      ask(); setTimeout(ask, 4000); setTimeout(ask, 12000);
+    } catch (e) {
+      offlineStatus("Não deu pra guardar o app (" + (e.message || e) + ").");
+    }
+  }
+
   // ---------- início ----------
   bind();
   applyPanel();
@@ -1386,6 +1437,6 @@
   if (navigator.permissions && navigator.requestMIDIAccess) {
     navigator.permissions.query({ name: "midi" }).then((p) => { if (p.state === "granted") connectMidi(); }).catch(() => {});
   }
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw-cycles.js").catch(() => {});
+  setupOffline();
   requestAnimationFrame(frame);
 })();

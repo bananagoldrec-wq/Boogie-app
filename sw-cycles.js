@@ -1,22 +1,70 @@
-/* Service worker network-first: sempre busca a versão mais recente quando
-   online (evita o app instalado ficar preso numa versão antiga em cache).
-   Cai para o cache só quando estiver offline. Só existe pra habilitar a
-   instalação como app. */
-const CACHE = "cycles-visual-v1";
+/* Service worker do Cycles Visual.
+   - Na instalação, guarda TUDO que o app precisa (código, 3D, análise e as
+     obras do banco listadas em refs/refs.json): no show, funciona sem internet.
+   - Com internet, busca sempre a versão mais nova (rede primeiro) e atualiza
+     o que está guardado; sem internet, usa o guardado.
+   Registrado com escopo ./cycles.html pra não interferir nos outros apps do site. */
+const CACHE = "cycles-visual-v16";
+const CORE = [
+  "cycles.html",
+  "css/cycles.css",
+  "js/cycles.js",
+  "js/cycles-analise.js",
+  "js/cycles-3d.js",
+  "js/vendor/three-r128.min.js",
+  "manifest-cycles.json",
+  "icons/icon-cycles-192.png",
+  "icons/icon-cycles-512.png",
+  "icons/apple-touch-icon-cycles.png",
+  "refs/refs.json",
+];
 
-self.addEventListener("install", (e) => self.skipWaiting());
+self.addEventListener("install", (e) => {
+  e.waitUntil((async () => {
+    const c = await caches.open(CACHE);
+    await c.addAll(CORE);
+    // as obras do banco (cada uma separada: se uma falhar, as outras ficam)
+    try {
+      const r = await fetch("refs/refs.json", { cache: "no-cache" });
+      const m = await r.json();
+      const srcs = m.sets.flatMap((s) => s.items.map((it) => it.src));
+      await Promise.all(srcs.map((src) => c.add(src).catch(() => {})));
+    } catch { /* sem banco: o app funciona sem as obras */ }
+    await self.skipWaiting();
+  })());
+});
 
-self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
+self.addEventListener("activate", (e) => {
+  e.waitUntil((async () => {
+    for (const k of await caches.keys()) if (k.startsWith("cycles-visual-") && k !== CACHE) await caches.delete(k);
+    await self.clients.claim();
+  })());
+});
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
-  e.respondWith(
-    fetch(e.request)
-      .then((res) => {
+  const url = new URL(e.request.url);
+  if (url.origin !== location.origin) return;
+  e.respondWith((async () => {
+    try {
+      const res = await fetch(e.request);
+      if (res.ok) {
         const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
-        return res;
-      })
-      .catch(() => caches.match(e.request))
-  );
+        // guarda sem o ?v=… pra o guardado valer pra qualquer versão
+        caches.open(CACHE).then((c) => c.put(url.origin + url.pathname, copy)).catch(() => {});
+      }
+      return res;
+    } catch {
+      const hit = await caches.match(url.origin + url.pathname) || await caches.match(e.request, { ignoreSearch: true });
+      return hit || Response.error();
+    }
+  })());
+});
+
+// a página pergunta quantos arquivos já estão guardados (indicador "pronto pra usar offline")
+self.addEventListener("message", async (e) => {
+  if (e.data !== "status") return;
+  const c = await caches.open(CACHE);
+  const keys = await c.keys();
+  e.source && e.source.postMessage({ type: "status", files: keys.length, cache: CACHE });
 });

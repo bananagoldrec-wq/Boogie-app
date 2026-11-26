@@ -1,17 +1,37 @@
 {
   "name": "Cycles Visual",
   "short_name": "Cycles Visual",
-  "description": "Transforma o MIDI e o áudio do Model:Cycles em imagens.",
+  "description": "Experiência 3D que conta uma história com o MIDI do Model:Cycles ou uma música. Funciona sem internet.",
   "lang": "pt-BR",
   "start_url": "./cycles.html",
   "scope": "./cycles.html",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "any",
   "background_color": "#0d0d10",
   "theme_color": "#0d0d10",
   "icons": [
-    { "src": "icons/icon-cycles-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-cycles-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-cycles-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-cycles-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-cycles-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-cycles-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "./cycles.html",
+  "display_override": [
+    "fullscreen",
+    "standalone"
   ]
 }
