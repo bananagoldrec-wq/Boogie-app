@@ -27,6 +27,11 @@
   const APP_PASSWORD = "231019";
   const UNLOCK_KEY = "frisson_agenda_unlocked_v1";
 
+  // Valor padrão do cachê — todo DJ novo entra com esse valor sugerido,
+  // mas dá pra subir caso o artista tenha um nome maior. R$ 600 é o piso:
+  // o app não deixa salvar um valor abaixo disso.
+  const STANDARD_FEE = 600;
+
   const WEEKDAY_NAMES = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
   const MONTH_NAMES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 
@@ -719,6 +724,7 @@
   const fTipo = document.getElementById("f-tipo");
   const fStatus = document.getElementById("f-status");
   const fEvento = document.getElementById("f-evento");
+  const fValor = document.getElementById("f-valor");
   const fEstilo = document.getElementById("f-estilo");
   const fTelefone = document.getElementById("f-telefone");
   const fEmail = document.getElementById("f-email");
@@ -983,6 +989,7 @@
     fTipo.value = entry.tipo || "DJ";
     fStatus.value = entry.status || "pendente";
     fEvento.value = entry.evento || "";
+    fValor.value = entry.valor != null ? entry.valor : STANDARD_FEE;
     fEstilo.value = entry.estilo || "";
     fTelefone.value = entry.telefone || "";
     fEmail.value = entry.email || "";
@@ -1019,6 +1026,7 @@
       status: fStatus.value,
       evento: fEvento.value.trim(),
       estilo: fEstilo.value.trim(),
+      valor: Number(fValor.value),
       telefone: fTelefone.value.trim(),
       email: fEmail.value.trim(),
       obs: fObs.value.trim(),
@@ -1030,6 +1038,10 @@
     const entry = readDayForm();
     if (!entry.artista) {
       showToast("Digite o nome do artista antes de salvar.");
+      return;
+    }
+    if (!Number.isFinite(entry.valor) || entry.valor < STANDARD_FEE) {
+      showToast(`O valor mínimo é R$ ${STANDARD_FEE}.`);
       return;
     }
     if (!bookingsCol) {
