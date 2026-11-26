@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 22;
+  const APP_VERSION = 23;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -994,10 +994,13 @@
     for (const k of kickRings) {
       const p = (t - k.born) / DUR;
       const e = 1 - Math.pow(1 - p, 3);                       // nasce rápido, desacelera
-      const r = md * (0.015 + (0.16 + 0.22 * k.v) * e);        // de um ponto até ~1/3 da tela
+      // FORÇA DO KICK = TAMANHO: fraco abre pouco (~8% da tela), forte abre até ~45%.
+      // Espessura e brilho são iguais pra qualquer força: só o tamanho fala.
+      const rMax = 0.08 + 0.37 * Math.pow(k.v, 1.5);
+      const r = md * (0.01 + rMax * e);
       lctx.beginPath();
       lctx.arc(W / 2, H / 2, r, 0, Math.PI * 2);
-      lctx.lineWidth = Math.max(1, (1.5 + 4 * k.v) * DPR * (1 - p * 0.6));
+      lctx.lineWidth = Math.max(1, 2.5 * DPR * (1 - p * 0.5));
       lctx.strokeStyle = `rgba(255,255,255,${(0.95 * Math.pow(1 - p, 1.6)).toFixed(3)})`;
       lctx.stroke();
     }
