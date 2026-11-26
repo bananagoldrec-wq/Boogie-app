@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 23;
+  const APP_VERSION = 24;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -363,7 +363,13 @@
       if (hz >= 30 && hz < 220 && p > lowPk) { lowPk = p; lowPkI = i; }
       if (hz >= 2000 && hz < 6000) clickE += p;
     }
-    const lowHz = lowPkI * binHz;
+    // tom do grave com interpolação entre as faixas do espectro (sem isso a medida
+    // anda em degraus de ~23 Hz e o mesmo kick parece cair de tom ora sim, ora não)
+    let lowHz = lowPkI * binHz;
+    if (lowPkI > 1 && lowPkI < fd.length - 1) {
+      const a = fd[lowPkI - 1], c0 = fd[lowPkI], c = fd[lowPkI + 1], den = a - 2 * c0 + c;
+      if (den < 0) lowHz = (lowPkI + clamp((0.5 * (a - c)) / den, -0.5, 0.5)) * binHz;
+    }
     audio.hz = peakI * binHz;
     audio.tonal = total ? peak / total : 0;
     const max = Math.max(b[0], b[1], b[2], 1e-12);
@@ -393,9 +399,7 @@
         audio.lowPend = null;
         const decay = lowE / (pend.peak + 1e-12);
         const glide = pend.f0 && lowHz ? pend.f0 / lowHz : 1;
-        // a queda de tom é o que separa: o kick despenca (1,3–2×), o baixo fica parado —
-        // mesmo um baixo plucado, que também some rápido e tem estalo
-        const isKick = glide > 1.2;
+        const isKick = classifyLow({ glide, click: pend.click, decay });
         spawn(isKick ? 0 : 8, pend.note, pend.vel, "audio");
       }
     }
@@ -424,6 +428,39 @@
     if (hit[0] && hit[1] && audio.tonal > 0.05 && Math.random() < 0.5) {
       spawn(5, 69 + 12 * Math.log2(Math.max(40, audio.hz) / 440), 80, "audio");
     }
+  }
+
+  // Separa kick × baixo APRENDENDO com o som que está tocando: guarda as últimas
+  // batidas graves e divide em dois grupos pela "cara de kick" (queda de tom,
+  // estalo, some rápido). Se só existe um grupo (só kick tocando, ou kick e baixo
+  // idênticos), vale kick — o círculo nunca some por excesso de rigor.
+  const lowHist = [];
+  function classifyLow(f) {
+    const lg = Math.log(Math.max(0.5, f.glide)), lc = Math.log(Math.max(0.05, f.click)), ld = Math.log(Math.max(0.01, f.decay));
+    lowHist.push([lg, lc, ld]);
+    if (lowHist.length > 48) lowHist.shift();
+    if (f.glide > 1.3) return true; // queda de tom clara: kick com certeza
+    if (lowHist.length < 8) return true;
+    // desvio com piso: batidas quase iguais (só kick) não podem virar "dois grupos" por ruído
+    const FLOOR = [0.15, 0.7, 0.4];
+    const stat = (k) => {
+      const v = lowHist.map((x) => x[k]), m = v.reduce((a, b) => a + b, 0) / v.length;
+      return [m, Math.max(FLOOR[k], Math.sqrt(v.reduce((a, b) => a + (b - m) * (b - m), 0) / v.length))];
+    };
+    const [mg, sg] = stat(0), [mc, sc] = stat(1), [md, sd] = stat(2);
+    const score = (x) => 1.0 * (x[0] - mg) / sg + 0.7 * (x[1] - mc) / sc - 0.5 * (x[2] - md) / sd;
+    const sc0 = lowHist.map(score).sort((a, b) => a - b);
+    let lo = sc0[Math.floor(sc0.length * 0.25)], hi = sc0[Math.floor(sc0.length * 0.75)];
+    for (let it = 0; it < 10; it++) {
+      const A = [], B = [];
+      sc0.forEach((v) => (Math.abs(v - lo) <= Math.abs(v - hi) ? A : B).push(v));
+      if (A.length) lo = A.reduce((a, b) => a + b, 0) / A.length;
+      if (B.length) hi = B.reduce((a, b) => a + b, 0) / B.length;
+    }
+    const cut = (lo + hi) / 2, nLow = sc0.filter((v) => v < cut).length;
+    // um grupo só (ou um "grupo" minúsculo de ruído): tudo é kick
+    if (hi - lo < 2.0 || nLow < sc0.length * 0.2 || nLow > sc0.length * 0.8) return true;
+    return score([lg, lc, ld]) > cut;
   }
 
   function drawBands() {
