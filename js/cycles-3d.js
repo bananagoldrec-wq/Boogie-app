@@ -380,11 +380,7 @@
     if (!ready) return;
     const v = ev.v, c = hsl(ev.c).lerp(col.cur, 0.5); // a cor do som puxa pra cor do ato
     switch (ev.m) {
-      case 0: // KICK: sempre um círculo
-        env.kickT = Math.max(env.kickT, 0.5 + 0.5 * v);
-        env.ripple = 2.2; env.rippleA = 0.35 + 0.35 * v;
-        if (chapter.tunnel) ring(new T.Vector3(0, 0, -26), new T.Euler(0, 0, 0), 2.6, 0, 2.2, c, 0.95, new T.Vector3(0, 0, 15 + 8 * v));
-        kickCircle(v, c);
+      case 0: // KICK: o círculo 2D é desenhado por cima da cena (js/cycles.js); a cena 3D não reage
         break;
       case 8: env.bass = Math.max(env.bass, 0.4 + 0.6 * v); break; // BAIXO
       case 1: // SNARE: onda circular que distorce a imagem toda
@@ -412,7 +408,7 @@
         break;
       case 7: // ACENTO / EFEITOS
         if (ev.kind === "acento") env.acc = Math.max(env.acc, 0.4 + 0.6 * v);
-        else if (ev.kind === "impacto") { env.rollV += (Math.random() < 0.5 ? -1 : 1) * 4; env.kickT = 1; env.acc = 1; burstShards(40, c, 1); kickCircle(1, c); }
+        else if (ev.kind === "impacto") { env.rollV += (Math.random() < 0.5 ? -1 : 1) * 4; env.acc = 1; burstShards(40, c, 1); }
         else env.bass = Math.max(env.bass, 0.5);
         break;
       default: break;

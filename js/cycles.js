@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 17;
+  const APP_VERSION = 18;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -453,6 +453,7 @@
       sh.ou = (Math.random() - 0.5) * j; sh.ov = (Math.random() - 0.5) * j;
       sh.color = refBaseColor(x, y, sh.ou, sh.ov, sh.color);
     }
+    if (sh.m === 0) kickRings.push({ born: t, v: n01(vel) }); // kick = círculo 2D nascendo
     if (gl3.ok) window.Cycles3D.hit({ m: sh.m, v: n01(vel), y: sh.y, c: sh.color, life: sh.life, kind: extra.kind });
     if (extra.kind === "impacto") lineGo(punch.s, [[0.8, 10], [0, 450]]);
     if (shapes.length > 600) shapes.splice(0, shapes.length - 600);
@@ -892,6 +893,7 @@
     const dtF = clamp(t - (frameBody.last || t), 0, 0.05);
     frameBody.last = t;
     frame3D(dtF);
+    drawKickRings(t);
 
     // clarão do drop por cima
     const sF = lineVal(punch.s);
@@ -953,7 +955,26 @@
     if (gl3.ok) window.Cycles3D.resize(W, H);
   }
 
+  // ---------- kick: um círculo simples, 2D, que nasce no centro e abre ----------
+  let kickRings = [];
+  function drawKickRings(t) {
+    const DUR = 0.65, md = Math.min(W, H);
+    kickRings = kickRings.filter((k) => t - k.born < DUR);
+    if (kickRings.length > 12) kickRings.splice(0, kickRings.length - 12);
+    for (const k of kickRings) {
+      const p = (t - k.born) / DUR;
+      const e = 1 - Math.pow(1 - p, 3);                       // nasce rápido, desacelera
+      const r = md * (0.015 + (0.16 + 0.22 * k.v) * e);        // de um ponto até ~1/3 da tela
+      lctx.beginPath();
+      lctx.arc(W / 2, H / 2, r, 0, Math.PI * 2);
+      lctx.lineWidth = Math.max(1, (1.5 + 4 * k.v) * DPR * (1 - p * 0.6));
+      lctx.strokeStyle = `rgba(255,255,255,${(0.95 * Math.pow(1 - p, 1.6)).toFixed(3)})`;
+      lctx.stroke();
+    }
+  }
+
   function clearCanvas() {
+    kickRings = [];
     shapes = [];
     if (gl3.ok) window.Cycles3D.clear();
     lctx.clearRect(0, 0, W, H);
@@ -966,6 +987,7 @@
     const o = out.getContext("2d");
     if (!gl3.ok) return toast("O 3D ainda não carregou.");
     window.Cycles3D.capture(o, W, H, settings.mode);
+    o.drawImage(live, 0, 0, W, H); // o círculo do kick fica por cima
     out.toBlob((blob) => {
       if (!blob) return toast("Não consegui gerar a imagem.");
       const url = URL.createObjectURL(blob);

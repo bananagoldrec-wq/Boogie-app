@@ -502,7 +502,7 @@ clock, a cada ~40 s). A forma muda a cada 4 compassos. Tecla **X** avança o ato
 
 | Instrumento | Na imagem |
 | --- | --- |
-| **kick** | sempre um **círculo** de luz em volta da forma (no túnel, vindo até você) |
+| **kick** | só um **círculo 2D simples**, branco, que nasce no centro da tela e abre (~0,6 s); a cena 3D não reage ao kick |
 | **snare** | distorção: uma onda circular atravessa a imagem, empurrando e separando as cores |
 | **clap** | outra distorção: rasgos horizontais em 2–3 estalos rápidos (o "flam" do clap) |
 | baixo | o chão ondula e a forma deforma por dentro |
