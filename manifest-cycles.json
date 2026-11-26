@@ -8,7 +8,7 @@
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0d0d10",
-  "theme_color": "#0d0d10",
+  "theme_color": "#cfccc3",
   "icons": [
     {
       "src": "icons/icon-cycles-192.png",

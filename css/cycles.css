@@ -151,3 +151,87 @@ input[type=range].wide{width:100%;accent-color:var(--accent);margin:4px 0}
 .help{margin:6px 0 4px;font-size:13px;color:#c9c8c2}
 .help summary{cursor:pointer;color:var(--text);font-weight:600}
 .help ol{padding-left:18px;margin:6px 0}.help li{margin:4px 0}
+
+/* ===================================================================
+   Pele "aparelho": gabinete cinza-claro, teclas escuras arredondadas
+   com rótulos condensados, tecla ativa acesa em vermelho e visores
+   azuis tipo LCD. A tela da imagem continua preta, encaixada no gabinete.
+   =================================================================== */
+:root{
+  --case:#cfccc3;          /* gabinete */
+  --case-2:#c2beb4;        /* rebaixo do painel */
+  --case-edge:#a9a59b;
+  --ink:#2b2b2e;           /* serigrafia */
+  --ink-2:#615e57;
+  --key:#3a3b3f;           /* tecla */
+  --key-top:#46474c;
+  --key-txt:#e9e7e1;
+  --lit:#ff2b2b;           /* tecla acesa */
+  --lcd:#bccbff;           /* visor */
+  --lcd-ink:#2a3a9e;
+  --cond:"DIN Condensed","Bahnschrift Condensed","Bahnschrift","Avenir Next Condensed","Roboto Condensed","Arial Narrow",sans-serif;
+  /* reaproveita as variáveis antigas pro painel de ajustes */
+  --bg:var(--case); --panel:var(--case); --panel-2:var(--case-2); --line:var(--case-edge);
+  --text:var(--ink); --muted:var(--ink-2); --accent:var(--lit); --accent-ink:#fff;
+}
+html,body{background:var(--case);color:var(--ink)}
+body.show,body.show .stage{background:#000}
+
+/* barra e dock: o painel do aparelho */
+.bar,.dock{background:var(--case-2);border-color:var(--case-edge);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.06)}
+.bar{margin:10px 10px 0;border:1px solid var(--case-edge);border-radius:16px 16px 0 0;border-bottom:0}
+.dock{margin:0 10px 10px;border:1px solid var(--case-edge);border-radius:0 0 16px 16px;border-top:0}
+@media (max-width:640px){.bar{margin:6px 6px 0}.dock{margin:0 6px 6px}}
+
+/* marca e indicadores = visores LCD azuis */
+.brand,.pill{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;background:var(--lcd);color:var(--lcd-ink);
+  border:2px solid #2c2d31;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5),inset 0 2px 6px rgba(20,30,90,.25)}
+.brand{border-radius:6px;padding:4px 9px;font-size:14px;letter-spacing:.06em}
+.brand span{color:var(--lcd-ink);opacity:.7}
+.pill{border-radius:5px;font-size:11px;padding:2px 8px;text-transform:uppercase;letter-spacing:.03em}
+.pill.on{background:var(--lcd);color:var(--lcd-ink)}
+.pill.on::before{content:"● ";color:var(--lit)}
+.pill.warn{background:#ffd9b0;color:#7a3a00}
+
+/* teclas */
+.btn,.sel,.seg button{font-family:var(--cond);text-transform:uppercase;letter-spacing:.05em;font-size:15px;font-weight:600;
+  color:var(--key-txt);background:linear-gradient(var(--key-top),var(--key));border:1px solid #1f2023;border-radius:9px;
+  box-shadow:0 2px 0 #1b1c1f,0 3px 6px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.08)}
+.btn{padding:8px 13px}
+.btn:hover,.sel:hover,.seg button:hover{border-color:#000;filter:brightness(1.12)}
+.btn:active,.seg button:active{transform:translateY(1px);box-shadow:0 1px 0 #1b1c1f,inset 0 1px 0 rgba(255,255,255,.05)}
+.sel{padding:7px 10px}
+.sel option{text-transform:none;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+/* acesa: vermelho com brilho, como T1 e play no aparelho */
+.btn.primary,.btn.on,.seg button.on{color:#fff;background:linear-gradient(#ff4a43,var(--lit));border-color:#7a0f0f;
+  box-shadow:0 2px 0 #5a0b0b,0 0 14px rgba(255,43,43,.55),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn.icon{padding:8px 11px}
+.seg{border:0;gap:6px;overflow:visible}
+.seg button+button{border-left:1px solid #1f2023}
+
+/* a imagem: uma "janela" preta encaixada no gabinete */
+.stage{margin:0 10px;border:3px solid #2c2d31;border-radius:6px;color:#ecebe6;
+  box-shadow:inset 0 0 0 1px #000,0 0 0 1px var(--case-edge)}
+@media (max-width:640px){.stage{margin:0 6px}}
+body.show .stage{margin:0;border:0;border-radius:0}
+body.show .bar,body.show .dock{margin:0}
+.empty p{color:#c9c8c2}
+
+/* painel de ajustes: serigrafia escura sobre o cinza */
+.sheet-card{background:var(--case);border-left:1px solid var(--case-edge);color:var(--ink)}
+.sheet h4{font-family:var(--cond);font-size:14px;color:var(--ink);letter-spacing:.08em}
+.sheet-head h3{font-family:var(--cond);text-transform:uppercase;letter-spacing:.06em;font-size:20px}
+.help,.keys dd{color:var(--ink)}
+.keys dt{background:linear-gradient(var(--key-top),var(--key));color:var(--key-txt);border-color:#1f2023}
+.ports .port,.chan-grid label{background:var(--case-2);border:1px solid var(--case-edge)}
+.ports .good{color:#0b7a3c}.ports .bad{color:#b14400}
+.offline{color:var(--ink-2)}.offline.ok{color:#0b7a3c}
+.monitor{background:#15161a;color:#b9c6ff;border-color:#2c2d31}
+.timeline{background:#111;border-color:#2c2d31}
+.chan-grid input,.cc-grid input{background:#f3f1ec;color:var(--ink);border-color:var(--case-edge)}
+.ref-grid button{background:var(--case-2)}
+.ref-grid button.on{border-color:var(--lit)}
+input[type=range].wide{accent-color:var(--lit)}
+.toast{background:var(--lcd);color:var(--lcd-ink);font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:600;border:2px solid #2c2d31}
+.tap-play{font-family:var(--cond);text-transform:uppercase;letter-spacing:.05em}
