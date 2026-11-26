@@ -8,7 +8,7 @@ const DAYS     = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 const DAY_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
 const START_H  = 6;
 const END_H    = 20;
-const ROUTINE_VERSION = 7;
+const ROUTINE_VERSION = 9;
 
 const CATS = [
   { id:'exercise', label:'Exercício',   color:'#A8C4A2' },
@@ -127,7 +127,9 @@ const ROUTINE = [
   { di:3, h:19, m:0, text:'IBEU',     category:'study',    startTime:'19:00', endTime:null    },
   { di:4, h:7,  m:0, text:'Malhação', category:'exercise', startTime:'07:00', endTime:null    },
   { di:4, h:9,  m:0, text:'KNN',      category:'study',    startTime:'09:00', endTime:'11:00' },
-  ...[0,1,2,3,4].map(di => ({ di, h:12, m:0, text:'Estúdio', category:'work', startTime:'12:00', endTime:'18:00', v:7 })),
+  ...[0,2,3,4].map(di => ({ di, h:12, m:0, text:'Estúdio', category:'work', startTime:'12:00', endTime:'18:00', v:7 })),
+  { di:1, h:13, m:0, text:'Estúdio', category:'work', startTime:'13:00', endTime:'18:00', v:8 },
+  { di:1, h:12, m:0, text:'Canto',   category:'study', startTime:'12:00', endTime:'13:00', v:9 },
 ];
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -287,6 +289,16 @@ function seedRoutineIfEmpty() {
   if (!S.seededWeeks) S.seededWeeks = [];
   if (!S.pinnedTemplate) S.pinnedTemplate = [];
   if (S.routineApplied !== ROUTINE_VERSION) {
+    if ((S.routineApplied || 0) >= 7 && S.routineApplied < 8) {
+      // Tuesday Estúdio moved from 12:00 to 13:00
+      S.pinnedTemplate = S.pinnedTemplate.filter(p => !(p.di === 1 && p.h === 12 && p.m === 0 && p.text === 'Estúdio'));
+      Object.keys(S.activities).forEach(k => {
+        const a = S.activities[k];
+        if (!k.endsWith('-tue-12-0') || a?.text !== 'Estúdio') return;
+        delete S.activities[k];
+        S.activities[k.replace(/-tue-12-0$/, '-tue-13-0')] = { ...a, startTime: '13:00' };
+      });
+    }
     // Merge ROUTINE into the template and the current week, keeping user edits
     // Only apply entries added after the last applied version, so deleted items don't come back
     ROUTINE.filter(r => (r.v || 6) > (S.routineApplied || 0)).forEach(r => {
@@ -298,6 +310,8 @@ function seedRoutineIfEmpty() {
     S.routineApplied = ROUTINE_VERSION;
     save();
   }
+  // With Google Agenda linked, weekly repeats come from Google's recurring events
+  if (typeof gcalConnected === 'function' && gcalConnected()) return;
   const wkKey = wk();
   if (S.seededWeeks.includes(wkKey)) return;
   const hasActivity = Object.keys(S.activities).some(k => k.startsWith(wkKey));
@@ -676,6 +690,7 @@ function saveAct() {
 
   // Determine target slot from start time input
   let { di, h, m } = editCell;
+  const orig = getAct(di, h, m);
   if (startTime) {
     const [sh, sm] = startTime.split(':').map(Number);
     const newH = sh, newM = sm < 30 ? 0 : 30;
@@ -691,7 +706,7 @@ function saveAct() {
   const actObj = text ? {
     text,
     category: selCat || 'other',
-    done: existing ? existing.done : false,
+    done: orig ? orig.done : existing ? existing.done : false,
     startTime: startTime || `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,
     endTime:   endTime || null,
     pin: _pinActive || undefined,
@@ -707,10 +722,14 @@ function saveAct() {
     S.pinnedTemplate.splice(tplIdx, 1);
   }
 
+  if (actObj) gcalBeforeSave(orig, actObj);
+  else        gcalQueueDelete(orig, di);
+
   setAct(di, h, m, actObj);
   save();
   closeActModal();
   buildGrid();
+  gcalSync();
 }
 
 // ── Categories ────────────────────────────────────────────────────────────────
@@ -1102,6 +1121,7 @@ function shiftWeek(delta) {
   weekStart.setDate(weekStart.getDate() + delta * 7);
   updateWeekLabel();
   buildGrid();
+  gcalSync();
 }
 
 function updateWeekLabel() {
@@ -1667,6 +1687,7 @@ function init() {
   q('#btn-del-act').addEventListener('click', () => {
     if (!editCell) return;
     const { di, h, m } = editCell;
+    gcalQueueDelete(getAct(di, h, m), di);
     setAct(di, h, m, null);
     if (!S.pinnedTemplate) S.pinnedTemplate = [];
     const tplIdx = S.pinnedTemplate.findIndex(p => p.di === di && p.h === h && p.m === m);
@@ -1674,6 +1695,7 @@ function init() {
     save();
     closeActModal();
     buildGrid();
+    gcalSync();
   });
   q('#act-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveAct(); });
   q('#btn-pin-act').addEventListener('click', () => { _pinActive = !_pinActive; refreshPinBtn(); });
@@ -1767,6 +1789,7 @@ function init() {
 function openSettings() {
   refreshLeadUI();
   renderGcalList();
+  renderGcalSettings();
   q('#settings-overlay').hidden = false;
 }
 

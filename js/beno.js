@@ -109,6 +109,30 @@
     { data: "2026-10-10", casa: "Zurich" },
   ];
 
+  /* Shows fechados que chegaram depois do primeiro lote. Cada lote tem a
+     sua chave: um lote novo entra sem ressuscitar o que foi apagado de um
+     lote antigo, igual aos curadores e à logística. Aqui o show já vem com
+     cachê, então entra somando no total do mês. */
+  const SEED_SHOW_LOTES = [
+    {
+      key: "beno_seed_agenda_v2",
+      shows: [
+        {
+          data: "2026-12-02", casa: "Moleska Gastrobar", bairro: "Fortaleza", cache: 750,
+          notas: "Quarta Rara. Set das 20h às 23h. EM VINIL — levar as agulhas. R$ 750 de cachê + R$ 150 de consumação.",
+        },
+        {
+          data: "2026-12-05", casa: "Festa Lá em Cima", bairro: "Fortaleza", cache: 1000,
+          notas: "Set das 20h às 22h. R$ 1.000 de cachê + passagens por conta deles + R$ 150 de consumação, e cerveja liberada no palco.",
+        },
+        {
+          data: "2026-12-06", casa: "Órbita Blue", bairro: "Fortaleza", cache: 700,
+          notas: "Beach club. 4h de set, horário ainda a definir. R$ 700 de cachê; consumação a confirmar.",
+        },
+      ],
+    },
+  ];
+
   /* Curadores passados pelo Beno. Cada um entra como contato e já abre
      uma negociação em "A contatar", pronta pro primeiro contato.
      Cada lote tem sua própria chave, pra que um lote novo entre sem
@@ -257,6 +281,61 @@
      entra uma vez por aparelho, com id fixo pra não duplicar. */
   const AGENCIA = "Travel Blue Turismo · Alessandro (21) 98875-5873 · alessandro@travelblueturismo.com.br";
   const SEED_LOGISTICA_LOTES = [
+    {
+      /* Fortaleza em dezembro: os três shows (2, 5 e 6/12) com a passagem
+         da GOL já emitida e paga. Tarifa LIGHT nos dois trechos, que é
+         justamente a que não leva bagagem despachada — e um dos sets é
+         em vinil, então isso está escrito em cada voo. */
+      key: "beno_seed_logistica_v6",
+      itens: [
+        {
+          id: "seed-log-g32050", tipo: "voo", companhia: "GOL", numero: "G32050", localizador: "OODCFY",
+          origem: "GIG", destino: "FOR", terminalOrigem: "2", terminalDestino: "",
+          data: "2026-12-02", hora: "09:55", dataFim: "2026-12-02", horaFim: "13:10",
+          obs: "Confirmado, bilhete emitido. Direto, 3h15, Boeing 737 MAX, Econômica (classe N), tarifa LIGHT. SEM BAGAGEM DESPACHADA — a LIGHT só dá bagagem de mão, e o set do Moleska nesse mesmo dia é em vinil: ou compra despacho, ou os discos vão na mão. Chega 13:10 e o show é 20h, dá folga. Assento não marcado. Bilhete 1272315483604.",
+        },
+        {
+          id: "seed-log-g32043", tipo: "voo", companhia: "GOL", numero: "G32043", localizador: "OODCFY",
+          origem: "FOR", destino: "GIG", terminalOrigem: "", terminalDestino: "2",
+          data: "2026-12-07", hora: "22:05", dataFim: "2026-12-08", horaFim: "01:20",
+          obs: "Confirmado, bilhete emitido. Direto, 3h15, Boeing 737-800, Econômica (classe B), tarifa LIGHT, também sem bagagem despachada. Sai na segunda à noite, um dia inteiro depois do último show — chega no Galeão 01:20 de terça. Os dois trechos saíram por R$ 1.555,67 (tarifa R$ 1.459,80 + R$ 95,87 de embarque), no cartão final 0470. A Festa Lá em Cima prometeu passagens: cobrar o reembolso. Bilhete não endossável nem transferível.",
+        },
+      ],
+    },
+    {
+      /* Viagem de novembro: Rio → Lisboa, pulo até Viena no meio, e volta
+         pro Rio. O Ryanair veio com tudo (número, horário, preço); o
+         Rio↔Lisboa veio de um cartão de resumo que só mostrava pontas e
+         horários — por isso esses dois estão sem número de voo, e a
+         duração sugere escala a confirmar. */
+      key: "beno_seed_logistica_v5",
+      itens: [
+        {
+          id: "seed-log-nov-giglis", tipo: "voo", companhia: "TAP", numero: "", localizador: "",
+          origem: "GIG", destino: "LIS", terminalOrigem: "", terminalDestino: "",
+          data: "2026-11-16", hora: "15:00", dataFim: "2026-11-17", horaFim: "06:20",
+          obs: "Ida pra Lisboa, chega na manhã do dia 17. Companhia lida pelo logo (TAP) — falta o número do voo. São 12h20 de porta a porta, umas 2h30 a mais que o direto Rio–Lisboa, então provavelmente tem escala. Confirmar na tela de detalhes da reserva.",
+        },
+        {
+          id: "seed-log-fr9705", tipo: "voo", companhia: "Ryanair", numero: "FR9705", localizador: "",
+          origem: "LIS", destino: "VIE", terminalOrigem: "", terminalDestino: "",
+          data: "2026-11-18", hora: "10:50", dataFim: "2026-11-18", horaFim: "15:20",
+          obs: "Confirmado. Direto, 3h30. Tarifa Basic € 148,99 + € 20,99 de Priority com 2 bagagens de mão. Sem bagagem despachada — Priority dá mala de cabine, não porão.",
+        },
+        {
+          id: "seed-log-fr4167-nov", tipo: "voo", companhia: "Ryanair", numero: "FR4167", localizador: "",
+          origem: "VIE", destino: "LIS", terminalOrigem: "", terminalDestino: "",
+          data: "2026-11-23", hora: "13:40", dataFim: "2026-11-23", horaFim: "16:25",
+          obs: "Confirmado. Direto, 3h45. Tarifa Basic € 59,27 + € 20,00 de Priority com 2 bagagens de mão. Mesmo número do voo de setembro, outra reserva.",
+        },
+        {
+          id: "seed-log-nov-lisgig", tipo: "voo", companhia: "TAP", numero: "", localizador: "",
+          origem: "LIS", destino: "GIG", terminalOrigem: "", terminalDestino: "",
+          data: "2026-11-24", hora: "08:50", dataFim: "2026-11-24", horaFim: "18:45",
+          obs: "Volta pro Rio, no dia seguinte à chegada de Viena. Companhia lida pelo logo (TAP) — falta o número do voo. São 12h55 de porta a porta, umas 2h30 a mais que o direto, então provavelmente tem escala. Confirmar na tela de detalhes da reserva.",
+        },
+      ],
+    },
     {
       /* Zurique → Varsóvia → Amsterdã → Lisboa: o pedaço que faltava entre
          o show de Zurique (10/10) e a volta pro Rio (18/10). Duas reservas
@@ -714,22 +793,35 @@
   }
 
   async function seedAgendaOnce() {
-    try {
-      if (localStorage.getItem(SEED_KEY)) return;
-      localStorage.setItem(SEED_KEY, "1");
-    } catch (err) {
-      return; // sem localStorage não dá pra saber se já rodou — não semeia
+    /* O primeiro lote é o original, sem chave própria no array; os
+       seguintes trazem a sua. Antes isto rodava uma vez e só: um show
+       novo acrescentado depois nunca entrava em quem já tinha semeado. */
+    const lotes = [{ key: SEED_KEY, shows: SEED_SHOWS }, ...SEED_SHOW_LOTES];
+    let semeou = false;
+
+    for (const lote of lotes) {
+      try {
+        if (localStorage.getItem(lote.key)) continue;
+        localStorage.setItem(lote.key, "1");
+      } catch (err) {
+        return; // sem localStorage não dá pra saber se já rodou — não semeia
+      }
+
+      for (const show of lote.shows) {
+        await persistDeal(makeDeal({
+          id: seedId(show.data, show.casa),
+          casa: show.casa,
+          bairro: show.bairro || "",
+          dataAlvo: show.data,
+          cache: show.cache || "",
+          etapa: "fechado",
+          notas: show.notas || (show.cortado ? "Nome veio cortado no print do Google Agenda — conferir." : ""),
+        }));
+      }
+      semeou = true;
     }
-    for (const show of SEED_SHOWS) {
-      await persistDeal(makeDeal({
-        id: seedId(show.data, show.casa),
-        casa: show.casa,
-        dataAlvo: show.data,
-        etapa: "fechado",
-        notas: show.cortado ? "Nome veio cortado no print do Google Agenda — conferir." : "",
-      }));
-    }
-    renderAll();
+
+    if (semeou) renderAll();
   }
 
   async function seedCuradoresOnce() {

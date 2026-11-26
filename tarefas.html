@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-build="5">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Listas de tarefas simples por assunto: Casa, Banana Gold, Produção Musical e DJ." />
+  <title>Tarefas</title>
+
+  <!-- PWA / atalho na tela inicial -->
+  <link rel="manifest" href="manifest-tarefas.json" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+
+  <!-- iOS: roda em tela cheia -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Tarefas" />
+
+  <!-- Ícones -->
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-tarefas.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-tarefas-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-tarefas-512.png" />
+
+  <link rel="stylesheet" href="css/tarefas.css?v=5" />
+</head>
+<body>
+  <header class="top">
+    <nav id="tabs" class="tabs" role="tablist" aria-label="Listas"></nav>
+    <div class="title-row">
+      <h1 id="list-title">Tarefas</h1>
+      <span id="count" class="count" aria-label="pendentes"></span>
+    </div>
+  </header>
+
+  <main class="main">
+    <ul id="todo" class="list" aria-label="A fazer"></ul>
+
+    <form id="add-form" class="add" autocomplete="off">
+      <span class="add-plus" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg>
+      </span>
+      <input id="add-input" type="text" placeholder="Nova tarefa" enterkeyhint="done" aria-label="Nova tarefa" />
+    </form>
+
+    <p id="empty" class="empty" hidden>Nenhuma tarefa</p>
+
+    <section id="done-wrap" class="done-wrap" hidden>
+      <div class="done-head">
+        <span class="done-info"><span id="done-count"></span> · <button id="clear-done" class="link" type="button">Limpar</button></span>
+        <button id="done-toggle" class="link" type="button" aria-expanded="true">Ocultar</button>
+      </div>
+      <ul id="done" class="list done" aria-label="Concluídas"></ul>
+    </section>
+  </main>
+
+  <!-- Barra inferior, como nos apps da Apple -->
+  <footer class="toolbar">
+    <button id="new-btn" class="new-btn" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M12 7v10M7 12h10" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      Nova tarefa
+    </button>
+    <span id="build" class="build"></span>
+  </footer>
+
+  <!-- Editar / criar lista -->
+  <dialog id="tab-dialog" class="alert">
+    <form method="dialog" id="tab-form">
+      <div class="alert-body">
+        <h2 id="tab-dialog-title">Lista</h2>
+        <input id="tab-name" type="text" maxlength="40" placeholder="Nome da lista" autocomplete="off" />
+        <div id="colors" class="colors" role="radiogroup" aria-label="Cor da lista"></div>
+      </div>
+      <div class="alert-buttons">
+        <button value="cancel" type="submit" formnovalidate>Cancelar</button>
+        <button id="tab-save" value="ok" type="submit" class="strong">Salvar</button>
+      </div>
+      <button id="tab-delete" class="alert-delete" type="button">Apagar lista</button>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" hidden>
+    <span id="toast-msg"></span>
+    <button id="toast-undo" type="button">Desfazer</button>
+  </div>
+
+  <script src="js/tarefas.js?v=5"></script>
+</body>
+</html>

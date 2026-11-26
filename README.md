@@ -366,3 +366,175 @@ verdade). Ao mexer em `js/bananagold.js`/`css/bananagold.css`, suba o `?v=` do
 `bananagold.html` e, junto, o `data-build` do `<html>` e o `BUILD` no topo
 do JS (os três iguais). Se o celular abrir a página velha com o código novo,
 o app percebe a diferença e recarrega sozinho em vez de travar.
+
+---
+
+# 🎙️ Bela Ciavatta · finalização do álbum
+
+App pra fechar o álbum, na mesma base do app da Banana Gold. Abre em
+`belaciavatta.html` (senha: `belaciavatta`, em `APP_PASSWORD` no topo de
+`js/belaciavatta.js` — trava visitante casual, não é segurança de verdade).
+A tela inicial tem o nome, a barra de progresso do álbum e **quatro abas**:
+
+- **Demos** — as faixas na ordem do álbum, com ▶ pra ouvir no player de baixo
+  (anterior/próxima, passa sozinho pra próxima, controles da tela de
+  bloqueio). Nome editável, ↑/↓ pra mudar a ordem, **+ áudio** sobe o arquivo
+  (WAV, MP3, AIFF, FLAC, M4A; dá pra escolher vários de uma vez — cada um vira
+  uma faixa — ou arrastar pra aba no computador) e 🔗 cola um link do Google
+  Drive ou Dropbox no lugar do upload.
+- **Calendário** — mês a mês com os compromissos (estúdio, ensaio, mix,
+  master, reunião, entrega, lançamento), cada um com horário e faixa ligada,
+  e os prazos dos marcos do road map (◆). Embaixo, a lista dos próximos e dos
+  atrasados.
+- **Road map** — quantas faixas estão em cada etapa (Demo → Arranjo →
+  Gravação → Mix → Master → Pronta), a barrinha de cada faixa e a linha dos
+  marcos do álbum (repertório, pré-produção, gravações, mix, master, arte,
+  distribuidora, divulgação, lançamento), cada um com prazo, status e notas.
+  Dá pra reordenar, apagar e criar marcos.
+- **To-do** — uma barra por faixa que abre e fecha, com a etapa, as tarefas
+  (marcar, editar, apagar, adicionar), notas da faixa e "+ usar checklist
+  padrão" (letra, arranjo, vozes, instrumentos, edição, mix, master, créditos,
+  ISRC). "Pendentes" esconde o que já foi feito.
+
+Sincroniza pelo mesmo projeto Firebase dos outros apps **sem precisar mexer
+nas regras**: os registros moram na coleção `pato_settings` (já liberada; o
+app do Pato só usa o doc `templates` dela) com ids `bc__tracks__…`,
+`bc__events__…` e `bc__milestones__…`. O que uma pessoa faz aparece pras
+outras em ~2 s. Sem nuvem, segue salvando no aparelho e sobe o pendente quando
+conectar (a bolinha no topo fica verde quando está sincronizado).
+
+As 6 demos da pasta BOUNCES do Drive vêm em versão leve (AAC 192k) em
+`audio/belaciavatta/`, servidas junto com o app; o ↗ abre o WAV original.
+Áudio subido pelo app tentaria o Firebase Storage em `bg_demos/bc-<faixa>/`,
+mas o Storage não está ativado no projeto, então fica só no aparelho de quem
+subiu ("só neste aparelho") — use 🔗 com um link do Drive pra todo mundo
+ouvir. Ícones: `python3 tools/make_belaciavatta_icons.py`. Ao mexer em
+`js/belaciavatta.js`/`css/belaciavatta.css`, suba o `?v=` do
+`belaciavatta.html` e, junto, o `data-build` do `<html>` e o `BUILD` no topo do
+JS (os três iguais).
+
+# ✅ Tarefas
+
+Listas de tarefas simples, com visual de app da Apple (Lembretes). Abre em
+`tarefas.html`.
+
+- **Abas** no topo: Casa (laranja), Banana Gold (amarelo), Produção Musical
+  (roxo), DJ (rosa), Frisson (azul), Burocracia (marrom), Santa Teresa
+  (verde) e Imóveis (azul-piscina); o número é quanto falta fazer. Lista
+  padrão nova entra uma vez nos aparelhos que já usam o app (`seeded`); se
+  apagar, ela não volta. O **+** cria uma lista
+  nova; tocar de novo na aba aberta (ou segurar) renomeia, troca a cor ou
+  apaga.
+- **Nova tarefa** (na lista ou no botão de baixo) e Enter: entra no fim das
+  pendentes e o cursor fica lá pra emendar a próxima.
+- Toca na **bolinha** pra concluir: ela enche com a cor da lista e a tarefa
+  desce pra "concluídas" (toca de novo pra voltar). "Limpar" tira as
+  concluídas; "Ocultar/Mostrar" esconde a seção.
+- Toca no texto pra editar; apagar o texto todo (ou o ⓧ) remove a tarefa.
+  Apagar sempre mostra **Desfazer** por 5 s.
+
+Fica salvo **só no aparelho** (`localStorage`, chave `tarefas-v1`) — sem
+login e sem nuvem, funciona offline. Ao mexer em `js/tarefas.js` ou
+`css/tarefas.css`, suba o `?v=` do `tarefas.html`.
+
+---
+
+# 🎛️ Cycles Visual
+
+Uma experiência 3D que conta uma história com o que você toca no **Elektron
+Model:Cycles** (ou com uma música do aparelho). Abre em `cycles.html`.
+Chrome ou Edge no computador/Android pra MIDI; no iPhone funciona com música
+e microfone (sem MIDI, a Apple não deixa).
+
+**Ligar:** Cycles no USB → *Settings → MIDI Config → Port Config*: saída USB e
+*Output CC/NRPN* ligados. No app, **Conectar MIDI** e play. Sem o aparelho:
+**Música** (toca um arquivo e analisa) ou **Demo**. **Tela cheia** (F; dois
+toques, segurar o dedo ou Esc saem) deixa só a imagem.
+
+## A história
+
+No centro, uma escultura que respira e se transforma devagar (esfera, cubo,
+toro, flor, rocha, lente), vestida com uma obra do banco. A apresentação anda
+por **atos**, cada um com câmera, cor, cenário e formas próprios, e as trocas
+escorregam em ~3 s:
+
+1. **Gênese** — no escuro, a forma pequena e quieta, quase sem estrelas.
+2. **Despertar** — ela cresce, as estrelas aparecem, a câmera começa a girar.
+3. **Terra** — o chão surge; câmera rasante, olhando de baixo.
+4. **Travessia** — túnel: o círculo do kick vem na sua direção.
+5. **Tempestade** — o clímax: câmera rápida, cor quente, estilhaços.
+6. **Dissolução** — vista de cima, a forma vira lente, tudo esfria.
+
+Com **música de arquivo**, a análise vira um roteiro: blocos de 8 compassos;
+os mais intensos da música são Tempestade, um fim calmo é Dissolução e o resto
+anda pra frente em ordem (Gênese → Travessia). Ex.: intro → Gênese, drop →
+Tempestade, breakdown → Terra, drop 2 → Tempestade, final → Dissolução. **Ao
+vivo**, cada 16 compassos ou troca de pattern no Cycles é um ato novo (sem
+clock, a cada ~40 s). A forma muda a cada 4 compassos. Tecla **X** avança o ato.
+
+## O papel de cada instrumento (em qualquer ato)
+
+| Instrumento | Na imagem |
+| --- | --- |
+| **kick** | sempre um **círculo** de luz em volta da forma (no túnel, vindo até você) |
+| **snare** | distorção: uma onda circular atravessa a imagem, empurrando e separando as cores |
+| **clap** | outra distorção: rasgos horizontais em 2–3 estalos rápidos (o "flam" do clap) |
+| baixo | o chão ondula e a forma deforma por dentro |
+| hi-hat | as estrelas piscam |
+| lead | fita de luz na altura da nota |
+| chord | a cor do ato varia e entra um anel gigante |
+| voz | halos que sobem |
+| acentos | a imagem acende (o que se destaca do entorno, seja qual for o instrumento) |
+| drop | estilhaços, círculo grande e a câmera gira |
+
+No Cycles, a trilha **SNARE** faz a distorção do snare e a **PERC** a do clap.
+
+## Análise da música (`js/cycles-analise.js`)
+
+A faixa inteira é analisada antes de tocar (~1 s por minuto), com limiares
+relativos à própria música e pisos de volume:
+
+- **kick × baixo** — ataque, release, click, harmônicos e queda da
+  fundamental (o kick despenca de tom, o baixo não), separados dentro da
+  própria música e usando a pulsação (kick no tempo, baixo no contratempo).
+- **snare × clap** — candidatos com limiar baixo pra não perder acentuação; as
+  posições do groove onde eles caem (ex.: 2 e 4) aceitam ataques mais fracos.
+  Hi-hat sai pela cauda curta e por morar acima de 6 kHz. **Clap** = escuro
+  (quase nada acima de 6 kHz) e com estalos colados; **caixa** = tem corpo
+  (grave logo depois do ataque — mesmo em cima de um kick, comparando com um
+  kick sozinho).
+- **acentos** — batidas bem acima das mais fortes em volta (±2 s).
+- hi-hat, chords, lead × vocal (a voz oscila), efeitos (riser e impacto).
+
+Testes com faixas sintéticas com gabarito: house com clap (kick 63/64, clap
+32/32, 0 falsos), break com caixa e pratos (kick 31/32, caixa 32/32, acentos
+3/4), caixa e clap juntos (16/16 cada, sem confundir um com o outro), e uma
+faixa só de baixo (nenhum kick inventado). No ⚙, **"O que a análise da música
+encontrou"** mostra a linha do tempo por instrumento e o roteiro dos atos
+aparece no monitor.
+
+## Ajustes (⚙)
+
+- **Sincronia da imagem** (−300 a +300 ms): o app já desconta o atraso de
+  saída do áudio que o navegador informa; se ainda vier antes do som (caixa
+  Bluetooth), puxe pra esquerda.
+- **Movimento da imagem**: Suave (padrão), Médio, Intenso.
+- **Modo**: Ao vivo (limpa), Rastro, Pintura (acumula; **C** limpa).
+- Canal MIDI de cada trilha, CCs com **Aprender**, monitor MIDI.
+
+## Banco de referências (`refs/`)
+
+A obra que veste a escultura. Conjuntos em `refs/refs.json`: **Van Gogh**
+(domínio público, Art Institute of Chicago), **Ismael Nery** (domínio público
+no Brasil; Wikimedia Commons), **Arte aleatória** (`tools/random-art.py` e o
+mesmo gerador ao vivo em JS — tecla **N**, e a cada drop), **Acervo (paredes)**
+e **Minhas imagens** (adicionadas no ⚙, ficam só no aparelho). Troca a cada 16
+compassos, na troca de pattern e no drop; **R** pula.
+
+## Técnica
+
+three.js r128 embutido em `js/vendor/` (MIT), cena em `js/cycles-3d.js`: a
+cena é renderizada numa textura e um passe final aplica as distorções (snare,
+clap, acento). Resolução interna ~1,2 Mpx. Ajustes no aparelho
+(`localStorage`, chave `cycles-visual-v1`). Ao mexer nos arquivos, suba o
+`?v=` no `cycles.html` e o `APP_VERSION` em `js/cycles.js` (aparece no ⚙).

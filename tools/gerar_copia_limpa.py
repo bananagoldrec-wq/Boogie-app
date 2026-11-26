@@ -362,6 +362,7 @@ js = trocar(
 
 # ── Sementes: tudo que era dado do Beno vira lista vazia ──
 js = esvaziar_bloco(js, "SEED_SHOWS", rotulo="agenda")
+js = esvaziar_bloco(js, "SEED_SHOW_LOTES", rotulo="lotes de shows")
 js = esvaziar_bloco(js, "SEED_CURADOR_LOTES", rotulo="curadores")
 js = esvaziar_bloco(js, "SEED_LOGISTICA_LOTES", rotulo="lotes de voos")
 js = esvaziar_bloco(js, "SEED_LOGISTICA", rotulo="voos")
@@ -408,6 +409,30 @@ for antes, depois in [
 # o mesmo nome de chave, um sobrescreveria o outro no aparelho de quem
 # abrisse os dois.
 js = re.sub(r'"beno_', '"dj_', js)
+
+# Varredura estrutural: toda constante de semente tem que ter saído vazia.
+#
+# A varredura por "beno" logo abaixo não pega tudo. Ela procura uma palavra,
+# e dado pessoal nem sempre a contém: um lote novo de shows entrou com
+# "Moleska Gastrobar", "Fortaleza" e os cachês, e passou limpo pela busca
+# por "beno" porque nenhum deles é "beno". Só não vazou porque alguém olhou.
+#
+# Esta checagem não procura palavra nenhuma: exige que todo SEED_*,
+# COMPLEMENTOS* e REMOCOES esteja vazio no arquivo gerado. Assim, um lote
+# novo que o script ainda não conheça para a geração em vez de viajar junto.
+SEMENTES = re.compile(r"^  const ((?:SEED|COMPLEMENTOS)\w*|REMOCOES) = (.*)$", re.M)
+cheias = [
+    f"  {nome} = {valor}"
+    for nome, valor in SEMENTES.findall(js)
+    if valor.strip() not in ("[];", "{};") and not nome.endswith("_KEY")
+]
+if cheias:
+    raise SystemExit(
+        "ERRO: semente não esvaziada na cópia:\n"
+        + "\n".join(cheias)
+        + "\n\nUm lote novo apareceu em js/beno.js. Acrescente um esvaziar_bloco()\n"
+          "para ele neste script antes de gerar a cópia."
+    )
 
 # "js/beno.js" no cabeçalho é de propósito: diz de onde esta cópia veio.
 conferindo = js.replace("js/beno.js", "")

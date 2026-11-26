@@ -9,6 +9,8 @@ self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  // Never cache Google API responses (Google Agenda data, sign-in)
+  if (/(^|\.)(googleapis|google)\.com$/.test(new URL(e.request.url).hostname)) return;
   e.respondWith(
     fetch(e.request)
       .then((res) => {

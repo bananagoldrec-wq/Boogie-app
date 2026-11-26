@@ -1562,3 +1562,7 @@ body {
   .chip:not(.is-tall) .chip-text  { font-size: 12px; }
   .chip:not(.is-tall) .chip-edit  { width: 14px; height: 14px; font-size: 10px; right: 2px; }
 }
+
+.gcal-list[hidden] { display: none; }
+.gcal-status { margin: 4px 0 10px; }
+.field-label[hidden] { display: none; }
