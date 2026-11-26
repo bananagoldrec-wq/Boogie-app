@@ -315,6 +315,8 @@
     ribbonMat = new T.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false });
     ribbon = new T.Line(rg, ribbonMat);
     scene.add(ribbon);
+    // a esfera (escultura) saiu: no centro fica só o círculo 2D do kick
+    blob.visible = false; blobWire.visible = false; glowSprite.visible = false;
     ready = true;
   }
 
