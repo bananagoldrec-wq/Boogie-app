@@ -18,11 +18,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  # 1) empacota o site
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,6 +34,19 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: '.'
+
+  # 2) publica, num job separado: o GitHub às vezes demora a "enxergar" o
+  #    pacote recém-enviado e o deploy no mesmo job falhava com
+  #    "No artifacts named github-pages were found"
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Esperar o pacote ficar disponível
+        run: sleep 20
 
       - name: Deploy to GitHub Pages
         id: deployment
