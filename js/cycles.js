@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 29;
+  const APP_VERSION = 30;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -401,11 +401,15 @@
       const age = t - pend.t0;
       if (age < 0.03) pend.peak = Math.max(pend.peak, lowE);
       if (pend.f0 == null && age >= 0.012) pend.f0 = lowHz;
-      if (age >= 0.075) {
+      // kick curtíssimo (decay no zero): aos ~40 ms o grave já sumiu — só kick faz isso,
+      // então decide logo (o círculo aparece mais cedo)
+      const goneFast = age >= 0.04 && lowE < pend.peak * 0.08;
+      if (age >= 0.075 || goneFast) {
         audio.lowPend = null;
         const decay = lowE / (pend.peak + 1e-12);
         const glide = pend.f0 && lowHz ? pend.f0 / lowHz : 1;
-        const isKick = classifyLow({ glide, click: pend.click, decay });
+        const learned = classifyLow({ glide, click: pend.click, decay }); // sempre alimenta o histórico (kick e baixo)
+        const isKick = goneFast || learned;
         // FORÇA contínua em decibéis, relativa ao kick mais forte dos últimos ~20 s
         // (ganho automático lento): 30 dB de faixa útil, cada pequena mudança de volume conta.
         const db = 10 * Math.log10(pend.peak + 1e-12);
