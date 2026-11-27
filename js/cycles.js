@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 49;
+  const APP_VERSION = 50;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -719,7 +719,9 @@
       brain: window.CyclesOuvido.create(),
     };
   }
-  const p2On = () => { const c = $("canvas"); return !!c && !c.hidden; };
+  // um dos projetos (escada ou orbital) na tela
+  const p2Canvas = () => ["canvas", "canvas3"].map((id) => $(id)).find((c) => c && !c.hidden) || null;
+  const p2On = () => !!p2Canvas();
   // planura do espectro numa faixa (1 = ruído puro, perto de 0 = tom): caixa/clap × acorde/nota
   function flatness(lo, hi) {
     const fd = audio.fd, bh = audio.ctx.sampleRate / audio.an.fftSize;
@@ -1476,8 +1478,8 @@
   // ---------- salvar imagem ----------
   // (na resolução real da tela, a mesma da imagem que está aparecendo; no Projeto 2 salva a escada)
   function saveImage() {
-    const p2 = p2On();
-    const src = p2 ? $("canvas") : live;
+    const pc = p2Canvas(), p2 = !!pc;
+    const src = pc || live;
     if (!src.width || !src.height) return toast("Nada pra salvar ainda.");
     const out = document.createElement("canvas");
     out.width = src.width; out.height = src.height;
@@ -1490,7 +1492,7 @@
       const url = URL.createObjectURL(blob);
       const d = new Date();
       const p = (n) => String(n).padStart(2, "0");
-      const name = `${p2 ? "escada" : "cycles"}-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
+      const name = `${p2 ? (pc.id === "canvas3" ? "orbital" : "escada") : "cycles"}-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
       const a = document.createElement("a");
       a.href = url; a.download = name;
       document.body.appendChild(a); a.click(); a.remove();

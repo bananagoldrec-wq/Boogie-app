@@ -25,7 +25,8 @@ button,select,input{font:inherit;color:inherit}
   padding:calc(8px + var(--safe-top)) 16px 8px;border-bottom:1px solid var(--line);background:var(--panel)}
 .brand{font-weight:800;letter-spacing:.04em;text-transform:uppercase;font-size:15px}
 .brand span{font-weight:400;color:var(--accent);margin-left:4px}
-.status{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0}
+.status{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:min(100%,230px)} /* sem espaço, os botões descem de linha (não passam por cima) */
+.status .pill{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .pill{font-size:12px;padding:3px 9px;border-radius:99px;background:var(--panel-2);color:var(--muted);white-space:nowrap}
 .pill.on{background:rgba(63,214,138,.16);color:#7fe6b0}
 .pill.warn{background:rgba(255,176,46,.16);color:#ffc96b}
@@ -240,6 +241,12 @@ input[type=range].wide{accent-color:var(--lit)}
 .seg.tabs{display:inline-flex}
 body.proj-2 #live,body.proj-2 #gl{display:none!important}
 body:not(.proj-2) .only-p2,body.proj-2 .only-p1{display:none!important}
+/* celular: as 3 abas cabem numa linha só */
+@media (max-width:640px){.seg.tabs button{padding-left:6px;padding-right:6px;letter-spacing:.02em;white-space:nowrap}}
+/* Projeto 3 (Bauhaus Orbital): papel claro — o aviso inicial em tinta escura */
+body.proj-3 .empty{color:#151515}
+body.proj-3 #p2-lights span[data-k="chord"]{display:none} /* o chord não entra no Projeto 3 */
+body.proj-3 .empty p{color:#3b3a36}
 
 /* Projeto 2: luzes do que está chegando (como os LEDs das trilhas) */
 .p2-lights{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
