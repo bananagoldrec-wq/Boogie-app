@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 30;
+  const APP_VERSION = 31;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -442,6 +442,15 @@
       }
       slow[i] = slow[i] * 0.94 + e[i] * 0.06;
     }
+    // REVERB da caixa, medido na cauda: quanto o médio ainda soa 100–300 ms depois do
+    // ataque (em dB relativo ao pico; −30 dB ou menos = seco, −6 dB = muito reverb)
+    if (audio.snLine && audio.snT0 != null) {
+      const age = t - audio.snT0;
+      if (age > 0.1 && age < 0.3) {
+        const rel = 10 * Math.log10((snE + 1e-12) / (audio.snPeak + 1e-12));
+        audio.snLine.rv = Math.max(audio.snLine.rv, clamp((rel + 30) / 24, 0, 1));
+      } else if (age >= 0.3) audio.snLine = null;
+    }
     // SNARE/CLAP: detector próprio em 900–5000 Hz (o kick não atrapalha), só se ali
     // for RUÍDO (caixa e clap são ruído; nota de synth e kick têm pico definido) e
     // se pesar mais no médio que no agudo (o hi-hat mora acima de 6 kHz).
@@ -462,6 +471,7 @@
         const db = 10 * Math.log10(snE + 1e-12);
         audio.sDbMax = Math.max(db, audio.sDbMax ?? db);
         const v = clamp((db - (audio.sDbMax - 30)) / 30, 0.01, 1), sv = 1 + 126 * v;
+        audio.snPeak = snE; audio.snT0 = t;
         spawn(1, 50, sv, "audio", { exactVel: sv });
         log(`áudio: médio → SNARE/CLAP (linha) · força ${Math.round(v * 100)}% · ruído ${flat.toFixed(2)}`);
       }
@@ -565,7 +575,13 @@
       sh.color = refBaseColor(x, y, sh.ou, sh.ov, sh.color);
     }
     if (sh.m === 0) kickRings.push({ born: t, v: n01(vel) }); // kick = círculo 2D nascendo
-    if (sh.m === 1 || sh.m === 3) snareLines.push({ born: t, v: n01(vel) }); // snare/clap = linha horizontal
+    if (sh.m === 1 || sh.m === 3) {
+      // snare/clap = linha horizontal. Reverb = distorção: pelo MIDI vem do knob REVERB
+      // SEND da trilha; pelo Áudio é medido na cauda do som (atualizado ao vivo)
+      const line = { born: t, v: n01(vel), rv: source === "audio" ? 0 : n01(tr.reverb), seed: Math.random() * 100 };
+      snareLines.push(line);
+      if (source === "audio") audio.snLine = line;
+    }
     // TELA ZERADA: por enquanto só o kick tem imagem (o círculo). Cada instrumento
     // novo entra aqui, um de cada vez, com um significado definido.
     if (shapes.length > 600) shapes.splice(0, shapes.length - 600);
@@ -1073,16 +1089,23 @@
   // FORÇA = COMPRIMENTO (contínuo): fraquinha é um risco curto, forte corta a tela inteira.
   let snareLines = [];
   function drawSnareLines(t) {
-    const DUR = 0.5;
-    snareLines = snareLines.filter((k) => t - k.born < DUR);
+    snareLines = snareLines.filter((k) => t - k.born < 0.5 + 0.9 * k.rv);
     if (snareLines.length > 12) snareLines.splice(0, snareLines.length - 12);
     for (const k of snareLines) {
+      const DUR = 0.5 + 0.9 * k.rv;               // reverb = a linha demora mais pra sumir
       const p = (t - k.born) / DUR;
-      const e = 1 - Math.pow(1 - p, 3);
+      const e = 1 - Math.pow(1 - Math.min(1, (t - k.born) / 0.5), 3);
       const half = (W / 2) * (0.02 + 0.98 * k.v) * e;
+      // reverb = distorção: a linha ondula e treme; amplitude contínua com o reverb
+      const amp = H * 0.09 * k.rv * (0.4 + 0.6 * p);
+      const N = 96;
       lctx.beginPath();
-      lctx.moveTo(W / 2 - half, H / 2);
-      lctx.lineTo(W / 2 + half, H / 2);
+      for (let i = 0; i <= N; i++) {
+        const u = i / N, x = W / 2 - half + 2 * half * u;
+        const env = Math.sin(Math.PI * u);           // pontas presas, meio solto
+        const y = H / 2 + amp * env * (Math.sin(u * 14 + k.seed + t * 9) * 0.6 + Math.sin(u * 37 - t * 13 + k.seed * 2) * 0.4);
+        i ? lctx.lineTo(x, y) : lctx.moveTo(x, y);
+      }
       lctx.lineWidth = Math.max(1, 2.5 * DPR * (1 - p * 0.5));
       lctx.strokeStyle = `rgba(255,255,255,${(0.95 * Math.pow(1 - p, 1.6)).toFixed(3)})`;
       lctx.stroke();
