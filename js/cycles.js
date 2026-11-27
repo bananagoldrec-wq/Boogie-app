@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 25;
+  const APP_VERSION = 26;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -391,6 +391,7 @@
     // KICK × BAIXO ao vivo: uma batida grave fica "em análise" por ~75 ms.
     // Kick: a nota despenca logo depois do ataque. Baixo: a nota fica parada.
     // Só o kick vira o círculo.
+    if (audio.kDbMax != null) audio.kDbMax -= 0.004; // o teto desce bem devagar (~0,25 dB/s): baixar o volume encolhe o círculo de verdade
     const pend = audio.lowPend;
     if (pend) {
       const age = t - pend.t0;
@@ -401,12 +402,18 @@
         const decay = lowE / (pend.peak + 1e-12);
         const glide = pend.f0 && lowHz ? pend.f0 / lowHz : 1;
         const isKick = classifyLow({ glide, click: pend.click, decay });
-        spawn(isKick ? 0 : 8, pend.note, pend.vel, "audio");
-        log(`áudio: grave → ${isKick ? "KICK (círculo)" : "baixo"} · força ${pend.vel} · tom ${glide.toFixed(2)} · estalo ${pend.click.toFixed(1)}`);
+        // FORÇA contínua em decibéis, relativa ao kick mais forte dos últimos ~20 s
+        // (ganho automático lento): 30 dB de faixa útil, cada pequena mudança de volume conta.
+        const db = 10 * Math.log10(pend.peak + 1e-12);
+        audio.kDbMax = Math.max(db, audio.kDbMax ?? db);
+        const v = clamp((db - (audio.kDbMax - 30)) / 30, 0.01, 1);
+        const vel = 1 + 126 * v;
+        spawn(isKick ? 0 : 8, pend.note, vel, "audio", { exactVel: vel });
+        log(`áudio: grave → ${isKick ? "KICK (círculo)" : "baixo"} · força ${Math.round(v * 100)}% · tom ${glide.toFixed(2)} · estalo ${pend.click.toFixed(1)}`);
       }
     }
     const last = audio.bandLast || (audio.bandLast = [0, 0, 0]);
-    const TH = [1.35, 1.4, 1.5], REF = [0.2, 0.12, 0.09];
+    const TH = [1.22, 1.4, 1.5], REF = [0.2, 0.12, 0.09]; // grave mais sensível: kick baixo também conta
     const hit = [false, false, false];
     for (let i = 0; i < 3; i++) {
       const ratio = slow[i] > 0 ? e[i] / slow[i] : 0;
@@ -483,7 +490,7 @@
   function spawn(trIndex, note, vel, source = "midi", extra = {}) {
     const tr = tracks[trIndex];
     if (!tr) return;
-    vel = clamp(Math.round(vel) || 64, 1, 127);
+    vel = clamp(extra.exactVel ?? (Math.round(vel) || 64), 1, 127); // força fracionária: sem degraus
     const t = now();
     if (note == null) note = audio.on && audio.hz ? 69 + 12 * Math.log2(audio.hz / 440) : 60;
     if (!isFinite(note)) note = 60;
@@ -1033,9 +1040,9 @@
     for (const k of kickRings) {
       const p = (t - k.born) / DUR;
       const e = 1 - Math.pow(1 - p, 3);                       // nasce rápido, desacelera
-      // FORÇA DO KICK = TAMANHO: fraco abre pouco (~8% da tela), forte abre até ~45%.
+      // FORÇA DO KICK = TAMANHO: fraquinho abre ~3% da tela, forte até ~48%.
       // Espessura e brilho são iguais pra qualquer força: só o tamanho fala.
-      const rMax = 0.08 + 0.37 * Math.pow(k.v, 1.5);
+      const rMax = 0.03 + 0.45 * k.v; // linear: cada nuance de força muda o tamanho
       const r = md * (0.01 + rMax * e);
       lctx.beginPath();
       lctx.arc(W / 2, H / 2, r, 0, Math.PI * 2);
