@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 35;
+  const APP_VERSION = 36;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -350,7 +350,8 @@
     let peak = 0, peakI = 0, total = 0;
     const b = [0, 0, 0], bp = [0, 0, 0], bpi = [1, 1, 1];
     let lowE = 0, lowPk = 0, lowPkI = 1, clickE = 0; // grave (30–160 Hz), seu pico, e o "click" (2–6 kHz)
-    let snE = 0, snPk = 0, snN = 0, snLog = 0, hiE = 0; // faixa da caixa/clap (900–5000 Hz), se é ruído, e o agudo (6–12 kHz)
+    let snE = 0, snPk = 0, snN = 0, snLog = 0, hiE = 0;
+    const chroma = new Float32Array(12); // energia por nota (C..B) na região dos acordes // faixa da caixa/clap (900–5000 Hz), se é ruído, e o agudo (6–12 kHz)
     for (let i = 1; i < fd.length; i++) {
       const hz = i * binHz;
       if (hz < 25 || hz > 12000) continue;
@@ -365,6 +366,7 @@
       if (hz >= 2000 && hz < 6000) clickE += p;
       if (hz >= 900 && hz < 5000) { snE += p; snN++; snLog += Math.log(p + 1e-20); if (p > snPk) snPk = p; }
       if (hz >= 6000 && hz < 12000) hiE += p;
+      if (hz >= 200 && hz < 1100) chroma[((Math.round(12 * Math.log2(hz / 440) + 69) % 12) + 12) % 12] += p;
     }
     // tom do grave com interpolação entre as faixas do espectro (sem isso a medida
     // anda em degraus de ~23 Hz e o mesmo kick parece cair de tom ora sim, ora não)
@@ -397,6 +399,32 @@
     if (audio.sDbMax != null) audio.sDbMax -= 0.004;
     if (audio.hDbMax != null) audio.hDbMax -= 0.004;
     if (audio.kDbMax != null) audio.kDbMax -= 0.004;
+    // ACORDE = COR DO FUNDO (contínua): se 3+ notas soam juntas com força na região
+    // média, a nota mais forte define o tom (círculo das quintas) e o volume, a intensidade
+    if (audio.stream || (music.el && !music.el.paused)) {
+      let cmax = 0, root = 0, ctot = 0;
+      for (let k = 0; k < 12; k++) { ctot += chroma[k]; if (chroma[k] > cmax) { cmax = chroma[k]; root = k; } }
+      let notes = 0;
+      for (let k = 0; k < 12; k++) if (chroma[k] > cmax * 0.35) notes++;
+      // acorde de verdade: 3+ notas e volume na região média que pese frente ao grave
+      // (os harmônicos de um baixo sozinho também somam 3 notas, mas bem fracos)
+      // quanto da energia média é só HARMÔNICO do grave (múltiplos inteiros da nota do baixo)?
+      let harm = 0, all = 0;
+      if (lowHz > 25) {
+        for (let i = Math.ceil(200 / binHz); i < Math.min(fd.length, 1100 / binHz); i++) {
+          const p = Math.pow(10, fd[i] / 10), r = (i * binHz) / lowHz, dev = Math.abs(r - Math.round(r)) * lowHz;
+          all += p;
+          if (dev < binHz * 1.2) harm += p;
+        }
+      }
+      const harmFrac = all > 0 ? harm / all : 0;
+      if (notes >= 3 && cmax > 0 && ctot > lowE * 0.15 && harmFrac < 0.45) {
+        const db = 10 * Math.log10(ctot + 1e-12);
+        audio.cDbMax = Math.max(db, (audio.cDbMax ?? db) - 0.004);
+        const target = clamp((db - (audio.cDbMax - 24)) / 24, 0, 1);
+        setChord(root, target, 1.2);
+      }
+    }
     // COR DO BAIXO contínua no modo Áudio: a cada quadro lê a nota e o volume do grave
     // (fora dos ~120 ms de cada kick) e pinta a tela; nada de esperar uma "batida"
     if (audio.stream || (music.el && !music.el.paused)) {
@@ -426,7 +454,14 @@
         const decay = lowE / (pend.peak + 1e-12);
         const glide = pend.f0 && lowHz ? pend.f0 / lowHz : 1;
         const learned = classifyLow({ glide, click: pend.click, decay }); // sempre alimenta o histórico (kick e baixo)
-        const isKick = goneFast || learned;
+        // com o clock do Cycles chegando: batida grave com estalo que cai NO TEMPO é kick,
+        // mesmo com o baixo tocando junto (o baixo "alonga" o som e confundia o aprendizado)
+        let onBeat = false;
+        if (clock.running && clock.bpm && clock.quarterT != null) {
+          const P = 60 / clock.bpm, ph = (((pend.t0 - clock.quarterT) % P) + P) % P;
+          onBeat = Math.min(ph, P - ph) < 0.06;
+        }
+        const isKick = goneFast || learned || (onBeat && pend.click > 1.2);
         // FORÇA contínua em decibéis, relativa ao kick mais forte dos últimos ~20 s
         // (ganho automático lento): 30 dB de faixa útil, cada pequena mudança de volume conta.
         const db = 10 * Math.log10(pend.peak + 1e-12);
@@ -621,6 +656,7 @@
       tint.t0 = t;
       tint.dur = source === "audio" ? 0.9 : 0.25 + 1.6 * Math.pow(n01(tr.decay), 1.3);
     }
+    if (sh.m === 5 && source !== "audio") setChord(((Math.round(note) % 12) + 12) % 12, n01(vel), 0.4 + 3 * Math.pow(n01(tr.decay), 1.3));
     if (sh.m === 2) {
       // hi-hat = risco na borda; anda uma posição por batida, em volta da tela (sentido horário)
       hatStep = (hatStep + 1) % 32;
@@ -1064,6 +1100,7 @@
     lctx.clearRect(0, 0, W, H);
     const dtF = clamp(t - (frameBody.last || t), 0, 0.05);
     frameBody.last = t;
+    drawChordBg(t);
     drawKickRings(t);
     drawSnareLines(t);
     drawHatTicks(t);
@@ -1163,6 +1200,32 @@
     }
   }
 
+  // ---------- acorde: cor no fundo ----------
+  // tom = nota principal do acorde no CÍRCULO DAS QUINTAS (acordes vizinhos, cores
+  // vizinhas); intensidade = força, sempre escura pra não apagar as formas; a troca
+  // de acorde desliza a cor e, sem acorde, o fundo volta ao preto no tempo do decay
+  const bg = { h: 0, amt: 0, tgtH: 0, t0: -9, dur: 1, peak: 0 };
+  function setChord(pc, v, dur) {
+    const h = ((pc * 7) % 12) * 30;                 // C=0°, G=30°, D=60°… (quintas)
+    bg.tgtH = h;
+    if (bg.amt < 0.02) bg.h = h;
+    bg.peak = Math.max(bg.peak * bgNow(now()), v);
+    bg.t0 = now(); bg.dur = dur;
+  }
+  function bgNow(t) { return Math.max(0, 1 - (t - bg.t0) / bg.dur); }
+  function drawChordBg(t) {
+    bg.amt = bg.peak * Math.pow(bgNow(t), 1.3);
+    if (bg.amt < 0.01) return;
+    const d = ((((bg.tgtH - bg.h) % 360) + 540) % 360) - 180;
+    bg.h = (bg.h + d * 0.06 + 360) % 360;           // desliza pro tom novo
+    const [r, g, b] = hslToRgb({ h: bg.h, s: 70, l: 22 });
+    const gr = lctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.hypot(W, H) / 2);
+    gr.addColorStop(0, `rgba(${r | 0},${g | 0},${b | 0},${(0.6 * bg.amt).toFixed(3)})`);
+    gr.addColorStop(1, `rgba(${r | 0},${g | 0},${b | 0},${(0.22 * bg.amt).toFixed(3)})`);
+    lctx.fillStyle = gr;
+    lctx.fillRect(0, 0, W, H);
+  }
+
   // ---------- cor do baixo: pinta tudo o que está na tela ----------
   const tint = { h: 0, amt: 0, t0: -9, dur: 1 };
   function tintNow(t) { return Math.max(0, 1 - (t - tint.t0) / tint.dur); }
@@ -1228,6 +1291,7 @@
     kickRings = [];
     snareLines = [];
     hatTicks = []; hatStep = -1;
+    bg.peak = 0; bg.amt = 0;
     shapes = [];
     if (gl3.ok) window.Cycles3D.clear();
     lctx.clearRect(0, 0, W, H);
@@ -1412,6 +1476,7 @@
     const t = now();
     if (st === 0xf8) {
       clock.ticks++;
+      if (clock.ticks % 24 === 0) clock.quarterT = t; // onde caiu o último tempo (semínima)
       if (clock.ticks % 6 === 0) {
         clock.step++;
         if (clock.step % 256 === 0 && settings.refAuto !== false) nextRef(); // a cada 16 compassos
