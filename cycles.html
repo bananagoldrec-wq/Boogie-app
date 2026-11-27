@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-cycles-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-cycles-512.png" />
 
-  <link rel="stylesheet" href="css/cycles.css?v=50" />
+  <link rel="stylesheet" href="css/cycles.css?v=51" />
 </head>
 <body>
   <header class="bar">
@@ -25,6 +25,7 @@
       <button data-p="1" type="button" role="tab" title="O primeiro projeto: círculo, linha, riscos e cores (tecla P troca)">Sessão 1</button>
       <button data-p="2" type="button" role="tab" title="Escada sem fim: kick anda, baixo sobe a escada, hi-hat chove, caixa faz o boneco crescer, chord muda o fundo (tecla P troca)">Projeto 2</button>
       <button data-p="3" type="button" role="tab" title="Bauhaus Orbital: kick pulsa o sol e gira a lua, baixo põe planetas, hi-hat acende triângulos, caixa pula o arco amarelo (tecla P troca)">Projeto 3</button>
+      <button data-p="4" type="button" role="tab" title="INFINITE MICROCOSMOS: viagem 3D sem fim — kick faz nascer e transformar as formas, baixo acelera, hi-hat solta microfragmentos, caixa muda o fundo e inverte o giro (tecla P troca)">Projeto 4</button>
     </div>
     <div class="status">
       <span id="st-midi" class="pill">MIDI desligado</span>
@@ -49,6 +50,7 @@
     <canvas id="live"></canvas>
     <canvas id="canvas" hidden></canvas>
     <canvas id="canvas3" hidden></canvas>
+    <canvas id="canvas4" hidden></canvas>
 
     <div class="hud" id="hud">
       <div class="hud-dom">
@@ -82,6 +84,11 @@
         <b id="p2-src">—</b>
         <b id="p2-midi" class="p2-midi" hidden></b>
       </div>
+      <div class="p4-ctl only-p4" id="p4-ctl" aria-label="INFINITE MICROCOSMOS">
+        <b class="p4-name">Infinite Microcosmos</b>
+        <label>Velocidade <input type="range" id="p4-speed" min="0.2" max="3" step="0.1" value="1" /><output for="p4-speed">1.0×</output></label>
+        <label>Perspectiva <input type="range" id="p4-persp" min="150" max="900" step="10" value="340" /><output for="p4-persp">340</output></label>
+      </div>
       <div class="seg only-p1" id="seg-mode" role="radiogroup" aria-label="Modo">
         <button data-v="vivo" type="button">Ao vivo</button>
         <button data-v="rastro" type="button">Rastro</button>
@@ -108,13 +115,13 @@
         programa, em janela própria, e funciona sem internet — bom pra show em lugar com rede ruim.</p>
         <h4>Atalhos de teclado</h4>
         <dl class="keys">
-          <dt>P</dt><dd>troca de aba: Sessão 1 · Projeto 2 · Projeto 3</dd>
+          <dt>P</dt><dd>troca de aba: Sessão 1 · Projeto 2 · Projeto 3 · Projeto 4</dd>
           <dt>F</dt><dd>tela cheia (Esc sai)</dd>
           <dt>Espaço</dt><dd>toca/pausa a música</dd>
           <dt>X</dt><dd>próximo ato da história</dd>
           <dt>R</dt><dd>próxima obra · <b>N</b> arte aleatória nova</dd>
           <dt>M</dt><dd>modo (ao vivo · rastro · pintura)</dd>
-          <dt>C</dt><dd>limpa a tela (no Projeto 2 e 3, começa de novo) · <b>S</b> salva a imagem</dd>
+          <dt>C</dt><dd>limpa a tela (nos Projetos 2, 3 e 4, começa de novo) · <b>S</b> salva a imagem</dd>
           <dt>1–6</dt><dd>dispara cada trilha</dd>
           <dt>D</dt><dd>demo · <b>A</b> áudio (microfone/linha)</dd>
         </dl>
@@ -171,7 +178,7 @@
       </section>
 
       <section>
-        <h4>Projetos 2 e 3 — qual trilha faz o quê</h4>
+        <h4>Projetos 2, 3 e 4 — qual trilha faz o quê</h4>
         <p class="muted">Cada papel segue a sua trilha: se a trilha manda notas MIDI, vale SÓ o MIDI (exato, na hora —
         o som nunca chuta por ela); se não manda, vale o ouvido do Projeto 2 (ligue <b>Áudio</b>). Com o play dado no
         Cycles, o app acha sozinho pelo ritmo do MIDI qual trilha é o kick (4 tempos) e qual é a caixa (2 e 4).
@@ -211,9 +218,9 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles-analise.js?v=50"></script>
-  <script src="js/p2-ouvido.js?v=50"></script>
-  <script src="js/cycles.js?v=50"></script>
-  <script type="module" src="js/projeto2.js?v=50"></script>
+  <script src="js/cycles-analise.js?v=51"></script>
+  <script src="js/p2-ouvido.js?v=51"></script>
+  <script src="js/cycles.js?v=51"></script>
+  <script type="module" src="js/projeto2.js?v=51"></script>
 </body>
 </html>

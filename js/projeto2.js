@@ -4,6 +4,7 @@
    A Sessão 1 continua exatamente como era; estas abas só trocam o desenho. */
 import { createEndlessClimb } from './endless-climb.js';
 import { createBauhausOrbital } from './bauhaus-orbital-024.js';
+import { createInfiniteMicrocosmos } from './infinite-microcosmos-030.js';
 
 const visual = createEndlessClimb(
   document.getElementById('canvas')
@@ -14,7 +15,25 @@ const visual = createEndlessClimb(
 const orbital = createBauhausOrbital(
   document.getElementById('canvas3')
 );
-const scene = () => (proj === 3 ? orbital : visual);
+// PROJETO 4 — INFINITE MICROCOSMOS: kick faz nascer e transformar · baixo acelera a viagem ·
+// hi-hat solta microfragmentos · caixa muda o fundo, a geometria e inverte a rotação
+const micro = createInfiniteMicrocosmos(
+  document.getElementById('canvas4')
+);
+const SCENES = { 2: visual, 3: orbital, 4: micro };
+const scene = () => SCENES[proj] || visual;
+
+// controles do Projeto 4: velocidade e perspectiva (guardados neste aparelho)
+const p4speed = document.getElementById('p4-speed'), p4persp = document.getElementById('p4-persp');
+const p4out = (el) => { const o = document.querySelector(`output[for="${el.id}"]`); if (o) o.textContent = el.id === 'p4-speed' ? (+el.value).toFixed(1) + '×' : el.value; };
+function p4Load(el, key, set) {
+  if (!el) return;
+  try { const v = localStorage.getItem(key); if (v != null && Number.isFinite(+v)) el.value = v; } catch { /* sem armazenamento */ }
+  set(+el.value); p4out(el);
+  el.addEventListener('input', () => { set(+el.value); p4out(el); try { localStorage.setItem(key, el.value); } catch { /* idem */ } });
+}
+p4Load(p4speed, 'cv-p4-speed', (v) => micro.setSpeed(v));
+p4Load(p4persp, 'cv-p4-persp', (v) => micro.setPerspective(v));
 
 // KICK: a pessoa anda (um passo por kick)      → visual.hit('kick', força)
 // BASS: a escada sobe (um degrau por nota)      → visual.hit('bass', força)
@@ -74,17 +93,20 @@ function refreshLights() {
 setInterval(refreshLights, 300);
 refreshLights();
 
-// ---------- abas: Sessão 1 · Projeto 2 · Projeto 3 ----------
+// ---------- abas: Sessão 1 · Projeto 2 · Projeto 3 · Projeto 4 ----------
 const canvas = document.getElementById('canvas');
 const canvas3 = document.getElementById('canvas3');
+const canvas4 = document.getElementById('canvas4');
 const tabs = document.querySelectorAll('#seg-proj button');
 
 function setProject(n, save = true) {
-  proj = n === 2 || n === 3 ? n : 1;
+  proj = n >= 2 && n <= 4 ? n : 1;
   document.body.classList.toggle('proj-2', proj !== 1); // o rodapé dos projetos (luzes, reiniciar)
   document.body.classList.toggle('proj-3', proj === 3);
-  canvas.hidden = proj !== 2;
+  document.body.classList.toggle('proj-4', proj === 4);
+  canvas.hidden = proj !== 2;   // só a cena da aba aberta desenha (as outras param de gastar)
   canvas3.hidden = proj !== 3;
+  canvas4.hidden = proj !== 4;
   tabs.forEach((b) => {
     const on = +b.dataset.p === proj;
     b.classList.toggle('on', on);
@@ -99,7 +121,7 @@ document.getElementById('btn-reset2').addEventListener('click', () => scene().re
 document.addEventListener('keydown', (e) => {
   if (e.target.closest && e.target.closest('input,select,textarea')) return;
   const k = e.key.toLowerCase();
-  if (k === 'p') setProject((proj % 3) + 1);       // troca de aba: 1 → 2 → 3 → 1 (funciona em tela cheia)
+  if (k === 'p') setProject((proj % 4) + 1);       // troca de aba: 1 → 2 → 3 → 4 → 1 (funciona em tela cheia)
   else if (k === 'c' && proj !== 1) scene().reset(); // nos projetos, "limpar" = começar de novo
 });
 
@@ -109,3 +131,4 @@ setProject(saved, false);
 
 window.CyclesProjeto2 = visual;  // pra testar pelo console
 window.CyclesProjeto3 = orbital;
+window.CyclesProjeto4 = micro;
