@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 46;
+  const APP_VERSION = 47;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -66,12 +66,17 @@
   );
   settings.cc = Object.assign({ ...DEFAULT_CC }, settings.cc);
   // PROJETO 2 pelo MIDI: qual TRILHA faz cada coisa (índice 0–5 = T1–T6; -1 = nenhuma)
-  const P2_DEFAULT = { kick: 0, bass: 4, hat: 2, snare: 1 };
+  const P2_DEFAULT = { kick: 0, bass: 4, hat: 2, snare: 1, chord: 5 };
   settings.p2roles = Object.assign({ ...P2_DEFAULT }, settings.p2roles);
+  const p2used = new Set();
   for (const k of Object.keys(P2_DEFAULT)) {
-    const v = settings.p2roles[k];
-    if (!Number.isInteger(v) || v < -1 || v > 5) settings.p2roles[k] = P2_DEFAULT[k];
+    let v = settings.p2roles[k];
+    if (!Number.isInteger(v) || v < -1 || v > 5) v = P2_DEFAULT[k];
+    if (v >= 0 && p2used.has(v)) v = -1; // uma trilha, um papel (ajuste salvo antes do CHORD existir)
+    if (v >= 0) p2used.add(v);
+    settings.p2roles[k] = v;
   }
+  for (const k of Object.keys(settings.p2roles)) if (!(k in P2_DEFAULT)) delete settings.p2roles[k];
   if (!Array.isArray(settings.channels) || settings.channels.length !== 6 || !settings.channels.every((c) => Number.isInteger(c) && c >= 1 && c <= 16))
     settings.channels = [1, 2, 3, 4, 5, 6];
   // versão 12: o estilo 3D chega e vira o padrão (uma vez só; depois vale a escolha)
@@ -616,19 +621,20 @@
   const roleOf = (tr) => Object.keys(settings.p2roles).find((k) => settings.p2roles[k] === tr) || null;
   function emitP2(type, amount, source = "audio") {
     if (source === "audio" && trackLive(settings.p2roles[type])) return;
-    const bpm = clock.running && clock.bpm ? clock.bpm : null;
-    const grid = !!(clock.running && clock.bpm && clock.quarterT != null); // separando kick × baixo pelo tempo
+    const pc = p2Clock();
+    const bpm = pc ? 60 / pc.P : null;
+    const grid = !!pc; // separando kick × baixo pelo tempo do Cycles
     window.dispatchEvent(new CustomEvent("cycles:hit", { detail: { type, amount, bpm, source, grid } }));
   }
 
   // ---------- PROJETO 2: ouvido próprio ----------
   // Separado da Sessão 1 e nunca desliga (nem quando outras trilhas mandam MIDI).
   // O som passa por filtros em 5 faixas e a energia de cada uma é medida a cada quadro;
-  // um salto rápido de energia é uma batida naquela faixa:
-  //   sub-grave (<90 Hz) = KICK · grave (90–260 Hz) = BAIXO · 300–1000 Hz = acordes (só pra
-  //   não confundir com baixo) · médio (1–5 kHz) com cauda = CAIXA/CLAP · agudo (>7 kHz) = HI-HAT
+  // quem decide o que é kick, baixo, hi-hat, caixa e chord é o js/p2-ouvido.js.
+  //   sub-grave (<90 Hz) · grave (90–260 Hz) · 300–1000 Hz (acordes) · médio (1–5 kHz) · agudo (>7 kHz)
   let p2ears = null;
   function setupP2Ears(ctx, an) {
+    if (!window.CyclesOuvido) return;
     const f = (type, hz) => { const n = ctx.createBiquadFilter(); n.type = type; n.frequency.value = hz; n.Q.value = 0.707; return n; };
     const sr = ctx.sampleRate;
     const ear = (chain, ms) => {
@@ -637,137 +643,57 @@
       const a = ctx.createAnalyser();
       a.fftSize = 2048; a.smoothingTimeConstant = 0;
       prev.connect(a);
-      return { an: a, td: new Float32Array(a.fftSize), win: Math.min(2048, Math.round((sr * ms) / 1000)), now: null, h: [], hl: [], ref: -140, last: -9 };
+      return { an: a, td: new Float32Array(a.fftSize), win: Math.min(2048, Math.round((sr * ms) / 1000)) };
     };
     p2ears = {
-      sub: ear([f("lowpass", 90), f("lowpass", 90)], 14),
-      low: ear([f("highpass", 90), f("highpass", 90), f("lowpass", 260), f("lowpass", 260)], 12),
-      harm: ear([f("highpass", 300), f("lowpass", 1000)], 10),
-      mid: ear([f("highpass", 1000), f("highpass", 1000), f("lowpass", 5000)], 6),
-      hi: ear([f("highpass", 7000), f("highpass", 7000)], 6),
-      t: 0, bass: null, hat: null, snare: null, kickT: -9, kickHold: -9, lowOn: -9, kickPh: [],
+      bands: {
+        sub: ear([f("lowpass", 90), f("lowpass", 90)], 14),
+        low: ear([f("highpass", 90), f("highpass", 90), f("lowpass", 260), f("lowpass", 260)], 12),
+        harm: ear([f("highpass", 300), f("lowpass", 1000)], 10),
+        mid: ear([f("highpass", 1000), f("highpass", 1000), f("lowpass", 5000)], 6),
+        hi: ear([f("highpass", 7000), f("highpass", 7000)], 6),
+      },
+      lv: { sub: -140, low: -140, harm: -140, mid: -140, hi: -140 },
+      brain: window.CyclesOuvido.create(),
     };
   }
   const p2On = () => { const c = $("canvas"); return !!c && !c.hidden; };
+  // planura do espectro numa faixa (1 = ruído puro, perto de 0 = tom): caixa/clap × acorde/nota
+  function flatness(lo, hi) {
+    const fd = audio.fd, bh = audio.ctx.sampleRate / audio.an.fftSize;
+    let n = 0, sl = 0, sp = 0;
+    for (let i = Math.ceil(lo / bh); i < Math.min(fd.length, hi / bh); i++) { const q = Math.pow(10, fd[i] / 10); sp += q; sl += Math.log(q + 1e-20); n++; }
+    return n ? Math.exp(sl / n) / (sp / n + 1e-20) : 0;
+  }
+  // o tempo do Cycles, como o ouvido do Projeto 2 precisa: duração do tempo e onde cai um tempo.
+  // Vale também SEM o play (Cycles já tocando quando conectou): os ticks chegando bastam — a fase
+  // dos tempos fica fora do lugar, mas fixa, e o lugar do kick é aprendido dos próprios kicks.
+  function p2Clock() {
+    const ticking = now() - clock.tickT < 0.5;
+    if (!(clock.bpm && clock.qTp != null && ticking && (clock.running || !clock.stopped))) return null;
+    return { P: 60 / clock.bpm, qT: clock.qTp, synced: !!(clock.synced && clock.running) };
+  }
   function p2Listen(t) {
     const E = p2ears;
     if (!E || !audio.on || !p2On()) return;
     const playing = music.el && !music.el.paused;
     if (playing && music.timeline) return; // música analisada: o Projeto 2 recebe a linha do tempo
-    // voltou depois de uma pausa (aba trocada, música parada): reaprende antes de detectar
-    const gap = t - (E.t || -9) > 0.25;
-    const dt = gap ? 0 : clamp(t - E.t, 0, 0.1);
-    E.t = t;
-    if (gap) for (const k of ["sub", "low", "harm", "mid", "hi"]) { E[k].h = []; E[k].hl = []; E[k].now = null; }
-    for (const k of ["sub", "low", "harm", "mid", "hi"]) {
-      const B = E[k];
+    for (const k in E.bands) {
+      const B = E.bands[k];
       B.an.getFloatTimeDomainData(B.td);
       let s = 0;
       for (let i = B.td.length - B.win; i < B.td.length; i++) s += B.td[i] * B.td[i];
-      // (o golpe do próprio kick não conta como "o mais alto recente" pro baixo que vem logo depois)
-      if (B.now != null) { B.h.push(B.now); B.hl.push((k === "sub" || k === "low") && t < E.kickHold ? -140 : B.now); }
-      if (B.h.length > 3) B.h.shift();
-      if (B.hl.length > 7) B.hl.shift();
-      B.now = 10 * Math.log10(s / B.win + 1e-14);
-      B.ref = Math.max(B.now, B.ref - 1.5 * dt); // pico recente (desce 1,5 dB/s: acompanha o volume)
-      B.rise = B.h.length ? B.now - Math.min(...B.h) : 0; // quanto subiu desde os últimos ~3 quadros
-      B.rise1 = B.h.length ? B.now - B.h[B.h.length - 1] : 0; // e só desde o quadro anterior (nota nova = salto de uma vez)
-      B.over = B.hl.length ? B.now - Math.max(...B.hl) : 0;  // acima do mais alto dos últimos ~120 ms? (pulsar não passa)
+      E.lv[k] = 10 * Math.log10(s / B.win + 1e-14);
     }
-    const S = E.sub, L = E.low, Hm = E.harm, M = E.mid, Hi = E.hi;
-    const FLOOR = -85; // abaixo disso é silêncio/ruído da linha
-    const mixRef = Math.max(S.ref, L.ref, M.ref); // o mais forte da música agora (pra caixa e chimbal pesarem de verdade)
-    const vel = (B, range) => clamp((B.now - (B.ref - range)) / range, 0.05, 1);
-    // ruído (caixa, clap) × tom (acorde, nota): planura do espectro de 1 a 5 kHz (1 = ruído puro)
-    const noisy = () => {
-      const fd = audio.fd, bh = audio.ctx.sampleRate / audio.an.fftSize;
-      let n = 0, sl = 0, sp = 0;
-      for (let i = Math.ceil(1000 / bh); i < Math.min(fd.length, 5000 / bh); i++) { const q = Math.pow(10, fd[i] / 10); sp += q; sl += Math.log(q + 1e-20); n++; }
-      return n ? Math.exp(sl / n) / (sp / n + 1e-20) : 0;
+    let fl = null, tn = null;
+    const frame = {
+      t, lv: E.lv, clock: p2Clock(),
+      flat: () => (fl == null ? (fl = flatness(1000, 5000)) : fl),   // ruído no médio (caixa)
+      tonal: () => (tn == null ? (tn = flatness(250, 2000)) : tn),   // tom no médio-grave (acorde)
     };
-    // início de uma batida grave (qualquer uma): marca a hora
-    const lowStart = (L.rise > 5 || S.rise > 5) && Math.max(L.now, S.now) > FLOOR && t - E.lowOn > 0.08;
-    if (lowStart) E.lowOn = t;
-    const onsetT = t - E.lowOn < 0.08 ? E.lowOn : t;
-    // O TEMPO do Cycles (clock MIDI): kick é a batida grave que cai NO TEMPO (semínima).
-    // Com o play dado no Cycles (clock.synced) sabemos onde cai cada tempo; o som chega
-    // alguns ms depois do clock (latência), e essa folga é aprendida dos próprios kicks.
-    const P = clock.running && clock.bpm && clock.quarterT != null ? 60 / clock.bpm : 0;
-    const beatOff = (x) => { const r = (((x - clock.quarterT) % P) + P) % P; return r > P * 0.75 ? r - P : r; };
-    let kickPhase = null;
-    if (P && E.kickPh.length >= 6) {
-      const a = E.kickPh.slice().sort((x, y) => x - y), med = a[a.length >> 1];
-      if (a.filter((x) => Math.abs(x - med) < 0.03).length >= a.length * 0.7) kickPhase = med;
-    }
-    const grid = P ? (kickPhase != null ? "aprendido" : clock.synced ? "play" : null) : null;
-    const onGrid = (x) => grid === "aprendido" ? Math.abs(beatOff(x) - kickPhase) < 0.035
-      : grid === "play" ? beatOff(x) > -0.04 && beatOff(x) < 0.11 : false; // o som chega até ~110 ms depois do clock
-    const loudEnough = (B, d) => B.now > FLOOR && B.now > B.ref - d;
-    const learnPh = () => { E.kickPh.push(beatOff(onsetT)); if (E.kickPh.length > 16) E.kickPh.shift(); };
-    const kick = (early) => {
-      S.last = t; E.kickT = t;
-      E.kickHold = t + 0.05; S.hl = S.hl.map(() => -140); L.hl = L.hl.map(() => -140);
-      if (P) learnPh();
-      if (window.__P2DBG) window.__P2DBG.push([music.el ? music.el.currentTime : t, early ? "kick-cedo" : "kick", grid, +S.now.toFixed(1), +S.ref.toFixed(1), +S.rise.toFixed(1), +L.now.toFixed(1), +L.rise.toFixed(1)]);
-      emitP2("kick", early ? clamp(Math.max(vel(S, 24), vel(L, 24)), 0.05, 1) : vel(S, 24));
-      if (E.bass && t - E.bass.t0 < 0.06) E.bass = null; // o "baixo" que começou junto era o ataque do kick
-    };
-    // o som do kick: salto no sub-grave (abaixo de 90 Hz) maior que o salto no grave (90–260 Hz)
-    // (uma nota de baixo acima de 90 Hz vaza um pouco no sub, mas salta muito mais no grave)
-    const kickSound = S.rise > 5 && S.rise > L.rise + 2 && loudEnough(S, 14) && t - S.last > 0.11;
-    if (grid) {
-      // com o tempo do Cycles: começou uma batida grave NO TEMPO = kick, na hora
-      if (lowStart && onGrid(t) && t - S.last > 0.11 && (loudEnough(S, 14) || loudEnough(L, 14))) kick(true);
-      else if (kickSound && onGrid(onsetT)) kick(false);
-      // fora do tempo NÃO é kick: é baixo (inclusive baixo bem grave, abaixo de 90 Hz, que no
-      // som parece kick). Assim o contratempo nunca vira "lugar do kick".
-      else {
-        // sem o play (clock pego no meio): o lugar do kick é aprendido do som, então continua aprendendo
-        if (kickSound && !clock.synced) { S.last = t; learnPh(); }
-        if (S.rise > 5 && S.rise1 > 3 && S.over > 1.5 && loudEnough(S, 20) && !onGrid(onsetT) && !E.bass && t - E.kickT > 0.06) E.bass = { t0: t, v: vel(S, 24), harm: Hm.now - Math.max(L.now, S.now) };
-      }
-    } else if (kickSound) kick(false); // sem clock: só pelo som
-    // BAIXO: salto no grave; decide ~35 ms depois (o ataque do kick também passa pelo grave)
-    // Um grave que só PULSA (cauda longa de kick, pad, duas notas graves batendo) não é nota nova:
-    // a nota salta de uma vez E passa do mais alto recente, ou traz o ataque dos harmônicos (300–1000 Hz)
-    if (L.rise > 5 && L.rise1 > 3 && (Math.max(L.over, S.over) > 1.5 || Hm.rise1 > 3) && L.now > FLOOR && L.now > L.ref - 20 && t - L.last > 0.07) {
-      L.last = t;
-      if (!E.bass && t - E.kickT > 0.06) E.bass = { t0: t, v: vel(L, 24), harm: Hm.now - Math.max(L.now, S.now) };
-    }
-    if (E.bass && t - E.bass.t0 >= 0.035) {
-      const B = E.bass; E.bass = null;
-      const kickNear = Math.abs(E.kickT - B.t0) < 0.06;
-      const chord = B.harm > -3; // energia de 300–1000 Hz igual ou maior que a do grave = acorde, não baixo
-      if (!kickNear && !chord) emitP2("bass", B.v);
-    }
-    // HI-HAT: salto no agudo; confirma no quadro seguinte pela VELOCIDADE da queda: o chimbal
-    // (mesmo fechado) cai menos de ~1,3 dB por ms; o estalo do kick cai muito mais rápido
-    if (Hi.rise > 5 && Hi.now > FLOOR && Hi.now > Hi.ref - 26 && t - Hi.last > 0.045) {
-      Hi.last = t;
-      if (!E.hat) E.hat = { t0: t, peak: Hi.now, v: vel(Hi, 24) };
-    }
-    if (E.hat && t - E.hat.t0 >= 0.01) {
-      const H = E.hat; E.hat = null;
-      if (window.__P2DBG) window.__P2DBG.push([music.el ? music.el.currentTime : t, "hat?", +H.peak.toFixed(1), +S.ref.toFixed(1), +L.ref.toFixed(1), +M.ref.toFixed(1)]);
-      if ((H.peak - Hi.now) / ((t - H.t0) * 1000) < 1.3 && H.peak > mixRef - 50) emitP2("hat", H.v);
-    }
-    // CAIXA/CLAP: salto no médio que continua soando ~30 ms depois (cauda); o estalo do kick e o hi-hat somem antes
-    // (e o médio tem que pesar tanto quanto o agudo: um chimbal vaza um pouco no médio, mas mora acima de 7 kHz)
-    if (M.rise > 6 && M.now > FLOOR && M.now > M.ref - 18 && M.now > Hi.now - 6 && t - M.last > 0.09) {
-      M.last = t;
-      if (!E.snare) E.snare = { t0: t, peak: M.now, v: vel(M, 24), flat: noisy(), harm: Hm.now };
-    }
-    if (E.snare) {
-      E.snare.peak = Math.max(E.snare.peak, M.now);
-      if (t - E.snare.t0 >= 0.03) {
-        const C = E.snare; E.snare = null;
-        if (window.__P2DBG) window.__P2DBG.push([music.el ? music.el.currentTime : t, "snare?", +C.peak.toFixed(1), +M.now.toFixed(1), +S.ref.toFixed(1), +L.ref.toFixed(1), +Hi.ref.toFixed(1)]);
-        // e tem que pesar na música: no máximo ~35 dB abaixo do grave (um chiado de ataque de baixo não é caixa)
-        // e é RUÍDO (caixa/clap); um acorde ou uma nota no médio é tom
-        // (um acorde mora em 300–1000 Hz e só respinga no médio: a caixa pesa no médio tanto quanto ali)
-        if (M.now > C.peak - 12 && C.peak > mixRef - 35 && C.peak > C.harm - 10 && Math.max(C.flat, noisy()) > 0.15) emitP2("snare", C.v);
-      }
-    }
+    if (window.__P2FR) window.__P2FR.push([music.el ? +music.el.currentTime.toFixed(4) : t, +t.toFixed(4),
+      ...["sub", "low", "harm", "mid", "hi"].map((k) => +E.lv[k].toFixed(2)), +frame.flat().toFixed(4), +frame.tonal().toFixed(4)]); // testes: grava o quadro
+    for (const e of E.brain.step(frame)) emitP2(e.type, e.v);
   }
 
   function spawn(trIndex, note, vel, source = "midi", extra = {}) {
@@ -837,7 +763,7 @@
       hatTicks.push({ born: t, v: n01(vel), pos: hatStep / 32, dur: source === "audio" ? 0.35 : 0.15 + 1.1 * Math.pow(n01(tr.decay), 1.5) });
     }
     // PROJETO 2 recebe os mesmos sons já separados (não muda nada na Sessão 1)
-    const hitType = sh.m === 0 ? "kick" : (sh.m === 8 || (sh.m === 4 && note < 52)) ? "bass" : sh.m === 2 ? "hat" : (sh.m === 1 || sh.m === 3) ? "snare" : null;
+    const hitType = sh.m === 0 ? "kick" : (sh.m === 8 || (sh.m === 4 && note < 52)) ? "bass" : sh.m === 2 ? "hat" : (sh.m === 1 || sh.m === 3) ? "snare" : sh.m === 5 ? "chord" : null;
     // do Áudio só vai o que saiu dos detectores próprios (kick/baixo, caixa; o hi-hat é confirmado à parte)
     if (source === "midi" || source === "pad") {
       // MIDI, Demo e teclas 1–6: pela TRILHA (T1 kick, T5 baixo…), escolhida em ⚙ → Projeto 2
@@ -1526,7 +1452,7 @@
   // explicitamente: no Windows um aparelho MIDI só pode estar aberto em UM programa
   // por vez — se o Ableton estiver com o Cycles, a porta falha e o app avisa.
   let midi = null;
-  const clock = { running: false, ticks: 0, step: 0, times: [], bpm: 0 };
+  const clock = { running: false, ticks: 0, step: 0, times: [], bpm: 0, tickT: -9, qTp: null, stopped: false };
   let learning = null;
   const monitorLines = [];
   const ports = new Map(); // id → { input, status: "ok" | "ocupada" | "desligada", last: 0, count: 0 }
@@ -1639,7 +1565,7 @@
         if (pid !== clock.port) return;
         clock.portT = t;
       }
-      return onRealtime(st);
+      return onRealtime(st, e.timeStamp);
     }
     if ((st & 0xf0) === 0x90 && d[2] > 0) {
       const key = st + "," + d[1], t = now(), prev = midiSeen.get(key);
@@ -1685,11 +1611,14 @@
     renderPads();
   }
 
-  function onRealtime(st) {
+  function onRealtime(st, stamp) {
     const t = now();
     if (st === 0xf8) {
       clock.ticks++;
-      if (clock.ticks % 24 === 0) clock.quarterT = t; // onde caiu o último tempo (semínima)
+      // hora exata em que o tick chegou (o evento traz; se não trouxer, a hora de agora)
+      const ts = Number.isFinite(stamp) && stamp > 0 && Math.abs(stamp / 1000 - t) < 0.2 ? stamp / 1000 : t;
+      clock.tickT = ts;
+      if (clock.ticks % 24 === 0) { clock.quarterT = t; clock.qTp = ts; } // onde caiu o último tempo (semínima)
       if (clock.ticks % 6 === 0) {
         clock.step++;
         if (clock.step % 256 === 0 && settings.refAuto !== false) nextRef(); // a cada 16 compassos
@@ -1709,14 +1638,14 @@
       }
     } else if (st === 0xfa) {
       clock.running = true; clock.ticks = -1; clock.step = 0; clock.times = [];
-      clock.synced = true; // o play chegou: os tempos (semínimas) estão no lugar certo
-      if (p2ears) p2ears.kickPh = []; // Projeto 2 reaprende onde o kick cai a cada play
+      clock.synced = true; clock.stopped = false; // o play chegou: os tempos (semínimas) estão no lugar certo
+      if (p2ears) p2ears.brain.newPlay(); // Projeto 2 reaprende onde o kick cai a cada play
       if (settings.clearOnPlay) clearCanvas();
       log("▶ play");
     } else if (st === 0xfb) {
-      clock.running = true; log("▶ continue");
+      clock.running = true; clock.stopped = false; log("▶ continue");
     } else if (st === 0xfc) {
-      clock.running = false; log("■ stop");
+      clock.running = false; clock.stopped = true; log("■ stop");
     }
   }
 
@@ -1807,7 +1736,7 @@
 
   // ---------- ajustes (painel) ----------
   const labelOf = (k) => (PARAMS.find((p) => p[0] === k) || [k, k])[1];
-  const P2_NAMES = { kick: "KICK (anda)", bass: "BAIXO (escada sobe)", hat: "HI-HAT (chuva)", snare: "CAIXA (cor do fundo)" };
+  const P2_NAMES = { kick: "KICK (anda)", bass: "BAIXO (escada sobe)", hat: "HI-HAT (só chuva)", snare: "CAIXA (boneco cresce)", chord: "CHORD (cor do fundo)" };
   function renderP2Roles() {
     const el = $("p2-roles");
     if (!el) return;

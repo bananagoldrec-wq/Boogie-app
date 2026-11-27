@@ -16,14 +16,14 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-cycles-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-cycles-512.png" />
 
-  <link rel="stylesheet" href="css/cycles.css?v=46" />
+  <link rel="stylesheet" href="css/cycles.css?v=47" />
 </head>
 <body>
   <header class="bar">
     <div class="brand">Cycles<span>Visual</span></div>
     <div class="seg tabs" id="seg-proj" role="tablist" aria-label="Projeto">
       <button data-p="1" type="button" role="tab" title="O primeiro projeto: círculo, linha, riscos e cores (tecla P troca)">Sessão 1</button>
-      <button data-p="2" type="button" role="tab" title="Escada sem fim: kick anda, baixo sobe a escada, hi-hat chove, caixa muda o fundo (tecla P troca)">Projeto 2</button>
+      <button data-p="2" type="button" role="tab" title="Escada sem fim: kick anda, baixo sobe a escada, hi-hat chove, caixa faz o boneco crescer, chord muda o fundo (tecla P troca)">Projeto 2</button>
     </div>
     <div class="status">
       <span id="st-midi" class="pill">MIDI desligado</span>
@@ -76,7 +76,7 @@
     <div class="tools">
       <button id="btn-reset2" class="btn only-p2" type="button" title="Começa a escada de novo (tecla C)">Reiniciar</button>
       <div class="p2-lights only-p2" id="p2-lights" aria-label="O que está chegando no Projeto 2">
-        <span data-k="kick">Kick</span><span data-k="bass">Baixo</span><span data-k="hat">Hi-hat</span><span data-k="snare">Caixa</span>
+        <span data-k="kick">Kick</span><span data-k="bass">Baixo</span><span data-k="hat">Hi-hat</span><span data-k="snare">Caixa</span><span data-k="chord">Chord</span>
         <b id="p2-src">—</b>
         <b id="p2-midi" class="p2-midi" hidden></b>
       </div>
@@ -173,8 +173,8 @@
         <p class="muted">Cada papel segue a sua trilha: se a trilha manda notas MIDI, vale o MIDI (exato, na hora);
         se não manda, vale o ouvido do Projeto 2 (ligue <b>Áudio</b>). Uma trilha no MIDI não cala as outras.
         <b>No Cycles, ligue o MOUT em cada trilha:</b> segure <i>FUNC</i>, aperte o botão da trilha (T1…T6) e marque
-        <i>MOUT</i> (vem desligado). O padrão é T1 kick, T5 baixo, T3 hi-hat, T2 caixa; troque aqui (ou clicando nas luzes
-        do rodapé) se estiver em outra trilha.</p>
+        <i>MOUT</i> (vem desligado). O padrão é T1 kick, T5 baixo, T3 hi-hat, T2 caixa, T6 chord; troque aqui (ou clicando
+        nas luzes do rodapé) se estiver em outra trilha. Com o MOUT ligado no kick, a pessoa anda em toda nota dele, sem erro.</p>
         <div id="p2-roles" class="p2-roles"></div>
       </section>
 
@@ -208,8 +208,9 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles-analise.js?v=46"></script>
-  <script src="js/cycles.js?v=46"></script>
-  <script type="module" src="js/projeto2.js?v=46"></script>
+  <script src="js/cycles-analise.js?v=47"></script>
+  <script src="js/p2-ouvido.js?v=47"></script>
+  <script src="js/cycles.js?v=47"></script>
+  <script type="module" src="js/projeto2.js?v=47"></script>
 </body>
 </html>

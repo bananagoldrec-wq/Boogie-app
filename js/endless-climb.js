@@ -6,13 +6,15 @@
              um degrau; no plano, força = tamanho do passo.
    - BASS    faz a ESCADA SUBIR: cada nota levanta um degrau novo à frente da pessoa.
              Força = altura do degrau. Sem baixo, o caminho segue plano.
-   - HI-HAT  faz CHOVER: cada hi-hat é uma pancada de chuva que some antes do próximo.
-             Força = quantidade e tamanho das gotas.
-   - SNARE   muda a COR DO FUNDO na hora da batida. Força = quão clara é a cor.
+   - HI-HAT  faz CHOVER (só isso): cada hi-hat é uma pancada de chuva que some antes do
+             próximo. Força = quantidade e tamanho das gotas.
+   - SNARE   faz a pessoa CRESCER na hora da batida e voltar ao tamanho normal até a
+             próxima. Força = quanto ela cresce.
+   - CHORD   muda a COR DO FUNDO na hora do acorde. Força = quão clara é a cor.
 
    Uso:
      const visual = createEndlessClimb(canvas);
-     visual.hit('kick' | 'bass' | 'hat' | 'snare', força 0–1);   // força opcional (1)
+     visual.hit('kick' | 'bass' | 'hat' | 'snare' | 'chord', força 0–1);   // força opcional (1)
      visual.setBpm(120);   // opcional: andamento vindo do clock MIDI
      visual.reset();       // começa de novo                                          */
 
@@ -41,7 +43,7 @@ export function createEndlessClimb(canvas) {
 
   // ---------- andamento ----------
   // andamento: vem do clock MIDI, ou é medido nos próprios kicks (só limita a duração do passo)
-  const kickTimes = [], hatTimes = [];
+  const kickTimes = [], hatTimes = [], snareTimes = [];
   let bpm = null, bpmT = -9;
   function median(times, lo, hi, def) {
     const iv = [];
@@ -67,12 +69,13 @@ export function createEndlessClimb(canvas) {
   function reset() {
     const t = now();
     steps = [{ x: -8, y: 0, w: 9, rise: 0, born: t - 9, v: 0, dur: 0.1, floor: true }];
-    hero = { x: -0.5, y: 0, feet: [[-0.6, 0], [-0.4, 0]], swing: 0, stride: null, footT: -9, footV: 0 };
+    hero = { x: -0.5, y: 0, feet: [[-0.6, 0], [-0.4, 0]], swing: 0, stride: null, footT: -9, footV: 0, growT: -9, growV: 0, growFrom: 1 };
     drops = [];
     bg = { from: [0, 0, 0], to: [0, 0, 0], t0: -9, hue: Math.random() * 360 };
     cam = { x: hero.x + CAM_DX, y: hero.y + CAM_DY };
     kickTimes.length = 0;
     hatTimes.length = 0;
+    snareTimes.length = 0;
   }
   reset();
 
@@ -169,7 +172,26 @@ export function createEndlessClimb(canvas) {
     if (drops.length > 2000) drops.splice(0, drops.length - 2000);
   }
 
-  // ---------- SNARE: cor do fundo ----------
+  // ---------- SNARE: a pessoa cresce ----------
+  // cresce de uma vez na batida (~25 ms) e volta ao normal antes da próxima caixa
+  const snareP = () => median(snareTimes, 0.12, 3, beatP() * 2);
+  function growNow(t) {
+    const a = t - hero.growT;
+    if (a < 0 || hero.growV <= 0) return 1;
+    const top = 1 + 0.25 + 0.85 * Math.pow(hero.growV, 0.9); // força = quanto cresce (até ~2×)
+    const up = 0.025, back = clamp(snareP() * 0.7, 0.16, 0.6);
+    if (a < up) return lerp(hero.growFrom, top, easeOut(a / up));
+    const k = clamp((a - up) / back, 0, 1);
+    return lerp(top, 1, 1 - Math.pow(1 - k, 2));
+  }
+  function grow(v) {
+    const t = now();
+    tap(snareTimes, t);
+    hero.growFrom = growNow(t); // caixa em cima de caixa: cresce a partir de onde está
+    hero.growT = t; hero.growV = Math.max(0.05, v);
+  }
+
+  // ---------- CHORD: cor do fundo ----------
   function hsl(h, s, l) {
     const f = (n) => {
       const k = (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
@@ -184,7 +206,7 @@ export function createEndlessClimb(canvas) {
   function changeBg(v) {
     const t = now();
     bg.from = bgNow(t);
-    bg.hue = (bg.hue + 137.508) % 360; // cada caixa, uma cor bem diferente da anterior
+    bg.hue = (bg.hue + 137.508) % 360; // cada acorde, uma cor bem diferente da anterior
     bg.to = hsl(bg.hue, 0.5 + 0.3 * v, 0.06 + 0.22 * Math.pow(v, 0.9)); // força = quão clara
     bg.t0 = t;
   }
@@ -193,8 +215,9 @@ export function createEndlessClimb(canvas) {
     const v = clamp(Number.isFinite(+amount) ? +amount : 1, 0, 1);
     if (type === "kick") walk(v);
     else if (type === "bass") raise(v);
-    else if (type === "hat") rain(v);
-    else if (type === "snare") changeBg(v);
+    else if (type === "hat") rain(v);       // hi-hat: só chuva
+    else if (type === "snare") grow(v);     // caixa: a pessoa cresce
+    else if (type === "chord") changeBg(v); // acorde: cor do fundo
   }
   function setBpm(b) { if (b > 30 && b < 300) { bpm = b; bpmT = now(); } }
 
@@ -289,17 +312,18 @@ export function createEndlessClimb(canvas) {
   }
 
   function drawHero(t, p) {
-    const lw = Math.max(2, U * 0.055);
+    const g = growNow(t); // caixa: a pessoa cresce a partir dos pés (os pés continuam no degrau)
+    const lw = Math.max(2, U * 0.055) * (1 + 0.6 * (g - 1));
     // o kick é o pé pousando: o corpo afunda um pouco (mais forte, mais fundo)
     const fa = t - hero.footT;
-    const dip = fa < 0.12 ? (0.04 + 0.08 * hero.footV) * Math.sin((Math.PI * fa) / 0.12) : 0;
+    const dip = (fa < 0.12 ? (0.04 + 0.08 * hero.footV) * Math.sin((Math.PI * fa) / 0.12) : 0) * g;
     const P = (x, y) => [sx(x), sy(y)];
-    const hip = P(p.x, p.y + 0.5 - dip);
-    const sh = P(p.x + 0.03, p.y + 0.82 - dip);
-    const head = P(p.x + 0.05, p.y + 0.97 - dip);
+    const hip = P(p.x, p.y + 0.5 * g - dip);
+    const sh = P(p.x + 0.03 * g, p.y + 0.82 * g - dip);
+    const head = P(p.x + 0.05 * g, p.y + 0.97 * g - dip);
     // braços balançam ao contrário da perna que anda
     const a = p.swingX == null ? 0 : clamp((p.swingX - p.x) * 1.6, -0.7, 0.7);
-    const hand = (ang) => [sh[0] + 0.3 * U * Math.sin(ang), sh[1] + 0.3 * U * Math.cos(ang)];
+    const hand = (ang) => [sh[0] + 0.3 * g * U * Math.sin(ang), sh[1] + 0.3 * g * U * Math.cos(ang)];
     ctx.strokeStyle = "#fff";
     ctx.fillStyle = "#fff";
     ctx.lineWidth = lw;
@@ -307,7 +331,7 @@ export function createEndlessClimb(canvas) {
     ctx.lineJoin = "round";
     ctx.beginPath();
     for (const ft of p.feet) {                       // pernas (com joelho)
-      const [kn, f] = knee(hip, P(ft[0], ft[1]), LEG * U);
+      const [kn, f] = knee(hip, P(ft[0], ft[1]), LEG * g * U);
       ctx.moveTo(hip[0], hip[1]); ctx.lineTo(kn[0], kn[1]); ctx.lineTo(f[0], f[1]);
     }
     ctx.moveTo(hip[0], hip[1]); ctx.lineTo(sh[0], sh[1]); // corpo
@@ -315,7 +339,7 @@ export function createEndlessClimb(canvas) {
     ctx.moveTo(h1[0], h1[1]); ctx.lineTo(sh[0], sh[1]); ctx.lineTo(h2[0], h2[1]); // braços
     ctx.stroke();
     ctx.beginPath();
-    ctx.arc(head[0], head[1], U * 0.12, 0, Math.PI * 2);
+    ctx.arc(head[0], head[1], U * 0.12 * g, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -365,6 +389,6 @@ export function createEndlessClimb(canvas) {
     window.removeEventListener("resize", resize);
   }
 
-  const state = () => ({ x: hero.x, y: hero.y, steps: steps.length, drops: drops.length });
+  const state = () => ({ x: hero.x, y: hero.y, steps: steps.length, drops: drops.length, size: +growNow(now()).toFixed(3), bg: bgNow(now()).map((c) => c | 0) });
   return { hit, reset, setBpm, destroy, canvas, state };
 }

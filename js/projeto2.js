@@ -10,8 +10,9 @@ const visual = createEndlessClimb(
 
 // KICK: a pessoa anda (um passo por kick)      → visual.hit('kick', força)
 // BASS: a escada sobe (um degrau por nota)      → visual.hit('bass', força)
-// HI-HAT: chuva                                 → visual.hit('hat', força)
-// SNARE: muda a cor do fundo                    → visual.hit('snare', força)
+// HI-HAT: chuva (só isso)                       → visual.hit('hat', força)
+// SNARE: a pessoa cresce                        → visual.hit('snare', força)
+// CHORD: muda a cor do fundo                    → visual.hit('chord', força)
 // Reiniciar                                     → visual.reset()
 
 let proj = 1;
@@ -32,7 +33,7 @@ window.addEventListener('cycles:hit', (e) => {
 // "T3 MIDI" = a trilha 3 está mandando notas: a chuva segue o MIDI dela (exato).
 // "T3 · áudio" = essa trilha não manda notas: o papel vem do ouvido próprio do Projeto 2.
 // Clique na luz pra trocar a trilha daquele papel.
-const NAMES = { kick: 'Kick', bass: 'Baixo', hat: 'Hi-hat', snare: 'Caixa' };
+const NAMES = { kick: 'Kick', bass: 'Baixo', hat: 'Hi-hat', snare: 'Caixa', chord: 'Chord' };
 Object.keys(lights).forEach((k) => {
   const L = lights[k];
   L.innerHTML = `${NAMES[k] || k}<small></small>`;
