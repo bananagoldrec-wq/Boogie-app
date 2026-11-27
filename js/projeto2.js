@@ -8,16 +8,17 @@ const visual = createEndlessClimb(
   document.getElementById('canvas')
 );
 
-// KICK: constrói a escada                       → visual.hit('kick', força)
-// BASS: movimenta o personagem;
-//       durante a queda, abre o paraquedas      → visual.hit('bass', força)
-// HI-HAT: produz chuva                          → visual.hit('hat', força)
+// KICK: a pessoa anda (um passo por kick)      → visual.hit('kick', força)
+// BASS: a escada sobe (um degrau por nota)      → visual.hit('bass', força)
+// HI-HAT: chuva                                 → visual.hit('hat', força)
 // SNARE: muda a cor do fundo                    → visual.hit('snare', força)
 // Reiniciar                                     → visual.reset()
 
 let proj = 1;
 window.addEventListener('cycles:hit', (e) => {
-  if (proj === 2) visual.hit(e.detail.type, e.detail.amount);
+  if (proj !== 2) return;
+  if (e.detail.bpm) visual.setBpm(e.detail.bpm); // passo no andamento do Cycles
+  visual.hit(e.detail.type, e.detail.amount);
 });
 
 // ---------- abas: Sessão 1 · Projeto 2 ----------

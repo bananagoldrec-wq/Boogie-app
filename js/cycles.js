@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 40;
+  const APP_VERSION = 41;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -351,6 +351,7 @@
     const b = [0, 0, 0], bp = [0, 0, 0], bpi = [1, 1, 1];
     let lowE = 0, lowPk = 0, lowPkI = 1, clickE = 0; // grave (30–160 Hz), seu pico, e o "click" (2–6 kHz)
     let snE = 0, snPk = 0, snN = 0, snLog = 0, hiE = 0;
+    let p2Sub = 0, p2Bass = 0, p2Low = 0; // (Projeto 2) sub-grave <90 Hz, região do baixo <130 Hz, grave todo <250 Hz
     const chroma = new Float32Array(12); // energia por nota (C..B) na região dos acordes // faixa da caixa/clap (900–5000 Hz), se é ruído, e o agudo (6–12 kHz)
     for (let i = 1; i < fd.length; i++) {
       const hz = i * binHz;
@@ -362,6 +363,7 @@
       b[k] += p;
       if (p > bp[k]) { bp[k] = p; bpi[k] = i; }
       if (hz >= 30 && hz < 160) lowE += p;
+      if (hz >= 30 && hz < 250) { p2Low += p; if (hz < 130) p2Bass += p; if (hz < 90) p2Sub += p; }
       if (hz >= 30 && hz < 220 && p > lowPk) { lowPk = p; lowPkI = i; }
       if (hz >= 2000 && hz < 6000) clickE += p;
       if (hz >= 900 && hz < 5000) { snE += p; snN++; snLog += Math.log(p + 1e-20); if (p > snPk) snPk = p; }
@@ -446,6 +448,10 @@
       const age = t - pend.t0;
       if (age < 0.03) pend.peak = Math.max(pend.peak, lowE);
       if (pend.f0 == null && age >= 0.012) pend.f0 = lowHz;
+      if (lowE > pend.peak * 0.2) { // (Projeto 2) onde mora a energia dessa batida grave
+        pend.p2SubMax = Math.max(pend.p2SubMax, p2Sub / (p2Low + 1e-20));
+        pend.p2BassMax = Math.max(pend.p2BassMax, p2Bass / (p2Low + 1e-20));
+      }
       // kick curtíssimo (decay no zero): aos ~40 ms o grave já sumiu — só kick faz isso,
       // então decide logo (o círculo aparece mais cedo)
       const goneFast = age >= 0.04 && lowE < pend.peak * 0.08;
@@ -469,7 +475,11 @@
         const v = clamp((db - (audio.kDbMax - 30)) / 30, 0.01, 1);
         const vel = 1 + 126 * v;
         if (isKick) audio.lastKickT = pend.t0;
-        spawn(isKick ? 0 : 8, pend.note, vel, "audio", { exactVel: vel });
+        // PROJETO 2, rigoroso: a batida grave tem que pesar no som todo (no silêncio, um hi-hat
+        // ou acorde faz o grave "subir" sem kick nenhum); kick mora no sub-grave (<90 Hz);
+        // baixo mora abaixo de ~130 Hz (a nota grave de um acorde fica acima)
+        const p2ok = pend.p2Share > 0.3 && (isKick ? pend.p2SubMax > 0.5 : pend.p2SubMax > 0.55 || pend.p2BassMax > 0.92);
+        spawn(isKick ? 0 : 8, pend.note, vel, "audio", { exactVel: vel, p2: p2ok });
         log(`áudio: grave → ${isKick ? "KICK (círculo)" : "baixo"} · força ${Math.round(v * 100)}% · tom ${glide.toFixed(2)} · estalo ${pend.click.toFixed(1)}`);
       }
     }
@@ -485,7 +495,8 @@
         const note = 69 + 12 * Math.log2(Math.max(20, bpi[i] * binHz) / 440);
         if (i === 0) {
           // grave: decide kick ou baixo daqui a ~75 ms
-          if (!audio.lowPend) audio.lowPend = { t0: t, peak: lowE, f0: null, click: clickE / (audio.clickSlow + 1e-12), vel, note };
+          audio.p2LowT = t; // (Projeto 2: marca o início da batida grave)
+          if (!audio.lowPend) audio.lowPend = { t0: t, peak: lowE, f0: null, click: clickE / (audio.clickSlow + 1e-12), vel, note, p2Share: p2Low / (total + 1e-20), p2SubMax: 0, p2BassMax: 0 };
           slow[i] = slow[i] * 0.94 + e[i] * 0.06;
           continue;
         }
@@ -496,6 +507,8 @@
           audio.hDbMax = Math.max(db, audio.hDbMax ?? db);
           const hv = clamp((db - (audio.hDbMax - 18)) / 18, 0.01, 1), hvel = 1 + 126 * hv; // faixa curta: acento salta
           spawn(2, 90, hvel, "audio", { exactVel: hvel });
+          // PROJETO 2: só vira chuva depois de confirmar que é hi-hat (não o estalo do kick)
+          if (!audio.p2Hat) audio.p2Hat = { t0: t, peak: hiE, r: hiE / (clickE + 1e-20), share: hiE / (b[2] + 1e-20), v: hv };
           slow[i] = slow[i] * 0.94 + e[i] * 0.06;
           continue;
         }
@@ -503,6 +516,18 @@
         spawn(tr, note, vel, "audio");
       }
       slow[i] = slow[i] * 0.94 + e[i] * 0.06;
+    }
+    // PROJETO 2 — hi-hat confirmado: o agudo (acima de 6 kHz) tem que ganhar do 2–6 kHz,
+    // onde mora o estalo do kick; ~12 ms depois ainda tem que soar (o estalo some na hora);
+    // e se uma batida grave começou junto, o agudo tem que ser MUITO mais forte que o estalo
+    const ph = audio.p2Hat;
+    if (ph) {
+      if (ph.e12 == null && t - ph.t0 >= 0.012) ph.e12 = hiE;
+      if (t - ph.t0 >= 0.035) {
+        audio.p2Hat = null;
+        const withLow = Math.abs((audio.p2LowT ?? -9) - ph.t0) < 0.035;
+        if (ph.e12 > ph.peak * 0.06 && ph.share >= 0.45 && ph.r >= (withLow ? 4 : 1.6)) emitP2("hat", ph.v);
+      }
     }
     // REVERB da caixa, medido na cauda: quanto o médio ainda soa 100–300 ms depois do
     // ataque (em dB relativo ao pico; −30 dB ou menos = seco, −6 dB = muito reverb)
@@ -538,9 +563,20 @@
         const v = clamp((db - (audio.sDbMax - 30)) / 30, 0.01, 1), sv = 1 + 126 * v;
         audio.snPeak = snE; audio.snT0 = t;
         spawn(1, 50, sv, "audio", { exactVel: sv });
+        if (!audio.p2Sn) audio.p2Sn = { t0: t, max: snE, tMax: t, v: n01(sv) }; // (Projeto 2: confirma abaixo)
         log(`áudio: médio → SNARE/CLAP (linha) · força ${Math.round(v * 100)}% · ruído ${flat.toFixed(2)}`);
       }
       audio.snSlow = audio.snSlow * 0.93 + se * 0.07;
+      // PROJETO 2 — caixa confirmada pela CAUDA: ~45 ms depois do pico (a janela de análise
+      // tem ~46 ms) caixa e clap ainda soam; o estalo do kick some por completo
+      const ps = audio.p2Sn;
+      if (ps) {
+        if (snE > ps.max) { ps.max = snE; ps.tMax = t; }
+        if (t - ps.tMax >= 0.045 || t - ps.t0 > 0.2) {
+          audio.p2Sn = null;
+          if (snE > ps.max * 0.012) emitP2("snare", ps.v);
+        }
+      }
     }
     // grave + médio juntos e com tom definido → um acorde (mancha de cor) de vez em quando
     if (hit[0] && hit[1] && audio.tonal > 0.05 && Math.random() < 0.5) {
@@ -596,6 +632,11 @@
   let shapes = [];
   let lastMidiNote = -99;
 
+  // avisa o Projeto 2 (com o andamento do clock MIDI, se estiver chegando)
+  function emitP2(type, amount, source = "audio") {
+    const bpm = clock.running && clock.bpm ? clock.bpm : null;
+    window.dispatchEvent(new CustomEvent("cycles:hit", { detail: { type, amount, bpm, source } }));
+  }
   function spawn(trIndex, note, vel, source = "midi", extra = {}) {
     const tr = tracks[trIndex];
     if (!tr) return;
@@ -664,7 +705,8 @@
     }
     // PROJETO 2 recebe os mesmos sons já separados (não muda nada na Sessão 1)
     const hitType = sh.m === 0 ? "kick" : (sh.m === 8 || (sh.m === 4 && note < 52)) ? "bass" : sh.m === 2 ? "hat" : (sh.m === 1 || sh.m === 3) ? "snare" : null;
-    if (hitType) window.dispatchEvent(new CustomEvent("cycles:hit", { detail: { type: hitType, amount: n01(vel) } }));
+    // do Áudio só vai o que saiu dos detectores próprios (kick/baixo, caixa; o hi-hat é confirmado à parte)
+    if (hitType && (source !== "audio" || extra.p2)) emitP2(hitType, n01(vel), source);
     // TELA ZERADA: por enquanto só o kick tem imagem (o círculo). Cada instrumento
     // novo entra aqui, um de cada vez, com um significado definido.
     if (shapes.length > 600) shapes.splice(0, shapes.length - 600);
