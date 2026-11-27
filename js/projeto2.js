@@ -25,7 +25,7 @@ window.addEventListener('cycles:hit', (e) => {
   // luzes: o que chegou e de onde (MIDI = exato; ÁUDIO = análise do som)
   const L = lights[e.detail.type];
   if (L) { L.classList.add('on'); clearTimeout(L._t); L._t = setTimeout(() => L.classList.remove('on'), 90); }
-  src.textContent = e.detail.source === 'audio' ? 'pelo áudio' : e.detail.source === 'musica' ? 'pela música' : e.detail.source === 'pad' ? 'teclas' : 'pelo MIDI';
+  src.textContent = e.detail.source === 'audio' ? (e.detail.grid ? 'áudio + clock' : 'pelo áudio') : e.detail.source === 'musica' ? 'pela música' : e.detail.source === 'pad' ? 'teclas' : 'pelo MIDI';
 });
 
 // ---------- abas: Sessão 1 · Projeto 2 ----------

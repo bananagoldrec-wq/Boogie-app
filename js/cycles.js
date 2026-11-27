@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 42;
+  const APP_VERSION = 43;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -424,6 +424,7 @@
       }
       const harmFrac = all > 0 ? harm / all : 0;
       if (notes >= 3 && cmax > 0 && ctot > lowE * 0.15 && harmFrac < 0.45) {
+        audio.p2ChordT = t; // (Projeto 2: tem acorde soando agora)
         const db = 10 * Math.log10(ctot + 1e-12);
         audio.cDbMax = Math.max(db, (audio.cDbMax ?? db) - 0.004);
         const target = clamp((db - (audio.cDbMax - 24)) / 24, 0, 1);
@@ -454,6 +455,7 @@
       if (lowE > pend.peak * 0.2) { // (Projeto 2) onde mora a energia dessa batida grave
         pend.p2SubMax = Math.max(pend.p2SubMax, p2Sub / (p2Low + 1e-20));
         pend.p2BassMax = Math.max(pend.p2BassMax, p2Bass / (p2Low + 1e-20));
+        pend.p2LowMax = Math.max(pend.p2LowMax, lowE / (p2Low + 1e-20)); // abaixo de 160 Hz (onde mora o baixo do Cycles)
       }
       // kick curtíssimo (decay no zero): aos ~40 ms o grave já sumiu — só kick faz isso,
       // então decide logo (o círculo aparece mais cedo)
@@ -478,11 +480,18 @@
         const v = clamp((db - (audio.kDbMax - 30)) / 30, 0.01, 1);
         const vel = 1 + 126 * v;
         if (isKick) audio.lastKickT = pend.t0;
-        // PROJETO 2, rigoroso: a batida grave tem que pesar no som todo (no silêncio, um hi-hat
-        // ou acorde faz o grave "subir" sem kick nenhum); kick mora no sub-grave (<90 Hz);
-        // baixo mora abaixo de ~130 Hz (a nota grave de um acorde fica acima)
-        const p2ok = pend.p2Share > 0.3 && (isKick ? pend.p2SubMax > 0.5 : pend.p2SubMax > 0.55 || pend.p2BassMax > 0.92);
-        spawn(isKick ? 0 : 8, pend.note, vel, "audio", { exactVel: vel, p2: p2ok });
+        spawn(isKick ? 0 : 8, pend.note, vel, "audio", { exactVel: vel });
+        // PROJETO 2: kick × baixo.
+        // Com o clock do Cycles chegando (play dado no Cycles): batida grave NO TEMPO = kick
+        // (a pessoa anda); FORA do tempo = baixo (a escada sobe). Sem clock: a análise do som.
+        // E o grave tem que pesar no som todo (no silêncio, um hi-hat ou acorde faz o grave
+        // "subir" sem kick nenhum); o baixo tem que morar abaixo de ~160 Hz.
+        const grid = clock.running && clock.bpm && clock.quarterT != null;
+        const p2kick = grid ? onBeat : isKick;
+        // acorde soando agora e sem sub-grave: a batida grave é do ACORDE, não é kick nem baixo
+        const chordHit = t - (audio.p2ChordT ?? -9) < 0.12 && pend.p2SubMax < 0.4;
+        const p2ok = !chordHit && pend.p2Share > 0.3 && (p2kick ? (grid ? pend.p2LowMax > 0.5 : pend.p2SubMax > 0.5) : pend.p2LowMax > 0.55);
+        if (p2ok) emitP2(p2kick ? "kick" : "bass", v);
         log(`áudio: grave → ${isKick ? "KICK (círculo)" : "baixo"} · força ${Math.round(v * 100)}% · tom ${glide.toFixed(2)} · estalo ${pend.click.toFixed(1)}`);
       }
     }
@@ -499,7 +508,7 @@
         if (i === 0) {
           // grave: decide kick ou baixo daqui a ~75 ms
           audio.p2LowT = t; // (Projeto 2: marca o início da batida grave)
-          if (!audio.lowPend) audio.lowPend = { t0: t, peak: lowE, f0: null, click: clickE / (audio.clickSlow + 1e-12), vel, note, p2Share: p2Low / (total + 1e-20), p2SubMax: 0, p2BassMax: 0 };
+          if (!audio.lowPend) audio.lowPend = { t0: t, peak: lowE, f0: null, click: clickE / (audio.clickSlow + 1e-12), vel, note, p2Share: p2Low / (total + 1e-20), p2SubMax: 0, p2BassMax: 0, p2LowMax: 0 };
           slow[i] = slow[i] * 0.94 + e[i] * 0.06;
           continue;
         }
@@ -643,7 +652,8 @@
   function emitP2(type, amount, source = "audio") {
     if (source === "audio" && midiLive()) return;
     const bpm = clock.running && clock.bpm ? clock.bpm : null;
-    window.dispatchEvent(new CustomEvent("cycles:hit", { detail: { type, amount, bpm, source } }));
+    const grid = !!(clock.running && clock.bpm && clock.quarterT != null); // separando kick × baixo pelo tempo
+    window.dispatchEvent(new CustomEvent("cycles:hit", { detail: { type, amount, bpm, source, grid } }));
   }
   function spawn(trIndex, note, vel, source = "midi", extra = {}) {
     const tr = tracks[trIndex];
