@@ -52,11 +52,18 @@
   async function decode(arrayBuffer) {
     const AC = window.AudioContext || window.webkitAudioContext;
     const tmp = new AC();
-    const buf = await new Promise((res, rej) => {
-      const p = tmp.decodeAudioData(arrayBuffer, res, rej);
-      if (p && p.then) p.then(res, rej);
-    });
-    tmp.close && tmp.close();
+    let buf;
+    try {
+      buf = await new Promise((res, rej) => {
+        const p = tmp.decodeAudioData(arrayBuffer, res, rej);
+        if (p && p.then) p.then(res, rej);
+      });
+    } finally {
+      // fecha sempre (mesmo quando o arquivo não abre): o navegador só deixa uns poucos contextos de áudio abertos
+      if (tmp.close) tmp.close().catch(() => {});
+    }
+    // faixa muito longa (DJ set de horas) estouraria a memória: aí fica a detecção ao vivo
+    if (buf.duration > 20 * 60) throw new Error("faixa com mais de 20 minutos");
     const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
     const off = new OAC(1, Math.max(1, Math.ceil(buf.duration * SR)), SR);
     const src = off.createBufferSource();

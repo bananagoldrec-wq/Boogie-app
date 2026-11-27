@@ -129,9 +129,20 @@ export function createEndlessClimb(canvas) {
     let front = Math.max(hero.x, hero.feet[0][0], hero.feet[1][0]);
     if (hero.stride) front = Math.max(front, hero.stride.x1, hero.stride.f1[0]);
     const ahead = front + 0.35;
+    const rise = 0.1 + 0.45 * Math.pow(v, 1.1);           // força = altura do degrau
+    // a escada à frente nunca sai da tela: se já tem os degraus que cabem à frente da pessoa
+    // (o baixo tocando mais que o kick), o baixo levanta o ÚLTIMO degrau ali mesmo, na tela
+    const fit = clamp(Math.floor((W / 2 / U + CAM_DX - 0.6) / STEP_W), 3, 8);
+    const nAhead = steps.reduce((n, st) => n + (!st.floor && st.x > hero.x + 0.05 ? 1 : 0), 0);
+    if (nAhead >= fit && !last.floor) {
+      const top = hero.y + (H / 2 / U + CAM_DY) * 0.85;       // e nem por cima da tela
+      const y = Math.min(last.y + rise, Math.max(top, last.y));
+      const r = Math.max(0.06, y - last.y);                   // no teto: o degrau dá um pulo no lugar
+      last.y = y; last.rise = r; last.born = t; last.v = v; last.dur = 0.06;
+      return;
+    }
     let x = last.x + last.w;
     if (x < ahead) { last.w = ahead - last.x; x = ahead; } // o plano se estende até ali
-    const rise = 0.1 + 0.45 * Math.pow(v, 1.1);           // força = altura do degrau
     steps.push({ x, y: last.y + rise, w: STEP_W, rise, born: t, v, dur: 0.06 }); // sobe na hora da nota
     // esquece o que ficou muito pra trás
     let behind = 0;

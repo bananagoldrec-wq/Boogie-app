@@ -28,9 +28,9 @@ window.addEventListener('cycles:hit', (e) => {
   src.textContent = e.detail.source === 'audio' ? (e.detail.grid ? 'áudio + clock' : 'pelo áudio') : e.detail.source === 'musica' ? 'pela música' : e.detail.source === 'pad' ? 'teclas' : 'pelo MIDI';
 });
 
-// ---------- luzes: qual trilha faz cada papel, e se ela está mandando notas MIDI ----------
-// "T3 ✔" = a trilha 3 está mandando notas (é ela que faz a chuva, exata);
-// "T3 ✖" = chegam notas de outras trilhas mas não dessa (MOUT desligado nela, ou o som está em outra trilha).
+// ---------- luzes: de onde vem cada papel ----------
+// "T3 MIDI" = a trilha 3 está mandando notas: a chuva segue o MIDI dela (exato).
+// "T3 · áudio" = essa trilha não manda notas: o papel vem do ouvido próprio do Projeto 2.
 // Clique na luz pra trocar a trilha daquele papel.
 const NAMES = { kick: 'Kick', bass: 'Baixo', hat: 'Hi-hat', snare: 'Caixa' };
 Object.keys(lights).forEach((k) => {
@@ -51,12 +51,13 @@ Object.keys(lights).forEach((k) => {
 function refreshLights() {
   const api = window.CyclesP2;
   if (!api) return;
-  const roles = api.roles(), live = api.live(), anyLive = live.some(Boolean);
+  const roles = api.roles(), live = api.live(), ouvido = api.audioOn();
   Object.keys(lights).forEach((k) => {
     const tr = roles[k], sm = lights[k].querySelector('small');
-    const txt = tr == null || tr < 0 ? '—' : `T${tr + 1}${live[tr] ? ' ✔' : anyLive ? ' ✖' : ''}`;
+    const midi = tr >= 0 && live[tr];
+    const txt = midi ? `T${tr + 1} MIDI` : ouvido ? (tr >= 0 ? `T${tr + 1} · áudio` : 'áudio') : tr >= 0 ? `T${tr + 1}` : '—';
     if (sm.textContent !== txt) sm.textContent = txt;
-    lights[k].classList.toggle('miss', anyLive && !(tr >= 0 && live[tr]));
+    lights[k].classList.toggle('miss', !midi && !ouvido);
   });
 }
 setInterval(refreshLights, 300);

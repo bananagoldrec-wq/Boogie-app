@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-cycles-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-cycles-512.png" />
 
-  <link rel="stylesheet" href="css/cycles.css?v=45" />
+  <link rel="stylesheet" href="css/cycles.css?v=46" />
 </head>
 <body>
   <header class="bar">
@@ -86,9 +86,9 @@
         <button data-v="pintura" type="button">Pintura</button>
       </div>
       <select id="sel-ref" class="sel only-p1" aria-label="Referência"><option value="nenhuma">Sem referência</option></select>
-      <button id="btn-save" class="btn primary only-p1" type="button">Salvar imagem</button>
+      <button id="btn-save" class="btn primary" type="button">Salvar imagem</button>
     </div>
-    <div class="gallery only-p1" id="gallery" hidden></div>
+    <div class="gallery" id="gallery" hidden></div>
   </footer>
 
   <!-- Ajustes -->
@@ -170,10 +170,11 @@
 
       <section>
         <h4>Projeto 2 — qual trilha faz o quê</h4>
-        <p class="muted">Com as notas MIDI do Cycles chegando, o Projeto 2 usa só o MIDI: cada trilha vem separada, na hora,
-        sem adivinhar pelo som. <b>No Cycles, ligue o MOUT em cada trilha:</b> segure <i>FUNC</i> e aperte o botão da trilha
-        (T1…T6) e marque <i>MOUT</i> (vem desligado). Sem isso o Cycles manda só o clock e o app tem que ouvir o áudio. O padrão é T1 kick, T5 baixo, T3 hi-hat, T2 caixa; troque aqui se o seu baixo estiver em outra trilha.
-        Sem MIDI, ele usa a análise do áudio.</p>
+        <p class="muted">Cada papel segue a sua trilha: se a trilha manda notas MIDI, vale o MIDI (exato, na hora);
+        se não manda, vale o ouvido do Projeto 2 (ligue <b>Áudio</b>). Uma trilha no MIDI não cala as outras.
+        <b>No Cycles, ligue o MOUT em cada trilha:</b> segure <i>FUNC</i>, aperte o botão da trilha (T1…T6) e marque
+        <i>MOUT</i> (vem desligado). O padrão é T1 kick, T5 baixo, T3 hi-hat, T2 caixa; troque aqui (ou clicando nas luzes
+        do rodapé) se estiver em outra trilha.</p>
         <div id="p2-roles" class="p2-roles"></div>
       </section>
 
@@ -207,8 +208,8 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles-analise.js?v=45"></script>
-  <script src="js/cycles.js?v=45"></script>
-  <script type="module" src="js/projeto2.js?v=45"></script>
+  <script src="js/cycles-analise.js?v=46"></script>
+  <script src="js/cycles.js?v=46"></script>
+  <script type="module" src="js/projeto2.js?v=46"></script>
 </body>
 </html>
