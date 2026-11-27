@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 27;
+  const APP_VERSION = 28;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -448,7 +448,12 @@
       const ratio = audio.snSlow > 0 ? se / audio.snSlow : 0;
       const flat = snN ? Math.exp(snLog / snN) / (snE / snN + 1e-20) : 0; // 1 = ruído puro, ~0 = nota
       const mid = snE / (snE + hiE + 1e-20); // caixa/clap pesam no médio; hi-hat mora acima de 6 kHz
-      if (ratio > 1.3 && flat > 0.2 && mid > 0.3 && t - (audio.snLast ?? -9) > 0.09) {
+      const okNoise = flat > 0.2, okMid = mid > 0.22; // um pouco mais permissivo (caixas com corpo forte, como a do Cycles)
+      if (ratio > 1.3 && (!okNoise || !okMid) && t - (audio.snRej ?? -9) > 0.25) {
+        audio.snRej = t; // registra no monitor por que uma batida no médio NÃO virou linha (diagnóstico)
+        log(`áudio: médio ignorado · ruído ${flat.toFixed(2)}${okNoise ? "" : " (baixo)"} · médio ${mid.toFixed(2)}${okMid ? "" : " (baixo)"}`);
+      }
+      if (ratio > 1.3 && okNoise && okMid && t - (audio.snLast ?? -9) > 0.09) {
         audio.snLast = t;
         const db = 10 * Math.log10(snE + 1e-12);
         audio.sDbMax = Math.max(db, audio.sDbMax ?? db);
