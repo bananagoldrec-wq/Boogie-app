@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 24;
+  const APP_VERSION = 25;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -379,7 +379,8 @@
     // seu próprio detector — grave vira KICK, médio vira SNARE/PERC/TONE, agudo vira METAL
     const t = now();
     const playing = music.el && !music.el.paused;
-    if (!(settings.onset || playing) || (playing && music.timeline) || t - lastMidiNote < 3 || rms < 0.008) {
+    // com o botão Áudio ligado, sempre escuta as batidas (o som do Cycles pelo USB pode vir baixo: piso pequeno)
+    if (!(settings.onset || playing || audio.stream) || (playing && music.timeline) || t - lastMidiNote < 3 || rms < 0.002) {
       audio.bandSlow = audio.bandSlow || [0, 0, 0];
       return;
     }
@@ -401,6 +402,7 @@
         const glide = pend.f0 && lowHz ? pend.f0 / lowHz : 1;
         const isKick = classifyLow({ glide, click: pend.click, decay });
         spawn(isKick ? 0 : 8, pend.note, pend.vel, "audio");
+        log(`áudio: grave → ${isKick ? "KICK (círculo)" : "baixo"} · força ${pend.vel} · tom ${glide.toFixed(2)} · estalo ${pend.click.toFixed(1)}`);
       }
     }
     const last = audio.bandLast || (audio.bandLast = [0, 0, 0]);
