@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 32;
+  const APP_VERSION = 33;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -442,7 +442,7 @@
           // HI-HAT (agudo): força contínua em dB, como o kick e a caixa
           const db = 10 * Math.log10(b[2] + 1e-12);
           audio.hDbMax = Math.max(db, audio.hDbMax ?? db);
-          const hv = clamp((db - (audio.hDbMax - 30)) / 30, 0.01, 1), hvel = 1 + 126 * hv;
+          const hv = clamp((db - (audio.hDbMax - 18)) / 18, 0.01, 1), hvel = 1 + 126 * hv; // faixa curta: acento salta
           spawn(2, 90, hvel, "audio", { exactVel: hvel });
           slow[i] = slow[i] * 0.94 + e[i] * 0.06;
           continue;
@@ -458,7 +458,7 @@
       const age = t - audio.snT0;
       if (age > 0.1 && age < 0.3) {
         const rel = 10 * Math.log10((snE + 1e-12) / (audio.snPeak + 1e-12));
-        audio.snLine.rv = Math.max(audio.snLine.rv, clamp((rel + 30) / 24, 0, 1));
+        audio.snLine.rv = Math.max(audio.snLine.rv, clamp((rel + 18) / 12, 0, 1)); // só cauda longa de verdade conta
       } else if (age >= 0.3) audio.snLine = null;
     }
     // SNARE/CLAP: detector próprio em 900–5000 Hz (o kick não atrapalha), só se ali
@@ -472,11 +472,14 @@
       const flat = snN ? Math.exp(snLog / snN) / (snE / snN + 1e-20) : 0; // 1 = ruído puro, ~0 = nota
       const mid = snE / (snE + hiE + 1e-20); // caixa/clap pesam no médio; hi-hat mora acima de 6 kHz
       const okNoise = flat > 0.2, okMid = mid > 0.22; // um pouco mais permissivo (caixas com corpo forte, como a do Cycles)
-      if (ratio > 1.3 && (!okNoise || !okMid) && t - (audio.snRej ?? -9) > 0.25) {
+      if (ratio > 1.5 && (!okNoise || !okMid) && t - (audio.snRej ?? -9) > 0.25) {
         audio.snRej = t; // registra no monitor por que uma batida no médio NÃO virou linha (diagnóstico)
         log(`áudio: médio ignorado · ruído ${flat.toFixed(2)}${okNoise ? "" : " (baixo)"} · médio ${mid.toFixed(2)}${okMid ? "" : " (baixo)"}`);
       }
-      if (ratio > 1.3 && okNoise && okMid && t - (audio.snLast ?? -9) > 0.09) {
+      // volume de verdade: a caixa precisa pesar no som todo (um chiado baixinho que
+      // "sobe" em relação a quase nada não conta — era o que fazia a linha aparecer sem caixa)
+      const loudEnough = snE > (b[0] + b[1] + b[2]) * 0.01;
+      if (ratio > 1.5 && okNoise && okMid && loudEnough && t - (audio.snLast ?? -9) > 0.15) {
         audio.snLast = t;
         const db = 10 * Math.log10(snE + 1e-12);
         audio.sDbMax = Math.max(db, audio.sDbMax ?? db);
@@ -1105,22 +1108,28 @@
   // FORÇA = COMPRIMENTO (contínuo): fraquinha é um risco curto, forte corta a tela inteira.
   let snareLines = [];
   function drawSnareLines(t) {
-    snareLines = snareLines.filter((k) => t - k.born < 0.5 + 0.9 * k.rv);
+    const DUR = 0.5;
+    snareLines = snareLines.filter((k) => t - k.born < DUR + 0.15 * k.rv);
     if (snareLines.length > 12) snareLines.splice(0, snareLines.length - 12);
     for (const k of snareLines) {
-      const DUR = 0.5 + 0.9 * k.rv;               // reverb = a linha demora mais pra sumir
-      const p = (t - k.born) / DUR;
-      const e = 1 - Math.pow(1 - Math.min(1, (t - k.born) / 0.5), 3);
+      const life = DUR + 0.15 * k.rv;
+      const p = (t - k.born) / life;
+      const e = 1 - Math.pow(1 - Math.min(1, (t - k.born) / DUR), 3);
       const half = (W / 2) * (0.02 + 0.98 * k.v) * e;
-      // reverb = distorção: a linha ondula e treme; amplitude contínua com o reverb
-      const amp = H * 0.09 * k.rv * (0.4 + 0.6 * p);
-      const N = 96;
+      // o ATAQUE é reto; só depois (2ª metade), se houver reverb, uma ondulação sutil
+      const late = clamp((p - 0.35) / 0.65, 0, 1);
+      const amp = H * 0.012 * k.rv * late;
       lctx.beginPath();
-      for (let i = 0; i <= N; i++) {
-        const u = i / N, x = W / 2 - half + 2 * half * u;
-        const env = Math.sin(Math.PI * u);           // pontas presas, meio solto
-        const y = H / 2 + amp * env * (Math.sin(u * 14 + k.seed + t * 9) * 0.6 + Math.sin(u * 37 - t * 13 + k.seed * 2) * 0.4);
-        i ? lctx.lineTo(x, y) : lctx.moveTo(x, y);
+      if (amp < 0.3) {
+        lctx.moveTo(W / 2 - half, H / 2);
+        lctx.lineTo(W / 2 + half, H / 2);
+      } else {
+        const N = 64;
+        for (let i = 0; i <= N; i++) {
+          const u = i / N, x = W / 2 - half + 2 * half * u;
+          const y = H / 2 + amp * Math.sin(Math.PI * u) * Math.sin(u * 9 + k.seed + t * 5);
+          i ? lctx.lineTo(x, y) : lctx.moveTo(x, y);
+        }
       }
       lctx.lineWidth = Math.max(1, 2.5 * DPR * (1 - p * 0.5));
       lctx.strokeStyle = `rgba(255,255,255,${(0.95 * Math.pow(1 - p, 1.6)).toFixed(3)})`;
@@ -1146,7 +1155,8 @@
     const md = Math.min(W, H);
     for (const k of hatTicks) {
       const p = (t - k.born) / k.dur;
-      const len = md * (0.012 + 0.11 * k.v) * (1 - Math.pow(1 - Math.min(1, (t - k.born) / 0.06), 2));
+      // acento = o risco CRESCE: curva forte, o hat normal é curto e o acentuado entra fundo na tela
+      const len = md * (0.01 + 0.3 * Math.pow(k.v, 2.2)) * (1 - Math.pow(1 - Math.min(1, (t - k.born) / 0.08), 2));
       const b = borderPoint(k.pos), m = 6 * DPR; // um respiro da borda
       lctx.beginPath();
       lctx.moveTo(b.x + b.nx * m, b.y + b.ny * m);
