@@ -28,6 +28,40 @@ window.addEventListener('cycles:hit', (e) => {
   src.textContent = e.detail.source === 'audio' ? (e.detail.grid ? 'áudio + clock' : 'pelo áudio') : e.detail.source === 'musica' ? 'pela música' : e.detail.source === 'pad' ? 'teclas' : 'pelo MIDI';
 });
 
+// ---------- luzes: qual trilha faz cada papel, e se ela está mandando notas MIDI ----------
+// "T3 ✔" = a trilha 3 está mandando notas (é ela que faz a chuva, exata);
+// "T3 ✖" = chegam notas de outras trilhas mas não dessa (MOUT desligado nela, ou o som está em outra trilha).
+// Clique na luz pra trocar a trilha daquele papel.
+const NAMES = { kick: 'Kick', bass: 'Baixo', hat: 'Hi-hat', snare: 'Caixa' };
+Object.keys(lights).forEach((k) => {
+  const L = lights[k];
+  L.innerHTML = `${NAMES[k] || k}<small></small>`;
+  L.title = 'Clique pra trocar a trilha do Cycles que faz isso';
+  L.addEventListener('click', () => {
+    const api = window.CyclesP2;
+    if (!api) return;
+    const roles = api.roles();
+    const taken = Object.keys(roles).filter((o) => o !== k).map((o) => roles[o]);
+    const opts = [0, 1, 2, 3, 4, 5].filter((i) => !taken.includes(i)).concat(-1);
+    const cur = opts.indexOf(roles[k]);
+    api.setRole(k, opts[(cur + 1) % opts.length]);
+    refreshLights();
+  });
+});
+function refreshLights() {
+  const api = window.CyclesP2;
+  if (!api) return;
+  const roles = api.roles(), live = api.live(), anyLive = live.some(Boolean);
+  Object.keys(lights).forEach((k) => {
+    const tr = roles[k], sm = lights[k].querySelector('small');
+    const txt = tr == null || tr < 0 ? '—' : `T${tr + 1}${live[tr] ? ' ✔' : anyLive ? ' ✖' : ''}`;
+    if (sm.textContent !== txt) sm.textContent = txt;
+    lights[k].classList.toggle('miss', anyLive && !(tr >= 0 && live[tr]));
+  });
+}
+setInterval(refreshLights, 300);
+refreshLights();
+
 // ---------- abas: Sessão 1 · Projeto 2 ----------
 const canvas = document.getElementById('canvas');
 const tabs = document.querySelectorAll('#seg-proj button');

@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 44;
+  const APP_VERSION = 45;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -643,6 +643,7 @@
   // ---------- formas ----------
   let shapes = [];
   let lastMidiNote = -99;
+  const lastTrNote = [-99, -99, -99, -99, -99, -99]; // última nota MIDI de cada trilha (Projeto 2 mostra quem está mandando)
 
   // avisa o Projeto 2 (com o andamento do clock MIDI, se estiver chegando)
   // notas MIDI chegando nos últimos segundos? então o MIDI manda no Projeto 2 (é exato: cada trilha
@@ -1510,6 +1511,7 @@
 
     if (type === 0x90 && d[2] > 0) {
       lastMidiNote = now();
+      lastTrNote[tr] = lastMidiNote;
       if (demo.on) stopDemo();
       spawn(tr, d[1], d[2]);
       const role = roleOf(tr);
@@ -1669,13 +1671,20 @@
         <select class="sel" data-role="${k}">${[-1, 0, 1, 2, 3, 4, 5].map((i) =>
           `<option value="${i}"${settings.p2roles[k] === i ? " selected" : ""}>${i < 0 ? "nenhuma" : "T" + (i + 1)}</option>`).join("")}</select>
       </label>`).join("");
-    el.querySelectorAll("select").forEach((sel) => sel.addEventListener("change", () => {
-      const k = sel.dataset.role, v = parseInt(sel.value, 10);
-      for (const o of Object.keys(settings.p2roles)) if (o !== k && settings.p2roles[o] === v && v >= 0) settings.p2roles[o] = -1; // uma trilha, um papel
-      settings.p2roles[k] = v;
-      save(); renderP2Roles();
-    }));
+    el.querySelectorAll("select").forEach((sel) => sel.addEventListener("change", () => setP2Role(sel.dataset.role, parseInt(sel.value, 10))));
   }
+  function setP2Role(k, v) {
+    if (!(k in settings.p2roles)) return;
+    for (const o of Object.keys(settings.p2roles)) if (o !== k && settings.p2roles[o] === v && v >= 0) settings.p2roles[o] = -1; // uma trilha, um papel
+    settings.p2roles[k] = v;
+    save(); renderP2Roles();
+  }
+  // o Projeto 2 lê daqui: papel de cada trilha e quais trilhas estão mandando notas MIDI agora
+  window.CyclesP2 = {
+    roles: () => ({ ...settings.p2roles }),
+    setRole: setP2Role,
+    live: () => lastTrNote.map((t) => now() - t < 4),
+  };
   function renderChanGrid() {
     $("chan-grid").innerHTML = tracks.slice(0, 6).map((_, i) =>
       `<label>T${i + 1}<input type="number" min="1" max="16" value="${settings.channels[i]}" data-i="${i}" /></label>`).join("");
@@ -1921,7 +1930,8 @@
     if (!el) return;
     const clockOn = clock.times.length > 0 && now() - clock.times[clock.times.length - 1] < 1;
     const notes = midiLive();
-    const txt = notes ? "notas MIDI ✔" : clockOn ? "só clock · ligue MOUT nas trilhas" : "";
+    const trs = lastTrNote.map((tt, i) => (now() - tt < 4 ? "T" + (i + 1) : "")).filter(Boolean).join(" ");
+    const txt = notes ? "MIDI ✔ " + trs : clockOn ? "só clock · ligue MOUT nas trilhas" : "";
     if (el.textContent !== txt) { el.textContent = txt; el.hidden = !txt; el.classList.toggle("warn", !notes); }
   }, 500);
   requestAnimationFrame(frame);
