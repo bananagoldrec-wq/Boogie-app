@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 31;
+  const APP_VERSION = 32;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -83,7 +83,7 @@
   // ---------- estado das trilhas ----------
   const tracks = MACHINES.map((_, i) => ({
     machine: i, level: 100, volume: 90, pitch: 64, decay: 64, color: 64, shape: 64,
-    sweep: 40, contour: 40, pan: 64, delay: 0, reverb: 20,
+    sweep: 40, contour: 40, pan: 64, delay: 0, reverb: 0,
     lastVel: 0, lastNote: 60, energy: 0,
   }));
   Object.assign(tracks[6], { decay: 95, reverb: 75, sweep: 55, color: 50 }); // voz: longa e com véu
@@ -395,6 +395,7 @@
     // Kick: a nota despenca logo depois do ataque. Baixo: a nota fica parada.
     // Só o kick vira o círculo.
     if (audio.sDbMax != null) audio.sDbMax -= 0.004;
+    if (audio.hDbMax != null) audio.hDbMax -= 0.004;
     if (audio.kDbMax != null) audio.kDbMax -= 0.004; // o teto desce bem devagar (~0,25 dB/s): baixar o volume encolhe o círculo de verdade
     const pend = audio.lowPend;
     if (pend) {
@@ -437,7 +438,16 @@
           continue;
         }
         if (i === 1) { slow[i] = slow[i] * 0.94 + e[i] * 0.06; continue; } // médio: caixa/clap têm detector próprio (abaixo)
-        const tr = i === 2 ? 2 : audio.tonal > 0.1 ? 4 : bpi[1] * binHz < 900 ? 3 : 1;
+        if (i === 2) {
+          // HI-HAT (agudo): força contínua em dB, como o kick e a caixa
+          const db = 10 * Math.log10(b[2] + 1e-12);
+          audio.hDbMax = Math.max(db, audio.hDbMax ?? db);
+          const hv = clamp((db - (audio.hDbMax - 30)) / 30, 0.01, 1), hvel = 1 + 126 * hv;
+          spawn(2, 90, hvel, "audio", { exactVel: hvel });
+          slow[i] = slow[i] * 0.94 + e[i] * 0.06;
+          continue;
+        }
+        const tr = audio.tonal > 0.1 ? 4 : bpi[1] * binHz < 900 ? 3 : 1;
         spawn(tr, note, vel, "audio");
       }
       slow[i] = slow[i] * 0.94 + e[i] * 0.06;
@@ -581,6 +591,11 @@
       const line = { born: t, v: n01(vel), rv: source === "audio" ? 0 : n01(tr.reverb), seed: Math.random() * 100 };
       snareLines.push(line);
       if (source === "audio") audio.snLine = line;
+    }
+    if (sh.m === 2) {
+      // hi-hat = risco na borda; anda uma posição por batida, em volta da tela (sentido horário)
+      hatStep = (hatStep + 1) % 32;
+      hatTicks.push({ born: t, v: n01(vel), pos: hatStep / 32, dur: source === "audio" ? 0.35 : 0.15 + 1.1 * Math.pow(n01(tr.decay), 1.5) });
     }
     // TELA ZERADA: por enquanto só o kick tem imagem (o círculo). Cada instrumento
     // novo entra aqui, um de cada vez, com um significado definido.
@@ -1022,6 +1037,7 @@
     frameBody.last = t;
     drawKickRings(t);
     drawSnareLines(t);
+    drawHatTicks(t);
 
     // clarão do drop por cima
     const sF = lineVal(punch.s);
@@ -1112,6 +1128,35 @@
     }
   }
 
+  // ---------- hi-hat: riscos curtos nas bordas, que andam em volta da tela ----------
+  // FORÇA = COMPRIMENTO do risco (contínuo) · DECAY = quanto tempo ele fica
+  let hatTicks = [], hatStep = -1;
+  function borderPoint(u) {
+    // u de 0 a 1 percorre a borda no sentido horário, começando no meio de cima
+    const per = 2 * (W + H);
+    let d = ((u * per + W / 2) % per + per) % per;
+    if (d < W) return { x: d, y: 0, nx: 0, ny: 1 };
+    d -= W; if (d < H) return { x: W, y: d, nx: -1, ny: 0 };
+    d -= H; if (d < W) return { x: W - d, y: H, nx: 0, ny: -1 };
+    d -= W; return { x: 0, y: H - d, nx: 1, ny: 0 };
+  }
+  function drawHatTicks(t) {
+    hatTicks = hatTicks.filter((k) => t - k.born < k.dur);
+    if (hatTicks.length > 40) hatTicks.splice(0, hatTicks.length - 40);
+    const md = Math.min(W, H);
+    for (const k of hatTicks) {
+      const p = (t - k.born) / k.dur;
+      const len = md * (0.012 + 0.11 * k.v) * (1 - Math.pow(1 - Math.min(1, (t - k.born) / 0.06), 2));
+      const b = borderPoint(k.pos), m = 6 * DPR; // um respiro da borda
+      lctx.beginPath();
+      lctx.moveTo(b.x + b.nx * m, b.y + b.ny * m);
+      lctx.lineTo(b.x + b.nx * (m + len), b.y + b.ny * (m + len));
+      lctx.lineWidth = Math.max(1, 2.5 * DPR);
+      lctx.strokeStyle = `rgba(255,255,255,${(0.95 * Math.pow(1 - p, 1.4)).toFixed(3)})`;
+      lctx.stroke();
+    }
+  }
+
   function drawKickRings(t) {
     const DUR = 0.65, md = Math.min(W, H);
     kickRings = kickRings.filter((k) => t - k.born < DUR);
@@ -1134,6 +1179,7 @@
   function clearCanvas() {
     kickRings = [];
     snareLines = [];
+    hatTicks = []; hatStep = -1;
     shapes = [];
     if (gl3.ok) window.Cycles3D.clear();
     lctx.clearRect(0, 0, W, H);
