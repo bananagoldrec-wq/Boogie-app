@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 26;
+  const APP_VERSION = 27;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -350,6 +350,7 @@
     let peak = 0, peakI = 0, total = 0;
     const b = [0, 0, 0], bp = [0, 0, 0], bpi = [1, 1, 1];
     let lowE = 0, lowPk = 0, lowPkI = 1, clickE = 0; // grave (30–160 Hz), seu pico, e o "click" (2–6 kHz)
+    let snE = 0, snPk = 0, snN = 0, snLog = 0, hiE = 0; // faixa da caixa/clap (900–5000 Hz), se é ruído, e o agudo (6–12 kHz)
     for (let i = 1; i < fd.length; i++) {
       const hz = i * binHz;
       if (hz < 25 || hz > 12000) continue;
@@ -362,6 +363,8 @@
       if (hz >= 30 && hz < 160) lowE += p;
       if (hz >= 30 && hz < 220 && p > lowPk) { lowPk = p; lowPkI = i; }
       if (hz >= 2000 && hz < 6000) clickE += p;
+      if (hz >= 900 && hz < 5000) { snE += p; snN++; snLog += Math.log(p + 1e-20); if (p > snPk) snPk = p; }
+      if (hz >= 6000 && hz < 12000) hiE += p;
     }
     // tom do grave com interpolação entre as faixas do espectro (sem isso a medida
     // anda em degraus de ~23 Hz e o mesmo kick parece cair de tom ora sim, ora não)
@@ -391,6 +394,7 @@
     // KICK × BAIXO ao vivo: uma batida grave fica "em análise" por ~75 ms.
     // Kick: a nota despenca logo depois do ataque. Baixo: a nota fica parada.
     // Só o kick vira o círculo.
+    if (audio.sDbMax != null) audio.sDbMax -= 0.004;
     if (audio.kDbMax != null) audio.kDbMax -= 0.004; // o teto desce bem devagar (~0,25 dB/s): baixar o volume encolhe o círculo de verdade
     const pend = audio.lowPend;
     if (pend) {
@@ -428,10 +432,31 @@
           slow[i] = slow[i] * 0.94 + e[i] * 0.06;
           continue;
         }
+        if (i === 1) { slow[i] = slow[i] * 0.94 + e[i] * 0.06; continue; } // médio: caixa/clap têm detector próprio (abaixo)
         const tr = i === 2 ? 2 : audio.tonal > 0.1 ? 4 : bpi[1] * binHz < 900 ? 3 : 1;
         spawn(tr, note, vel, "audio");
       }
       slow[i] = slow[i] * 0.94 + e[i] * 0.06;
+    }
+    // SNARE/CLAP: detector próprio em 900–5000 Hz (o kick não atrapalha), só se ali
+    // for RUÍDO (caixa e clap são ruído; nota de synth e kick têm pico definido) e
+    // se pesar mais no médio que no agudo (o hi-hat mora acima de 6 kHz).
+    // Força contínua em dB, como o kick.
+    {
+      const se = Math.sqrt(snE);
+      audio.snSlow = (audio.snSlow ?? se);
+      const ratio = audio.snSlow > 0 ? se / audio.snSlow : 0;
+      const flat = snN ? Math.exp(snLog / snN) / (snE / snN + 1e-20) : 0; // 1 = ruído puro, ~0 = nota
+      const mid = snE / (snE + hiE + 1e-20); // caixa/clap pesam no médio; hi-hat mora acima de 6 kHz
+      if (ratio > 1.3 && flat > 0.2 && mid > 0.3 && t - (audio.snLast ?? -9) > 0.09) {
+        audio.snLast = t;
+        const db = 10 * Math.log10(snE + 1e-12);
+        audio.sDbMax = Math.max(db, audio.sDbMax ?? db);
+        const v = clamp((db - (audio.sDbMax - 30)) / 30, 0.01, 1), sv = 1 + 126 * v;
+        spawn(1, 50, sv, "audio", { exactVel: sv });
+        log(`áudio: médio → SNARE/CLAP (linha) · força ${Math.round(v * 100)}% · ruído ${flat.toFixed(2)}`);
+      }
+      audio.snSlow = audio.snSlow * 0.93 + se * 0.07;
     }
     // grave + médio juntos e com tom definido → um acorde (mancha de cor) de vez em quando
     if (hit[0] && hit[1] && audio.tonal > 0.05 && Math.random() < 0.5) {
@@ -531,6 +556,7 @@
       sh.color = refBaseColor(x, y, sh.ou, sh.ov, sh.color);
     }
     if (sh.m === 0) kickRings.push({ born: t, v: n01(vel) }); // kick = círculo 2D nascendo
+    if (sh.m === 1 || sh.m === 3) snareLines.push({ born: t, v: n01(vel) }); // snare/clap = linha horizontal
     // TELA ZERADA: por enquanto só o kick tem imagem (o círculo). Cada instrumento
     // novo entra aqui, um de cada vez, com um significado definido.
     if (shapes.length > 600) shapes.splice(0, shapes.length - 600);
@@ -970,6 +996,7 @@
     const dtF = clamp(t - (frameBody.last || t), 0, 0.05);
     frameBody.last = t;
     drawKickRings(t);
+    drawSnareLines(t);
 
     // clarão do drop por cima
     const sF = lineVal(punch.s);
@@ -1033,6 +1060,26 @@
 
   // ---------- kick: um círculo simples, 2D, que nasce no centro e abre ----------
   let kickRings = [];
+  // ---------- snare/clap: uma linha horizontal que nasce no centro e abre pros lados ----------
+  // FORÇA = COMPRIMENTO (contínuo): fraquinha é um risco curto, forte corta a tela inteira.
+  let snareLines = [];
+  function drawSnareLines(t) {
+    const DUR = 0.5;
+    snareLines = snareLines.filter((k) => t - k.born < DUR);
+    if (snareLines.length > 12) snareLines.splice(0, snareLines.length - 12);
+    for (const k of snareLines) {
+      const p = (t - k.born) / DUR;
+      const e = 1 - Math.pow(1 - p, 3);
+      const half = (W / 2) * (0.02 + 0.98 * k.v) * e;
+      lctx.beginPath();
+      lctx.moveTo(W / 2 - half, H / 2);
+      lctx.lineTo(W / 2 + half, H / 2);
+      lctx.lineWidth = Math.max(1, 2.5 * DPR * (1 - p * 0.5));
+      lctx.strokeStyle = `rgba(255,255,255,${(0.95 * Math.pow(1 - p, 1.6)).toFixed(3)})`;
+      lctx.stroke();
+    }
+  }
+
   function drawKickRings(t) {
     const DUR = 0.65, md = Math.min(W, H);
     kickRings = kickRings.filter((k) => t - k.born < DUR);
@@ -1054,6 +1101,7 @@
 
   function clearCanvas() {
     kickRings = [];
+    snareLines = [];
     shapes = [];
     if (gl3.ok) window.Cycles3D.clear();
     lctx.clearRect(0, 0, W, H);
