@@ -16,7 +16,7 @@
     const E = { t: null };
     function reset() {
       for (const k of KEYS) E[k] = band();
-      Object.assign(E, { t: null, bass: null, hat: null, snare: null, chord: null, kickT: -9, kickOn: -9, kickishT: -9, bassOn: -9, kickHold: -9, lowOn: -9, lowRise: 0, lowEv: null, votes: [], kickPh: null });
+      Object.assign(E, { t: null, bass: null, hat: null, snare: null, chord: null, kickT: -9, kickOn: -9, kickishT: -9, bassOn: -9, kickHold: -9, lowOn: -9, lowRise: 0, lowEv: null, votes: [], lows: [], kickPh: null });
     }
     reset();
 
@@ -56,19 +56,12 @@
       const C = f.clock;
       const P = C && C.P > 0 && C.qT != null ? C.P : 0;
       const beatOff = (x) => { const r = (((x - C.qT) % P) + P) % P; return r > P * 0.75 ? r - P : r; };
-      if (!P) E.votes.length = 0;
-      // o lugar do kick só vale enquanto há kick tocando (um som de kick nos últimos 4 s):
-      // com só o baixo no tempo (kick parado), o baixo não faz a pessoa andar
-      const kickLive = t - E.kickishT < 4;
-      const grid = P && kickLive ? (E.kickPh != null ? "aprendido" : C.synced ? "play" : null) : null;
       const near = (a, b) => { const d = (((a - b) % P) + P) % P; return Math.min(d, P - d); };
-      const onGrid = (x) => grid === "aprendido" ? near(beatOff(x), E.kickPh) < 0.035
-        : grid === "play" ? beatOff(x) > -0.04 && beatOff(x) < 0.11 : false;
+      if (!P) { E.votes.length = 0; E.lows.length = 0; }
       // votos: cada batida grave que SOA como kick vota no seu lugar dentro do tempo;
       // o lugar do kick é onde caem mais votos (pelo menos 3, a ±25 ms)
-      const learn = (ev) => {
-        if (!P || !ev.kickish) return;
-        E.votes.push(beatOff(ev.t0));
+      const vote = (ph) => {
+        E.votes.push(ph);
         if (E.votes.length > 16) E.votes.shift(); // ~4 compassos: se a fase mudar (outra entrada de clock), reaprende logo
         let best = null, bn = 0;
         for (const a of E.votes) {
@@ -86,6 +79,28 @@
       const lowRise = Math.max(S.rise, L.rise), lowLvl = Math.max(S.now - S.ref, L.now - L.ref);
       const lowStart = lowRise > 5 && Math.max(S.now, L.now) > FLOOR && lowLvl > -20 &&
         (t - E.lowOn > 0.08 || lowRise > E.lowRise + 10);
+      // rede de segurança (kick que quase não desce de tom): batida grave forte que se repete no mesmo
+      // lugar do tempo em quase todo tempo (6 dos últimos 8) e mais forte que as outras graves também é kick
+      if (lowStart && P) {
+        const ph = beatOff(t);
+        E.lows.push({ t, ph, lv: lowLvl });
+        while (E.lows.length && t - E.lows[0].t > 8 * P) E.lows.shift();
+        const onBeat = ph > -0.04 && ph < 0.11;
+        if (lowLvl > -6 && (onBeat || !C.synced)) {
+          let n = 0, lvIn = 0, nOut = 0, lvOut = 0;
+          for (const x of E.lows) if (near(x.ph, ph) < 0.025) { n++; lvIn += x.lv; } else { nOut++; lvOut += x.lv; }
+          // com o play: em cima do tempo. Sem o play (fase desconhecida): só se há outras batidas
+          // graves pra comparar e essa é claramente a mais forte
+          const louder = nOut ? lvIn / n > lvOut / nOut + 3 : C.synced;
+          if (n >= 6 && louder && (C.synced || nOut >= 4)) { E.kickishT = t; vote(ph); }
+        }
+      }
+      // o lugar do kick só vale enquanto há kick tocando (um som de kick nos últimos 4 s):
+      // com só o baixo no tempo (kick parado), o baixo não faz a pessoa andar
+      const kickLive = t - E.kickishT < 4;
+      const grid = P && kickLive ? (E.kickPh != null ? "aprendido" : C.synced ? "play" : null) : null;
+      const onGrid = (x) => grid === "aprendido" ? near(beatOff(x), E.kickPh) < 0.035
+        : grid === "play" ? beatOff(x) > -0.04 && beatOff(x) < 0.11 : false;
       const kick = (ev, v) => {
         E.kickT = t; E.kickOn = ev ? ev.t0 : t;
         E.kickHold = t + 0.05; S.hl = S.hl.map(() => -140); L.hl = L.hl.map(() => -140);
@@ -116,10 +131,12 @@
           // a nota de baixo logo depois do kick também "desce" (a cauda do kick some), mas fica abaixo
           // do pico. Ou: no pico do grave e curtíssimo (kick sem queda de tom).
           ev.kickish = (ev.glide > 6 && ev.pkL - L.ref > -6) || (ev.pkL - L.ref > -2 && ev.drop > 8);
-          if (ev.kickish) E.kickishT = t;
-          learn(ev);
-          // sem o tempo (ou fora dele, com o som de kick bem claro): kick um pouco depois
-          if (!ev.kicked && t - E.kickT > 0.11 && (grid ? ev.kickish && ev.glide > 9 && !onGrid(ev.t0) : ev.kickish)) {
+          if (ev.kickish) { E.kickishT = t; if (P) vote(beatOff(ev.t0)); }
+          // sem o tempo: kick um pouco depois. Fora do lugar do kick (kick sincopado), só com o som de
+          // kick bem claro: desce muito de tom, chega no pico do sub-grave e cai rápido (um sub-baixo
+          // que pulsa também "desce", mas fica abaixo do pico)
+          const clear = ev.glide > 9 && ev.pkS - S.ref > -6 && ev.drop > 4;
+          if (!ev.kicked && t - E.kickT > 0.11 && (grid ? ev.kickish && clear && !onGrid(ev.t0) : ev.kickish)) {
             const v = clamp(Math.max(ev.pkS - (S.ref - 24), ev.pkL - (L.ref - 24)) / 24, 0.05, 1);
             kick(ev, v);
           }
@@ -192,7 +209,7 @@
       }
       return out;
     }
-    return { step, reset, newPlay: () => { E.votes = []; E.kickPh = null; }, state: E };
+    return { step, reset, newPlay: () => { E.votes = []; E.lows = []; E.kickPh = null; }, state: E };
   }
   root.CyclesOuvido = { create };
 })(typeof window !== "undefined" ? window : globalThis);
