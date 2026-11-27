@@ -179,7 +179,7 @@ export function createEndlessClimb(canvas) {
     // DISTORTION (tone): degrau torto, rachado e, forte, frágil (desaba quando pisa)
     const dist = c.dist;
     const k = { y: prev.y + rise, born: t, rise, dur: 0.06 + c.contour * 0.3, v, life, gone: false, goneT: -9,
-      crack: dist, tilt: dist > 0.05 ? (Math.random() - 0.5) * dist * 0.5 : 0, style: FM() ? FM().step5(c.color) : 0,
+      crack: dist, tilt: dist > 0.05 ? (Math.random() - 0.5) * dist * 0.8 : 0, style: FM() ? FM().step5(c.color) : 0,
       slab: step === 4, fragile: dist > 0.55 && Math.random() < (dist - 0.5) * 0.9 };
     cols.set(cc, k);
     // esquece o que ficou muito pra trás
@@ -369,7 +369,7 @@ export function createEndlessClimb(canvas) {
       ctx.lineTo(x1, y - tl); ctx.stroke();
       // rachaduras (DISTORTION): zigue-zague preto no degrau
       if (k.crack > 0.12) {
-        ctx.strokeStyle = st === 3 ? "#ede6d6" : "#151515"; ctx.lineWidth = Math.max(1, lw * 0.6);
+        ctx.strokeStyle = st === 0 ? "#fff" : st === 3 ? "#ede6d6" : "#151515"; ctx.lineWidth = Math.max(1.5, lw * (0.6 + k.crack * 0.6)); // (no estilo original, branco: preto sumia no fundo escuro)
         ctx.beginPath(); let xx = x0 + (x1 - x0) * 0.3, yy2 = y + 2; ctx.moveTo(xx, yy2);
         for (let i = 0; i < 3 + Math.round(k.crack * 4); i++) { xx += (x1 - x0) * 0.1; yy2 += (i % 2 ? -1 : 1) * U * 0.06 * k.crack + U * 0.03; ctx.lineTo(xx, yy2); }
         ctx.stroke();
@@ -405,25 +405,30 @@ export function createEndlessClimb(canvas) {
     const lw = Math.max(2, U * 0.055) * (1 + 0.6 * (Math.max(gx, gy) - 1));
     const a = p.swingX == null ? (hero.state === "fall" ? (hero.chute ? 1.2 : 2.4) : 0) : clamp((p.swingX - p.x) * 1.6 * art, -0.9, 0.9);
     const hand = (ang) => [shp[0] + 0.3 * gx * U * Math.sin(ang), shp[1] + 0.3 * gy * U * Math.cos(ang)];
+    const drawBody = () => {
     ctx.strokeStyle = ink; ctx.fillStyle = ink; ctx.lineWidth = lw; ctx.lineCap = "round"; ctx.lineJoin = "round";
-    const fractured = sh > 0.6 && imp > 0.2; // fratura: o corpo se separa um instante
-    const off = fractured ? (sh - 0.6) * U * 0.6 * imp : 0;
-    ctx.beginPath();
-    for (const ft of p.feet) { const [kn, f] = knee(hip, P2(ft[0], ft[1]), LEG * gy * U); ctx.moveTo(hip[0], hip[1]); ctx.lineTo(kn[0], kn[1]); ctx.lineTo(f[0], f[1]); }
-    ctx.moveTo(hip[0], hip[1] - off); ctx.lineTo(shp[0], shp[1] - off);
-    const h1 = hand(-a), h2 = hand(a);
-    ctx.moveTo(h1[0], h1[1] - off * 1.5); ctx.lineTo(shp[0], shp[1] - off * 1.5); ctx.lineTo(h2[0], h2[1] - off * 1.5);
-    ctx.stroke();
-    ctx.beginPath(); ctx.arc(head[0], head[1] - off * 2, U * 0.12 * Math.max(gx, gy), 0, Math.PI * 2); ctx.fill();
-    // DISTORTION (kick e caixa): o corpo ganha dentes — deformação geométrica, não só tamanho
-    const zig = U * (PK.dist * 0.07 + hero.growDist * Math.max(0, g - 1) * 0.12);
-    if (zig > 0.6) {
-      const teeth = (a0, a1, n) => { const dx = a1[0] - a0[0], dy = a1[1] - a0[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L; ctx.beginPath();
-        for (let i = 0; i < n; i++) { const u0 = i / n, u1 = (i + 0.5) / n, u2 = (i + 1) / n, sg = i % 2 ? 1 : -1;
-          ctx.moveTo(a0[0] + dx * u0, a0[1] + dy * u0 - off); ctx.lineTo(a0[0] + dx * u1 + nx * zig * sg, a0[1] + dy * u1 + ny * zig * sg - off); ctx.lineTo(a0[0] + dx * u2, a0[1] + dy * u2 - off); }
-        ctx.fill(); };
-      teeth(hip, shp, 5); teeth(shp, h1, 3); teeth(shp, h2, 3);
-    }
+      const fractured = sh > 0.6 && imp > 0.2; // fratura: o corpo se separa um instante
+      const off = fractured ? (sh - 0.6) * U * 0.6 * imp : 0;
+      ctx.beginPath();
+      for (const ft of p.feet) { const [kn, f] = knee(hip, P2(ft[0], ft[1]), LEG * gy * U); ctx.moveTo(hip[0], hip[1]); ctx.lineTo(kn[0], kn[1]); ctx.lineTo(f[0], f[1]); }
+      ctx.moveTo(hip[0], hip[1] - off); ctx.lineTo(shp[0], shp[1] - off);
+      const h1 = hand(-a), h2 = hand(a);
+      ctx.moveTo(h1[0], h1[1] - off * 1.5); ctx.lineTo(shp[0], shp[1] - off * 1.5); ctx.lineTo(h2[0], h2[1] - off * 1.5);
+      ctx.stroke();
+      ctx.beginPath(); ctx.arc(head[0], head[1] - off * 2, U * 0.12 * Math.max(gx, gy), 0, Math.PI * 2); ctx.fill();
+      // DISTORTION (kick e caixa): o corpo ganha dentes — deformação geométrica, não só tamanho
+      const zig = U * (PK.dist * 0.12 + hero.growDist * Math.max(0, g - 1) * 0.3);
+      if (zig > 0.6) {
+        const teeth = (a0, a1, n) => { const dx = a1[0] - a0[0], dy = a1[1] - a0[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L; ctx.beginPath();
+          for (let i = 0; i < n; i++) { const u0 = i / n, u1 = (i + 0.5) / n, u2 = (i + 1) / n, sg = i % 2 ? 1 : -1;
+            ctx.moveTo(a0[0] + dx * u0, a0[1] + dy * u0 - off); ctx.lineTo(a0[0] + dx * u1 + nx * zig * sg, a0[1] + dy * u1 + ny * zig * sg - off); ctx.lineTo(a0[0] + dx * u2, a0[1] + dy * u2 - off); }
+          ctx.fill(); };
+        teeth(hip, shp, 5); teeth(shp, h1, 3); teeth(shp, h2, 3);
+      }
+    };
+    drawBody();
+    // COLOR da caixa no fim (espelhado): o boneco crescido ganha um reflexo de cabeça pra baixo sob o degrau
+    if (ax === 4 && g > 1.02) { const yb = sy(by); ctx.save(); ctx.translate(0, yb); ctx.scale(1, -0.85); ctx.translate(0, -yb); drawBody(); ctx.restore(); }
     // rachaduras da caixa (SHAPE da snare) no corpo crescido
     if (hero.growCrack > 0.2 && g > 1.05) {
       ctx.strokeStyle = ink === "#fff" ? "#151515" : "#ede6d6"; ctx.lineWidth = Math.max(1, lw * 0.35);
@@ -477,8 +482,8 @@ export function createEndlessClimb(canvas) {
     ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(rot); ctx.fillStyle = col1;
     const R = Math.hypot(W, H) / 2;
     if (bg.mode === 1) ctx.fillRect(0, -R, R, 2 * R);
-    else if (bg.mode === 2) for (let i = 0; i < n; i++) if (i % 2) ctx.fillRect(-R + (2 * R * i) / n, -R + Math.sin(t + i) * (bg.spin || 0) * 20, (2 * R) / n, 2 * R);
-    else if (bg.mode === 3) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if ((i + j) % 2) ctx.fillRect(-R + (2 * R * i) / n, -R + (2 * R * j) / n, (2 * R) / n, (2 * R) / n);
+    else if (bg.mode === 2) { for (let i = 0; i < n; i++) if (i % 2) ctx.fillRect(-R + (2 * R * i) / n, -R + Math.sin(t + i) * (bg.spin || 0) * 20, (2 * R) / n, 2 * R); } // (chaves: o "else" de baixo não pode cair no "if" do laço)
+    else if (bg.mode === 3) { for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if ((i + j) % 2) ctx.fillRect(-R + (2 * R * i) / n, -R + (2 * R * j) / n, (2 * R) / n, (2 * R) / n); }
     else { let alt = true; for (let i = n; i > 0; i--) { ctx.fillStyle = alt ? col1 : col0; alt = !alt; ctx.beginPath(); ctx.arc(0, 0, (R * i) / n, 0, 6.283); ctx.fill(); } }
     ctx.restore();
     if ((bg.dist || 0) > 0.05) crackBand(t, col0, R0);
@@ -556,7 +561,7 @@ export function createEndlessClimb(canvas) {
   const state = () => {
     let stairs = 0; for (const [, s] of cols) if (!s.gone) stairs += s.y;
     return { ...counts, x: hero.x, y: hero.y, col: hero.col, hero: hero.state, chute: hero.chute, steps: cols.size, stairs: +stairs.toFixed(3), drops: drops.length,
-      size: +growNow(now()).toFixed(3), bg: bgNow(now()).map((c) => c | 0), gaps: [...cols.values()].filter((s) => s.gone).length, figures: figs ? figs.active() : 0,
+      size: +growNow(now()).toFixed(3), bg: bgNow(now()).map((c) => c | 0), bgMode: bg.mode, bgFields: bg.fields, gaps: [...cols.values()].filter((s) => s.gone).length, figures: figs ? figs.active() : 0,
       objects: cols.size + drops.length + marks.length + shards.length + echoes.length + (figs ? figs.active() : 0) };
   };
   return { hit, reset, setBpm, destroy, canvas, state };
