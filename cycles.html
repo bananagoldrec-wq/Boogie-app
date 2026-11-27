@@ -16,14 +16,14 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-cycles-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-cycles-512.png" />
 
-  <link rel="stylesheet" href="css/cycles.css?v=52" />
+  <link rel="stylesheet" href="css/cycles.css?v=53" />
 </head>
 <body>
   <header class="bar">
     <div class="brand">Cycles<span>Visual</span></div>
     <div class="seg tabs" id="seg-proj" role="tablist" aria-label="Projeto">
-      <button data-p="2" type="button" role="tab" title="Escada sem fim: kick anda, baixo sobe a escada, hi-hat chove, caixa faz o boneco crescer, chord muda o fundo (tecla P troca)">Projeto 2</button>
-      <button data-p="3" type="button" role="tab" title="Bauhaus Orbital: kick pulsa o sol e gira a lua, baixo põe planetas, hi-hat acende triângulos, caixa pula o arco amarelo (tecla P troca)">Projeto 3</button>
+      <button data-p="2" type="button" role="tab" title="Escada sem fim: kick anda, baixo (TONE) sobe a escada, hi-hat (METAL) chove, caixa faz o boneco crescer, chord muda o fundo, perc põe figuras; queda, paraquedas e resgate (tecla P troca; knobs no painel FM, tecla M)">Projeto 2</button>
+      <button data-p="3" type="button" role="tab" title="Bauhaus Orbital · Attraction &amp; Repulsion: anéis 3D; kick atrai (em cima), caixa expele (embaixo), baixo põe planetas, hi-hat solta partículas, chord reorganiza os anéis, perc põe figuras em órbita (tecla P troca; knobs no painel FM, tecla M)">Projeto 3</button>
       <button data-p="4" type="button" role="tab" title="INFINITE MICROCOSMOS: viagem 3D sem fim — kick faz nascer e transformar as formas, baixo acelera, hi-hat solta microfragmentos, caixa muda o fundo e inverte o giro (tecla P troca)">Projeto 4</button>
       <button data-p="5" type="button" role="tab" title="031 — IMPOSSIBLE CITY: cidade Bauhaus sem fim — kick constrói e desconstrói, baixo acelera a câmera, hi-hat solta peças, caixa muda a cor do ambiente (tecla P troca)">Projeto 5</button>
       <button data-p="6" type="button" role="tab" title="032 — MAGNETIC BALLET: esculturas que se atraem e se separam — kick atrai, baixo acelera a rotação, hi-hat fragmenta e transforma, caixa repele e muda o fundo (tecla P troca)">Projeto 6</button>
@@ -83,7 +83,7 @@
     <div class="tools">
       <button id="btn-reset2" class="btn only-p2" type="button" title="Começa a escada de novo (tecla C)">Reiniciar</button>
       <div class="p2-lights only-p2" id="p2-lights" aria-label="O que está chegando no Projeto 2">
-        <span data-k="kick">Kick</span><span data-k="bass">Baixo</span><span data-k="hat">Hi-hat</span><span data-k="snare">Caixa</span><span data-k="chord">Chord</span>
+        <span data-k="kick">Kick</span><span data-k="bass">Baixo</span><span data-k="hat">Hi-hat</span><span data-k="snare">Caixa</span><span data-k="chord">Chord</span><span data-k="perc">Perc</span>
         <b id="p2-src">—</b>
         <b id="p2-midi" class="p2-midi" hidden></b>
       </div>
@@ -221,9 +221,12 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles-analise.js?v=52"></script>
-  <script src="js/p2-ouvido.js?v=52"></script>
-  <script src="js/cycles.js?v=52"></script>
-  <script type="module" src="js/projeto2.js?v=52"></script>
+  <script src="js/cycles-analise.js?v=53"></script>
+  <script src="js/p2-ouvido.js?v=53"></script>
+  <script src="js/fm-engine.js?v=53"></script>
+  <script src="js/fm-figures.js?v=53"></script>
+  <script src="js/cycles.js?v=53"></script>
+  <script src="js/fm-panel.js?v=53"></script>
+  <script type="module" src="js/projeto2.js?v=53"></script>
 </body>
 </html>

@@ -29,22 +29,38 @@ const scene = () => current;
 const lights = {};
 document.querySelectorAll('#p2-lights span').forEach((el) => { lights[el.dataset.k] = el; });
 const src = document.getElementById('p2-src');
+const FM = window.CyclesFM;
+function flash(type, source, grid) {
+  const L = lights[type];
+  if (L) { L.classList.add('on'); clearTimeout(L._t); L._t = setTimeout(() => L.classList.remove('on'), 90); }
+  src.textContent = source === 'audio' ? (grid ? 'áudio + clock' : 'pelo áudio') : source === 'musica' ? 'pela música' : source === 'pad' ? 'teclas' : source === 'manual' ? 'teste manual' : 'pelo MIDI';
+}
+// MIDI, Demo, teclas e teste manual → motor FM → a cena aberta recebe o papel da MÁQUINA da pista,
+// a força (0–1) e o contexto (knobs da pista com LFO, réplica de delay/reverb, duração da nota)
+if (FM) FM.onHit((ctx) => {
+  const V = current;
+  if (!V) return;
+  if (FM.bpm() && V.setBpm) V.setBpm(FM.bpm());
+  V.hit(ctx.role, ctx.v, ctx);
+  if (!ctx.replica) flash(ctx.role, ctx.src);
+});
+// troca de pattern (program change, se o Cycles mandar): a cena reorganiza a composição (sem reiniciar)
+if (FM) FM.onMeta((m) => { if (m.kind === 'program' && current && current.pattern) current.pattern(m.program); });
+// ouvido de áudio e música analisada (sem pista): o papel vem do som, os knobs da pista daquela máquina
 window.addEventListener('cycles:hit', (e) => {
   const V = current;
   if (!V) return;
   if (e.detail.bpm && V.setBpm) V.setBpm(e.detail.bpm); // movimento no andamento do Cycles
-  V.hit(e.detail.type, e.detail.amount);                 // força MIDI normalizada (0–1)
-  // luzes: o que chegou e de onde (MIDI = exato; ÁUDIO = análise do som)
-  const L = lights[e.detail.type];
-  if (L) { L.classList.add('on'); clearTimeout(L._t); L._t = setTimeout(() => L.classList.remove('on'), 90); }
-  src.textContent = e.detail.source === 'audio' ? (e.detail.grid ? 'áudio + clock' : 'pelo áudio') : e.detail.source === 'musica' ? 'pela música' : e.detail.source === 'pad' ? 'teclas' : 'pelo MIDI';
+  const ctx = FM ? FM.contextForRole(e.detail.type, e.detail.amount, e.detail.source) : undefined;
+  V.hit(e.detail.type, e.detail.amount, ctx);             // força normalizada (0–1)
+  flash(e.detail.type, e.detail.source, e.detail.grid);
 });
 
 // ---------- luzes: de onde vem cada papel ----------
 // "T3 MIDI" = a trilha 3 está mandando notas: o papel segue o MIDI dela (exato).
 // "T3 · áudio" = essa trilha não manda notas: o papel vem do ouvido próprio.
 // Clique na luz pra trocar a trilha daquele papel.
-const NAMES = { kick: 'Kick', bass: 'Baixo', hat: 'Hi-hat', snare: 'Caixa', chord: 'Chord' };
+const NAMES = { kick: 'Kick', bass: 'Baixo', hat: 'Hi-hat', snare: 'Caixa', chord: 'Chord', perc: 'Perc' };
 Object.keys(lights).forEach((k) => {
   const L = lights[k];
   L.innerHTML = `${NAMES[k] || k}<small></small>`;
@@ -63,7 +79,8 @@ Object.keys(lights).forEach((k) => {
 function refreshLights() {
   const api = window.CyclesP2;
   if (!api) return;
-  const roles = api.roles(), live = api.live(), ouvido = api.audioOn(), auto = api.auto ? api.auto() : {};
+  const roles = { ...api.roles() }, live = api.live(), ouvido = api.audioOn(), auto = api.auto ? api.auto() : {};
+  if (FM) roles.perc = FM.trackOfRole('perc'); // PERC não é papel do ⚙: é a pista com a máquina PERC
   Object.keys(lights).forEach((k) => {
     const tr = roles[k], sm = lights[k].querySelector('small');
     const midi = tr >= 0 && live[tr];
@@ -122,6 +139,7 @@ function setProject(n, save = true) {
     document.body.classList.add('proj-2'); // rodapé dos projetos (luzes, reiniciar)
     document.body.dataset.scene = String(n);
     current = SCENES[n].make(document.getElementById(SCENES[n].canvas));
+    if (FM) FM.setScene(n);
   }
   applyControls(n);
   tabs.forEach((b) => {

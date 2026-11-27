@@ -1,40 +1,46 @@
-/* Projeto 2 — ESCADA SEM FIM (Endless Climb)
+/* Projeto 2 — ESCADA SEM FIM (Endless Climb) · FM Engine 2.0
 
-   Cada som tem um papel só, sempre o mesmo, e tudo acontece NO TEMPO da música:
-   - KICK    faz a pessoa ANDAR: cada kick é UM passo dado NA HORA do kick, sempre do
-             mesmo tamanho (um degrau): 4 kicks no compasso = 4 passos iguais, no 4/4.
-             Com escada à frente, cada kick sobe um degrau. Força = o quanto o corpo balança.
-   - BASS    faz a ESCADA SUBIR: cada nota levanta um degrau novo à frente da pessoa.
-             Força = altura do degrau. Sem baixo, o caminho segue plano.
-   - HI-HAT  faz CHOVER (só isso): cada hi-hat é uma pancada de chuva que some antes do
-             próximo. Força = quantidade e tamanho das gotas.
-   - SNARE   faz a pessoa CRESCER na hora da batida e voltar ao tamanho normal até a
-             próxima. Força = quanto ela cresce.
-   - CHORD   muda a COR DO FUNDO na hora do acorde. Força = quão clara é a cor.
-
-   Uso:
-     const visual = createEndlessClimb(canvas);
-     visual.hit('kick' | 'bass' | 'hat' | 'snare' | 'chord', força 0–1);   // força opcional (1)
-     visual.setBpm(120);   // opcional: andamento vindo do clock MIDI
-     visual.reset();       // começa de novo                                          */
+   A pessoa sobe escadas tridimensionais, um degrau por kick, no 4/4. Cada MÁQUINA do
+   Model:Cycles faz uma coisa, e os knobs DAQUELA pista esculpem aquela coisa:
+   - KICK   a pessoa anda: um passo igual por kick (pés no meio dos degraus).
+            COLOR marcas do impacto · SHAPE compressão/torção/fratura/implosão do corpo no passo ·
+            SWEEP expansão do salto e deslocamento · CONTOUR articulação, elasticidade, impacto
+   - TONE   a escada sobe (um degrau por nota). COLOR identidade arquitetônica e cromática ·
+            SHAPE geometria/inclinação/configuração · SWEEP perspectiva 3D e trajetória ·
+            CONTOUR elasticidade da subida · DISTORTION deformação e RUPTURA (penhascos) ·
+            DECAY tempo de existência dos degraus (quando acaba, o degrau desaba)
+   - SNARE  a pessoa cresce. COLOR eixo/simetria · SHAPE rachaduras e fragmentos · SWEEP direção
+            da explosão · CONTOUR intensidade e duração da ruptura
+   - METAL  chuva. COLOR agulhas/pontos/esferas/discos/cristais · SHAPE angularidade ·
+            SWEEP chuva/órbita/vórtice/fuga em perspectiva · CONTOUR vibração e dispersão
+   - CHORD  o fundo muda. COLOR organização (campo/duas faixas/listras/grade/círculos) ·
+            SHAPE quantos campos · SWEEP giro e ondulação · CONTOUR articulação da troca
+   - PERC   figuras (geometria, objetos, símbolos, animais, pessoas) andam/correm/pulam/voam.
+   QUEDA: degrau que falta (ruptura ou decay) é penhasco — a pessoa cai; na queda, o TONE abre o
+   paraquedas (e empurra pra frente) e o KICK cria uma plataforma embaixo; ela pousa, se
+   recupera e segue. Delay = marcas e degraus-eco em sequência; reverb = réplicas ao fundo.
+   API: hit(tipo, força, ctx?) · setBpm · reset · destroy · state                           */
 
 export function createEndlessClimb(canvas) {
   const ctx = canvas.getContext("2d");
   const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
   const lerp = (a, b, k) => a + (b - a) * k;
-  const easeOut = (s) => 1 - Math.pow(1 - s, 3); // quase todo o movimento logo no começo: o passo "bate" com o kick
+  const easeOut = (s) => 1 - Math.pow(1 - s, 3);
   const now = () => performance.now() / 1000;
+  const FM = () => window.CyclesFM;
+  const Fig = () => window.CyclesFigures;
+  const P = (role) => (FM() ? FM().role(role) : NEU);
+  const NEU = { color: 0, shape: 0, sweep: 0, contour: 0, decay: 0.5, pitch: 0, pan: 0, level: 0.8, dist: 0, punch: 0, gate: 0, vis: {} };
+  const A = (v, st) => (FM() ? FM().anchors(v, st) : st[0]);
 
   // ---------- tela ----------
-  let W = 1, H = 1, DPR = 1, U = 40; // U = 1 unidade do mundo em pixels (a pessoa tem ~1 unidade)
+  let W = 1, H = 1, DPR = 1, U = 40;
   function resize() {
     const r = canvas.getBoundingClientRect();
-    W = Math.max(1, r.width);
-    H = Math.max(1, r.height);
+    W = Math.max(1, r.width); H = Math.max(1, r.height);
     DPR = Math.min(2, window.devicePixelRatio || 1);
-    canvas.width = Math.round(W * DPR);
-    canvas.height = Math.round(H * DPR);
-    U = Math.max(10, Math.min(W, H) / 7); // a pessoa tem ~1/7 da altura da tela
+    canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
+    U = Math.max(10, Math.min(W, H) / 7);
   }
   const ro = window.ResizeObserver ? new ResizeObserver(resize) : null;
   if (ro) ro.observe(canvas);
@@ -42,15 +48,11 @@ export function createEndlessClimb(canvas) {
   resize();
 
   // ---------- andamento ----------
-  // andamento: vem do clock MIDI, ou é medido nos próprios kicks (só limita a duração do passo)
   const kickTimes = [], hatTimes = [], snareTimes = [];
   let bpm = null, bpmT = -9;
   function median(times, lo, hi, def) {
     const iv = [];
-    for (let i = 1; i < times.length; i++) {
-      const d = times[i] - times[i - 1];
-      if (d >= lo && d <= hi) iv.push(d);
-    }
+    for (let i = 1; i < times.length; i++) { const d = times[i] - times[i - 1]; if (d >= lo && d <= hi) iv.push(d); }
     if (!iv.length) return def;
     iv.sort((a, b) => a - b);
     return iv[iv.length >> 1];
@@ -59,241 +61,315 @@ export function createEndlessClimb(canvas) {
   const beatP = () => (bpm && now() - bpmT < 4 ? 60 / bpm : median(kickTimes, 0.18, 1.6, 0.5));
   const hatP = () => median(hatTimes, 0.05, 1.0, 0.25);
 
-  // ---------- estado ----------
-  // medidas em "alturas de pessoa": a pessoa tem 1; o quadril fica em 0,5; cada perna 0,6
-  // tudo numa grade: cada degrau tem a largura de UM passo, e cada pé pisa no meio de um degrau
-  const STEP_W = 0.6;               // largura de cada degrau = tamanho de cada passo (sempre igual)
-  const LEG = 0.3;                  // coxa = canela
-  const CAM_DX = 1.6, CAM_DY = 1.3; // a pessoa fica à esquerda e abaixo do centro
-  let steps, hero, drops, bg, cam;
-
+  // ---------- mundo: colunas da escada (uma coluna = um degrau = um passo) ----------
+  const SW = 0.6, LEG = 0.3, CAM_DX = 1.6, CAM_DY = 1.3;
+  let cols, hero, drops, marks, bg, cam, shards, echoes, figs, counts;
+  // a coluna c: a construída, ou (se não há) o chão plano que continua o último degrau à esquerda
+  // (virtual: acompanha sempre a altura atual daquele degrau, nunca fica pra trás)
+  const VIRT = { y: 0, born: -99, rise: 0, dur: 0.1, v: 0, life: Infinity, gone: false, goneT: -9, crack: 0, tilt: 0, style: 0, slab: false, fragile: false, virtual: true };
+  function col(c) {
+    const k = cols.get(c);
+    if (k) return k;
+    for (let j = c - 1; j > c - 200; j--) { const q = cols.get(j); if (q) { VIRT.y = q.y; VIRT.style = q.style; return VIRT; } }
+    VIRT.y = 0; VIRT.style = 0; return VIRT;
+  }
+  const solid = (c) => { const k = cols.get(c); return !k || !k.gone; };
   function reset() {
     const t = now();
-    steps = [{ x: -8, y: 0, w: 8 + STEP_W / 2, rise: 0, born: t - 9, v: 0, dur: 0.1, floor: true }];
-    // a pessoa fica com um pé no degrau "col" (o da frente) e outro no anterior; o corpo entre os dois
-    hero = { col: 0, x: -STEP_W / 2, y: 0, feet: [[-STEP_W, 0], [0, 0]], swing: 0, stride: null, footT: -9, footV: 0, growT: -9, growV: 0, growFrom: 1 };
-    drops = [];
-    bg = { from: [0, 0, 0], to: [0, 0, 0], t0: -9, hue: Math.random() * 360 };
-    cam = { x: hero.x + CAM_DX, y: hero.y + CAM_DY };
-    kickTimes.length = 0;
-    hatTimes.length = 0;
-    snareTimes.length = 0;
+    cols = new Map();
+    for (let c = -14; c <= 0; c++) cols.set(c, { y: 0, born: t - 9, rise: 0, dur: 0.1, v: 0, life: Infinity, gone: false, goneT: -9, crack: 0, tilt: 0, style: 0, slab: false, fragile: false });
+    hero = { col: 0, x: -SW / 2, y: 0, feet: [[-SW, 0], [0, 0]], swing: 0, stride: null, footT: -9, footV: 0, footShape: 0, growT: -9, growV: 0, growFrom: 1, growAxis: 0, growCrack: 0,
+      state: "walk", vx: 0, vy: 0, chute: false, chuteT: -9, chuteFold: -9, landT: -9, fallT: -9, twist: 0 };
+    drops = []; marks = []; shards = []; echoes = [];
+    bg = { from: [0, 0, 0], to: [0, 0, 0], t0: -9, dur: 0.02, hue: Math.random() * 360, mode: 0, fields: 1, rot: 0, alt: [0, 0, 0], spin: 0 };
+    cam = { x: hero.x + CAM_DX, y: hero.y + CAM_DY, tilt: 0 };
+    kickTimes.length = 0; hatTimes.length = 0; snareTimes.length = 0;
+    figs = Fig() ? Fig().swarm({ max: 28, size: 0.28 }) : null;
+    counts = { kicks: 0, built: 0, falls: 0, chutes: 0, rescues: 0, crumbles: 0, ruptures: 0, grows: 0, rains: 0, chords: 0, percs: 0, echoes: 0 };
   }
   reset();
 
-  // chão em cada ponto: o degrau mais à direita que já começou ali (altura final)
-  function groundY(x) {
-    for (let i = steps.length - 1; i >= 0; i--) if (steps[i].x <= x + 1e-9) return steps[i].y;
-    return steps[0].y;
-  }
+  // altura do degrau sob um ponto (a inclinação da DISTORTION entra aqui: o pé acompanha)
+  function treadY(x) { const c = Math.round(x / SW), k = cols.get(c); if (!k) return col(c).y; return k.y + Math.tan(k.tilt) * (x - c * SW); }
 
   // ---------- KICK: um passo ----------
   function finishStride() {
     const s = hero.stride;
     if (!s) return;
     hero.col = s.col;
-    hero.feet[hero.swing] = [s.f1[0], groundY(s.f1[0])];
+    hero.feet[hero.swing] = [s.f1[0], treadY(s.f1[0])];
     hero.x = s.x1; hero.y = (hero.feet[0][1] + hero.feet[1][1]) / 2;
     hero.swing ^= 1;
     hero.stride = null;
+    // pisou num degrau frágil (ruptura): ele desaba debaixo do pé
+    const k = cols.get(hero.col);
+    if (k && k.fragile && !k.gone) { k.gone = true; k.goneT = now(); counts.ruptures++; }
+    if (k && k.gone) startFall(0.6);
   }
-
-  function walk(v) {
+  function walk(v, c) {
     const t = now();
     tap(kickTimes, t);
-    finishStride(); // se o passo anterior ainda não terminou, termina agora
-    hero.footT = t; hero.footV = v;
-    // UM passo, sempre do mesmo tamanho: o pé de trás vai pro meio do próximo degrau (no plano
-    // ou subindo) e o corpo avança um degrau. A força só muda o quanto o corpo balança.
-    const col = hero.col + 1, fx = col * STEP_W, fy = groundY(fx);
-    const other = hero.feet[hero.swing ^ 1];
-    hero.stride = {
-      col, x0: hero.x, y0: hero.y, x1: hero.x + STEP_W, y1: (other[1] + fy) / 2, t0: t, len: STEP_W,
-      dur: clamp(beatP() * 0.35, 0.1, 0.2), // passo curto, colado no kick
-      f0: hero.feet[hero.swing], f1: [fx, fy],
-      lift: 0.03 + 0.06 * v,
-    };
-  }
-
-  // ---------- BASS: a escada sobe ----------
-  function raise(v) {
-    const t = now();
-    const last = steps[steps.length - 1];
-    // o degrau novo nasce À FRENTE da pessoa, na grade (nunca embaixo dos pés): no primeiro
-    // degrau depois do pé da frente (ou de onde ele está indo)
-    const front = hero.stride ? hero.stride.col : hero.col;
-    const lastCol = last.floor ? -999 : Math.round((last.x + STEP_W / 2) / STEP_W);
-    const col = Math.max(front + 1, lastCol + 1);
-    const rise = 0.1 + 0.35 * Math.pow(v, 1.1);           // força = altura do degrau
-    // a escada à frente nunca sai da tela: se já tem os degraus que cabem à frente da pessoa
-    // (o baixo tocando mais que o kick), o baixo levanta o ÚLTIMO degrau ali mesmo, na tela
-    const fit = clamp(Math.floor((W / 2 / U + CAM_DX - 0.6) / STEP_W), 3, 10);
-    if (col - front > fit && !last.floor) {
-      const top = hero.y + (H / 2 / U + CAM_DY) * 0.85;       // e nem por cima da tela
-      const y = Math.min(last.y + rise, Math.max(top, last.y));
-      const r = Math.max(0.06, y - last.y);                   // no teto: o degrau dá um pulo no lugar
-      last.y = y; last.rise = r; last.born = t; last.v = v; last.dur = 0.06;
+    if (hero.state === "fall") { rescue(v); return; } // caindo: o kick constrói uma plataforma embaixo
+    finishStride();
+    if (hero.state === "fall") return;
+    hero.footT = t; hero.footV = v; hero.footShape = c.shape; hero.twist = (Math.random() < 0.5 ? -1 : 1) * c.shape;
+    const next = hero.col + 1;
+    if (!solid(next)) { // penhasco à frente: o passo vai pro vazio
+      hero.stride = null; hero.x += SW * 0.6; startFall(0.9 + v); counts.kicks++;
       return;
     }
-    const x = col * STEP_W - STEP_W / 2;
-    if (last.x + last.w < x) last.w = x - last.x; // o plano se estende até ali
-    steps.push({ x, y: last.y + rise, w: STEP_W, rise, born: t, v, dur: 0.06 }); // sobe na hora da nota
-    // esquece o que ficou muito pra trás
-    let behind = 0;
-    while (behind < steps.length - 1 && steps[behind + 1].x < hero.x - 40) behind++;
-    if (behind > 0) steps.splice(0, behind);
+    const fx = next * SW, fy = treadY(fx);
+    const other = hero.feet[hero.swing ^ 1];
+    // SWEEP (kick): expansão — o salto fica mais alto e mais longo no ar
+    const lift = (0.03 + 0.06 * v) * (1 + c.sweep * 3) * (1 + c.contour * 0.6);
+    hero.stride = { col: next, x0: hero.x, y0: hero.y, x1: hero.x + SW, y1: (other[1] + fy) / 2, t0: t, len: SW,
+      dur: clamp(beatP() * (0.35 + c.sweep * 0.15), 0.1, 0.26), f0: hero.feet[hero.swing], f1: [fx, fy], lift };
+    // COLOR (kick): marca geométrica do impacto no degrau (nada no estado original)
+    if (c.color > 0.08) marks.push({ x: fx, y: fy, born: t, v, kind: FM() ? FM().step5(c.color) : 0, life: 0.5 + c.decay * 1.2 });
+    if (marks.length > 60) marks.shift();
+    counts.kicks++;
+  }
+  function startFall(push) {
+    if (hero.state === "fall") return;
+    hero.state = "fall"; hero.stride = null; hero.vx = 1.2 + push; hero.vy = 1.6; hero.chute = false; hero.fallT = now(); hero.rescued = false; counts.falls++;
+  }
+  function rescue(v) { // plataforma de resgate embaixo, um pouco à frente; a escada segue dali
+    const t = now();
+    if (hero.rescued) return; // uma plataforma por queda (senão ela fugiria pra baixo a cada kick)
+    hero.rescued = true; hero.fallT = t;
+    const c = Math.round((hero.x + hero.vx * 0.25) / SW), y = hero.y - 1.2 - v * 0.4;
+    for (let k = c - 1; k <= c + 1; k++) cols.set(k, { y, born: t, rise: 0.4, dur: 0.12, v, life: Infinity, gone: false, goneT: -9, crack: 0, tilt: 0, style: col(c - 2).style, slab: false, fragile: false });
+    for (const [k] of cols) if (k > c + 1) cols.delete(k); // o que estava lá em cima à frente fica pra trás
+    counts.rescues++;
+  }
+  function land(c, t) {
+    hero.state = "recover"; hero.landT = t; hero.col = c; hero.x = c * SW - SW / 2; hero.y = col(c).y;
+    hero.feet = [[(c - 1) * SW, col(c).y], [c * SW, col(c).y]]; if (!solid(c - 1)) hero.feet[0] = [c * SW - 0.15, col(c).y];
+    hero.vx = hero.vy = 0;
+    if (hero.chute) { hero.chute = false; hero.chuteFold = t; }
   }
 
-  // ---------- HI-HAT: chuva ----------
-  function rain(v) {
+  // ---------- TONE: a escada sobe ----------
+  function raise(v, c) {
+    const t = now();
+    if (hero.state === "fall") { // na queda, o tom abre o paraquedas (e depois empurra pra frente)
+      if (!hero.chute) { hero.chute = true; hero.chuteT = t; counts.chutes++; } else hero.vx = Math.min(hero.vx + 0.4 + 1.2 * v, 4);
+      return;
+    }
+    let lastC = hero.col; for (const [k, s] of cols) if (k > lastC && s.born > 0) lastC = Math.max(lastC, k);
+    const front = hero.stride ? hero.stride.col : hero.col;
+    let cc = Math.max(front + 1, lastC + 1);
+    const fit = clamp(Math.floor((W / 2 / U + CAM_DX - 0.6) / SW), 3, 10);
+    // SHAPE (tone): geometria — regular → alto → alternado → zigue-zague → lajes soltas
+    const shp = c.shape, step = FM() ? FM().step5(shp) : 0;
+    let rise = (0.1 + 0.35 * Math.pow(v, 1.1)) * A(shp, [1, 1.55, 1.2, 1, 1.25]) * (1 + c.pitch * 0.5);
+    if (step === 2 && cc % 2) rise *= 0.35;               // alternado: um alto, um baixo
+    if (step === 3 && Math.random() < 0.4) rise = -rise * 0.7; // zigue-zague: às vezes desce
+    const prev = col(cc - 1);
+    if (cc - front > fit) { // já tem degraus demais à frente: levanta o último (nunca sai da tela)
+      cc = lastC; const k = col(cc), top = hero.y + (H / 2 / U + CAM_DY) * 0.85;
+      k.y = Math.min(k.y + Math.abs(rise), Math.max(top, k.y)); k.rise = Math.max(0.06, Math.abs(rise)); k.born = t; k.v = v; k.dur = 0.06 + c.contour * 0.25;
+      return;
+    }
+    // DECAY (tone): quanto tempo o degrau existe (curto → desaba logo: penhascos)
+    const life = A(c.decay, [2.5, 6, 20, 60, Infinity]);
+    // DISTORTION (tone): degrau torto, rachado e, forte, frágil (desaba quando pisa)
+    const dist = c.dist;
+    const k = { y: prev.y + rise, born: t, rise, dur: 0.06 + c.contour * 0.3, v, life, gone: false, goneT: -9,
+      crack: dist, tilt: dist > 0.05 ? (Math.random() - 0.5) * dist * 0.5 : 0, style: FM() ? FM().step5(c.color) : 0,
+      slab: step === 4, fragile: dist > 0.55 && Math.random() < (dist - 0.5) * 0.9 };
+    cols.set(cc, k);
+    // esquece o que ficou muito pra trás
+    for (const [kk] of cols) if (kk < hero.col - 40) cols.delete(kk);
+    counts.built++;
+  }
+
+  // ---------- METAL: chuva ----------
+  function rain(v, c) {
     const t = now();
     tap(hatTimes, t);
-    // a pancada some antes do próximo hi-hat: dá pra ver o ritmo na chuva
-    // toda nota chove (até a mais fraca); a força muda quantidade, tamanho e brilho
-    const life = Math.max(0.07, Math.min(0.1 + 0.3 * v, hatP() * 0.9));
-    const n = Math.round(12 + 70 * Math.pow(v, 0.8)); // força = quantidade…
+    const life = Math.max(0.07, Math.min(0.1 + 0.3 * v, hatP() * 0.9)) * (1 + c.decay * 0.8);
+    const n = Math.round((12 + 70 * Math.pow(v, 0.8)) * (0.4 + c.level * 0.7));
+    const kind = FM() ? FM().step5(c.color) : 0;           // agulha, ponto, esfera, disco, cristal
+    const mode = FM() ? FM().step5(c.sweep) : 0;           // chuva, órbita, vórtice, fuga, chafariz
     for (let k = 0; k < n; k++) {
-      drops.push({
-        x: Math.random() * W, y: Math.random() * H,
-        len: U * (0.16 + 0.5 * v) * (0.6 + 0.8 * Math.random()), // …e tamanho das gotas
-        sp: H * (0.9 + 0.8 * v), born: t, life,
-        a: 0.5 + 0.5 * v, w: 1 + 1.4 * v,
-      });
+      drops.push({ x: Math.random() * W, y: Math.random() * H, a0: Math.random() * 6.28, r0: 0.4 + Math.random() * 3,
+        len: U * (0.16 + 0.5 * v) * (0.6 + 0.8 * Math.random()), sp: H * (0.9 + 0.8 * v), born: t, life,
+        w: 1 + 1.4 * v, kind, mode, ang: c.shape, jit: c.contour, pan: c.pan });
     }
     if (drops.length > 2000) drops.splice(0, drops.length - 2000);
+    counts.rains++;
   }
 
   // ---------- SNARE: a pessoa cresce ----------
-  // cresce de uma vez na batida (~25 ms) e volta ao normal antes da próxima caixa
   const snareP = () => median(snareTimes, 0.12, 3, beatP() * 2);
   function growNow(t) {
     const a = t - hero.growT;
     if (a < 0 || hero.growV <= 0) return 1;
-    const top = 1 + Math.pow(hero.growV, 1.2); // força = quanto cresce: nota fantasma ~10–15%, caixa cheia ~2×
-    const up = 0.025, back = clamp(snareP() * 0.7, 0.16, 0.6);
+    const top = 1 + Math.pow(hero.growV, 1.2);
+    const up = 0.025, back = clamp(snareP() * 0.7, 0.16, 0.6) * (0.6 + hero.growHold);
     if (a < up) return lerp(hero.growFrom, top, easeOut(a / up));
     const k = clamp((a - up) / back, 0, 1);
     return lerp(top, 1, 1 - Math.pow(1 - k, 2));
   }
-  function grow(v) {
+  function grow(v, c) {
     const t = now();
     tap(snareTimes, t);
-    hero.growFrom = growNow(t); // caixa em cima de caixa: cresce a partir de onde está
+    hero.growFrom = growNow(t);
     hero.growT = t; hero.growV = Math.max(0.05, v);
+    hero.growAxis = FM() ? FM().step5(c.color) : 0;   // por igual, vertical, horizontal, assimétrico, espelhado
+    hero.growCrack = c.shape;                          // rachaduras e fragmentos
+    hero.growHold = c.contour + (c.gate ? 1 : 0);      // ruptura mais longa (e GATE sustenta)
+    // SWEEP (snare): estilhaços na direção da explosão (cima → frente → trás → todas)
+    if (c.shape > 0.25 || c.sweep > 0.1) {
+      const n = 4 + Math.round(10 * c.shape * v), dir = FM() ? FM().step5(c.sweep) : 0;
+      for (let i = 0; i < n; i++) {
+        const a = dir === 0 ? Math.PI / 2 + (Math.random() - 0.5) : dir === 1 ? (Math.random() - 0.5) * 0.8 : dir === 2 ? Math.PI + (Math.random() - 0.5) * 0.8 : Math.random() * 6.28;
+        const sp = 2 + 4 * v * (0.5 + Math.random());
+        shards.push({ x: hero.x, y: hero.y + 0.6, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, born: t, life: 0.5 + c.contour * 0.8, s: 0.05 + Math.random() * 0.08 });
+      }
+      if (shards.length > 300) shards.splice(0, shards.length - 300);
+    }
+    counts.grows++;
   }
 
-  // ---------- CHORD: cor do fundo ----------
-  function hsl(h, s, l) {
-    const f = (n) => {
-      const k = (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
-      return 255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)));
-    };
-    return [f(0), f(8), f(4)];
-  }
-  function bgNow(t) {
-    const k = clamp((t - bg.t0) / 0.02, 0, 1); // troca na batida (instantâneo)
-    return bg.from.map((c, i) => lerp(c, bg.to[i], k));
-  }
-  function changeBg(v) {
+  // ---------- CHORD: o fundo ----------
+  function hsl(h, s, l) { const f = (n) => { const k = (n + h / 30) % 12, a = s * Math.min(l, 1 - l); return 255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))); }; return [f(0), f(8), f(4)]; }
+  function bgNow(t) { const k = clamp((t - bg.t0) / bg.dur, 0, 1); return bg.from.map((c, i) => lerp(c, bg.to[i], k)); }
+  function changeBg(v, c) {
     const t = now();
     bg.from = bgNow(t);
-    bg.hue = (bg.hue + 137.508) % 360; // cada acorde, uma cor bem diferente da anterior
-    bg.to = hsl(bg.hue, 0.65 + 0.25 * v, 0.2 + 0.2 * v); // sempre uma cor bem visível; força = quão clara
+    bg.hue = (bg.hue + 137.508) % 360;
+    bg.to = hsl(bg.hue, 0.65 + 0.25 * v, 0.2 + 0.2 * v);
+    bg.alt = hsl((bg.hue + 180) % 360, 0.6, 0.22 + 0.18 * v);
+    bg.dur = 0.02 + c.contour * 0.5;                    // CONTOUR: troca seca → troca articulada
     bg.t0 = t;
+    bg.mode = FM() ? FM().step5(c.color) : 0;           // campo, duas faixas, listras, grade, círculos
+    bg.fields = 1 + Math.round(c.shape * 6);            // SHAPE: quantos campos (configuração do acorde)
+    bg.spin = c.sweep;                                  // SWEEP: giro e ondulação
+    counts.chords++;
   }
 
-  function hit(type, amount = 1) {
+  // ---------- PERC: figuras ----------
+  function perc(v, c) {
+    if (!figs) return;
+    const t = now();
+    figs.spawn(c, { x: hero.x + (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 2), y: hero.y + 0.6, z: c.pan * 2, dir: 1 }, t);
+    counts.percs++;
+  }
+
+  // ---------- ecos (DELAY: em sequência à frente; REVERB: ao fundo) ----------
+  function echo(type, v, c) {
+    const t = now();
+    counts.echoes++;
+    if (type === "kick") marks.push({ x: (hero.col + c.replica) * SW, y: treadY((hero.col + c.replica) * SW), born: t, v: v * 0.8, kind: Math.max(1, FM() ? FM().step5(c.color) : 1), life: 0.5 });
+    else echoes.push({ type, x: hero.x + (c.echo === "reverb" ? 2 + c.replica : c.replica * SW * 1.5), y: hero.y + 0.8 + c.replica * 0.25, born: t, v, depth: c.depth, life: 0.6 + c.space * 1.2 });
+    if (echoes.length > 80) echoes.shift();
+    if (marks.length > 60) marks.shift();
+  }
+
+  function hit(type, amount = 1, c) {
     const v = clamp(Number.isFinite(+amount) ? +amount : 1, 0, 1);
-    if (type === "kick") walk(v);
-    else if (type === "bass") raise(v);
-    else if (type === "hat") rain(v);       // hi-hat: só chuva
-    else if (type === "snare") grow(v);     // caixa: a pessoa cresce
-    else if (type === "chord") changeBg(v); // acorde: cor do fundo
+    const cx = c || { ...(P(type) || NEU), v };
+    if (cx.replica) return echo(type, v, cx);
+    if (type === "kick") walk(v, cx);
+    else if (type === "bass") raise(v, cx);
+    else if (type === "hat") rain(v, cx);
+    else if (type === "snare") grow(v, cx);
+    else if (type === "chord") changeBg(v, cx);
+    else if (type === "perc") perc(v, cx);
   }
   function setBpm(b) { if (b > 30 && b < 300) { bpm = b; bpmT = now(); } }
 
   // ---------- movimento ----------
   function pose(t) {
-    // posição do corpo e dos pés agora
     const s = hero.stride;
+    if (hero.state === "fall") return { x: hero.x, y: hero.y, feet: [[hero.x - 0.12, hero.y - 0.05], [hero.x + 0.1, hero.y - 0.1]], swingX: null, air: true };
     if (!s) return { x: hero.x, y: hero.y, feet: hero.feet, swingX: null };
     const k = clamp((t - s.t0) / s.dur, 0, 1), e = easeOut(k);
-    const x = lerp(s.x0, s.x1, e);
-    const y = lerp(s.y0, s.y1, e) + s.lift * Math.sin(Math.PI * k);
-    // o pé que anda levanta (mais alto quando sobe degrau) e pousa à frente
+    const x = lerp(s.x0, s.x1, e), y = lerp(s.y0, s.y1, e) + s.lift * Math.sin(Math.PI * k);
     const fx = lerp(s.f0[0], s.f1[0], e);
     const fy = lerp(s.f0[1], s.f1[1], Math.min(1, e * 1.4)) + (0.06 + 0.12 * s.len + Math.max(0, s.f1[1] - s.f0[1]) * 0.6) * Math.sin(Math.PI * k);
-    const feet = [];
-    feet[hero.swing] = [fx, fy];
-    feet[hero.swing ^ 1] = hero.feet[hero.swing ^ 1];
+    const feet = []; feet[hero.swing] = [fx, fy]; feet[hero.swing ^ 1] = hero.feet[hero.swing ^ 1];
     return { x, y, feet, swingX: fx };
   }
-
   function update(dt, t) {
-    if (hero.stride && t - hero.stride.t0 >= hero.stride.dur) finishStride(); // sem kick novo: para
+    const PK = P("kick"), PT = P("bass"), vis = FM() ? FM().visAll() : {};
+    if (hero.stride && t - hero.stride.t0 >= hero.stride.dur) finishStride();
+    // degraus que acabaram o tempo (DECAY) ou romperam: desabam (os da frente viram penhasco)
+    for (const [kk, s] of cols) {
+      if (!s.gone && s.life !== Infinity && t - s.born > s.life && kk !== hero.col) { s.gone = true; s.goneT = t; counts.crumbles++; }
+    }
+    if (hero.state === "walk" && !hero.stride && !solid(hero.col)) startFall(0.4);
+    if (hero.state === "fall") {
+      const py = hero.y;
+      if (hero.chute) { hero.vy += (-1.1 - hero.vy) * (1 - Math.exp(-dt * 5)); hero.vx += (0.5 - hero.vx) * (1 - Math.exp(-dt * 0.8)); }
+      else { hero.vy = Math.max(hero.vy - 20 * (1 + (vis.gravity || 0) * 0.6) * dt, -16); hero.vx *= Math.exp(-dt * 0.3); }
+      hero.x += hero.vx * dt; hero.y += hero.vy * dt;
+      if (hero.vy < 0) { const c = Math.round(hero.x / SW), k = col(c); if (!k.gone && py >= k.y - 0.02 && hero.y <= k.y) land(c, t); }
+      if (hero.state === "fall" && t - hero.fallT > 1.8) { hero.rescued = false; rescue(0.5); } // recuperação: sempre aparece onde pousar
+    } else if (hero.state === "recover" && t - hero.landT > 0.3) hero.state = "walk";
     const p = pose(t);
-    const k = 1 - Math.exp(-dt * 4.5); // a pessoa pula pra frente no kick e a câmera vem atrás (dá pra ver cada passo)
+    const k = 1 - Math.exp(-dt * (hero.state === "fall" ? 4 : 4.5));
     cam.x += (p.x + CAM_DX - cam.x) * k;
     cam.y += (p.y + CAM_DY - cam.y) * k;
+    // SWEEP (tone): a câmera inclina e a escada ganha profundidade (perspectiva 3D)
+    cam.tilt += ((PT.sweep * 0.12 + (vis.rot || 0) * 0.15) - cam.tilt) * (1 - Math.exp(-dt * 3));
     if (drops.length && t - drops[0].born > drops[0].life) drops = drops.filter((d) => t - d.born <= d.life);
+    if (shards.length) { for (const s of shards) { s.vy -= 9 * dt; s.x += s.vx * dt; s.y += s.vy * dt; } shards = shards.filter((s) => t - s.born < s.life); }
+    if (figs) figs.update(dt, t, (x) => treadY(x), P("perc")); // as figuras andam em cima dos degraus
+    marks = marks.filter((m) => t - m.born < m.life);
+    echoes = echoes.filter((e) => t - e.born < e.life);
     return p;
   }
 
   // ---------- desenho ----------
   const sx = (x) => W / 2 + (x - cam.x) * U;
   const sy = (y) => H / 2 - (y - cam.y) * U;
-  const stepY = (s, t) => {
-    if (s.floor) return s.y;
-    const k = clamp((t - s.born) / s.dur, 0, 1);
-    const e = 1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2); // sobe com um pequeno exagero
-    return s.y - s.rise + s.rise * e;
-  };
-
-  function drawSteps(t) {
+  const colY = (k, t) => { const a = clamp((t - k.born) / k.dur, 0, 1), e = 1 + 2.2 * Math.pow(a - 1, 3) + 1.2 * Math.pow(a - 1, 2); return k.y - k.rise + k.rise * e; };
+  // identidades da escada (COLOR do TONE): 0 linhas brancas (original) · 1 papel e tinta · 2 blocos
+  // coloridos · 3 blocos pretos com bordas de cor · 4 Mondrian
+  const BAU = ["#d3262c", "#1d4f9e", "#f1b70e", "#151515", "#ede6d6"];
+  function drawSteps(t, PT, vis) {
     const lw = Math.max(1.5, U * 0.035);
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    for (let i = 0; i < steps.length; i++) {
-      const s = steps[i], prev = steps[i - 1], lastOne = i === steps.length - 1;
-      const x0 = i === 0 ? Math.min(sx(s.x), -10) : sx(s.x);
-      const x1 = lastOne ? Math.max(sx(s.x + s.w), W + 10) : sx(s.x + s.w); // o último segue plano até a borda
-      const y = sy(stepY(s, t));
-      if (x1 < -40 || x0 > W + 40) continue;
-      ctx.fillStyle = "rgba(255,255,255,0.07)";
-      ctx.fillRect(x0, y, x1 - x0, Math.max(0, H - y));
-      ctx.strokeStyle = "rgba(255,255,255,0.92)";
-      ctx.lineWidth = lw;
-      ctx.beginPath();
-      if (prev) { ctx.moveTo(x0, sy(stepY(prev, t))); ctx.lineTo(x0, y); } else ctx.moveTo(x0, y);
-      ctx.lineTo(x1, y);
-      ctx.stroke();
-      // marcas fixas no chão (duas por passo): no plano, mostram cada passo andando
-      const wa = (x0 - W / 2) / U + cam.x, wb = (x1 - W / 2) / U + cam.x;
-      ctx.strokeStyle = "rgba(255,255,255,0.3)";
-      ctx.lineWidth = Math.max(1, lw * 0.6);
-      ctx.beginPath();
-      for (let gx = Math.ceil(wa / (STEP_W / 2)) * (STEP_W / 2); gx < wb; gx += STEP_W / 2) {
-        const px = sx(gx);
-        if (px < -5 || px > W + 5) continue;
-        ctx.moveTo(px, y + lw); ctx.lineTo(px, y + lw + U * 0.07);
+    const depth = (PT.sweep * 0.55 + (vis.persp || 0) * 0.3) * U;   // profundidade 3D da escada
+    const c0 = Math.floor((cam.x - W / 2 / U) / SW) - 2, c1 = Math.ceil((cam.x + W / 2 / U) / SW) + 2;
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    let prevY = null, prevGone = false;
+    for (let c = c0; c <= c1; c++) {
+      const k = cols.get(c) || { ...col(c) }, x0 = sx(c * SW - SW / 2), x1 = sx(c * SW + SW / 2);
+      const fallK = k.gone ? clamp((t - k.goneT) / 0.6, 0, 1) : 0;
+      const yy = colY(k, t) - fallK * fallK * 6;                    // desaba caindo
+      const y = sy(yy), st = k.style | 0;
+      if (k.gone && fallK >= 1) { prevY = null; prevGone = true; continue; }
+      const tl = Math.tan(k.tilt) * SW * U * 0.5;
+      // corpo (massa embaixo do degrau) e face de profundidade
+      if (!k.slab) {
+        ctx.fillStyle = st === 0 ? "rgba(255,255,255,0.07)" : st === 1 ? "#ede6d6" : st === 2 ? BAU[((c % 3) + 3) % 3] : st === 3 ? "#151515" : BAU[((c * 7) % 4 + 4) % 4];
+        ctx.beginPath(); ctx.moveTo(x0, y + tl); ctx.lineTo(x1, y - tl); ctx.lineTo(x1, H + 10); ctx.lineTo(x0, H + 10); ctx.closePath(); ctx.fill();
+      } else { ctx.fillStyle = st === 0 ? "rgba(255,255,255,0.9)" : BAU[((c % 4) + 4) % 4]; ctx.fillRect(x0, y - tl - lw, x1 - x0, U * 0.18); }
+      if (depth > 1) { // tampa do degrau em perspectiva (escada tridimensional)
+        ctx.fillStyle = st === 0 ? "rgba(255,255,255,0.16)" : st === 3 ? BAU[((c % 3) + 3) % 3] : "#bfb8a8";
+        ctx.beginPath(); ctx.moveTo(x0, y + tl); ctx.lineTo(x1, y - tl); ctx.lineTo(x1 + depth * 0.7, y - tl - depth * 0.5); ctx.lineTo(x0 + depth * 0.7, y + tl - depth * 0.5); ctx.closePath(); ctx.fill();
       }
-      ctx.stroke();
-      // brilho do degrau que acabou de subir (proporcional à força do baixo)
-      const age = t - s.born;
-      if (!s.floor && age < 0.3) {
-        const k = 1 - age / 0.3;
-        ctx.strokeStyle = `rgba(255,255,255,${(0.35 * k).toFixed(3)})`;
-        ctx.lineWidth = lw * (1 + 4 * s.v * k);
-        ctx.beginPath();
-        ctx.moveTo(x0, sy(stepY(prev, t)));
-        ctx.lineTo(x0, y);
-        ctx.lineTo(Math.min(x1, sx(s.x + s.w)), y);
+      ctx.strokeStyle = st === 0 ? "rgba(255,255,255,0.92)" : st === 1 || st === 4 ? "#151515" : st === 3 ? BAU[((c % 3) + 3) % 3] : "#151515";
+      ctx.lineWidth = lw * (st === 4 ? 1.6 : 1);
+      ctx.beginPath();
+      if (prevY != null && !prevGone && !k.slab) { ctx.moveTo(x0, prevY); ctx.lineTo(x0, y + tl); } else ctx.moveTo(x0, y + tl);
+      ctx.lineTo(x1, y - tl); ctx.stroke();
+      // rachaduras (DISTORTION): zigue-zague preto no degrau
+      if (k.crack > 0.12) {
+        ctx.strokeStyle = st === 3 ? "#ede6d6" : "#151515"; ctx.lineWidth = Math.max(1, lw * 0.6);
+        ctx.beginPath(); let xx = x0 + (x1 - x0) * 0.3, yy2 = y + 2; ctx.moveTo(xx, yy2);
+        for (let i = 0; i < 3 + Math.round(k.crack * 4); i++) { xx += (x1 - x0) * 0.1; yy2 += (i % 2 ? -1 : 1) * U * 0.06 * k.crack + U * 0.03; ctx.lineTo(xx, yy2); }
         ctx.stroke();
       }
+      // brilho do degrau novo (proporcional à força)
+      const age = t - k.born;
+      if (age < 0.3 && age >= 0 && !k.gone) { const q = 1 - age / 0.3; ctx.strokeStyle = st === 0 ? `rgba(255,255,255,${(0.35 * q).toFixed(3)})` : "#151515"; ctx.lineWidth = lw * (1 + 4 * k.v * q); ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); }
+      prevY = y - tl; prevGone = false;
     }
   }
-
-  // perna com joelho: dados quadril e pé, acha o joelho (dobra pra frente)
   function knee(h, f, L) {
     let dx = f[0] - h[0], dy = f[1] - h[1], d = Math.hypot(dx, dy) || 1e-6;
     const max = 2 * L * 0.999;
@@ -301,62 +377,122 @@ export function createEndlessClimb(canvas) {
     const hh = Math.sqrt(Math.max(0, L * L - (d * d) / 4));
     return [[h[0] + dx / 2 + (dy / d) * hh, h[1] + dy / 2 - (dx / d) * hh], f];
   }
-
-  function drawHero(t, p) {
-    const g = growNow(t); // caixa: a pessoa cresce a partir dos pés (os pés continuam no degrau)
-    const lw = Math.max(2, U * 0.055) * (1 + 0.6 * (g - 1));
-    // o kick é o pé pousando: o corpo afunda um pouco (mais forte, mais fundo)
-    const fa = t - hero.footT;
-    const dip = (fa < 0.12 ? (0.04 + 0.08 * hero.footV) * Math.sin((Math.PI * fa) / 0.12) : 0) * g;
-    const P = (x, y) => [sx(x), sy(y)];
-    const hip = P(p.x, p.y + 0.5 * g - dip);
-    const sh = P(p.x + 0.03 * g, p.y + 0.82 * g - dip);
-    const head = P(p.x + 0.05 * g, p.y + 0.97 * g - dip);
-    // braços balançam ao contrário da perna que anda
-    const a = p.swingX == null ? 0 : clamp((p.swingX - p.x) * 1.6, -0.7, 0.7);
-    const hand = (ang) => [sh[0] + 0.3 * g * U * Math.sin(ang), sh[1] + 0.3 * g * U * Math.cos(ang)];
-    ctx.strokeStyle = "#fff";
-    ctx.fillStyle = "#fff";
-    ctx.lineWidth = lw;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+  function drawHero(t, p, PK, vis, ink) {
+    const g = growNow(t), ax = hero.growAxis;
+    const gx = ax === 2 ? g : ax === 1 ? 1 : ax === 3 ? 1 + (g - 1) * 0.4 : g, gy = ax === 2 ? 1 : ax === 3 ? g * 1.1 : g;
+    const art = 1 + PK.contour * 1.2 + (vis.artic || 0) * 0.8;      // CONTOUR (kick): articulação
+    const fa = t - hero.footT, impactDur = 0.12 * (1 + PK.contour);
+    const dip = (fa < impactDur ? (0.04 + 0.08 * hero.footV) * (1 + PK.contour) * (PK.punch ? 1.5 : 1) * Math.sin((Math.PI * fa) / impactDur) : 0) * gy;
+    // SHAPE (kick): no impacto, compressão → torção → fratura → implosão
+    const sh = hero.footShape, imp = fa < 0.25 ? 1 - fa / 0.25 : 0;
+    const squash = 1 - sh * 0.35 * imp, twist = hero.twist * 0.6 * imp, implode = sh > 0.85 ? 1 - imp * 0.6 : 1;
+    const P2 = (x, y) => [sx(x), sy(y)];
+    const crouch = hero.state === "recover" ? 0.25 * (1 - clamp((t - hero.landT) / 0.3, 0, 1)) : 0;
+    const by = p.y - dip - crouch + (vis.pos || 0) * 0.15;
+    const hip = P2(p.x, by + 0.5 * gy * squash * implode);
+    const shp = P2(p.x + 0.03 * gx + twist * 0.2, by + 0.82 * gy * squash * implode);
+    const head = P2(p.x + 0.05 * gx + twist * 0.3, by + 0.97 * gy * squash * implode);
+    const lw = Math.max(2, U * 0.055) * (1 + 0.6 * (Math.max(gx, gy) - 1));
+    const a = p.swingX == null ? (hero.state === "fall" ? (hero.chute ? 1.2 : 2.4) : 0) : clamp((p.swingX - p.x) * 1.6 * art, -0.9, 0.9);
+    const hand = (ang) => [shp[0] + 0.3 * gx * U * Math.sin(ang), shp[1] + 0.3 * gy * U * Math.cos(ang)];
+    ctx.strokeStyle = ink; ctx.fillStyle = ink; ctx.lineWidth = lw; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    const fractured = sh > 0.6 && imp > 0.2; // fratura: o corpo se separa um instante
+    const off = fractured ? (sh - 0.6) * U * 0.6 * imp : 0;
     ctx.beginPath();
-    for (const ft of p.feet) {                       // pernas (com joelho)
-      const [kn, f] = knee(hip, P(ft[0], ft[1]), LEG * g * U);
-      ctx.moveTo(hip[0], hip[1]); ctx.lineTo(kn[0], kn[1]); ctx.lineTo(f[0], f[1]);
-    }
-    ctx.moveTo(hip[0], hip[1]); ctx.lineTo(sh[0], sh[1]); // corpo
+    for (const ft of p.feet) { const [kn, f] = knee(hip, P2(ft[0], ft[1]), LEG * gy * U); ctx.moveTo(hip[0], hip[1]); ctx.lineTo(kn[0], kn[1]); ctx.lineTo(f[0], f[1]); }
+    ctx.moveTo(hip[0], hip[1] - off); ctx.lineTo(shp[0], shp[1] - off);
     const h1 = hand(-a), h2 = hand(a);
-    ctx.moveTo(h1[0], h1[1]); ctx.lineTo(sh[0], sh[1]); ctx.lineTo(h2[0], h2[1]); // braços
+    ctx.moveTo(h1[0], h1[1] - off * 1.5); ctx.lineTo(shp[0], shp[1] - off * 1.5); ctx.lineTo(h2[0], h2[1] - off * 1.5);
     ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(head[0], head[1], U * 0.12 * g, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(head[0], head[1] - off * 2, U * 0.12 * Math.max(gx, gy), 0, Math.PI * 2); ctx.fill();
+    // rachaduras da caixa (SHAPE da snare) no corpo crescido
+    if (hero.growCrack > 0.2 && g > 1.05) {
+      ctx.strokeStyle = ink === "#fff" ? "#151515" : "#ede6d6"; ctx.lineWidth = Math.max(1, lw * 0.35);
+      ctx.beginPath(); ctx.moveTo(hip[0] - lw, hip[1]); ctx.lineTo(shp[0] + lw, (hip[1] + shp[1]) / 2); ctx.lineTo(shp[0] - lw, shp[1]); ctx.stroke();
+    }
+    // paraquedas (abre com o TONE na queda, fecha no pouso)
+    let open = 0;
+    if (hero.chute) open = clamp((t - hero.chuteT) / 0.3, 0, 1); else if (t - hero.chuteFold < 0.3) open = 1 - (t - hero.chuteFold) / 0.3;
+    if (open > 0) {
+      const cx = head[0], cy = head[1] - U * 1.1 * open, rx = U * 0.85 * open, ry = U * 0.5 * open;
+      ctx.fillStyle = "#d3262c"; ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, Math.PI, 0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#ede6d6"; ctx.beginPath(); ctx.ellipse(cx, cy, rx * 0.34, ry, 0, Math.PI, 0); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = ink; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(cx - rx, cy); ctx.lineTo(shp[0], shp[1]); ctx.moveTo(cx + rx, cy); ctx.lineTo(shp[0], shp[1]); ctx.stroke();
+    }
   }
-
-  function drawRain(t) {
+  function drawRain(t, ink) {
     ctx.lineCap = "round";
     for (const d of drops) {
       const age = t - d.born, k = 1 - age / d.life;
       if (k <= 0) continue;
-      const y = d.y + d.sp * age, x = d.x + d.sp * 0.18 * age;
-      ctx.strokeStyle = `rgba(255,255,255,${(d.a * k).toFixed(3)})`;
-      ctx.lineWidth = d.w;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x + d.len * 0.18, y + d.len);
-      ctx.stroke();
+      let x, y;
+      if (d.mode === 0) { y = d.y + d.sp * age; x = d.x + d.sp * 0.18 * age + d.pan * W * 0.1; }              // chuva
+      else if (d.mode === 1 || d.mode === 2) { const a = d.a0 + age * (d.mode === 2 ? 6 : 3), r = d.r0 * U * (d.mode === 2 ? Math.max(0.2, 1 - age / d.life) : 1); x = sx(hero.x) + Math.cos(a) * r; y = sy(hero.y + 0.6) + Math.sin(a) * r * 0.6; } // órbita / vórtice
+      else if (d.mode === 3) { const z = 1 + age * 4; x = W / 2 + (d.x - W / 2) * z; y = H / 2 + (d.y - H / 2) * z; } // fuga em perspectiva
+      else { x = d.x; y = d.y - d.sp * age * 0.8; }                                                           // chafariz
+      x += (Math.random() - 0.5) * d.jit * 6; y += (Math.random() - 0.5) * d.jit * 6;                            // vibração
+      ctx.strokeStyle = ink; ctx.fillStyle = ink; ctx.lineWidth = d.w;
+      const s = d.len * 0.12 * (0.5 + k);
+      if (d.kind === 0) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + d.len * 0.18, y + d.len); ctx.stroke(); }
+      else if (d.kind === 1) ctx.fillRect(x - 1.5, y - 1.5, 3, 3);
+      else if (d.kind === 2) { ctx.beginPath(); ctx.arc(x, y, s, 0, 6.283); ctx.fill(); }
+      else if (d.kind === 3) { ctx.beginPath(); ctx.ellipse(x, y, s * 1.6, s * 0.5, d.a0, 0, 6.283); ctx.fill(); }
+      else { const n = 3 + Math.round(d.ang * 4); ctx.beginPath(); for (let i = 0; i <= n; i++) { const a = d.a0 + (i / n) * 6.283, r = i % 2 && d.ang > 0.5 ? s * 0.5 : s * 1.4; ctx[i ? "lineTo" : "moveTo"](x + Math.cos(a) * r, y + Math.sin(a) * r); } ctx.fill(); } // cristal
     }
   }
-
-  function draw(t, p) {
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  function drawBg(t, vis) {
     const c = bgNow(t);
-    ctx.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
-    ctx.fillRect(0, 0, W, H);
-    drawSteps(t);
-    drawHero(t, p);
-    drawRain(t);
+    const col0 = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`, col1 = `rgb(${bg.alt[0] | 0},${bg.alt[1] | 0},${bg.alt[2] | 0})`;
+    ctx.fillStyle = col0; ctx.fillRect(0, 0, W, H);
+    if (!bg.mode || bg.to.every((v) => v === 0)) return;
+    // organização do acorde (COLOR), quantos campos (SHAPE), giro e ondulação (SWEEP)
+    const n = Math.max(2, bg.fields), rot = (bg.spin || 0) * Math.sin(t * 0.4) * 0.6 + (vis.rot || 0) * 0.3;
+    ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(rot); ctx.fillStyle = col1;
+    const R = Math.hypot(W, H) / 2;
+    if (bg.mode === 1) ctx.fillRect(0, -R, R, 2 * R);
+    else if (bg.mode === 2) for (let i = 0; i < n; i++) if (i % 2) ctx.fillRect(-R + (2 * R * i) / n, -R + Math.sin(t + i) * (bg.spin || 0) * 20, (2 * R) / n, 2 * R);
+    else if (bg.mode === 3) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if ((i + j) % 2) ctx.fillRect(-R + (2 * R * i) / n, -R + (2 * R * j) / n, (2 * R) / n, (2 * R) / n);
+    else { let alt = true; for (let i = n; i > 0; i--) { ctx.fillStyle = alt ? col1 : col0; alt = !alt; ctx.beginPath(); ctx.arc(0, 0, (R * i) / n, 0, 6.283); ctx.fill(); } }
+    ctx.restore();
+  }
+  function drawMarks(t, ink) {
+    for (const m of marks) {
+      const a = (t - m.born) / m.life, x = sx(m.x), y = sy(m.y), r = U * (0.08 + 0.12 * m.v) * (1 + a);
+      ctx.fillStyle = ["#d3262c", "#1d4f9e", "#f1b70e", ink][m.kind % 4];
+      ctx.beginPath();
+      if (m.kind === 1) ctx.arc(x, y - r, r, 0, 6.283);
+      else if (m.kind === 2) ctx.rect(x - r, y - 2 * r, 2 * r, 2 * r);
+      else if (m.kind === 3) { ctx.moveTo(x - r, y); ctx.lineTo(x + r, y); ctx.lineTo(x, y - 2 * r); }
+      else { for (let i = 0; i < 10; i++) { const aa = (i / 10) * 6.283 - Math.PI / 2, rr = i % 2 ? r * 0.45 : r * 1.1; ctx.lineTo(x + Math.cos(aa) * rr, y - r + Math.sin(aa) * rr); } }
+      ctx.closePath(); ctx.fill();
+    }
+  }
+  function drawEchoes(t) {
+    for (const e of echoes) {
+      const a = (t - e.born) / e.life, s = U * (0.25 + 0.2 * e.v) * (1 - e.depth * 0.6) * (1 - a * 0.5);
+      // réplicas sólidas, menores quanto mais no fundo (sem transparência)
+      const x = sx(e.x) + e.depth * (W / 2 - sx(e.x)) * 0.5, y = sy(e.y) + e.depth * (H / 2 - sy(e.y)) * 0.5;
+      ctx.fillStyle = { bass: "#1d4f9e", hat: "#f1b70e", snare: "#d3262c", chord: "#ede6d6", perc: "#151515" }[e.type] || "#ede6d6";
+      if (e.type === "bass") ctx.fillRect(x - s, y - s * 0.25, s * 2, s * 0.5); else { ctx.beginPath(); ctx.arc(x, y, s * 0.5, 0, 6.283); ctx.fill(); }
+    }
+  }
+  function draw(t, p) {
+    const PT = P("bass"), PK = P("kick"), vis = FM() ? FM().visAll() : {};
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    drawBg(t, vis);
+    // inclinação da câmera (SWEEP do tone)
+    ctx.translate(W / 2, H / 2); ctx.rotate(-cam.tilt); ctx.translate(-W / 2, -H / 2);
+    const light = (bgNow(t)[0] + bgNow(t)[1] + bgNow(t)[2]) / 3 > 140;
+    const ink = light ? "#151515" : "#fff";
+    drawEchoes(t);
+    drawSteps(t, PT, vis);
+    drawMarks(t, ink);
+    if (figs) figs.draw(ctx, (x, y, z) => [sx(x), sy(y) - z * 2, U * (1 - z * 0.08)], ["#d3262c", "#1d4f9e", "#f1b70e", ink], light ? "#5c5a55" : "#8a8a8a", light ? "#ede6d6" : "#000", t);
+    drawHero(t, p, PK, vis, ink);
+    ctx.fillStyle = ink;
+    for (const s of shards) { const k = 1 - (t - s.born) / s.life; ctx.fillRect(sx(s.x), sy(s.y), U * s.s * k, U * s.s * k); }
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    drawRain(t, ink);
   }
 
   // ---------- laço ----------
@@ -366,7 +502,7 @@ export function createEndlessClimb(canvas) {
     raf = requestAnimationFrame(frame);
     const t = now(), dt = Math.min(0.05, t - last);
     last = t;
-    if (canvas.hidden) return; // aba fechada: não gasta nada
+    if (canvas.hidden) return;
     if (Math.abs(canvas.getBoundingClientRect().width - W) > 1) resize();
     const p = update(dt, t);
     draw(t, p);
@@ -378,9 +514,13 @@ export function createEndlessClimb(canvas) {
     cancelAnimationFrame(raf);
     if (ro) ro.disconnect();
     window.removeEventListener("resize", resize);
+    if (figs) figs.clear();
   }
-
-  // pra testes: onde está a pessoa, a escada (soma das alturas), a chuva, o tamanho e a cor agora
-  const state = () => ({ x: hero.x, y: hero.y, steps: steps.length, stairs: +steps.reduce((a, s) => a + s.y, 0).toFixed(3), drops: drops.length, size: +growNow(now()).toFixed(3), bg: bgNow(now()).map((c) => c | 0) });
+  const state = () => {
+    let stairs = 0; for (const [, s] of cols) if (!s.gone) stairs += s.y;
+    return { ...counts, x: hero.x, y: hero.y, col: hero.col, hero: hero.state, chute: hero.chute, steps: cols.size, stairs: +stairs.toFixed(3), drops: drops.length,
+      size: +growNow(now()).toFixed(3), bg: bgNow(now()).map((c) => c | 0), gaps: [...cols.values()].filter((s) => s.gone).length, figures: figs ? figs.active() : 0,
+      objects: cols.size + drops.length + marks.length + shards.length + echoes.length + (figs ? figs.active() : 0) };
+  };
   return { hit, reset, setBpm, destroy, canvas, state };
 }

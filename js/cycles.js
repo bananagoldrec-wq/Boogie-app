@@ -21,7 +21,7 @@
   // Mapeamento padrão de CCs do Model:Cycles. Confira no apêndice do manual;
   // dá pra corrigir no app com "Aprender".
   const DEFAULT_CC = {
-    machine: 64, level: 95, volume: 7, pitch: 65, decay: 80,
+    machine: 70, level: 95, volume: 7, pitch: 65, decay: 80, // CCs oficiais (manual OS 1.13, Apêndice A)
     color: 16, shape: 17, sweep: 18, contour: 19, pan: 10, delay: 12, reverb: 13,
   };
   const PARAMS = [
@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 52;
+  const APP_VERSION = 53;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -65,6 +65,7 @@
     load()
   );
   settings.cc = Object.assign({ ...DEFAULT_CC }, settings.cc);
+  if (settings.cc.machine === 64) settings.cc.machine = 70; // a seleção de máquina é o CC 70 (versões antigas usavam 64)
   // PROJETO 2 pelo MIDI: qual TRILHA faz cada coisa (índice 0–5 = T1–T6; -1 = nenhuma)
   const P2_DEFAULT = { kick: 0, bass: 4, hat: 2, snare: 1, chord: 5 };
   // versão 48: os papéis voltam ao padrão do Cycles uma vez (um clique sem querer nas luzes do
@@ -681,6 +682,30 @@
     return { roles: settings.p2roles, auto: p2sess.auto };
   }
   const roleOf = (tr) => { const r = p2Roles().roles; return Object.keys(r).find((k) => r[k] === tr) || null; };
+  // ---------- máquinas por pista (motor FM) × papéis ----------
+  // a máquina de cada pista é a verdade: vem do CC 70 do Cycles, do painel FM ou dos papéis do ⚙
+  function fmSyncFromRoles() {
+    const fm = window.CyclesFM; if (!fm) return;
+    const r = settings.p2roles;
+    for (let tr = 0; tr < 6; tr++) {
+      const role = Object.keys(r).find((k) => r[k] === tr);
+      const cur = fm.tracks[tr].raw.machine;
+      if (role) { if (fm.ROLE[cur] !== role) fm.setMachine(tr, fm.MACHINE_OF_ROLE[role], "⚙"); }
+      else if (r[fm.ROLE[cur]] !== undefined && r[fm.ROLE[cur]] !== tr) fm.setMachine(tr, 3, "⚙"); // perdeu o papel: PERC
+    }
+  }
+  if (window.CyclesFM) {
+    // a máquina mudou (CC 70 do Cycles ou painel): os papéis do ⚙ acompanham
+    window.CyclesFM.onMeta((m) => {
+      if (m.kind !== "machine" || fmSyncing) return;
+      const role = window.CyclesFM.ROLE[m.machine], r = settings.p2roles;
+      for (const k of Object.keys(r)) if (r[k] === m.track && k !== role) r[k] = -1;
+      if (role in r) r[role] = m.track;
+      save(); renderP2Roles();
+    });
+  }
+  let fmSyncing = false;
+  fmSyncing = true; try { fmSyncFromRoles(); } finally { fmSyncing = false; } // começa com as máquinas dos papéis salvos
   function emitP2(type, amount, source = "audio") {
     if (source === "audio" && trackLive(p2Roles().roles[type])) return;
     const pc = p2Clock();
@@ -830,9 +855,10 @@
     const hitType = sh.m === 0 ? "kick" : (sh.m === 8 || (sh.m === 4 && note < 52)) ? "bass" : sh.m === 2 ? "hat" : (sh.m === 1 || sh.m === 3) ? "snare" : sh.m === 5 ? "chord" : null;
     // do Áudio só vai o que saiu dos detectores próprios (kick/baixo, caixa; o hi-hat é confirmado à parte)
     if (source === "midi" || source === "pad") {
-      // MIDI, Demo e teclas 1–6: pela TRILHA (T1 kick, T5 baixo…), escolhida em ⚙ → Projeto 2
-      const role = roleOf(trIndex);
-      if (role) emitP2(role, n01(vel), source);
+      // MIDI, Demo e teclas 1–6: pelo MOTOR FM — a MÁQUINA da pista (KICK, SNARE, METAL, PERC,
+      // TONE, CHORD) decide o acontecimento, com os knobs daquela pista
+      if (window.CyclesFM) window.CyclesFM.noteOn(trIndex, note, vel, source);
+      else { const role = roleOf(trIndex); if (role) emitP2(role, n01(vel), source); }
     } else if (hitType && (source !== "audio" || extra.p2)) emitP2(hitType, n01(vel), source);
     // TELA ZERADA: por enquanto só o kick tem imagem (o círculo). Cada instrumento
     // novo entra aqui, um de cada vez, com um significado definido.
@@ -1258,6 +1284,7 @@
     const t = now();
     tickMusic();
     drawTimeline();
+    if (window.CyclesFM) window.CyclesFM.tick(); // motor FM: interpolação, LFO, réplicas de delay/reverb
     analyseAudio();
     try { p2Listen(t); } catch (e) { if (frameErr++ < 3) console.error(e); } // nunca derruba a Sessão 1
     drawBands();
@@ -1651,8 +1678,10 @@
       noteStep(tr);
       if (demo.on) stopDemo();
       spawn(tr, d[1], d[2]);
-      const role = roleOf(tr);
-      log(`ch${ch} nota ${noteName(d[1])} (${d[1]}) vel ${d[2]} → T${tr + 1}${mapped ? "" : " (canal sem trilha)"}${role ? " → Projeto 2: " + P2_NAMES[role] : ""}`);
+      const fmT = window.CyclesFM && window.CyclesFM.tracks[tr];
+      log(`ch${ch} nota ${noteName(d[1])} (${d[1]}) vel ${d[2]} → T${tr + 1}${mapped ? "" : " (canal sem trilha)"}${fmT ? " → " + window.CyclesFM.MACHINES[fmT.raw.machine] : ""}`);
+    } else if (type === 0x80 || (type === 0x90 && d[2] === 0)) {
+      if (window.CyclesFM) window.CyclesFM.noteOff(tr); // TRIG LENGTH: a forma se sustenta enquanto a nota dura
     } else if (type === 0xb0) {
       const num = d[1], val = d[2];
       if (learning) {
@@ -1664,9 +1693,12 @@
       }
       const param = Object.keys(settings.cc).find((k) => settings.cc[k] === num);
       if (param) setParam(tr, param, val);
-      log(`ch${ch} CC ${num} = ${val}${param ? " → T" + (tr + 1) + " " + labelOf(param) : ""}`);
+      const fm = window.CyclesFM, fmKey = fm ? fm.TRACK_CC[num] || fm.FX_CC[num] : null;
+      if (fm) fm.cc(tr, num, val);
+      log(`ch${ch} CC ${num} = ${val}${fmKey ? " → " + (fm.FX_CC[num] ? "FX " : "T" + (tr + 1) + " ") + fmKey : param ? " → T" + (tr + 1) + " " + labelOf(param) : ""}`);
     } else if (type === 0xc0) {
       log(`ch${ch} program change ${d[1]} (pattern)`);
+      if (window.CyclesFM) window.CyclesFM.program(d[1]);
       if (settings.refAuto !== false) nextRef();
       nextAct(); // pattern novo = ato novo
     }
@@ -1699,6 +1731,7 @@
         const bpm = 60 / (((clock.times[n] - clock.times[0]) / n) * 24);
         if (isFinite(bpm) && bpm > 20 && bpm < 400) {
           clock.bpm = bpm;
+          if (window.CyclesFM) window.CyclesFM.setBpm(bpm);
           const el = $("st-bpm");
           el.hidden = false;
           el.textContent = bpm.toFixed(1) + " BPM";
@@ -1824,6 +1857,7 @@
     if (!(k in settings.p2roles)) return;
     for (const o of Object.keys(settings.p2roles)) if (o !== k && settings.p2roles[o] === v && v >= 0) settings.p2roles[o] = -1; // uma trilha, um papel
     settings.p2roles[k] = v;
+    fmSyncing = true; try { fmSyncFromRoles(); } finally { fmSyncing = false; }
     save(); renderP2Roles();
   }
   // o Projeto 2 lê daqui: papel de cada trilha e quais trilhas estão mandando notas MIDI agora

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Transforma o MIDI (e o áudio) do Elektron Model:Cycles em imagens: cada trig vira uma forma, com tamanho, cor e posição pelo volume, frequência e parâmetros." />
+  <title>[v52 guardada] Cycles Visual</title>
+
+  <link rel="manifest" href="../../manifest-cycles.json" />
+  <meta name="theme-color" content="#cfccc3" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Cycles Visual" />
+  <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-cycles.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../../icons/icon-cycles-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="../../icons/icon-cycles-512.png" />
+
+  <link rel="stylesheet" href="css/cycles.css?v=52" />
+</head>
+<body>
+  <header class="bar">
+    <div class="brand">Cycles<span>Visual</span></div>
+    <div class="seg tabs" id="seg-proj" role="tablist" aria-label="Projeto">
+      <button data-p="2" type="button" role="tab" title="Escada sem fim: kick anda, baixo sobe a escada, hi-hat chove, caixa faz o boneco crescer, chord muda o fundo (tecla P troca)">Projeto 2</button>
+      <button data-p="3" type="button" role="tab" title="Bauhaus Orbital: kick pulsa o sol e gira a lua, baixo põe planetas, hi-hat acende triângulos, caixa pula o arco amarelo (tecla P troca)">Projeto 3</button>
+      <button data-p="4" type="button" role="tab" title="INFINITE MICROCOSMOS: viagem 3D sem fim — kick faz nascer e transformar as formas, baixo acelera, hi-hat solta microfragmentos, caixa muda o fundo e inverte o giro (tecla P troca)">Projeto 4</button>
+      <button data-p="5" type="button" role="tab" title="031 — IMPOSSIBLE CITY: cidade Bauhaus sem fim — kick constrói e desconstrói, baixo acelera a câmera, hi-hat solta peças, caixa muda a cor do ambiente (tecla P troca)">Projeto 5</button>
+      <button data-p="6" type="button" role="tab" title="032 — MAGNETIC BALLET: esculturas que se atraem e se separam — kick atrai, baixo acelera a rotação, hi-hat fragmenta e transforma, caixa repele e muda o fundo (tecla P troca)">Projeto 6</button>
+    </div>
+    <div class="status">
+      <span id="st-midi" class="pill">MIDI desligado</span>
+      <span id="st-audio" class="pill">Áudio desligado</span>
+      <span id="st-bpm" class="pill" hidden></span>
+    </div>
+    <div class="actions">
+      <button id="btn-install" class="btn primary" type="button" hidden title="Instala como programa no computador e funciona sem internet">Instalar no computador</button>
+      <button id="btn-midi" class="btn" type="button">Conectar MIDI</button>
+      <button id="btn-audio" class="btn" type="button" title="Use a entrada de linha/microfone com a saída do Cycles">Áudio</button>
+      <button id="btn-music" class="btn" type="button" title="Tocar uma música do aparelho pra testar (Espaço pausa)">Música</button>
+      <button id="btn-music-pick" class="btn icon" type="button" title="Escolher outra música" aria-label="Escolher outra música" hidden>⏏</button>
+      <input type="file" id="inp-music" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac" hidden />
+      <button id="btn-demo" class="btn" type="button" title="Simula um padrão para testar sem o aparelho">Demo</button>
+      <button id="btn-show" class="btn primary" type="button" title="Tela cheia preta, só as imagens (tecla F)">Tela cheia</button>
+      <button id="btn-settings" class="btn icon" type="button" aria-label="Ajustes" title="Ajustes">⚙</button>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+    <canvas id="gl"></canvas>
+    <canvas id="live"></canvas>
+    <canvas id="canvas" hidden></canvas>
+    <canvas id="canvas3" hidden></canvas>
+    <canvas id="canvas4" hidden></canvas>
+    <canvas id="canvas5" hidden></canvas>
+    <canvas id="canvas6" hidden></canvas>
+
+    <div class="hud" id="hud">
+      <div class="hud-dom">
+        <span class="hud-k">Mais alto agora</span>
+        <span id="hud-dom" class="hud-v">—</span>
+      </div>
+      <div class="bands" id="bands" hidden>
+        <div class="band"><i id="b-low"></i><span>Graves</span></div>
+        <div class="band"><i id="b-mid"></i><span>Médios</span></div>
+        <div class="band"><i id="b-high"></i><span>Agudos</span></div>
+        <div class="band hz"><b id="b-hz">— Hz</b><span>pico</span></div>
+      </div>
+    </div>
+
+    <div class="stage-hint" id="stage-hint" hidden></div>
+    <button class="tap-play" id="tap-play" type="button" hidden>▶ Toque para tocar a música</button>
+
+    <div class="empty" id="empty">
+      <h2>Toque o Model:Cycles</h2>
+      <p>Ligue o Cycles por USB, toque em <b>Conectar MIDI</b> e dê play — a história começa no primeiro trig.</p>
+      <p class="muted">Sem o aparelho à mão? Toque em <b>Música</b> e escolha uma música sua, ou em <b>Demo</b>.</p>
+    </div>
+  </main>
+
+  <footer class="dock">
+    <div class="pads" id="pads"></div>
+    <div class="tools">
+      <button id="btn-reset2" class="btn only-p2" type="button" title="Começa a escada de novo (tecla C)">Reiniciar</button>
+      <div class="p2-lights only-p2" id="p2-lights" aria-label="O que está chegando no Projeto 2">
+        <span data-k="kick">Kick</span><span data-k="bass">Baixo</span><span data-k="hat">Hi-hat</span><span data-k="snare">Caixa</span><span data-k="chord">Chord</span>
+        <b id="p2-src">—</b>
+        <b id="p2-midi" class="p2-midi" hidden></b>
+      </div>
+      <div class="scn-ctl only-ctl" id="scn-ctl" aria-label="Controles da cena">
+        <b class="scn-name" id="scn-name">—</b>
+        <label>Velocidade <input type="range" id="scn-speed" min="0.2" max="3" step="0.1" value="1" /><output for="scn-speed">1.0×</output></label>
+        <label>Perspectiva <input type="range" id="scn-persp" min="0.5" max="2.5" step="0.05" value="1" /><output for="scn-persp">1.00×</output></label>
+      </div>
+      <div class="seg only-p1" id="seg-mode" role="radiogroup" aria-label="Modo">
+        <button data-v="vivo" type="button">Ao vivo</button>
+        <button data-v="rastro" type="button">Rastro</button>
+        <button data-v="pintura" type="button">Pintura</button>
+      </div>
+      <select id="sel-ref" class="sel only-p1" aria-label="Referência"><option value="nenhuma">Sem referência</option></select>
+      <button id="btn-save" class="btn primary" type="button">Salvar imagem</button>
+    </div>
+    <div class="gallery" id="gallery" hidden></div>
+  </footer>
+
+  <!-- Ajustes -->
+  <div class="sheet" id="sheet" hidden>
+    <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div class="sheet-head">
+        <h3 id="sheet-title">Ajustes <small id="ver" class="muted"></small></h3>
+        <button id="sheet-close" class="btn icon" type="button" aria-label="Fechar">✕</button>
+      </div>
+
+      <section>
+        <h4>Neste computador</h4>
+        <p class="offline" id="offline-status">—</p>
+        <p class="muted">Instalado (Chrome ou Edge: botão <b>Instalar no computador</b>, ou menu ⋮ → Instalar), o Cycles Visual abre como
+        programa, em janela própria, e funciona sem internet — bom pra show em lugar com rede ruim.</p>
+        <h4>Atalhos de teclado</h4>
+        <dl class="keys">
+          <dt>P</dt><dd>troca de cena: Projeto 2 · 3 · 4 · 5 · 6</dd>
+          <dt>F</dt><dd>tela cheia (Esc sai)</dd>
+          <dt>Espaço</dt><dd>toca/pausa a música</dd>
+          <dt>X</dt><dd>próximo ato da história</dd>
+          <dt>R</dt><dd>próxima obra · <b>N</b> arte aleatória nova</dd>
+          <dt>M</dt><dd>modo (ao vivo · rastro · pintura)</dd>
+          <dt>C</dt><dd>começa a cena de novo · <b>S</b> salva a imagem</dd>
+          <dt>1–6</dt><dd>dispara cada trilha</dd>
+          <dt>D</dt><dd>demo · <b>A</b> áudio (microfone/linha)</dd>
+        </dl>
+      </section>
+
+      <section>
+        <h4>Entrada MIDI</h4>
+        <select id="sel-input" class="sel wide"><option value="todas">Todas as entradas (recomendado)</option></select>
+        <div id="midi-ports" class="ports"><p class="muted">Toque em <b>Conectar MIDI</b>.</p></div>
+        <details class="help">
+          <summary>O Cycles não aparece ou não manda nada?</summary>
+          <ol>
+            <li>Use o <b>Chrome</b> ou o <b>Edge</b> (Safari e Firefox não servem) e aceite o pedido de MIDI. Se recusou: cadeado ao lado do endereço → MIDI → Permitir.</li>
+            <li>No Cycles: <i>Settings → MIDI Config → Port Config</i>: <b>Output to</b> = USB (ou MIDI+USB) e <b>Output CC/NRPN</b> ligado.
+              Em <i>Sync</i>, <b>Clock send</b> ligado. Em <i>Channels</i>, as trilhas nos canais 1–6.</li>
+            <li>Dê play no Cycles: a porta dele tem que ficar <b>"recebendo ●"</b> aqui em cima.</li>
+            <li><b>Windows + Ableton aberto:</b> o Windows só deixa um programa por vez abrir o aparelho. Feche o Ableton,
+              ou desligue <i>Track/Sync/Remote</i> do Cycles nas preferências MIDI dele, ou use o <b>loopMIDI</b> pra repassar.</li>
+            <li>Cabo USB de dados (não só de carga) e, se usar hub, teste direto no computador.</li>
+          </ol>
+        </details>
+        <label class="chk"><input type="checkbox" id="chk-clear-play" /> Limpar a tela quando der play no Cycles</label>
+        <label class="row">Movimento da imagem
+          <select id="sel-motion" class="sel">
+            <option value="suave">Suave</option>
+            <option value="medio">Médio</option>
+            <option value="intenso">Intenso</option>
+          </select>
+        </label>
+        <label class="row">Sincronia da imagem <small id="sync-val" class="muted"></small></label>
+        <input type="range" id="rng-sync" min="-300" max="300" step="10" class="wide" aria-label="Sincronia da imagem em milissegundos" />
+        <p class="muted">Se a imagem vier antes do som (caixa Bluetooth), puxe pra esquerda; se vier depois, pra direita.</p>
+        <label class="chk"><input type="checkbox" id="chk-panel" /> Mostrar trilhas e medidores na tela</label>
+        <label class="chk"><input type="checkbox" id="chk-onset" /> Sem MIDI: criar formas pelas batidas do áudio</label>
+      </section>
+
+      <section>
+        <h4>Banco de referências</h4>
+        <p class="muted">A obra que veste a escultura. Troca sozinha a cada 16 compassos, quando você muda de pattern e no drop;
+        tecla <b>R</b> passa pra próxima. Toque numa obra pra usar agora.</p>
+        <label class="row">Fidelidade
+          <select id="sel-fid" class="sel">
+            <option value="baixa">Baixa — fragmentos soltos</option>
+            <option value="media">Média</option>
+            <option value="alta">Alta — a obra aparece mais</option>
+          </select>
+        </label>
+        <label class="chk"><input type="checkbox" id="chk-ref-auto" /> Trocar de obra sozinho (16 compassos / pattern)</label>
+        <p class="muted" id="ref-now"></p>
+        <button id="btn-new-art" class="btn small" type="button">Gerar arte aleatória nova (N)</button>
+        <div class="ref-grid" id="ref-grid"></div>
+        <label class="btn small file">Adicionar imagens minhas…<input type="file" id="inp-ref" accept="image/*" multiple hidden /></label>
+        <p class="muted">Ficam só neste aparelho, em "Minhas imagens".</p>
+      </section>
+
+      <section>
+        <h4>Cenas — qual trilha faz o quê</h4>
+        <p class="muted">Cada papel segue a sua trilha: se a trilha manda notas MIDI, vale SÓ o MIDI (exato, na hora —
+        o som nunca chuta por ela); se não manda, vale o ouvido do Projeto 2 (ligue <b>Áudio</b>). Com o play dado no
+        Cycles, o app acha sozinho pelo ritmo do MIDI qual trilha é o kick (4 tempos) e qual é a caixa (2 e 4).
+        <b>No Cycles, ligue o MOUT em cada trilha:</b> segure <i>FUNC</i>, aperte o botão da trilha (T1…T6) e marque
+        <i>MOUT</i> (vem desligado). O padrão é T1 kick, T5 baixo, T3 hi-hat, T2 caixa, T6 chord; troque aqui (ou clicando
+        nas luzes do rodapé) se estiver em outra trilha. Com o MOUT ligado no kick, a pessoa anda em toda nota dele, sem erro.</p>
+        <div id="p2-roles" class="p2-roles"></div>
+      </section>
+
+      <section>
+        <h4>Canal MIDI de cada trilha</h4>
+        <p class="muted">No Cycles: <i>Settings → MIDI Config → Channels</i>. O padrão é 1 a 6.</p>
+        <div class="chan-grid" id="chan-grid"></div>
+      </section>
+
+      <section>
+        <h4>Parâmetros (CC)</h4>
+        <p class="muted">Toque em <b>Aprender</b> e mexa no knob correspondente do Cycles. Para o Cycles mandar os knobs,
+        ligue <i>MIDI Config → Port Config → Output CC/NRPN</i>.</p>
+        <div class="cc-grid" id="cc-grid"></div>
+        <button id="btn-cc-reset" class="btn small" type="button">Voltar ao padrão</button>
+      </section>
+
+      <section>
+        <h4>O que a análise da música encontrou</h4>
+        <p class="muted">Cada risco é um instrumento detectado; a linha laranja é onde a música está. Se algo não bater
+        (ex.: kick onde é baixo), me conta o trecho.</p>
+        <canvas id="timeline" class="timeline"></canvas>
+      </section>
+
+      <section>
+        <h4>Monitor MIDI</h4>
+        <pre id="monitor" class="monitor">Nada recebido ainda.</pre>
+      </section>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="js/cycles-analise.js?v=52"></script>
+  <script src="js/p2-ouvido.js?v=52"></script>
+  <script src="js/cycles.js?v=52"></script>
+  <script type="module" src="js/projeto2.js?v=52"></script>
+</body>
+</html>
