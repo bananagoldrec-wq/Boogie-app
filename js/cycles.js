@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 28;
+  const APP_VERSION = 29;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -1612,7 +1612,11 @@
         const w = r.active || r.waiting || r.installing;
         if (w && /sw-cycles\.js/.test(w.scriptURL) && !/cycles\.html$/.test(r.scope)) await r.unregister();
       }
-      await navigator.serviceWorker.register("sw-cycles.js", { scope: "./cycles.html" });
+      const regNew = await navigator.serviceWorker.register("sw-cycles.js", { scope: "./cycles.html", updateViaCache: "none" });
+      regNew.update().catch(() => {});
+      // quando um ajudante novo assume, recarrega uma vez pra já mostrar a versão nova
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => { if (!reloaded && navigator.serviceWorker.controller) { reloaded = true; location.reload(); } });
       offlineStatus("Guardando o app neste aparelho…");
       const reg = await navigator.serviceWorker.ready;
       navigator.serviceWorker.addEventListener("message", (e) => {

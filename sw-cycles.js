@@ -4,7 +4,7 @@
    - Com internet, busca sempre a versão mais nova (rede primeiro) e atualiza
      o que está guardado; sem internet, usa o guardado.
    Registrado com escopo ./cycles.html pra não interferir nos outros apps do site. */
-const CACHE = "cycles-visual-v28";
+const CACHE = "cycles-visual-v29";
 const CORE = [
   "cycles.html",
   "css/cycles.css",
@@ -47,7 +47,9 @@ self.addEventListener("fetch", (e) => {
   if (url.origin !== location.origin) return;
   e.respondWith((async () => {
     try {
-      const res = await fetch(e.request);
+      // "no-cache": sempre confere com o servidor (o GitHub manda guardar por 10 min,
+      // e sem isso a versão nova demorava a aparecer)
+      const res = await fetch(e.request, { cache: "no-cache" });
       if (res.ok) {
         const copy = res.clone();
         // guarda sem o ?v=… pra o guardado valer pra qualquer versão
