@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 34;
+  const APP_VERSION = 35;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -396,7 +396,23 @@
     // Só o kick vira o círculo.
     if (audio.sDbMax != null) audio.sDbMax -= 0.004;
     if (audio.hDbMax != null) audio.hDbMax -= 0.004;
-    if (audio.kDbMax != null) audio.kDbMax -= 0.004; // o teto desce bem devagar (~0,25 dB/s): baixar o volume encolhe o círculo de verdade
+    if (audio.kDbMax != null) audio.kDbMax -= 0.004;
+    // COR DO BAIXO contínua no modo Áudio: a cada quadro lê a nota e o volume do grave
+    // (fora dos ~120 ms de cada kick) e pinta a tela; nada de esperar uma "batida"
+    if (audio.stream || (music.el && !music.el.paused)) {
+      const sinceKick = t - (audio.lastKickT ?? -9);
+      if (sinceKick > 0.12 && lowE > 0 && lowHz > 25) {
+        const db = 10 * Math.log10(lowE + 1e-12);
+        audio.bDbMax = Math.max(db, (audio.bDbMax ?? db) - 0.004);
+        const target = clamp((db - (audio.bDbMax - 30)) / 30, 0, 1);
+        const u = clamp(Math.log(lowHz / 35) / Math.log(220 / 35), 0, 1);
+        const h = (8 - u * 128 + 360) % 360;
+        // suaviza só um pouco (responde rápido, sem piscar)
+        tint.h = tint.amt > 0.05 ? tint.h + ((((h - tint.h) % 360) + 540) % 360 - 180) * 0.35 : h;
+        tint.amt = Math.max(tint.amt * tintNow(t) * 0.9, Math.pow(target, 0.9));
+        tint.t0 = t; tint.dur = 0.6;
+      }
+    } // o teto desce bem devagar (~0,25 dB/s): baixar o volume encolhe o círculo de verdade
     const pend = audio.lowPend;
     if (pend) {
       const age = t - pend.t0;
@@ -417,6 +433,7 @@
         audio.kDbMax = Math.max(db, audio.kDbMax ?? db);
         const v = clamp((db - (audio.kDbMax - 30)) / 30, 0.01, 1);
         const vel = 1 + 126 * v;
+        if (isKick) audio.lastKickT = pend.t0;
         spawn(isKick ? 0 : 8, pend.note, vel, "audio", { exactVel: vel });
         log(`áudio: grave → ${isKick ? "KICK (círculo)" : "baixo"} · força ${Math.round(v * 100)}% · tom ${glide.toFixed(2)} · estalo ${pend.click.toFixed(1)}`);
       }
