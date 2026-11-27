@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 51;
+  const APP_VERSION = 52;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -720,7 +720,7 @@
     };
   }
   // um dos projetos (escada ou orbital) na tela
-  const p2Canvas = () => ["canvas", "canvas3", "canvas4"].map((id) => $(id)).find((c) => c && !c.hidden) || null;
+  const p2Canvas = () => ["canvas", "canvas3", "canvas4", "canvas5", "canvas6"].map((id) => $(id)).find((c) => c && !c.hidden) || null;
   const p2On = () => !!p2Canvas();
   // planura do espectro numa faixa (1 = ruído puro, perto de 0 = tom): caixa/clap × acorde/nota
   function flatness(lo, hi) {
@@ -1264,6 +1264,9 @@
     tickDemo(t);
 
     shapes = shapes.filter((s) => t - s.born < s.life);
+    // a Sessão 1 saiu das abas: com uma cena dos projetos aberta, o desenho dela não roda
+    // (o motor — MIDI, áudio, música, demo — continua aqui em cima, e as cenas usam ele)
+    if (p2On()) return;
 
     // energia de cada trilha → "mais alto agora"
     let dom = null, domE = 0;
@@ -1492,7 +1495,7 @@
       const url = URL.createObjectURL(blob);
       const d = new Date();
       const p = (n) => String(n).padStart(2, "0");
-      const name = `${p2 ? ({ canvas3: "orbital", canvas4: "microcosmos" }[pc.id] || "escada") : "cycles"}-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
+      const name = `${p2 ? ({ canvas3: "orbital", canvas4: "microcosmos", canvas5: "impossible-city", canvas6: "magnetic-ballet" }[pc.id] || "escada") : "cycles"}-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
       const a = document.createElement("a");
       a.href = url; a.download = name;
       document.body.appendChild(a); a.click(); a.remove();

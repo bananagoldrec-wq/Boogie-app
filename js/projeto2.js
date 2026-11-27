@@ -1,56 +1,39 @@
-/* PROJETO 2 — Escada sem fim · PROJETO 3 — Bauhaus Orbital.
-   Usam os MESMOS sons da Sessão 1 (MIDI, Áudio, Música ou Demo): o motor da Sessão 1
-   reconhece kick, baixo, hi-hat, caixa e chord e avisa aqui pelo evento "cycles:hit".
-   A Sessão 1 continua exatamente como era; estas abas só trocam o desenho. */
+/* CENAS DO CYCLES VISUAL — Projeto 2 (Escada sem fim) · 3 (Bauhaus Orbital) ·
+   4 (Infinite Microcosmos) · 5 (031 Impossible City) · 6 (032 Magnetic Ballet).
+   Todas usam os MESMOS sons (MIDI de cada trilha, Áudio, Música ou Demo): o motor
+   (js/cycles.js) reconhece kick, baixo, hi-hat, caixa e chord e avisa aqui pelo evento
+   "cycles:hit" com a força já entre 0 e 1.
+   Só UMA cena existe por vez: ao trocar de aba, a anterior é encerrada com destroy()
+   (o laço de animação dela é cancelado) e a nova é criada do zero. */
 import { createEndlessClimb } from './endless-climb.js';
 import { createBauhausOrbital } from './bauhaus-orbital-024.js';
 import { createInfiniteMicrocosmos } from './infinite-microcosmos-030.js';
+import { createImpossibleCity, createMagneticBallet } from './bauhaus-scenes.js';
 
-const visual = createEndlessClimb(
-  document.getElementById('canvas')
-);
+// cada cena: o canvas dela, como criar, e (se tiver) os controles de velocidade e perspectiva
+const SCENES = {
+  2: { canvas: 'canvas', make: createEndlessClimb, name: 'Escada sem fim' },
+  3: { canvas: 'canvas3', make: createBauhausOrbital, name: 'Bauhaus Orbital' },
+  4: { canvas: 'canvas4', make: createInfiniteMicrocosmos, name: 'Infinite Microcosmos',
+    speed: [0.2, 3, 0.1, 1], persp: [150, 900, 10, 340], fmt: (v) => String(Math.round(v)) },
+  5: { canvas: 'canvas5', make: createImpossibleCity, name: '031 · Impossible City',
+    speed: [0.2, 3, 0.1, 1], persp: [0.5, 2.5, 0.05, 1], fmt: (v) => (+v).toFixed(2) + '×' },
+  6: { canvas: 'canvas6', make: createMagneticBallet, name: '032 · Magnetic Ballet',
+    speed: [0.2, 3, 0.1, 1], persp: [0.5, 2.5, 0.05, 1], fmt: (v) => (+v).toFixed(2) + '×' },
+};
+const FIRST = 2, LAST = 6;
+let proj = 0, current = null;
+const scene = () => current;
 
-// PROJETO 3: kick pulsa o sol e gira a lua · baixo põe planetas · hi-hat acende triângulos ·
-// caixa pula o arco amarelo (o chord não entra nesta cena)
-const orbital = createBauhausOrbital(
-  document.getElementById('canvas3')
-);
-// PROJETO 4 — INFINITE MICROCOSMOS: kick faz nascer e transformar · baixo acelera a viagem ·
-// hi-hat solta microfragmentos · caixa muda o fundo, a geometria e inverte a rotação
-const micro = createInfiniteMicrocosmos(
-  document.getElementById('canvas4')
-);
-const SCENES = { 2: visual, 3: orbital, 4: micro };
-const scene = () => SCENES[proj] || visual;
-
-// controles do Projeto 4: velocidade e perspectiva (guardados neste aparelho)
-const p4speed = document.getElementById('p4-speed'), p4persp = document.getElementById('p4-persp');
-const p4out = (el) => { const o = document.querySelector(`output[for="${el.id}"]`); if (o) o.textContent = el.id === 'p4-speed' ? (+el.value).toFixed(1) + '×' : el.value; };
-function p4Load(el, key, set) {
-  if (!el) return;
-  try { const v = localStorage.getItem(key); if (v != null && Number.isFinite(+v)) el.value = v; } catch { /* sem armazenamento */ }
-  set(+el.value); p4out(el);
-  el.addEventListener('input', () => { set(+el.value); p4out(el); try { localStorage.setItem(key, el.value); } catch { /* idem */ } });
-}
-p4Load(p4speed, 'cv-p4-speed', (v) => micro.setSpeed(v));
-p4Load(p4persp, 'cv-p4-persp', (v) => micro.setPerspective(v));
-
-// KICK: a pessoa anda (um passo por kick)      → visual.hit('kick', força)
-// BASS: a escada sobe (um degrau por nota)      → visual.hit('bass', força)
-// HI-HAT: chuva (só isso)                       → visual.hit('hat', força)
-// SNARE: a pessoa cresce                        → visual.hit('snare', força)
-// CHORD: muda a cor do fundo                    → visual.hit('chord', força)
-// Reiniciar                                     → visual.reset()
-
-let proj = 1;
+// ---------- eventos dos instrumentos → hit() da cena aberta ----------
 const lights = {};
 document.querySelectorAll('#p2-lights span').forEach((el) => { lights[el.dataset.k] = el; });
 const src = document.getElementById('p2-src');
 window.addEventListener('cycles:hit', (e) => {
-  if (proj === 1) return;
-  const V = scene();
-  if (e.detail.bpm) V.setBpm(e.detail.bpm); // movimento no andamento do Cycles
-  V.hit(e.detail.type, e.detail.amount);
+  const V = current;
+  if (!V) return;
+  if (e.detail.bpm && V.setBpm) V.setBpm(e.detail.bpm); // movimento no andamento do Cycles
+  V.hit(e.detail.type, e.detail.amount);                 // força MIDI normalizada (0–1)
   // luzes: o que chegou e de onde (MIDI = exato; ÁUDIO = análise do som)
   const L = lights[e.detail.type];
   if (L) { L.classList.add('on'); clearTimeout(L._t); L._t = setTimeout(() => L.classList.remove('on'), 90); }
@@ -58,8 +41,8 @@ window.addEventListener('cycles:hit', (e) => {
 });
 
 // ---------- luzes: de onde vem cada papel ----------
-// "T3 MIDI" = a trilha 3 está mandando notas: a chuva segue o MIDI dela (exato).
-// "T3 · áudio" = essa trilha não manda notas: o papel vem do ouvido próprio do Projeto 2.
+// "T3 MIDI" = a trilha 3 está mandando notas: o papel segue o MIDI dela (exato).
+// "T3 · áudio" = essa trilha não manda notas: o papel vem do ouvido próprio.
 // Clique na luz pra trocar a trilha daquele papel.
 const NAMES = { kick: 'Kick', bass: 'Baixo', hat: 'Hi-hat', snare: 'Caixa', chord: 'Chord' };
 Object.keys(lights).forEach((k) => {
@@ -93,20 +76,54 @@ function refreshLights() {
 setInterval(refreshLights, 300);
 refreshLights();
 
-// ---------- abas: Sessão 1 · Projeto 2 · Projeto 3 · Projeto 4 ----------
-const canvas = document.getElementById('canvas');
-const canvas3 = document.getElementById('canvas3');
-const canvas4 = document.getElementById('canvas4');
-const tabs = document.querySelectorAll('#seg-proj button');
+// ---------- controles: velocidade e perspectiva (por cena, guardados neste aparelho) ----------
+const ctlName = document.getElementById('scn-name');
+const ctlSpeed = document.getElementById('scn-speed'), ctlPersp = document.getElementById('scn-persp');
+const outSpeed = document.querySelector('output[for="scn-speed"]'), outPersp = document.querySelector('output[for="scn-persp"]');
+const key = (n, what) => `cv-${what}-${n}`;
+function readSaved(n, what, def) {
+  try { const v = localStorage.getItem(key(n, what)) ?? (n === 4 ? localStorage.getItem(`cv-p4-${what}`) : null); if (v != null && Number.isFinite(+v)) return +v; } catch { /* sem armazenamento */ }
+  return def;
+}
+function applyControls(n) {
+  const cfg = SCENES[n];
+  document.body.classList.toggle('has-ctl', !!cfg.speed);
+  if (!cfg.speed || !current) return;
+  if (ctlName) ctlName.textContent = cfg.name;
+  const set = (el, out, range, what, fn, fmt) => {
+    const [min, max, step, def] = range;
+    el.min = min; el.max = max; el.step = step;
+    el.value = clamp(readSaved(n, what, def), min, max);
+    fn(+el.value); out.textContent = fmt(+el.value);
+  };
+  set(ctlSpeed, outSpeed, cfg.speed, 'speed', (v) => current.setSpeed(v), (v) => (+v).toFixed(1) + '×');
+  set(ctlPersp, outPersp, cfg.persp, 'persp', (v) => current.setPerspective(v), cfg.fmt);
+}
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+if (ctlSpeed) ctlSpeed.addEventListener('input', () => {
+  if (!current || !current.setSpeed) return;
+  current.setSpeed(+ctlSpeed.value); outSpeed.textContent = (+ctlSpeed.value).toFixed(1) + '×';
+  try { localStorage.setItem(key(proj, 'speed'), ctlSpeed.value); } catch { /* idem */ }
+});
+if (ctlPersp) ctlPersp.addEventListener('input', () => {
+  if (!current || !current.setPerspective) return;
+  current.setPerspective(+ctlPersp.value); outPersp.textContent = SCENES[proj].fmt(+ctlPersp.value);
+  try { localStorage.setItem(key(proj, 'persp'), ctlPersp.value); } catch { /* idem */ }
+});
 
+// ---------- abas ----------
+const tabs = document.querySelectorAll('#seg-proj button');
 function setProject(n, save = true) {
-  proj = n >= 2 && n <= 4 ? n : 1;
-  document.body.classList.toggle('proj-2', proj !== 1); // o rodapé dos projetos (luzes, reiniciar)
-  document.body.classList.toggle('proj-3', proj === 3);
-  document.body.classList.toggle('proj-4', proj === 4);
-  canvas.hidden = proj !== 2;   // só a cena da aba aberta desenha (as outras param de gastar)
-  canvas3.hidden = proj !== 3;
-  canvas4.hidden = proj !== 4;
+  n = SCENES[n] ? n : FIRST;
+  if (n !== proj) {
+    if (current) { try { current.destroy(); } catch (e) { console.error(e); } current = null; } // cancela o laço da cena anterior
+    for (const k of Object.keys(SCENES)) { const c = document.getElementById(SCENES[k].canvas); if (c) c.hidden = +k !== n; }
+    proj = n;
+    document.body.classList.add('proj-2'); // rodapé dos projetos (luzes, reiniciar)
+    document.body.dataset.scene = String(n);
+    current = SCENES[n].make(document.getElementById(SCENES[n].canvas));
+  }
+  applyControls(n);
   tabs.forEach((b) => {
     const on = +b.dataset.p === proj;
     b.classList.toggle('on', on);
@@ -116,19 +133,19 @@ function setProject(n, save = true) {
 }
 
 tabs.forEach((b) => b.addEventListener('click', () => setProject(+b.dataset.p)));
-document.getElementById('btn-reset2').addEventListener('click', () => scene().reset());
+document.getElementById('btn-reset2').addEventListener('click', () => { if (current) current.reset(); });
 
 document.addEventListener('keydown', (e) => {
   if (e.target.closest && e.target.closest('input,select,textarea')) return;
   const k = e.key.toLowerCase();
-  if (k === 'p') setProject((proj % 4) + 1);       // troca de aba: 1 → 2 → 3 → 4 → 1 (funciona em tela cheia)
-  else if (k === 'c' && proj !== 1) scene().reset(); // nos projetos, "limpar" = começar de novo
+  if (k === 'p') setProject(proj >= LAST ? FIRST : proj + 1); // troca de cena (funciona em tela cheia)
+  else if (k === 'c' && current) current.reset();             // "limpar" = começar de novo
 });
 
-let saved = 1;
-try { saved = +localStorage.getItem('cv-proj') || 1; } catch { /* idem */ }
-setProject(saved, false);
+let saved = FIRST;
+try { saved = +localStorage.getItem('cv-proj') || FIRST; } catch { /* idem */ }
+setProject(saved, false); // a Sessão 1 saiu: quem estava nela abre no Projeto 2
 
-window.CyclesProjeto2 = visual;  // pra testar pelo console
-window.CyclesProjeto3 = orbital;
-window.CyclesProjeto4 = micro;
+// pra testar pelo console: a cena aberta (as outras não existem enquanto estão fechadas)
+window.CyclesCena = () => current;
+for (const n of Object.keys(SCENES)) Object.defineProperty(window, 'CyclesProjeto' + n, { get: () => (proj === +n ? current : null), configurable: true });
