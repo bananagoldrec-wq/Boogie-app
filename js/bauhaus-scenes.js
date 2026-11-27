@@ -264,6 +264,7 @@ export function createImpossibleCity(canvas) {
   const PC = Array.from({ length: MAXP }, () => ({ on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, s: 0.1, c: 0, born: 0, life: 1, rot: 0, w: 0, kind: 0, mode: 0, asp: 1, ox: 0, oz: 0, ang: 0, rad: 0, vib: 0 }));
   let pNext = 0, camZ, boost, boostK, envI, envSwap, rowNext, counts, rnd = Math.random, t0 = now();
   let bend, bendT, camAmp, camAmpT, wave, posS, lastRisen, figs;
+  let camHigh = 0, camHighT = 0, sway = 0, bendK = 0.15, gapK = 1.1, waveK = 0.5;
 
   function rowHash(k) { let h = (k * 2654435761) >>> 0; return () => ((h = (h * 1103515245 + 12345) >>> 0) / 4294967296); }
   function freeB() { for (const b of B) if (!b.on) return b; return null; }
@@ -310,6 +311,7 @@ export function createImpossibleCity(canvas) {
     for (const b of B) { b.on = false; b.kind = 0; }
     for (const p of PC) p.on = false;
     camZ = 0; boost = 0; boostK = 2.4; envI = 0; envSwap = false; bend = 0; bendT = 0; camAmp = 0; camAmpT = 0; wave = 0; posS = 0; lastRisen = [];
+    camHigh = 0; camHighT = 0; sway = 0; bendK = 0.15; gapK = 1.1; waveK = 0.5;
     counts = { builds: 0, splits: 0, morphs: 0, falls: 0, risen: 0, boosts: 0, piecesSent: 0, snares: 0, chords: 0, percs: 0, collapses: 0, cracks: 0, flips: 0, decons: 0, echoes: 0, archetypes: 0 };
     if (figs) figs.clear(); else figs = FIGS() ? FIGS().swarm({ max: 30, size: 0.42 }) : null;
     rowNext = 1;
@@ -371,6 +373,9 @@ export function createImpossibleCity(canvas) {
     boostK = ANC(c.contour, [2.4, 1.6, 1, 0.6, 0.3]);              // CONTOUR: rígido → fluido
     bendT = (c.color > 0.5 ? -1 : 1) * c.shape * 0.7;               // SHAPE: dobra o espaço (COLOR: pra cima ou pra baixo)
     camAmpT = c.sweep;                                              // SWEEP: trajetória da câmera
+    camHighT = c.color;                                             // COLOR: identidade do olhar (rua → vista aérea)
+    sway = Math.max(sway, c.dist);                                  // DISTORTION: a cidade inteira balança e entorta
+    bendK = ANC(c.decay, [1.2, 0.5, 0.15, 0.05, 0.01]);             // DECAY: quanto a dobra do espaço dura
   }
   function hat(v, c) {
     const t = now(), src = B.filter((b) => b.on && b.kind === 0 && b.n > 0 && inView(b));
@@ -419,9 +424,11 @@ export function createImpossibleCity(canvas) {
     envSwap = org === 3 ? !envSwap : false;
     counts.snares++;
     // SHAPE: rachaduras · SWEEP: direção dos estilhaços · CONTOUR: ruptura (desaba)
-    if (c.shape > 0.08) {
+    // DISTORTION: os prédios à vista entortam juntos (geometria impossível na hora)
+    if (c.dist > 0.05) for (const b of B) if (b.on && inView(b)) b.skew = Math.max(b.skew, c.dist * (0.6 + Math.random() * 0.6));
+    if (c.shape > 0.08 || c.sweep > 0.1) {
       const t = now(), list = B.filter((b) => b.on && b.kind === 0 && b.n > 0 && inView(b));
-      const n = Math.min(list.length, Math.round(c.shape * 6));
+      const n = Math.min(list.length, Math.max(1, Math.round(c.shape * 6)));
       for (let i = 0; i < n; i++) {
         const b = list.splice((rnd() * list.length) | 0, 1)[0];
         if (!b.split) { b.split = 1; b.st = t; }
@@ -454,6 +461,9 @@ export function createImpossibleCity(canvas) {
     // SWEEP: ondulação das alturas e, no fim do knob, inversão (prédios viram de cabeça pra baixo)
     wave = Math.max(wave, Math.max(0, c.sweep - 0.3) * 1.6);
     if (c.sweep > 0.8) { const cand = list.filter((b) => b.kind === 0 && b.flipT < 0); for (let i = 0; i < Math.min(2, cand.length); i++) { const b = cand[(R() * cand.length) | 0]; b.flipT = t; b.flipTo = 3; counts.flips++; } }
+    // DISTORTION: a reorganização sai torta (inclinação impossível coletiva) · DECAY: quanto dura
+    if (c.dist > 0.05) for (const b of list) b.skew = Math.max(b.skew, c.dist);
+    gapK = ANC(c.decay, [3, 1.8, 1.1, 0.5, 0.2]); waveK = ANC(c.decay, [1.5, 0.9, 0.5, 0.25, 0.1]);
     // CONTOUR no fim: desmontagem
     if (c.contour > 0.85) for (const b of list.slice(0, 3)) if (b.n > 1) { collapse(b, t, 0.1); b.gap = 1.6; }
     counts.chords++;
@@ -499,9 +509,10 @@ export function createImpossibleCity(canvas) {
   const S = createStage(canvas, (dt, t) => {
     const vis = VIS();
     boost *= Math.exp(-dt * boostK);
-    bend += (bendT - bend) * (1 - Math.exp(-dt * 1.5)); bendT *= Math.exp(-dt * 0.15);
+    bend += (bendT - bend) * (1 - Math.exp(-dt * 1.5)); bendT *= Math.exp(-dt * bendK);
+    camHigh += (camHighT - camHigh) * (1 - Math.exp(-dt * 0.6)); sway *= Math.exp(-dt * 0.5);
     camAmp += (camAmpT - camAmp) * (1 - Math.exp(-dt * 0.8));
-    wave *= Math.exp(-dt * 0.5);
+    wave *= Math.exp(-dt * waveK);
     posS += (vis.pos - posS) * (1 - Math.exp(-dt * 4));
     camZ += dt * 5.2 * speed * (1 + boost);
     while (rowNext * ROW < camZ + FAR) makeRow(rowNext++);
@@ -510,7 +521,7 @@ export function createImpossibleCity(canvas) {
       if (b.z < camZ - 4) { b.on = false; continue; }   // ficou pra trás: libera
       const k = 1 - Math.exp(-dt * 1.6);
       b.ox += (b.oxT - b.ox) * k; b.rot += (b.rotT - b.rot) * k;
-      b.gap *= Math.exp(-dt * 1.1);
+      b.gap *= Math.exp(-dt * gapK);
       // DECAY: o tempo dele acabou — desconstrói de cima pra baixo
       if (!b.dying && t - b.born > b.life && b.n > 0) { b.dying = true; for (let j = b.n - 1; j >= 0; j--) { const f = b.fl[j]; f.gone = true; f.gt = t + (b.n - 1 - j) * 0.12; } counts.decons++; }
       if (b.flipT > 0 && t - b.flipT > 0.35 && b.kind !== b.flipTo) { b.kind = b.flipTo; b.hang = 12 + Math.random() * 6; }
@@ -519,8 +530,8 @@ export function createImpossibleCity(canvas) {
     // câmera: avança sempre, serpenteia devagar pela avenida (nunca no mesmo caminho);
     // SWEEP do baixo abre a trajetória (curvas largas, órbita, espiral)
     const amp = 1 + camAmp * 2.4;
-    const cxw = (Math.sin(T * 0.071) * 1.3 + Math.sin(T * 0.023) * 0.6) * amp + posS * 2.5, cyw = 1.7 + (Math.sin(T * 0.11) * 0.45 + Math.sin(T * 0.037) * 0.3) * (1 + camAmp * 1.5) + camAmp * 1.2 * (1 + Math.sin(T * 0.21));
-    const yaw = (Math.sin(T * 0.049) * 0.13 + Math.sin(T * 0.017) * 0.07) * (1 + camAmp * 2) + vis.rot * 0.25, pitch = 0.05 + Math.sin(T * 0.083) * 0.05 - camAmp * 0.06;
+    const cxw = (Math.sin(T * 0.071) * 1.3 + Math.sin(T * 0.023) * 0.6) * amp + posS * 2.5, cyw = 1.7 + (Math.sin(T * 0.11) * 0.45 + Math.sin(T * 0.037) * 0.3) * (1 + camAmp * 1.5) + camAmp * 1.2 * (1 + Math.sin(T * 0.21)) + camHigh * 7;
+    const yaw = (Math.sin(T * 0.049) * 0.13 + Math.sin(T * 0.017) * 0.07) * (1 + camAmp * 2) + vis.rot * 0.25, pitch = 0.05 + Math.sin(T * 0.083) * 0.05 - camAmp * 0.06 - camHigh * 0.32;
     lookAt(C, cxw, cyw, camZ, cxw + Math.sin(yaw) * 10, cyw + pitch * 10, camZ + Math.cos(yaw) * 10);
     C.f = (Math.min(S.W, S.H) * 0.95 / persp) * (1 + vis.persp * 0.4);
     C.bend = Math.abs(bend) > 0.01 ? bend : 0;
@@ -606,7 +617,7 @@ export function createImpossibleCity(canvas) {
     if (b.flipT > 0) { const fk = clamp((t - b.flipT) / 0.7, 0, 1); grow *= fk < 0.5 ? 1 - fk * 2 : (fk - 0.5) * 2; }  // inversão: encolhe e volta pendurado
     if (wave > 0.01) grow *= 1 + wave * 0.35 * Math.sin(b.z * 0.25 + T * 3);
     grow *= hscale;
-    const skew = b.skew + geo;
+    const skew = b.skew + geo + (sway > 0.01 ? sway * 0.6 * Math.sin(T * 2.2 + b.z * 0.3) : 0);
     if (b.kind === 3) { // torre pendurada no céu (de cabeça pra baixo)
       let y = b.hang;
       for (let i = 0; i < b.n; i++) { const f = b.fl[i]; if (f.gone && t - f.gt > 0.45) continue; const h = f.h * grow * (f.gone ? 1 - clamp((t - f.gt) / 0.45, 0, 1) : 1); if (h <= 0.001) continue; drawBox(S, C, bx + skew * i * 0.3, y - h / 2, b.z, f.w / 2, h / 2, f.d / 2, b.rot + (i % 2 ? 1 : -1) * skew * 0.4, visibleOn(f.c, sky)); y -= h + b.gap * 0.5; }
@@ -704,11 +715,12 @@ export function createMagneticBallet(canvas) {
   const P = Array.from({ length: MAXN }, () => ({
     on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, hx: 0, hy: 0, hz: 0, ph: 0, type: 0, s: 0.4, c: 0,
     rot: 0, w: 0, born: 0, life: 0, mt: -9, nextType: 0, frag: false, g: 0,
-    h0x: 0, h0y: 0, h0z: 0, tx: 0, ty: 0, tz: 0, hasT: false, vib: 0, mag: 0,
+    h0x: 0, h0y: 0, h0z: 0, tx: 0, ty: 0, tz: 0, hasT: false, vib: 0, mag: 0, warp: 0,
   }));
   const M = Array.from({ length: MAG }, (_, i) => ({ x: 0, y: 0, z: 0, ph: i * 1.7, a: 0, r: 0, w: 1, ox: 0, oy: 0, oz: 0, col: -1 }));
   let attract, repel, spin, spinK, orbit, orbitDir, orbitDirT, bgI, bgI2, bgMode, counts, t0 = now();
   let kickN, force, forceAmt, tension, decayK, stretch, stretchT, camAmp, camAmpT, und, formRot, figs, lastPiece;
+  let stretchK = 0.3, bgT = -9, bgLife = 1e9, formT = -9, formLife = 1e9;
 
   function spawn(x, y, z, frag) {
     const p = P.find((q) => !q.on);
@@ -716,7 +728,7 @@ export function createMagneticBallet(canvas) {
     const t = now(), r = 2.5 + Math.random() * 3.5, a = Math.random() * 6.283, e = (Math.random() - 0.5) * 1.6;
     p.on = true; p.frag = !!frag; p.born = t; p.life = frag ? 4 + Math.random() * 4 : 0; p.mt = -9;
     p.hx = Math.cos(a) * Math.cos(e) * r; p.hy = Math.sin(e) * r * 0.7; p.hz = Math.sin(a) * Math.cos(e) * r;
-    p.h0x = p.hx; p.h0y = p.hy; p.h0z = p.hz; p.hasT = false; p.vib = 0; p.mag = 0;
+    p.h0x = p.hx; p.h0y = p.hy; p.h0z = p.hz; p.hasT = false; p.vib = 0; p.mag = 0; p.warp = 0;
     p.x = x ?? p.hx; p.y = y ?? p.hy; p.z = z ?? p.hz; p.vx = p.vy = p.vz = 0;
     p.ph = Math.random() * 100; p.type = (Math.random() * 3) | 0; p.nextType = p.type;
     p.s = (frag ? 0.12 + Math.random() * 0.12 : 0.22 + Math.random() * 0.28);
@@ -728,6 +740,7 @@ export function createMagneticBallet(canvas) {
     for (let i = 0; i < BASEN; i++) spawn();
     attract = 0; repel = 0; spin = 0; spinK = 1.2; orbit = Math.random() * 6.28; orbitDir = 1; orbitDirT = 1; bgI = 0; bgI2 = 1; bgMode = 0;
     kickN = 0; force = 0; forceAmt = 0; tension = 0; decayK = 0.9; stretch = 0; stretchT = 0; camAmp = 0; camAmpT = 0; und = 0; formRot = 0; lastPiece = null;
+    stretchK = 0.3; bgT = -9; bgLife = 1e9; formT = -9; formLife = 1e9;
     for (const m of M) { m.a = 0; m.r = 0; m.w = 1; m.ox = m.oy = m.oz = 0; m.col = -1; }
     counts = { attracts: 0, spins: 0, frags: 0, impulses: 0, morphs: 0, repels: 0, chords: 0, percs: 0, ruptures: 0, echoes: 0, dissolves: 0 };
     if (figs) figs.clear(); else figs = FIGS() ? FIGS().swarm({ max: 20, size: 0.5 }) : null;
@@ -784,6 +797,8 @@ export function createMagneticBallet(canvas) {
     stretchT = c.shape;                                         // SHAPE: estica as peças
     camAmpT = c.sweep;                                          // SWEEP: trajetória da câmera
     orbitDirT = c.color > 0.5 ? -1 : 1;                         // COLOR: sentido da órbita (vira devagar)
+    if (c.dist > 0.05) for (const p of P) if (p.on && !p.frag) p.warp = Math.max(p.warp, c.dist * 0.8); // DISTORTION: todas as peças entortam
+    stretchK = ANC(c.decay, [2, 0.8, 0.3, 0.12, 0.04]);         // DECAY: quanto o estiramento dura
   }
   function hat(v, c) {
     const alive = P.filter((p) => p.on && !p.frag);
@@ -792,6 +807,7 @@ export function createMagneticBallet(canvas) {
     for (let i = 0; i < n && alive.length; i++) {
       const p = alive[(Math.random() * alive.length) | 0], a = Math.random();
       p.vib = c.contour;
+      if (c.dist > 0.05) p.warp = Math.max(p.warp, c.dist);      // DISTORTION: a peça atingida entorta
       if (a < 0.4) {                     // fragmenta: solta pedacinhos que saem voando
         const k = 2 + Math.round(2 * v);
         fragment(p, k, v, kind, dir, disp, c.decay === 0.5 && !kind && !dir ? 0 : life);
@@ -819,6 +835,7 @@ export function createMagneticBallet(canvas) {
     }
     let b = (Math.random() * (BGS.length - 1)) | 0; if (b >= bgI) b++; bgI = b;
     bgMode = st5(c.color);                                       // COLOR: organização do fundo
+    bgT = now(); bgLife = ANC(c.decay, [0.3, 0.8, 1e9, 1e9, 1e9]); // DECAY curto: o fundo volta ao creme
     if (bgMode) { let b2 = (Math.random() * (BGS.length - 1)) | 0; if (b2 >= bgI) b2++; bgI2 = b2; }
     attract *= 0.3; for (const m of M) m.a *= 0.3;
     // SHAPE: cortes — algumas peças se partem
@@ -842,6 +859,7 @@ export function createMagneticBallet(canvas) {
       if (cfg) morphTo(p, cfg === 1 ? 0 : cfg === 2 ? [0, 1][i % 2] : cfg === 3 ? [1, 2, 3][i % 3] : 4);
     });
     und = Math.max(und, Math.max(0, c.sweep - 0.3) * 1.6);               // SWEEP: ondulação
+    formT = now(); formLife = ANC(c.decay, [1.5, 3, 10, 40, 1e9]);       // DECAY: quanto a formação dura antes de se soltar
     if (c.contour > 0.85) { for (let i = 0; i < Math.round(n * 0.25); i++) { const p = list[(Math.random() * n) | 0]; fragment(p, 2, v, 0, 0, 1.5, 0); p.g = 1; } } // desmontagem
     counts.chords++;
   }
@@ -883,8 +901,10 @@ export function createMagneticBallet(canvas) {
     // os ímãs passeiam devagar (os grupos nunca se formam no mesmo lugar)
     M.forEach((m, i) => { m.x = Math.sin(T * 0.13 + m.ph) * 2.6 + m.ox + vis.pos * 1.5; m.y = Math.sin(T * 0.17 + m.ph * 1.3) * 1.4 + m.oy; m.z = Math.cos(T * 0.11 + m.ph * 0.7) * 2.6 + m.oz; m.a *= Math.exp(-dt * decayK); m.r *= Math.exp(-dt * 1.4); });
     attract *= Math.exp(-dt * decayK); repel *= Math.exp(-dt * 3); spin *= Math.exp(-dt * spinK);
-    stretch += (stretchT - stretch) * (1 - Math.exp(-dt * 2)); stretchT *= Math.exp(-dt * 0.3);
+    stretch += (stretchT - stretch) * (1 - Math.exp(-dt * 2)); stretchT *= Math.exp(-dt * stretchK);
     und *= Math.exp(-dt * 0.4);
+    if (formLife < 1e8 && t - formT > formLife) { formLife = 1e9; for (const p of P) if (p.hasT) { p.tx = p.h0x; p.ty = p.h0y; p.tz = p.h0z; } } // a formação se solta: cada peça volta pra casa
+    if (bgLife < 1e8 && t - bgT > bgLife) { bgLife = 1e9; bgI = 0; bgMode = 0; }
     const list = P, elastic = 1 - tension * 0.45, gk = vis.gravity * 3, mk = Math.max(0, vis.magnet);
     for (const p of list) {
       if (!p.on) continue;
@@ -916,6 +936,7 @@ export function createMagneticBallet(canvas) {
       p.rot += p.w * dt * (1 + spin * 1.5);
       p.g *= Math.exp(-dt * 2);
       p.vib *= Math.exp(-dt * 1.5);
+      p.warp *= Math.exp(-dt * 0.35);
     }
     // as peças não se atravessam: cada par muito perto se empurra de leve
     for (let i = 0; i < MAXN; i++) {
@@ -999,9 +1020,11 @@ export function createMagneticBallet(canvas) {
       const s = p.s * k * (1 - p.g * 0.35) * scl, col = visibleOn(p.c, bg);
       if (s < 0.01) continue;
       const x = p.vib > 0.05 ? p.x + (Math.random() - 0.5) * p.vib * s * 0.6 : p.x;
-      if (p.type === 0) drawSphere(S, C, x, p.y, p.z, s, col);
-      else if (p.type === 1) drawBox(S, C, x, p.y, p.z, s, s * st, s, p.rot, col);
-      else if (p.type === 2) drawBox(S, C, x, p.y, p.z, s * 0.32, s * 1.9 * st, s * 0.32, p.rot, col); // barra (escultura vertical)
+      // DISTORTION: deformação geométrica — a esfera vira cristal, caixas e barras se achatam e torcem
+      const wp = p.warp > 0.05 ? p.warp : 0, wx = 1 + wp * 0.8, wy = 1 - wp * 0.45, wr = p.rot + wp * 1.2 * Math.sin(T * 1.7 + p.ph);
+      if (p.type === 0) { if (wp > 0.4) drawCrystal(S, C, x, p.y, p.z, s * (0.8 + wp * 0.5), wr, col); else drawSphere(S, C, x, p.y, p.z, s, col); }
+      else if (p.type === 1) drawBox(S, C, x, p.y, p.z, s * wx, s * st * wy, s / wx, wr, col);
+      else if (p.type === 2) drawBox(S, C, x, p.y, p.z, s * 0.32 * wx, s * 1.9 * st * wy, s * 0.32, wr, col); // barra (escultura vertical)
       else if (p.type === 3) drawCylinder(S, C, x, p.y, p.z, s * 0.6, s * 1.1 * st, col);
       else if (p.type === 4) { // escultura: base, haste e esfera
         drawBox(S, C, x, p.y - s * 0.75, p.z, s * 0.7, s * 0.3, s * 0.7, p.rot, col);

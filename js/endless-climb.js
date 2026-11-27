@@ -78,10 +78,10 @@ export function createEndlessClimb(canvas) {
     const t = now();
     cols = new Map();
     for (let c = -14; c <= 0; c++) cols.set(c, { y: 0, born: t - 9, rise: 0, dur: 0.1, v: 0, life: Infinity, gone: false, goneT: -9, crack: 0, tilt: 0, style: 0, slab: false, fragile: false });
-    hero = { col: 0, x: -SW / 2, y: 0, feet: [[-SW, 0], [0, 0]], swing: 0, stride: null, footT: -9, footV: 0, footShape: 0, growT: -9, growV: 0, growFrom: 1, growAxis: 0, growCrack: 0,
+    hero = { col: 0, x: -SW / 2, y: 0, feet: [[-SW, 0], [0, 0]], swing: 0, stride: null, footT: -9, footV: 0, footShape: 0, growT: -9, growV: 0, growFrom: 1, growAxis: 0, growCrack: 0, growDist: 0, growDecay: 1,
       state: "walk", vx: 0, vy: 0, chute: false, chuteT: -9, chuteFold: -9, landT: -9, fallT: -9, twist: 0 };
     drops = []; marks = []; shards = []; echoes = [];
-    bg = { from: [0, 0, 0], to: [0, 0, 0], t0: -9, dur: 0.02, hue: Math.random() * 360, mode: 0, fields: 1, rot: 0, alt: [0, 0, 0], spin: 0 };
+    bg = { from: [0, 0, 0], to: [0, 0, 0], t0: -9, dur: 0.02, hue: Math.random() * 360, mode: 0, fields: 1, rot: 0, alt: [0, 0, 0], spin: 0, dist: 0, life: 1e9 };
     cam = { x: hero.x + CAM_DX, y: hero.y + CAM_DY, tilt: 0 };
     kickTimes.length = 0; hatTimes.length = 0; snareTimes.length = 0;
     figs = Fig() ? Fig().swarm({ max: 28, size: 0.28 }) : null;
@@ -123,7 +123,10 @@ export function createEndlessClimb(canvas) {
     // SWEEP (kick): expansão — o salto fica mais alto e mais longo no ar
     const lift = (0.03 + 0.06 * v) * (1 + c.sweep * 3) * (1 + c.contour * 0.6);
     hero.stride = { col: next, x0: hero.x, y0: hero.y, x1: hero.x + SW, y1: (other[1] + fy) / 2, t0: t, len: SW,
-      dur: clamp(beatP() * (0.35 + c.sweep * 0.15), 0.1, 0.26), f0: hero.feet[hero.swing], f1: [fx, fy], lift };
+      dur: clamp(beatP() * (0.35 + c.sweep * 0.15) * A(c.decay, [0.6, 0.8, 1, 1.2, 1.4]), 0.08, 0.34), f0: hero.feet[hero.swing], f1: [fx, fy], lift };
+    // DECAY (kick) longo: o pé deixa pegadas que duram · DISTORTION: o degrau pisado racha e entorta
+    if (c.decay > 0.6) marks.push({ x: fx, y: fy, born: t, v, kind: -1, life: (c.decay - 0.5) * 12 });
+    if (c.dist > 0.2) { const k = cols.get(next); if (k) { k.crack = Math.max(k.crack || 0, c.dist); if (!k.tilt) k.tilt = (Math.random() - 0.5) * c.dist * 0.3; } }
     // COLOR (kick): marca geométrica do impacto no degrau (nada no estado original)
     if (c.color > 0.08) marks.push({ x: fx, y: fy, born: t, v, kind: FM() ? FM().step5(c.color) : 0, life: 0.5 + c.decay * 1.2 });
     if (marks.length > 60) marks.shift();
@@ -195,7 +198,7 @@ export function createEndlessClimb(canvas) {
     for (let k = 0; k < n; k++) {
       drops.push({ x: Math.random() * W, y: Math.random() * H, a0: Math.random() * 6.28, r0: 0.4 + Math.random() * 3,
         len: U * (0.16 + 0.5 * v) * (0.6 + 0.8 * Math.random()), sp: H * (0.9 + 0.8 * v), born: t, life,
-        w: 1 + 1.4 * v, kind, mode, ang: c.shape, jit: c.contour, pan: c.pan });
+        w: 1 + 1.4 * v, kind, mode, ang: c.shape, jit: c.contour, pan: c.pan, dist: c.dist });
     }
     if (drops.length > 2000) drops.splice(0, drops.length - 2000);
     counts.rains++;
@@ -207,7 +210,7 @@ export function createEndlessClimb(canvas) {
     const a = t - hero.growT;
     if (a < 0 || hero.growV <= 0) return 1;
     const top = 1 + Math.pow(hero.growV, 1.2);
-    const up = 0.025, back = clamp(snareP() * 0.7, 0.16, 0.6) * (0.6 + hero.growHold);
+    const up = 0.025, back = clamp(snareP() * 0.7, 0.16, 0.6) * (0.6 + hero.growHold) * hero.growDecay;
     if (a < up) return lerp(hero.growFrom, top, easeOut(a / up));
     const k = clamp((a - up) / back, 0, 1);
     return lerp(top, 1, 1 - Math.pow(1 - k, 2));
@@ -220,6 +223,8 @@ export function createEndlessClimb(canvas) {
     hero.growAxis = FM() ? FM().step5(c.color) : 0;   // por igual, vertical, horizontal, assimétrico, espelhado
     hero.growCrack = c.shape;                          // rachaduras e fragmentos
     hero.growHold = c.contour + (c.gate ? 1 : 0);      // ruptura mais longa (e GATE sustenta)
+    hero.growDist = c.dist;                            // DISTORTION: o corpo crescido entorta (serrilhado)
+    hero.growDecay = A(c.decay, [0.4, 0.7, 1, 1.8, 3]); // DECAY: quanto tempo ele fica grande
     // SWEEP (snare): estilhaços na direção da explosão (cima → frente → trás → todas)
     if (c.shape > 0.25 || c.sweep > 0.1) {
       const n = 4 + Math.round(10 * c.shape * v), dir = FM() ? FM().step5(c.sweep) : 0;
@@ -235,7 +240,10 @@ export function createEndlessClimb(canvas) {
 
   // ---------- CHORD: o fundo ----------
   function hsl(h, s, l) { const f = (n) => { const k = (n + h / 30) % 12, a = s * Math.min(l, 1 - l); return 255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))); }; return [f(0), f(8), f(4)]; }
-  function bgNow(t) { const k = clamp((t - bg.t0) / bg.dur, 0, 1); return bg.from.map((c, i) => lerp(c, bg.to[i], k)); }
+  function bgNow(t) {
+    const k = clamp((t - bg.t0) / bg.dur, 0, 1), back = bg.life < 1e8 ? clamp((t - bg.t0 - bg.life) / 0.3, 0, 1) : 0;
+    return bg.from.map((c, i) => lerp(lerp(c, bg.to[i], k), 0, back));
+  }
   function changeBg(v, c) {
     const t = now();
     bg.from = bgNow(t);
@@ -247,6 +255,8 @@ export function createEndlessClimb(canvas) {
     bg.mode = FM() ? FM().step5(c.color) : 0;           // campo, duas faixas, listras, grade, círculos
     bg.fields = 1 + Math.round(c.shape * 6);            // SHAPE: quantos campos (configuração do acorde)
     bg.spin = c.sweep;                                  // SWEEP: giro e ondulação
+    bg.dist = c.dist;                                   // DISTORTION: o campo racha (faixa serrilhada)
+    bg.life = A(c.decay, [0.35, 0.9, 1e9, 1e9, 1e9]);   // DECAY curto: a cor do acorde volta ao escuro
     counts.chords++;
   }
 
@@ -405,6 +415,15 @@ export function createEndlessClimb(canvas) {
     ctx.moveTo(h1[0], h1[1] - off * 1.5); ctx.lineTo(shp[0], shp[1] - off * 1.5); ctx.lineTo(h2[0], h2[1] - off * 1.5);
     ctx.stroke();
     ctx.beginPath(); ctx.arc(head[0], head[1] - off * 2, U * 0.12 * Math.max(gx, gy), 0, Math.PI * 2); ctx.fill();
+    // DISTORTION (kick e caixa): o corpo ganha dentes — deformação geométrica, não só tamanho
+    const zig = U * (PK.dist * 0.07 + hero.growDist * Math.max(0, g - 1) * 0.12);
+    if (zig > 0.6) {
+      const teeth = (a0, a1, n) => { const dx = a1[0] - a0[0], dy = a1[1] - a0[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L; ctx.beginPath();
+        for (let i = 0; i < n; i++) { const u0 = i / n, u1 = (i + 0.5) / n, u2 = (i + 1) / n, sg = i % 2 ? 1 : -1;
+          ctx.moveTo(a0[0] + dx * u0, a0[1] + dy * u0 - off); ctx.lineTo(a0[0] + dx * u1 + nx * zig * sg, a0[1] + dy * u1 + ny * zig * sg - off); ctx.lineTo(a0[0] + dx * u2, a0[1] + dy * u2 - off); }
+        ctx.fill(); };
+      teeth(hip, shp, 5); teeth(shp, h1, 3); teeth(shp, h2, 3);
+    }
     // rachaduras da caixa (SHAPE da snare) no corpo crescido
     if (hero.growCrack > 0.2 && g > 1.05) {
       ctx.strokeStyle = ink === "#fff" ? "#151515" : "#ede6d6"; ctx.lineWidth = Math.max(1, lw * 0.35);
@@ -431,9 +450,10 @@ export function createEndlessClimb(canvas) {
       else if (d.mode === 3) { const z = 1 + age * 4; x = W / 2 + (d.x - W / 2) * z; y = H / 2 + (d.y - H / 2) * z; } // fuga em perspectiva
       else { x = d.x; y = d.y - d.sp * age * 0.8; }                                                           // chafariz
       x += (Math.random() - 0.5) * d.jit * 6; y += (Math.random() - 0.5) * d.jit * 6;                            // vibração
+      if (d.dist > 0.05) x += Math.sin(age * 18 + d.a0 * 3) * d.dist * U * 0.25;                               // DISTORTION: trajetória torta
       ctx.strokeStyle = ink; ctx.fillStyle = ink; ctx.lineWidth = d.w;
       const s = d.len * 0.12 * (0.5 + k);
-      if (d.kind === 0) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + d.len * 0.18, y + d.len); ctx.stroke(); }
+      if (d.kind === 0) { ctx.beginPath(); ctx.moveTo(x, y); if (d.dist > 0.05) { const z = d.dist * d.len * 0.35; ctx.lineTo(x + z, y + d.len * 0.33); ctx.lineTo(x - z * 0.6, y + d.len * 0.66); } ctx.lineTo(x + d.len * 0.18, y + d.len); ctx.stroke(); } // agulha (entortada pela DISTORTION)
       else if (d.kind === 1) ctx.fillRect(x - 1.5, y - 1.5, 3, 3);
       else if (d.kind === 2) { ctx.beginPath(); ctx.arc(x, y, s, 0, 6.283); ctx.fill(); }
       else if (d.kind === 3) { ctx.beginPath(); ctx.ellipse(x, y, s * 1.6, s * 0.5, d.a0, 0, 6.283); ctx.fill(); }
@@ -444,7 +464,14 @@ export function createEndlessClimb(canvas) {
     const c = bgNow(t);
     const col0 = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`, col1 = `rgb(${bg.alt[0] | 0},${bg.alt[1] | 0},${bg.alt[2] | 0})`;
     ctx.fillStyle = col0; ctx.fillRect(0, 0, W, H);
-    if (!bg.mode || bg.to.every((v) => v === 0)) return;
+    if (bg.to.every((v) => v === 0)) return;
+    const R0 = Math.hypot(W, H) / 2;
+    if (!bg.mode) {
+      // campo liso (original); SWEEP abre um segundo campo que gira devagar, DISTORTION racha o campo
+      if ((bg.spin || 0) > 0.1) { ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(t * 0.25 * bg.spin + (vis.rot || 0) * 0.3); ctx.fillStyle = col1; ctx.fillRect(0, -R0, R0, 2 * R0 * (0.3 + 0.7 * bg.spin)); ctx.restore(); }
+      if ((bg.dist || 0) > 0.05) crackBand(t, col1, R0);
+      return;
+    }
     // organização do acorde (COLOR), quantos campos (SHAPE), giro e ondulação (SWEEP)
     const n = Math.max(2, bg.fields), rot = (bg.spin || 0) * Math.sin(t * 0.4) * 0.6 + (vis.rot || 0) * 0.3;
     ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(rot); ctx.fillStyle = col1;
@@ -454,13 +481,23 @@ export function createEndlessClimb(canvas) {
     else if (bg.mode === 3) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if ((i + j) % 2) ctx.fillRect(-R + (2 * R * i) / n, -R + (2 * R * j) / n, (2 * R) / n, (2 * R) / n);
     else { let alt = true; for (let i = n; i > 0; i--) { ctx.fillStyle = alt ? col1 : col0; alt = !alt; ctx.beginPath(); ctx.arc(0, 0, (R * i) / n, 0, 6.283); ctx.fill(); } }
     ctx.restore();
+    if ((bg.dist || 0) > 0.05) crackBand(t, col0, R0);
+  }
+  // faixa serrilhada atravessando o fundo (DISTORTION do chord): cor sólida, sem degradê
+  function crackBand(t, col, R) {
+    const d = bg.dist, n = 14, amp = H * 0.12 * d, th = H * (0.02 + 0.06 * d);
+    ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(-0.35 + Math.sin(bg.hue) * 0.3); ctx.fillStyle = col; ctx.beginPath();
+    for (let i = 0; i <= n; i++) ctx.lineTo(-R + (2 * R * i) / n, ((i * 7919 + (bg.hue | 0)) % 13 / 13 - 0.5) * 2 * amp);
+    for (let i = n; i >= 0; i--) ctx.lineTo(-R + (2 * R * i) / n, ((i * 7919 + (bg.hue | 0)) % 13 / 13 - 0.5) * 2 * amp + th * (0.6 + ((i * 31) % 5) / 5));
+    ctx.closePath(); ctx.fill(); ctx.restore();
   }
   function drawMarks(t, ink) {
     for (const m of marks) {
       const a = (t - m.born) / m.life, x = sx(m.x), y = sy(m.y), r = U * (0.08 + 0.12 * m.v) * (1 + a);
-      ctx.fillStyle = ["#d3262c", "#1d4f9e", "#f1b70e", ink][m.kind % 4];
+      ctx.fillStyle = m.kind < 0 ? ink : ["#d3262c", "#1d4f9e", "#f1b70e", ink][m.kind % 4];
       ctx.beginPath();
-      if (m.kind === 1) ctx.arc(x, y - r, r, 0, 6.283);
+      if (m.kind < 0) ctx.rect(x - r * 0.7, y - r * 0.3, r * 1.4, r * 0.3);   // pegada (DECAY do kick)
+      else if (m.kind === 1) ctx.arc(x, y - r, r, 0, 6.283);
       else if (m.kind === 2) ctx.rect(x - r, y - 2 * r, 2 * r, 2 * r);
       else if (m.kind === 3) { ctx.moveTo(x - r, y); ctx.lineTo(x + r, y); ctx.lineTo(x, y - 2 * r); }
       else { for (let i = 0; i < 10; i++) { const aa = (i / 10) * 6.283 - Math.PI / 2, rr = i % 2 ? r * 0.45 : r * 1.1; ctx.lineTo(x + Math.cos(aa) * rr, y - r + Math.sin(aa) * rr); } }

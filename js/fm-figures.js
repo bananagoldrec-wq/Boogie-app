@@ -7,7 +7,9 @@
      COLOR   geometria → objetos → símbolos → animais → figuras humanas
      SHAPE   articulação, flexibilidade e metamorfose (as figuras viram outras)
      SWEEP   caminhada → corrida → salto → voo
-     CONTOUR rebote, colisão e multiplicação                                                   */
+     CONTOUR rebote, colisão e multiplicação (até quem anda dá pulinhos e se multiplica)
+   DIST    deformação geométrica de verdade (a silhueta entorta e serrilha)
+   DECAY   quanto tempo cada figura vive                                                     */
 (function (root) {
   "use strict";
   const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
@@ -80,7 +82,7 @@
   // espaço genérico 3D (x lado, y altura, z profundidade); a cena dá a projeção e o chão
   function swarm(opts = {}) {
     const MAX = opts.max || 48;
-    const F = Array.from({ length: MAX }, () => ({ on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, cat: 0, idx: 0, ph: 0, s: 0.4, col: 0, born: 0, life: 4, pose: 0, art: 0.5, kids: 0, rot: 0, morphT: -9, nextIdx: 0 }));
+    const F = Array.from({ length: MAX }, () => ({ on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, cat: 0, idx: 0, ph: 0, s: 0.4, col: 0, born: 0, life: 4, pose: 0, art: 0.5, kids: 0, rot: 0, morphT: -9, nextIdx: 0, hop: 0, dist: 0, bounce: 0.2 }));
     let n = 0;
     function spawn(ctx, at, t, gen = 0) {
       const f = F.find((q) => !q.on) || F.reduce((a, b) => (a.born < b.born ? a : b));
@@ -96,7 +98,7 @@
       f.s = (opts.size || 0.45) * (0.6 + (P.v ?? 0.8) * 0.7) * (1 + (P.pitch ?? 0) * 0.35);
       f.col = (Math.random() * 4) | 0; f.ph = Math.random() * 6;
       f.life = 1 + (P.decay ?? 0.5) * 4; f.kids = gen < 2 ? Math.round(contour * 3) : 0; f.rot = 0; f.morphT = -9;
-      f.bounce = 0.2 + contour * 0.7;
+      f.bounce = 0.2 + contour * 0.7; f.hop = contour; f.dist = P.dist ?? 0;
       n++;
       return f;
     }
@@ -107,7 +109,7 @@
         f.ph += dt * (f.pose === 1 ? 11 : f.pose === 3 ? 9 : 7);
         f.x += f.vx * dt; f.z += f.vz * dt;
         if (f.pose === 3) { f.y += S(f.ph * 0.3) * dt * 0.4 + dt * 0.15; } // voo: plana subindo
-        else { const gy = typeof ground === "function" ? ground(f.x, f.z) : ground; f.vy -= 9 * dt; f.y += f.vy * dt; if (f.y < gy) { f.y = gy; f.vy = f.pose >= 2 ? (1.2 + Math.random()) * 2.5 * (opts.jump || 1) * f.bounce + 1 : 0; // salto/rebote
+        else { const gy = typeof ground === "function" ? ground(f.x, f.z) : ground; f.vy -= 9 * dt; f.y += f.vy * dt; if (f.y < gy) { f.y = gy; f.vy = f.pose >= 2 ? (1.2 + Math.random()) * 2.5 * (opts.jump || 1) * f.bounce + 1 : f.hop > 0.08 ? (0.6 + f.hop * 2.4) * (opts.jump || 1) : 0; // salto/rebote (CONTOUR: quem anda também quica)
           if (f.kids > 0 && f.vy > 0) { f.kids--; const k = spawn({ color: f.cat / 4, shape: f.art, sweep: f.pose / 3.99, contour: f.bounce, v: 0.6, decay: 0.3 }, { x: f.x, y: f.y, z: f.z, dir: -Math.sign(f.vx || 1), vz: f.vz }, t, 2); k.cat = f.cat; } } } // multiplicação ao bater
         // metamorfose (SHAPE alto): de tempos em tempos a figura vira outra da mesma família
         if (P && P.shape > 0.6 && t - f.morphT > 1.2 - P.shape * 0.6) { f.morphT = t; f.nextIdx = f.idx + 1; }
@@ -124,14 +126,24 @@
         const morph = f.morphT > 0 && t - f.morphT < 0.3 ? Math.abs(Math.cos(((t - f.morphT) / 0.3) * Math.PI)) : 1;
         const s = pr[2] * f.s * grow * shrink * morph;
         if (s < 1.2) continue;
-        const parts = figure(f.cat, f.idx, f.ph, f.art, f.pose);
+        let parts = figure(f.cat, f.idx, f.ph, f.art, f.pose);
+        if (f.dist > 0.05) parts = warp(parts, f.dist, f.ph);
         const flip = f.vx < 0 ? -1 : 1;
-        draw(ctx2d, flip < 0 ? mirror(parts) : parts, pr[0], pr[1], s, 0, colors[f.col % colors.length], dark, Math.max(1, s * 0.06), bgCol);
+        draw(ctx2d, flip < 0 ? mirror(parts) : parts, pr[0], pr[1], s, f.dist * 0.35 * Math.sin(f.ph * 0.5), colors[f.col % colors.length], dark, Math.max(1, s * 0.06), bgCol);
       }
     }
     const active = () => F.reduce((k, f) => k + (f.on ? 1 : 0), 0);
     const clear = () => { for (const f of F) f.on = false; };
     return { spawn, update, draw: drawAll, active, clear, list: F };
+  }
+  // DIST: deformação geométrica (cisalhamento ondulado + serrilhado nos polígonos), sem transparência
+  function warp(parts, d, ph) {
+    const W = (x, y) => [x + d * 0.45 * y * Math.sin(ph * 0.7) + d * 0.12 * Math.sin(y * 9 + ph), y * (1 + d * 0.25 * Math.sin(x * 5 + ph))];
+    return parts.map((pt) => {
+      if (pt.p) { const q = []; for (let i = 0; i < pt.p.length; i += 2) { const [x, y] = W(pt.p[i], pt.p[i + 1]); q.push(x, y); if (d > 0.5 && i + 2 < pt.p.length) { const mx = (pt.p[i] + pt.p[i + 2]) / 2, my = (pt.p[i + 1] + pt.p[i + 3]) / 2, [a, b] = W(mx, my); q.push(a + (d - 0.5) * 0.25, b + (d - 0.5) * 0.25); } } return { p: q }; }
+      if (pt.c) { const [x, y] = W(pt.c[0], pt.c[1]); return { c: [x, y, pt.c[2] * (1 + d * 0.2), pt.c[3]] }; }
+      const [a, b] = W(pt.l[0], pt.l[1]), [c, e] = W(pt.l[2], pt.l[3]); return { l: [a, b, c, e, pt.l[4]] };
+    });
   }
   const mirror = (parts) => parts.map((p) => (p.p ? { p: p.p.map((v, i) => (i % 2 ? v : -v)) } : p.c ? { c: [-p.c[0], p.c[1], p.c[2], p.c[3]] } : { l: [-p.l[0], p.l[1], -p.l[2], p.l[3], p.l[4]] }));
 

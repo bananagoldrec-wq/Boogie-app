@@ -126,9 +126,10 @@ export function createInfiniteMicrocosmos(canvas) {
     // 2.0: trajetória, figura (metamorfose sólido ↔ figura), vida, torção, alvo do acorde
     vx: 0, vy: 0, vz: 0, orb: 0, fig: -1, figFrom: -1, ft: -9, fd: 0.3, life: 1e9, die: 0, twist: 0, stretch: 0, tx: 0, ty: 0, hasT: false,
   }));
-  const F = Array.from({ length: MAXF }, () => ({ on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, s: 0.05, born: 0, life: 0.5, c: 3, a: 0, kind: 0, sides: 4, mode: 0, ox: 0, oy: 0, ang: 0, rad: 0, w: 0, vib: 0, len: 1 }));
+  const F = Array.from({ length: MAXF }, () => ({ on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, s: 0.05, born: 0, life: 0.5, c: 3, a: 0, kind: 0, sides: 4, mode: 0, ox: 0, oy: 0, ang: 0, rad: 0, w: 0, vib: 0, len: 1, dist: 0 }));
   let fNext = 0; // anel dos fragmentos: o mais velho dá lugar ao novo
   let cam, bgI, bgI2, bgMode, rotDir, rollBoost, boost, boostK, stretch, family, counts, mono, layout, slot, und, lastBorn, camW, posS, figs;
+  let tonTwist = 0, stretchK = 1.5, layoutT = -9, layoutLife = 1e9, bgT = -9, bgLife = 1e9;
   const V = new Float32Array(42), P = new Float32Array(28), Z = new Float32Array(14); // um sólido de cada vez
   const triZ = new Float32Array(NT), triT = new Int8Array(NT), order = new Int16Array(NT);
   const draw = []; // lista de desenho (reaproveitada)
@@ -138,7 +139,7 @@ export function createInfiniteMicrocosmos(canvas) {
     for (const f of F) f.on = false;
     cam = { z: 0, roll: 0, t: 0 };
     bgI = 0; bgI2 = 1; bgMode = 0; rotDir = 1; rollBoost = 0; boost = 0; boostK = 2.6; stretch = 0; family = 0; mono = 0; layout = 0; slot = 0; und = 0;
-    camW = [1, 0, 0, 0, 0]; posS = 0; lastBorn = [];
+    camW = [1, 0, 0, 0, 0]; posS = 0; lastBorn = []; tonTwist = 0; stretchK = 1.5; layoutT = -9; layoutLife = 1e9; bgT = -9; bgLife = 1e9;
     counts = { births: 0, morphs: 0, boosts: 0, fragsSent: 0, snares: 0, chords: 0, percs: 0, figures: 0, shattered: 0, echoes: 0, died: 0 };
     if (figs) figs.clear(); else figs = FIG() ? FIG().swarm({ max: 24, size: 0.5 }) : null;
     // começa com algumas formas espalhadas no caminho (a viagem não começa vazia)
@@ -235,6 +236,8 @@ export function createInfiniteMicrocosmos(canvas) {
     boostK = A(c.contour, [2.6, 1.8, 1.1, 0.6, 0.3]);               // CONTOUR: rígido → fluido
     stretch = Math.min(0.9, Math.max(stretch, c.shape * (0.5 + 0.5 * v)));                // SHAPE: estica na direção da viagem
     rollBoost += (c.color - 0.1) * 0.6 * v * rotDir;                 // COLOR: um giro da câmera junto
+    tonTwist = Math.max(tonTwist, c.dist);                           // DISTORTION: o espaço torce (todas as formas)
+    stretchK = A(c.decay, [4, 2.5, 1.5, 0.7, 0.3]);                  // DECAY: quanto o estiramento dura
     const m = st5(c.sweep);
     for (let i = 0; i < 5; i++) camWT[i] = i === m ? Math.min(1, 0.3 + c.sweep) : 0;
   }
@@ -251,7 +254,7 @@ export function createInfiniteMicrocosmos(canvas) {
       f.on = true; f.born = t; f.life = life * (0.7 + 0.6 * Math.random());
       f.x = o ? o.x : camX(cam.t) + (Math.random() - 0.5) * 4 + c.pan * 3; f.y = o ? o.y : camY(cam.t) + (Math.random() - 0.5) * 3; f.z = o ? o.z : cam.z + 6 + Math.random() * 14;
       const sp = (1.5 + 4 * v) * (0.5 + Math.random()) * (1 + c.contour * 0.8);
-      f.mode = mode; f.kind = kind; f.vib = c.contour; f.sides = c.shape < 0.34 ? 4 : c.shape < 0.67 ? 3 : 5; f.len = 1 + c.shape * 2;
+      f.mode = mode; f.kind = kind; f.vib = c.contour; f.dist = c.dist; f.sides = c.shape < 0.34 ? 4 : c.shape < 0.67 ? 3 : 5; f.len = 1 + c.shape * 2;
       if (mode === 1) { f.vx = (Math.random() - 0.5) * 0.6; f.vy = -sp; f.vz = 0; }                                    // chuva
       else if (mode === 2) { f.ox = f.x; f.oy = f.y; f.ang = Math.random() * TAU; f.rad = 0.2; f.w = (2 + 4 * v) * (Math.random() < 0.5 ? -1 : 1); f.vx = sp * 0.25; } // órbita
       else if (mode === 3) { f.ang = Math.atan2(f.y - camY(cam.t), f.x - camX(cam.t)); f.rad = Math.hypot(f.x - camX(cam.t), f.y - camY(cam.t)); f.w = 1.5 + 3 * v; f.vz = -sp * 0.4; } // vórtice
@@ -272,7 +275,7 @@ export function createInfiniteMicrocosmos(canvas) {
       o.die = t; done++; counts.shattered++;
       for (let i = 0; i < 10; i++) {
         const f = F[fNext]; fNext = (fNext + 1) % MAXF;
-        f.on = true; f.born = t; f.life = 0.5 + Math.random() * 0.6; f.mode = 0; f.kind = 0; f.vib = 0; f.sides = 4; f.len = 1;
+        f.on = true; f.born = t; f.life = 0.5 + Math.random() * 0.6; f.mode = 0; f.kind = 0; f.vib = 0; f.sides = 4; f.len = 1; f.dist = 0;
         f.x = o.x + (Math.random() - 0.5) * o.s; f.y = o.y + (Math.random() - 0.5) * o.s; f.z = o.z;
         const sp = (1.2 + Math.random() * 2.5) * force, a = Math.random() * TAU;
         f.vx = Math.cos(a) * sp; f.vy = Math.sin(a) * sp; f.vz = (Math.random() - 0.5) * sp;
@@ -289,6 +292,7 @@ export function createInfiniteMicrocosmos(canvas) {
     // fundo novo (nunca o mesmo), todas as formas mudam juntas de geometria, rotação invertida
     let b = (Math.random() * (BGS.length - 1)) | 0; if (b >= bgI) b++; bgI = b;
     bgMode = st5(c.color);                                    // COLOR: organização do fundo
+    bgT = now(); bgLife = A(c.decay, [0.3, 0.8, 1e9, 1e9, 1e9]); // DECAY curto: o fundo volta ao papel
     if (bgMode) { let b2 = (Math.random() * (BGS.length - 1)) | 0; if (b2 >= bgI) b2++; bgI2 = b2; }
     family = (family + 1 + ((Math.random() * (NSH - 1)) | 0)) % NSH;
     const d = clamp(beat() * 0.3, 0.08, 0.2) * (1 + c.contour);
@@ -303,12 +307,14 @@ export function createInfiniteMicrocosmos(canvas) {
   function chord(v, c) {
     const t = now();
     layout = st5(c.color); slot = 0;                           // COLOR: distribuição espacial
+    layoutT = t; layoutLife = A(c.decay, [1, 2.5, 8, 30, 1e9]);  // DECAY: quanto a formação dura
     const vis = []; for (const o of O) if (o.on && !o.die && o.z - cam.z > 2) vis.push(o);
     vis.sort((a, b) => a.z - b.z);
     const cfg = st5(c.shape), shapes = [[family], [0, 1], [2, 4, 6], [3, 5, 1, 0], [0, 1, 2, 3, 4, 5, 6]][cfg];
     const d = clamp(beat() * 0.5, 0.15, 0.4) * (1 + c.contour * 2);
     vis.forEach((o, i) => {
       if (layout) place(o, i); else o.hasT = false;
+      if (c.dist > 0.05) o.twist = Math.max(o.twist, c.dist);   // DISTORTION: a formação inteira torce
       morph(o, shapes[i % shapes.length], d);                    // (as figuras continuam figuras: só mudam de lugar)                    // SHAPE: configuração coletiva
     });
     // SWEEP: rotação → ondulação → inversão
@@ -360,7 +366,10 @@ export function createInfiniteMicrocosmos(canvas) {
   function update(dt, t) {
     const vis = FM() ? FM().visAll() : null;
     boost *= Math.exp(-dt * boostK);
-    stretch *= Math.exp(-dt * 1.5);
+    stretch *= Math.exp(-dt * stretchK);
+    tonTwist *= Math.exp(-dt * 0.8);
+    if (layout && t - layoutT > layoutLife) { layout = 0; for (const o of O) o.hasT = false; }  // DECAY do acorde: a formação se solta
+    if (bgLife < 1e8 && t - bgT > bgLife && (bgI || bgMode)) { bgI = 0; bgMode = 0; }             // DECAY da caixa: o fundo volta
     und *= Math.exp(-dt * 0.35);
     rollBoost *= Math.exp(-dt * 1.2);
     for (let i = 0; i < 5; i++) camW[i] += (camWT[i] - camW[i]) * (1 - Math.exp(-dt * 0.6)); // trajetória muda devagar
@@ -476,7 +485,7 @@ export function createInfiniteMicrocosmos(canvas) {
     const k = ease(clamp((t - o.mt) / o.md, 0, 1));
     const Av = o.fromV, B = SH[o.to];
     const ca = Math.cos(o.ax), sa = Math.sin(o.ax), cb = Math.cos(o.ay), sb = Math.sin(o.ay), cc = Math.cos(o.az), sc = Math.sin(o.az);
-    const tw = (o.twist + geo * 0.5) * 1.6, st = 1 + stretch;
+    const tw = (o.twist + geo * 0.5 + tonTwist) * 1.6, st = 1 + stretch;
     // vértices: forma (metamorfose) → torção → giro → posição → câmera (com o giro da câmera) → tela
     for (let i = 0; i < 14; i++) {
       let x = Av[i * 3] + (B[i * 3] - Av[i * 3]) * k, y = Av[i * 3 + 1] + (B[i * 3 + 1] - Av[i * 3 + 1]) * k, z = Av[i * 3 + 2] + (B[i * 3 + 2] - Av[i * 3 + 2]) * k;
@@ -534,7 +543,8 @@ export function createInfiniteMicrocosmos(canvas) {
     ctx.fillStyle = col;
     const c = Math.cos(f.a), s = Math.sin(f.a);
     ctx.beginPath();
-    if (f.kind === 1) ctx.arc(px, py, r * 0.6, 0, TAU);                                         // ponto
+    if (f.dist > 0.1) { const L = r * (1.2 + f.dist * 3); ctx.moveTo(px + c * L, py + s * L); ctx.lineTo(px - s * r * 0.9 - c * r * 0.3, py + c * r * 0.9 - s * r * 0.3); ctx.lineTo(px - c * L * 0.35 + s * r * 0.4, py - s * L * 0.35 - c * r * 0.4); } // DISTORTION: estilhaço torto
+    else if (f.kind === 1) ctx.arc(px, py, r * 0.6, 0, TAU);                                         // ponto
     else if (f.kind === 2) ctx.ellipse(px, py, r * 1.4, r * 0.5, f.a, 0, TAU);                    // disco
     else if (f.kind === 3) { const L = r * 2.2 * f.len, w = Math.max(0.6, r * 0.22); ctx.moveTo(px + c * L, py + s * L); ctx.lineTo(px - s * w, py + c * w); ctx.lineTo(px - c * L, py - s * L); ctx.lineTo(px + s * w, py - c * w); } // agulha
     else if (f.kind === 4) { const L = r * 1.2 * f.len; ctx.moveTo(px + c * L, py + s * L); ctx.lineTo(px - s * r * 0.6, py + c * r * 0.6); ctx.lineTo(px - c * L * 0.5, py - s * L * 0.5); ctx.lineTo(px + s * r * 0.6, py - c * r * 0.6); } // cristal

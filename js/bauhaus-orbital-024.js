@@ -78,7 +78,7 @@ export function createBauhausOrbital(canvas) {
       bass: { turn: 0, from: 0, to: 0, t0: -9, dur: 0.15, planets: [], n: 0 },
       snare: { q: -1, arcs: [] },
       rings: { kick: newRing(), bass: newRing(), snare: newRing(), hat: newRing() },
-      attract: 0, repel: 0, attractK: 1, repelK: 1,
+      attract: 0, repel: 0, attractK: 1, repelK: 1, attractDecay: 1.4, chordBreak: 0, chordK: 3, chordDecay: 1.2, chordLife: 1e9,
     };
     parts = Array.from({ length: MAXP }, () => ({ on: false, r: 0.6, a: 0, inc: 0, node: 0, w: 1, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, born: 0, life: 4, kind: 1, shape: 0, s: 0.02, col: 0, free: false }));
     for (let i = 0; i < 40; i++) emit(0.5, { color: 0.25, shape: 0, sweep: 0.25, contour: 0, decay: 1, pitch: 0, dist: 0, pan: 0 }, true);
@@ -112,7 +112,8 @@ export function createBauhausOrbital(canvas) {
     kickTimes.push(t); if (kickTimes.length > 9) kickTimes.shift();
     K.from = angNow(K, t); K.step++; K.to = K.step * (TAU / 4); K.t0 = t; K.dur = move(); K.v = v;
     K.pulseT = t; K.shape = c.shape; K.kind = st5(c.color); K.sweep = c.sweep; K.punch = c.punch;
-    K.waves.push({ t0: t, v, kind: K.kind, reach: 0.6 + c.sweep * 0.8 }); if (K.waves.length > 6) K.waves.shift();
+    K.waves.push({ t0: t, v, kind: K.kind, reach: 0.6 + c.sweep * 0.8, dur: 0.32 * A(c.decay, [0.4, 0.7, 1, 2, 4]) }); if (K.waves.length > 6) K.waves.shift();
+    S.attractDecay = A(c.decay, [3, 2, 1.4, 0.7, 0.3]); K.dist = c.dist;
     // ATRAÇÃO (hemisfério de cima): força com a elasticidade do CONTOUR
     S.attract = Math.min(3, S.attract + 0.8 + 1.6 * v); S.attractK = 0.4 + c.contour * 1.6;
     counts.kicks++; counts.attracts++;
@@ -120,7 +121,7 @@ export function createBauhausOrbital(canvas) {
   function bass(v, c) {
     const t = now(), B = S.bass;
     B.from = angNow(B, t); B.turn++; B.to = B.turn * (TAU / 16); B.t0 = t; B.dur = move() * (1 + c.contour);
-    B.planets.push({ a: -Math.PI / 2 - B.to, n: B.n++, born: t, v, shape: c.shape, kind: st5(c.color), spiral: c.sweep, pitch: c.pitch });
+    B.planets.push({ a: -Math.PI / 2 - B.to, n: B.n++, born: t, v, shape: c.shape, kind: st5(c.color), spiral: c.sweep, pitch: c.pitch, dist: c.dist, life: A(c.decay, [1.2, 3, 1e9, 1e9, 1e9]) });
     if (B.planets.length > 14) B.planets.shift();
     counts.notes++;
   }
@@ -129,7 +130,7 @@ export function createBauhausOrbital(canvas) {
     N.q = (N.q + 1) % 4;
     // COLOR: organização — 1 arco, 2 opostos, 4 em cruz, assimétrico, 8 fatias
     const sym = st5(c.color), qs = sym === 1 ? [N.q, N.q + 2] : sym === 2 ? [0, 1, 2, 3] : sym === 3 ? [N.q, N.q + 1.5] : sym === 4 ? [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5] : [N.q];
-    for (const q of qs) N.arcs.push({ q, born: t, v, cut: c.shape, span: sym === 4 ? 0.5 : 1 });
+    for (const q of qs) N.arcs.push({ q, born: t, v, cut: c.shape, span: sym === 4 ? 0.5 : 1, life: A(c.decay, [0.4, 0.8, 1.6, 4, 10]) });
     if (N.arcs.length > 12) N.arcs.splice(0, N.arcs.length - 12);
     // EXPULSÃO (hemisfério de baixo): direção pelo SWEEP, força pelo CONTOUR
     S.repel = Math.min(3, S.repel + 1 + 2 * v); S.repelK = 0.5 + c.contour * 2; S.repelDir = st5(c.sweep);
@@ -156,6 +157,10 @@ export function createBauhausOrbital(canvas) {
       r.eccT = c.color * 0.5 * (i % 2 ? 1 : 0.4);
       r.chordT = t; r.spin = c.sweep * (i % 2 ? 1 : -1);
     });
+    S.chordK = A(c.contour, [3, 2, 1.2, 0.6, 0.3]);                 // CONTOUR: articulação (rápida → lenta, elástica)
+    S.chordBreak = Math.max(S.chordBreak, c.dist);                   // DISTORTION: todos os anéis se rompem juntos
+    S.chordDecay = A(c.decay, [3, 1.8, 1.2, 0.6, 0.25]);
+    S.chordLife = A(c.decay, [0.6, 1.5, 1e9, 1e9, 1e9]);             // DECAY curto: os anéis voltam ao lugar
     counts.chords++;
   }
   function perc(v, c) {
@@ -185,15 +190,17 @@ export function createBauhausOrbital(canvas) {
     const vis = FM() ? FM().visAll() : {};
     camA += dt * (0.07 + (vis.rot || 0) * 0.3); camE = 0.42 + Math.sin(t * 0.05) * 0.12 + (vis.persp || 0) * 0.25;
     setCam();
-    S.attract *= Math.exp(-dt * 1.4); S.repel *= Math.exp(-dt * 2.2);
+    S.attract *= Math.exp(-dt * (S.attractDecay || 1.4)); S.repel *= Math.exp(-dt * 2.2);
+    S.chordBreak *= Math.exp(-dt * (S.chordDecay || 1.2));
     // anéis: inclinação e excentricidade pelo SWEEP da pista dona; ruptura pela DISTORTION
     RKEYS.forEach((k, i) => {
       const r = S.rings[k], p = P(k);
-      const tgtTilt = clamp((r.tiltT || 0) + p.sweep * (i % 2 ? 0.9 : -0.9) + (vis.geom || 0) * 0.3, -1.25, 1.25);
-      r.tilt += (tgtTilt - r.tilt) * (1 - Math.exp(-dt * 3));
-      r.ecc += ((r.eccT || 0) + p.sweep * 0.35 - r.ecc) * (1 - Math.exp(-dt * 3));
+      if (r.chordT > 0 && t - r.chordT > (S.chordLife || 1e9)) { r.tiltT = 0; r.eccT = 0; r.spin = 0; }
+      const tgtTilt = clamp((r.tiltT || 0) + p.sweep * (i % 2 ? 0.9 : -0.9) + (vis.geom || 0) * 0.3, -1.25, 1.25), rk = 1 - Math.exp(-dt * (S.chordK || 3));
+      r.tilt += (tgtTilt - r.tilt) * rk;
+      r.ecc += ((r.eccT || 0) + p.sweep * 0.35 - r.ecc) * rk;
       r.yaw += dt * (r.spin || 0) * 0.6;
-      r.broken += (p.dist - r.broken) * (1 - Math.exp(-dt * 4));
+      r.broken += (Math.max(p.dist, S.chordBreak * 0.9) - r.broken) * (1 - Math.exp(-dt * 4));
     });
     const magnet = 1 + (vis.magnet || 0);
     for (const p of parts) {
@@ -270,13 +277,16 @@ export function createBauhausOrbital(canvas) {
     if (sh > 0.55 && imp > 0.15) { // fratura: o sol em duas metades que se afastam
       const off = (sh - 0.55) * rs * 1.2 * imp;
       ctx.fillStyle = RED; ctx.beginPath(); ctx.arc(-off, 0, rs, Math.PI / 2, Math.PI * 1.5); ctx.fill(); ctx.beginPath(); ctx.arc(off, 0, rs, -Math.PI / 2, Math.PI / 2); ctx.fill();
+    } else if ((K.dist || 0) > 0.1) { // DISTORTION (kick): o sol deforma em coroa serrilhada (geometria, não tamanho)
+      const m = 18, d = K.dist;
+      for (const [col, k, o] of [["#a81c21", 1, 0], [RED, 0.86, -0.12]]) { ctx.fillStyle = col; ctx.beginPath(); for (let j = 0; j < m; j++) { const aa = (j / m) * TAU + t * 0.3, rr = rs * k * (j % 2 ? 1 - d * 0.35 : 1 + d * 0.15); ctx[j ? "lineTo" : "moveTo"](rs * o + Math.cos(aa) * rr, rs * o + Math.sin(aa) * rr); } ctx.closePath(); ctx.fill(); }
     } else { ctx.fillStyle = "#a81c21"; ctx.beginPath(); ctx.arc(0, 0, rs, 0, TAU); ctx.fill(); ctx.fillStyle = RED; ctx.beginPath(); ctx.arc(-rs * 0.12, -rs * 0.12, rs * 0.86, 0, TAU); ctx.fill(); }
     ctx.restore();
   }
   function drawWaves(t) {
     const K = S.kick;
     for (const w of K.waves) {
-      const k = (t - w.t0) / 0.32; if (k >= 1 || k < 0) continue;
+      const k = (t - w.t0) / (w.dur || 0.32); if (k >= 1 || k < 0) continue;
       const r = lerp(0.13, w.reach, easeOut(k)), q = proj(0, 0, 0), rr = r * q[3];
       ctx.strokeStyle = INK; ctx.lineWidth = R * (0.006 + 0.02 * w.v) * (1 - k * 0.6);
       ctx.beginPath();
@@ -301,7 +311,7 @@ export function createBauhausOrbital(canvas) {
   }
   function drawArcs(t) {
     for (const A2 of S.snare.arcs) {
-      const age = t - A2.born, fade = clamp(1 - age / 1.6, 0, 1); if (fade <= 0) continue;
+      const age = t - A2.born, fade = clamp(1 - age / (A2.life || 1.6), 0, 1); if (fade <= 0) continue;
       const k = easeOut(clamp(age / 0.08, 0, 1)), last = A2 === S.snare.arcs[S.snare.arcs.length - 1];
       const a0 = A2.q * (TAU / 4) + 0.07, a1 = a0 + ((TAU / 4) * A2.span - 0.14) * k;
       const w = R * (0.03 + 0.06 * A2.v) * (last ? 1 : 0.55);
@@ -322,15 +332,26 @@ export function createBauhausOrbital(canvas) {
     const B = S.bass, rot = angNow(B, t), n = B.planets.length;
     B.planets.forEach((pl, i) => {
       const old = n - 1 - i; if (old > 12) return;
+      const ageP = t - pl.born; if (ageP > pl.life + 0.3) return;                         // DECAY: o planeta some
+      const die = ageP > pl.life ? 1 - (ageP - pl.life) / 0.3 : 1;
       // SWEEP (tone): trajetória — órbita → espiral (os mais velhos descem pra dentro)
       const a = pl.a + rot, spiral = pl.spiral * old * 0.05;
       const p = ringPt("bass", a), k = 1 - spiral;
       const q = proj(p[0] * k, p[1] * k, p[2] * k);
       const age = t - pl.born, pop = age < 0.12 ? 1 + 0.35 * Math.sin((Math.PI * age) / 0.12) : 1;
-      const s = (0.016 + 0.034 * pl.v) * q[3] * pop * (old < 8 ? 1 : 0.8) * (1 + pl.pitch * 0.3);
-      // SHAPE (tone): alongamento / torção do planeta
+      const s = (0.016 + 0.034 * pl.v) * q[3] * pop * (old < 8 ? 1 : 0.8) * (1 + pl.pitch * 0.3) * die;
+      if (s < 0.3) return;
+      // SHAPE (tone): alongamento / torção · COLOR: identidade (disco, quadrado, anel, meia-lua, triângulo) · DIST: serrilhado
       ctx.fillStyle = old === 0 ? BLUE : old % 5 === 2 ? INK : BLUE;
-      ctx.beginPath(); ctx.ellipse(q[0], q[1], s * (1 + pl.shape * 1.5), s * (1 - pl.shape * 0.4), a * pl.shape, 0, TAU); ctx.fill();
+      ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(a * pl.shape); ctx.scale(1 + pl.shape * 1.5, 1 - pl.shape * 0.4);
+      ctx.beginPath();
+      if (pl.dist > 0.1) { const m = 12; for (let j = 0; j < m; j++) { const aa = (j / m) * TAU, rr = s * (j % 2 ? 1 - pl.dist * 0.45 : 1 + pl.dist * 0.2); ctx[j ? "lineTo" : "moveTo"](Math.cos(aa) * rr, Math.sin(aa) * rr); } ctx.closePath(); }
+      else if (pl.kind === 1) ctx.rect(-s, -s, 2 * s, 2 * s);
+      else if (pl.kind === 2) { ctx.arc(0, 0, s, 0, TAU); ctx.moveTo(s * 0.5, 0); ctx.arc(0, 0, s * 0.5, 0, TAU, true); }
+      else if (pl.kind === 3) ctx.arc(0, 0, s, Math.PI, 0);
+      else if (pl.kind === 4) { ctx.moveTo(0, -s * 1.1); ctx.lineTo(s, s * 0.8); ctx.lineTo(-s, s * 0.8); ctx.closePath(); }
+      else ctx.arc(0, 0, s, 0, TAU);
+      ctx.fill("evenodd"); ctx.restore();
     });
   }
   function drawMoon(t) {
