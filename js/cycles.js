@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 33;
+  const APP_VERSION = 34;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -595,6 +595,15 @@
       snareLines.push(line);
       if (source === "audio") audio.snLine = line;
     }
+    // BAIXO = COR: a nota vira o tom (grave quente → mais agudo frio), a força vira a
+    // intensidade, e a cor volta ao branco no tempo do decay do baixo
+    if (sh.m === 8 || (sh.m === 4 && note < 52)) {
+      const hz = noteHz(note), u = clamp(Math.log(hz / 35) / Math.log(220 / 35), 0, 1);
+      tint.h = (8 - u * 128 + 360) % 360;          // vermelho → magenta → roxo → azul (sem passar pelo verde)
+      tint.amt = Math.max(tint.amt * tintNow(t), Math.pow(n01(vel), 0.8));
+      tint.t0 = t;
+      tint.dur = source === "audio" ? 0.9 : 0.25 + 1.6 * Math.pow(n01(tr.decay), 1.3);
+    }
     if (sh.m === 2) {
       // hi-hat = risco na borda; anda uma posição por batida, em volta da tela (sentido horário)
       hatStep = (hatStep + 1) % 32;
@@ -1132,9 +1141,21 @@
         }
       }
       lctx.lineWidth = Math.max(1, 2.5 * DPR * (1 - p * 0.5));
-      lctx.strokeStyle = `rgba(255,255,255,${(0.95 * Math.pow(1 - p, 1.6)).toFixed(3)})`;
+      lctx.strokeStyle = ink(0.95 * Math.pow(1 - p, 1.6));
       lctx.stroke();
     }
+  }
+
+  // ---------- cor do baixo: pinta tudo o que está na tela ----------
+  const tint = { h: 0, amt: 0, t0: -9, dur: 1 };
+  function tintNow(t) { return Math.max(0, 1 - (t - tint.t0) / tint.dur); }
+  // tinta das formas: branco misturado com a cor do baixo do momento
+  function ink(alpha) {
+    const a = tint.amt * Math.pow(tintNow(now()), 1.2);
+    if (a < 0.01) return `rgba(255,255,255,${alpha.toFixed(3)})`;
+    const [r, g, bb] = hslToRgb({ h: tint.h, s: 95, l: 58 });
+    const m = (w, c) => Math.round(w * (1 - a) + c * a);
+    return `rgba(${m(255, r)},${m(255, g)},${m(255, bb)},${alpha.toFixed(3)})`;
   }
 
   // ---------- hi-hat: riscos curtos nas bordas, que andam em volta da tela ----------
@@ -1162,7 +1183,7 @@
       lctx.moveTo(b.x + b.nx * m, b.y + b.ny * m);
       lctx.lineTo(b.x + b.nx * (m + len), b.y + b.ny * (m + len));
       lctx.lineWidth = Math.max(1, 2.5 * DPR);
-      lctx.strokeStyle = `rgba(255,255,255,${(0.95 * Math.pow(1 - p, 1.4)).toFixed(3)})`;
+      lctx.strokeStyle = ink(0.95 * Math.pow(1 - p, 1.4));
       lctx.stroke();
     }
   }
@@ -1181,7 +1202,7 @@
       lctx.beginPath();
       lctx.arc(W / 2, H / 2, r, 0, Math.PI * 2);
       lctx.lineWidth = Math.max(1, 2.5 * DPR * (1 - p * 0.5));
-      lctx.strokeStyle = `rgba(255,255,255,${(0.95 * Math.pow(1 - p, 1.6)).toFixed(3)})`;
+      lctx.strokeStyle = ink(0.95 * Math.pow(1 - p, 1.6));
       lctx.stroke();
     }
   }
