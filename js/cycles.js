@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 48;
+  const APP_VERSION = 49;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -641,37 +641,44 @@
     const cur = Math.round(clock.ticks / 6), a = trSteps[tr].filter((x) => cur - x < 32 && cur - x >= 0); // 2 compassos
     const has = (x) => a.includes(x);
     const beats = [];
-    for (let b = Math.floor(cur / 4) * 4 - 28; b <= cur - 4; b += 4) if (b >= 0) beats.push(b); // os últimos 8 tempos já passados
+    // os últimos 8 tempos já passados — só desde que a trilha começou a tocar (o kick que entra
+    // depois de uma intro é julgado pelos tempos em que já toca, não pelo silêncio de antes)
+    const from = a.length ? Math.floor(Math.min(...a) / 4) * 4 : cur;
+    for (let b = Math.floor(cur / 4) * 4 - 28; b <= cur - 4; b += 4) if (b >= 0 && b >= from) beats.push(b);
     const onBeats = beats.filter(has).length;
     const back = beats.filter((b) => (b / 4) % 2 === 1), front = beats.filter((b) => (b / 4) % 2 === 0);
     const miss = beats.length >= 8 ? 1 : 0; // em 2 compassos, perdoa uma nota que faltou
     return {
       n: a.length,
+      judged: beats.length >= 4, // já tocou pelo menos 4 tempos: dá pra julgar o ritmo
       four: beats.length >= 4 && onBeats >= beats.length - miss && a.length <= beats.length * 1.5,  // bate nos 4 tempos (chimbal em colcheia não)
       backbeat: back.length >= 2 && back.filter(has).length >= back.length - miss && front.filter(has).length <= miss, // 2 e 4
     };
   }
-  let p2map = null, p2mapT = -9;
+  // O ajuste é FIRME: só troca o papel de uma trilha que está tocando e NUNCA bateu daquele jeito
+  // desde o play (então uma virada do kick, ou uma intro sem kick com outra trilha nos 4 tempos,
+  // não passam o papel pra ninguém). Quando troca, fica salvo no ⚙: da próxima vez já começa certo.
+  const p2sess = { ok: {}, auto: {} }; // zera a cada play
+  let p2mapT = -9;
   function p2Roles() {
     const t = now();
-    if (p2map && t - p2mapT < 0.25) return p2map;
-    const r = { ...settings.p2roles }, auto = {};
-    if (settings.p2auto !== false && clock.synced && clock.running && clock.ticks >= 6 * 16) { // depois de 1 compasso
-      const R = [0, 1, 2, 3, 4, 5].map((tr) => (now() - lastTrNote[tr] < 8 ? rhythmOf(tr) : { n: 0 }));
-      const pick = (role, test, avoid) => {
-        const cur = r[role];
-        if (cur >= 0 && R[cur][test]) return;
+    if (t - p2mapT >= 0.25 && settings.p2auto !== false && clock.synced && clock.running && clock.ticks >= 6 * 16) {
+      p2mapT = t;
+      const R = [0, 1, 2, 3, 4, 5].map((tr) => (t - lastTrNote[tr] < 8 ? rhythmOf(tr) : { n: 0 }));
+      const check = (role, test, avoid) => {
+        const cur = settings.p2roles[role];
+        if (cur >= 0 && R[cur][test]) { p2sess.ok[role] = true; return; }
+        if (p2sess.ok[role] || cur < 0) return;  // já bateu certo neste play (virada) ou "nenhuma" escolhida
+        if (!R[cur].judged) return;              // a trilha escolhida não está tocando (intro) ou acabou de entrar: espera
         const c = [0, 1, 2, 3, 4, 5].filter((tr) => tr !== cur && tr !== avoid && R[tr][test]);
-        if (c.length !== 1) return; // nenhuma ou mais de uma: fica como está
-        // troca: o papel que estava na trilha nova vai pra trilha antiga (ex.: kick na T3 e hi-hat na T1)
-        for (const o of Object.keys(r)) if (r[o] === c[0]) { r[o] = cur; if (cur >= 0) auto[o] = true; }
-        r[role] = c[0]; auto[role] = true;
+        if (c.length !== 1) return;              // nenhuma ou mais de uma: fica como está
+        setP2Role(role, c[0]);                   // a trilha que estava com outro papel fica sem papel
+        p2sess.ok[role] = true; p2sess.auto[role] = true;
       };
-      pick("kick", "four", -1);
-      pick("snare", "backbeat", r.kick);
+      check("kick", "four", -1);
+      check("snare", "backbeat", settings.p2roles.kick);
     }
-    p2map = { roles: r, auto }; p2mapT = t;
-    return p2map;
+    return { roles: settings.p2roles, auto: p2sess.auto };
   }
   const roleOf = (tr) => { const r = p2Roles().roles; return Object.keys(r).find((k) => r[k] === tr) || null; };
   function emitP2(type, amount, source = "audio") {
@@ -1696,6 +1703,7 @@
       clock.running = true; clock.ticks = -1; clock.step = 0; clock.times = [];
       clock.synced = true; clock.stopped = false; // o play chegou: os tempos (semínimas) estão no lugar certo
       if (p2ears) p2ears.brain.newPlay(); // Projeto 2 reaprende onde o kick cai a cada play
+      p2sess.ok = {}; p2sess.auto = {};   // e confere de novo qual trilha é o kick e a caixa
       if (settings.clearOnPlay) clearCanvas();
       log("▶ play");
     } else if (st === 0xfb) {
@@ -1805,13 +1813,12 @@
         <input type="checkbox" id="chk-p2auto"${settings.p2auto !== false ? " checked" : ""} /></label>`;
     el.querySelectorAll("select").forEach((sel) => sel.addEventListener("change", () => setP2Role(sel.dataset.role, parseInt(sel.value, 10))));
     const au = $("chk-p2auto");
-    if (au) au.addEventListener("change", () => { settings.p2auto = au.checked; p2map = null; save(); });
+    if (au) au.addEventListener("change", () => { settings.p2auto = au.checked; save(); });
   }
   function setP2Role(k, v) {
     if (!(k in settings.p2roles)) return;
     for (const o of Object.keys(settings.p2roles)) if (o !== k && settings.p2roles[o] === v && v >= 0) settings.p2roles[o] = -1; // uma trilha, um papel
     settings.p2roles[k] = v;
-    p2map = null;
     save(); renderP2Roles();
   }
   // o Projeto 2 lê daqui: papel de cada trilha e quais trilhas estão mandando notas MIDI agora

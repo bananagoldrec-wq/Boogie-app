@@ -169,7 +169,7 @@ export function createEndlessClimb(canvas) {
   function growNow(t) {
     const a = t - hero.growT;
     if (a < 0 || hero.growV <= 0) return 1;
-    const top = 1 + 0.25 + 0.85 * Math.pow(hero.growV, 0.9); // força = quanto cresce (até ~2×)
+    const top = 1 + Math.pow(hero.growV, 1.2); // força = quanto cresce: nota fantasma ~10–15%, caixa cheia ~2×
     const up = 0.025, back = clamp(snareP() * 0.7, 0.16, 0.6);
     if (a < up) return lerp(hero.growFrom, top, easeOut(a / up));
     const k = clamp((a - up) / back, 0, 1);
@@ -380,6 +380,7 @@ export function createEndlessClimb(canvas) {
     window.removeEventListener("resize", resize);
   }
 
-  const state = () => ({ x: hero.x, y: hero.y, steps: steps.length, drops: drops.length, size: +growNow(now()).toFixed(3), bg: bgNow(now()).map((c) => c | 0) });
+  // pra testes: onde está a pessoa, a escada (soma das alturas), a chuva, o tamanho e a cor agora
+  const state = () => ({ x: hero.x, y: hero.y, steps: steps.length, stairs: +steps.reduce((a, s) => a + s.y, 0).toFixed(3), drops: drops.length, size: +growNow(now()).toFixed(3), bg: bgNow(now()).map((c) => c | 0) });
   return { hit, reset, setBpm, destroy, canvas, state };
 }
