@@ -1,9 +1,9 @@
 /* Projeto 2 — ESCADA SEM FIM (Endless Climb)
 
    Cada som tem um papel só, sempre o mesmo, e tudo acontece NO TEMPO da música:
-   - KICK    faz a pessoa ANDAR: cada kick é UM passo dado NA HORA do kick
-             (4 kicks no compasso = 4 passos). Com escada à frente, cada kick sobe
-             um degrau; no plano, força = tamanho do passo.
+   - KICK    faz a pessoa ANDAR: cada kick é UM passo dado NA HORA do kick, sempre do
+             mesmo tamanho (um degrau): 4 kicks no compasso = 4 passos iguais, no 4/4.
+             Com escada à frente, cada kick sobe um degrau. Força = o quanto o corpo balança.
    - BASS    faz a ESCADA SUBIR: cada nota levanta um degrau novo à frente da pessoa.
              Força = altura do degrau. Sem baixo, o caminho segue plano.
    - HI-HAT  faz CHOVER (só isso): cada hi-hat é uma pancada de chuva que some antes do
@@ -61,15 +61,17 @@ export function createEndlessClimb(canvas) {
 
   // ---------- estado ----------
   // medidas em "alturas de pessoa": a pessoa tem 1; o quadril fica em 0,5; cada perna 0,6
-  const STEP_W = 0.9;               // largura de cada degrau (constante: a força muda só a altura)
+  // tudo numa grade: cada degrau tem a largura de UM passo, e cada pé pisa no meio de um degrau
+  const STEP_W = 0.6;               // largura de cada degrau = tamanho de cada passo (sempre igual)
   const LEG = 0.3;                  // coxa = canela
   const CAM_DX = 1.6, CAM_DY = 1.3; // a pessoa fica à esquerda e abaixo do centro
   let steps, hero, drops, bg, cam;
 
   function reset() {
     const t = now();
-    steps = [{ x: -8, y: 0, w: 9, rise: 0, born: t - 9, v: 0, dur: 0.1, floor: true }];
-    hero = { x: -0.5, y: 0, feet: [[-0.6, 0], [-0.4, 0]], swing: 0, stride: null, footT: -9, footV: 0, growT: -9, growV: 0, growFrom: 1 };
+    steps = [{ x: -8, y: 0, w: 8 + STEP_W / 2, rise: 0, born: t - 9, v: 0, dur: 0.1, floor: true }];
+    // a pessoa fica com um pé no degrau "col" (o da frente) e outro no anterior; o corpo entre os dois
+    hero = { col: 0, x: -STEP_W / 2, y: 0, feet: [[-STEP_W, 0], [0, 0]], swing: 0, stride: null, footT: -9, footV: 0, growT: -9, growV: 0, growFrom: 1 };
     drops = [];
     bg = { from: [0, 0, 0], to: [0, 0, 0], t0: -9, hue: Math.random() * 360 };
     cam = { x: hero.x + CAM_DX, y: hero.y + CAM_DY };
@@ -84,18 +86,14 @@ export function createEndlessClimb(canvas) {
     for (let i = steps.length - 1; i >= 0; i--) if (steps[i].x <= x + 1e-9) return steps[i].y;
     return steps[0].y;
   }
-  // o pé não pousa colado no espelho de um degrau
-  function clearRiser(x) {
-    for (const st of steps) if (!st.floor && x > st.x - 0.1 && x < st.x + 0.1) return st.x + 0.1;
-    return x;
-  }
 
   // ---------- KICK: um passo ----------
   function finishStride() {
     const s = hero.stride;
     if (!s) return;
-    hero.x = s.x1; hero.y = groundY(s.x1);
+    hero.col = s.col;
     hero.feet[hero.swing] = [s.f1[0], groundY(s.f1[0])];
+    hero.x = s.x1; hero.y = (hero.feet[0][1] + hero.feet[1][1]) / 2;
     hero.swing ^= 1;
     hero.stride = null;
   }
@@ -105,21 +103,14 @@ export function createEndlessClimb(canvas) {
     tap(kickTimes, t);
     finishStride(); // se o passo anterior ainda não terminou, termina agora
     hero.footT = t; hero.footV = v;
-    const len = 0.3 + 0.4 * Math.pow(v, 0.7); // força = tamanho do passo (nota fraca ainda anda bem)
-    // escada à frente ao alcance? este kick sobe UM degrau (nem mais, nem menos)
-    const next = steps.find((st) => !st.floor && st.x > hero.x + 0.05);
-    let x1, fx;
-    if (next && next.x - hero.x <= len + 0.9) {
-      x1 = next.x + 0.22;                                  // o corpo sobe pro degrau…
-      fx = next.x + Math.min(0.5, next.w * 0.55);          // …e o pé pousa em cima dele
-    } else {
-      x1 = hero.x + len;                     // no plano: o corpo anda um passo…
-      fx = clearRiser(x1 + len * 0.5);       // …e o pé que estava atrás pousa meio passo à frente
-    }
+    // UM passo, sempre do mesmo tamanho: o pé de trás vai pro meio do próximo degrau (no plano
+    // ou subindo) e o corpo avança um degrau. A força só muda o quanto o corpo balança.
+    const col = hero.col + 1, fx = col * STEP_W, fy = groundY(fx);
+    const other = hero.feet[hero.swing ^ 1];
     hero.stride = {
-      x0: hero.x, y0: hero.y, x1, y1: groundY(x1), t0: t, len,
-      dur: clamp(beatP() * 0.3, 0.08, 0.15), // passo curto e rápido, colado no kick
-      f0: hero.feet[hero.swing], f1: [fx, groundY(fx)],
+      col, x0: hero.x, y0: hero.y, x1: hero.x + STEP_W, y1: (other[1] + fy) / 2, t0: t, len: STEP_W,
+      dur: clamp(beatP() * 0.35, 0.1, 0.2), // passo curto, colado no kick
+      f0: hero.feet[hero.swing], f1: [fx, fy],
       lift: 0.03 + 0.06 * v,
     };
   }
@@ -128,24 +119,24 @@ export function createEndlessClimb(canvas) {
   function raise(v) {
     const t = now();
     const last = steps[steps.length - 1];
-    // o degrau novo nasce À FRENTE da pessoa (nunca embaixo dela nem dos pés)
-    let front = Math.max(hero.x, hero.feet[0][0], hero.feet[1][0]);
-    if (hero.stride) front = Math.max(front, hero.stride.x1, hero.stride.f1[0]);
-    const ahead = front + 0.35;
-    const rise = 0.1 + 0.45 * Math.pow(v, 1.1);           // força = altura do degrau
+    // o degrau novo nasce À FRENTE da pessoa, na grade (nunca embaixo dos pés): no primeiro
+    // degrau depois do pé da frente (ou de onde ele está indo)
+    const front = hero.stride ? hero.stride.col : hero.col;
+    const lastCol = last.floor ? -999 : Math.round((last.x + STEP_W / 2) / STEP_W);
+    const col = Math.max(front + 1, lastCol + 1);
+    const rise = 0.1 + 0.35 * Math.pow(v, 1.1);           // força = altura do degrau
     // a escada à frente nunca sai da tela: se já tem os degraus que cabem à frente da pessoa
     // (o baixo tocando mais que o kick), o baixo levanta o ÚLTIMO degrau ali mesmo, na tela
-    const fit = clamp(Math.floor((W / 2 / U + CAM_DX - 0.6) / STEP_W), 3, 8);
-    const nAhead = steps.reduce((n, st) => n + (!st.floor && st.x > hero.x + 0.05 ? 1 : 0), 0);
-    if (nAhead >= fit && !last.floor) {
+    const fit = clamp(Math.floor((W / 2 / U + CAM_DX - 0.6) / STEP_W), 3, 10);
+    if (col - front > fit && !last.floor) {
       const top = hero.y + (H / 2 / U + CAM_DY) * 0.85;       // e nem por cima da tela
       const y = Math.min(last.y + rise, Math.max(top, last.y));
       const r = Math.max(0.06, y - last.y);                   // no teto: o degrau dá um pulo no lugar
       last.y = y; last.rise = r; last.born = t; last.v = v; last.dur = 0.06;
       return;
     }
-    let x = last.x + last.w;
-    if (x < ahead) { last.w = ahead - last.x; x = ahead; } // o plano se estende até ali
+    const x = col * STEP_W - STEP_W / 2;
+    if (last.x + last.w < x) last.w = x - last.x; // o plano se estende até ali
     steps.push({ x, y: last.y + rise, w: STEP_W, rise, born: t, v, dur: 0.06 }); // sobe na hora da nota
     // esquece o que ficou muito pra trás
     let behind = 0;
@@ -207,7 +198,7 @@ export function createEndlessClimb(canvas) {
     const t = now();
     bg.from = bgNow(t);
     bg.hue = (bg.hue + 137.508) % 360; // cada acorde, uma cor bem diferente da anterior
-    bg.to = hsl(bg.hue, 0.5 + 0.3 * v, 0.06 + 0.22 * Math.pow(v, 0.9)); // força = quão clara
+    bg.to = hsl(bg.hue, 0.65 + 0.25 * v, 0.2 + 0.2 * v); // sempre uma cor bem visível; força = quão clara
     bg.t0 = t;
   }
 
@@ -276,12 +267,12 @@ export function createEndlessClimb(canvas) {
       if (prev) { ctx.moveTo(x0, sy(stepY(prev, t))); ctx.lineTo(x0, y); } else ctx.moveTo(x0, y);
       ctx.lineTo(x1, y);
       ctx.stroke();
-      // marcas fixas no chão (a cada 0,45): no plano, mostram cada passo andando
+      // marcas fixas no chão (duas por passo): no plano, mostram cada passo andando
       const wa = (x0 - W / 2) / U + cam.x, wb = (x1 - W / 2) / U + cam.x;
       ctx.strokeStyle = "rgba(255,255,255,0.3)";
       ctx.lineWidth = Math.max(1, lw * 0.6);
       ctx.beginPath();
-      for (let gx = Math.ceil(wa / 0.45) * 0.45; gx < wb; gx += 0.45) {
+      for (let gx = Math.ceil(wa / (STEP_W / 2)) * (STEP_W / 2); gx < wb; gx += STEP_W / 2) {
         const px = sx(gx);
         if (px < -5 || px > W + 5) continue;
         ctx.moveTo(px, y + lw); ctx.lineTo(px, y + lw + U * 0.07);

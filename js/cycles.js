@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 47;
+  const APP_VERSION = 48;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -67,6 +67,9 @@
   settings.cc = Object.assign({ ...DEFAULT_CC }, settings.cc);
   // PROJETO 2 pelo MIDI: qual TRILHA faz cada coisa (índice 0–5 = T1–T6; -1 = nenhuma)
   const P2_DEFAULT = { kick: 0, bass: 4, hat: 2, snare: 1, chord: 5 };
+  // versão 48: os papéis voltam ao padrão do Cycles uma vez (um clique sem querer nas luzes do
+  // rodapé trocava a trilha de um papel e ficava salvo)
+  if (settings.p2ver !== 48) { settings.p2roles = { ...P2_DEFAULT }; settings.p2ver = 48; }
   settings.p2roles = Object.assign({ ...P2_DEFAULT }, settings.p2roles);
   const p2used = new Set();
   for (const k of Object.keys(P2_DEFAULT)) {
@@ -617,10 +620,62 @@
   // só do MIDI (exato); se não está, vem do ouvido próprio do Projeto 2 (áudio). Uma trilha
   // mandando MIDI não cala as outras.
   const midiLive = () => now() - lastMidiNote < 4;
-  const trackLive = (tr) => tr >= 0 && tr < 6 && now() - lastTrNote[tr] < 4;
-  const roleOf = (tr) => Object.keys(settings.p2roles).find((k) => settings.p2roles[k] === tr) || null;
+  // uma trilha que mandou nota MIDI no último minuto é SÓ MIDI: o som nunca chuta por ela
+  // (nem nos compassos em que ela fica quieta, como o acorde que toca a cada 2 compassos)
+  const trackLive = (tr) => tr >= 0 && tr < 6 && now() - lastTrNote[tr] < 60;
+
+  // ---------- quem é quem, pelo MIDI ----------
+  // Com o play dado no Cycles, cada nota MIDI cai num passo exato do compasso (16 passos).
+  // Pelo ritmo dá pra saber: o KICK do house bate nos 4 tempos (passos 1, 5, 9, 13) e a CAIXA
+  // nos tempos 2 e 4 (passos 5 e 13). Se a trilha escolhida pro kick (ou pra caixa) não toca
+  // assim e OUTRA trilha toca, o papel vai pra ela (aparece "auto" na luz do rodapé).
+  const trSteps = [[], [], [], [], [], []]; // últimos passos (contados desde o play) de cada trilha
+  function noteStep(tr) {
+    if (!(clock.synced && clock.running)) return;
+    const st = Math.round(clock.ticks / 6);
+    const a = trSteps[tr];
+    if (a[a.length - 1] !== st) a.push(st);
+    if (a.length > 48) a.shift();
+  }
+  function rhythmOf(tr) {
+    const cur = Math.round(clock.ticks / 6), a = trSteps[tr].filter((x) => cur - x < 32 && cur - x >= 0); // 2 compassos
+    const has = (x) => a.includes(x);
+    const beats = [];
+    for (let b = Math.floor(cur / 4) * 4 - 28; b <= cur - 4; b += 4) if (b >= 0) beats.push(b); // os últimos 8 tempos já passados
+    const onBeats = beats.filter(has).length;
+    const back = beats.filter((b) => (b / 4) % 2 === 1), front = beats.filter((b) => (b / 4) % 2 === 0);
+    const miss = beats.length >= 8 ? 1 : 0; // em 2 compassos, perdoa uma nota que faltou
+    return {
+      n: a.length,
+      four: beats.length >= 4 && onBeats >= beats.length - miss && a.length <= beats.length * 1.5,  // bate nos 4 tempos (chimbal em colcheia não)
+      backbeat: back.length >= 2 && back.filter(has).length >= back.length - miss && front.filter(has).length <= miss, // 2 e 4
+    };
+  }
+  let p2map = null, p2mapT = -9;
+  function p2Roles() {
+    const t = now();
+    if (p2map && t - p2mapT < 0.25) return p2map;
+    const r = { ...settings.p2roles }, auto = {};
+    if (settings.p2auto !== false && clock.synced && clock.running && clock.ticks >= 6 * 16) { // depois de 1 compasso
+      const R = [0, 1, 2, 3, 4, 5].map((tr) => (now() - lastTrNote[tr] < 8 ? rhythmOf(tr) : { n: 0 }));
+      const pick = (role, test, avoid) => {
+        const cur = r[role];
+        if (cur >= 0 && R[cur][test]) return;
+        const c = [0, 1, 2, 3, 4, 5].filter((tr) => tr !== cur && tr !== avoid && R[tr][test]);
+        if (c.length !== 1) return; // nenhuma ou mais de uma: fica como está
+        // troca: o papel que estava na trilha nova vai pra trilha antiga (ex.: kick na T3 e hi-hat na T1)
+        for (const o of Object.keys(r)) if (r[o] === c[0]) { r[o] = cur; if (cur >= 0) auto[o] = true; }
+        r[role] = c[0]; auto[role] = true;
+      };
+      pick("kick", "four", -1);
+      pick("snare", "backbeat", r.kick);
+    }
+    p2map = { roles: r, auto }; p2mapT = t;
+    return p2map;
+  }
+  const roleOf = (tr) => { const r = p2Roles().roles; return Object.keys(r).find((k) => r[k] === tr) || null; };
   function emitP2(type, amount, source = "audio") {
-    if (source === "audio" && trackLive(settings.p2roles[type])) return;
+    if (source === "audio" && trackLive(p2Roles().roles[type])) return;
     const pc = p2Clock();
     const bpm = pc ? 60 / pc.P : null;
     const grid = !!pc; // separando kick × baixo pelo tempo do Cycles
@@ -1581,6 +1636,7 @@
     if (type === 0x90 && d[2] > 0) {
       lastMidiNote = now();
       lastTrNote[tr] = lastMidiNote;
+      noteStep(tr);
       if (demo.on) stopDemo();
       spawn(tr, d[1], d[2]);
       const role = roleOf(tr);
@@ -1744,20 +1800,27 @@
       `<label class="row">${P2_NAMES[k]}
         <select class="sel" data-role="${k}">${[-1, 0, 1, 2, 3, 4, 5].map((i) =>
           `<option value="${i}"${settings.p2roles[k] === i ? " selected" : ""}>${i < 0 ? "nenhuma" : "T" + (i + 1)}</option>`).join("")}</select>
-      </label>`).join("");
+      </label>`).join("") + `
+      <label class="row"><span>Achar o kick (4 tempos) e a caixa (2 e 4) pelo ritmo do MIDI</span>
+        <input type="checkbox" id="chk-p2auto"${settings.p2auto !== false ? " checked" : ""} /></label>`;
     el.querySelectorAll("select").forEach((sel) => sel.addEventListener("change", () => setP2Role(sel.dataset.role, parseInt(sel.value, 10))));
+    const au = $("chk-p2auto");
+    if (au) au.addEventListener("change", () => { settings.p2auto = au.checked; p2map = null; save(); });
   }
   function setP2Role(k, v) {
     if (!(k in settings.p2roles)) return;
     for (const o of Object.keys(settings.p2roles)) if (o !== k && settings.p2roles[o] === v && v >= 0) settings.p2roles[o] = -1; // uma trilha, um papel
     settings.p2roles[k] = v;
+    p2map = null;
     save(); renderP2Roles();
   }
   // o Projeto 2 lê daqui: papel de cada trilha e quais trilhas estão mandando notas MIDI agora
   window.CyclesP2 = {
-    roles: () => ({ ...settings.p2roles }),
+    roles: () => ({ ...p2Roles().roles }),  // valendo agora (com o ajuste automático pelo ritmo)
+    auto: () => ({ ...p2Roles().auto }),
+    chosen: () => ({ ...settings.p2roles }), // como está no ⚙
     setRole: setP2Role,
-    live: () => lastTrNote.map((t) => now() - t < 4),
+    live: () => lastTrNote.map((t, i) => trackLive(i)),
     audioOn: () => !!audio.on,
   };
   function renderChanGrid() {

@@ -41,7 +41,7 @@ Object.keys(lights).forEach((k) => {
   L.addEventListener('click', () => {
     const api = window.CyclesP2;
     if (!api) return;
-    const roles = api.roles();
+    const roles = api.chosen ? api.chosen() : api.roles();
     const taken = Object.keys(roles).filter((o) => o !== k).map((o) => roles[o]);
     const opts = [0, 1, 2, 3, 4, 5].filter((i) => !taken.includes(i)).concat(-1);
     const cur = opts.indexOf(roles[k]);
@@ -52,11 +52,12 @@ Object.keys(lights).forEach((k) => {
 function refreshLights() {
   const api = window.CyclesP2;
   if (!api) return;
-  const roles = api.roles(), live = api.live(), ouvido = api.audioOn();
+  const roles = api.roles(), live = api.live(), ouvido = api.audioOn(), auto = api.auto ? api.auto() : {};
   Object.keys(lights).forEach((k) => {
     const tr = roles[k], sm = lights[k].querySelector('small');
     const midi = tr >= 0 && live[tr];
-    const txt = midi ? `T${tr + 1} MIDI` : ouvido ? (tr >= 0 ? `T${tr + 1} · áudio` : 'áudio') : tr >= 0 ? `T${tr + 1}` : '—';
+    // "auto": o ritmo do MIDI mostrou que esse som está nessa trilha (kick nos 4 tempos, caixa no 2 e 4)
+    const txt = (midi ? `T${tr + 1} MIDI` : ouvido ? (tr >= 0 ? `T${tr + 1} · áudio` : 'áudio') : tr >= 0 ? `T${tr + 1}` : '—') + (auto[k] ? ' auto' : '');
     if (sm.textContent !== txt) sm.textContent = txt;
     lights[k].classList.toggle('miss', !midi && !ouvido);
   });
