@@ -249,4 +249,5 @@ body:not(.proj-2) .only-p2,body.proj-2 .only-p1{display:none!important}
 .p2-lights span.on{color:#fff;background:linear-gradient(#ff4a43,var(--lit));border-color:#7a0f0f;box-shadow:0 0 12px rgba(255,43,43,.6);transition:none}
 .p2-lights b{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;background:var(--lcd);color:var(--lcd-ink);
   border:2px solid #2c2d31;border-radius:5px;padding:2px 8px;text-transform:uppercase}
+.p2-lights b.p2-midi.warn{background:#3a1212;color:#ffb0aa;border-color:#6b1d1d}
 .p2-roles{display:grid;gap:6px}

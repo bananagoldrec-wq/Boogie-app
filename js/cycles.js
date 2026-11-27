@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 43;
+  const APP_VERSION = 44;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -1915,5 +1915,14 @@
     navigator.permissions.query({ name: "midi" }).then((p) => { if (p.state === "granted") connectMidi(); }).catch(() => {});
   }
   setupOffline();
+  // Projeto 2: diz se as notas MIDI estão chegando ou se o Cycles manda só o clock (MOUT desligado nas trilhas)
+  setInterval(() => {
+    const el = $("p2-midi");
+    if (!el) return;
+    const clockOn = clock.times.length > 0 && now() - clock.times[clock.times.length - 1] < 1;
+    const notes = midiLive();
+    const txt = notes ? "notas MIDI ✔" : clockOn ? "só clock · ligue MOUT nas trilhas" : "";
+    if (el.textContent !== txt) { el.textContent = txt; el.hidden = !txt; el.classList.toggle("warn", !notes); }
+  }, 500);
   requestAnimationFrame(frame);
 })();

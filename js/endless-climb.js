@@ -1,8 +1,8 @@
 /* Projeto 2 — ESCADA SEM FIM (Endless Climb)
 
    Cada som tem um papel só, sempre o mesmo, e tudo acontece NO TEMPO da música:
-   - KICK    faz a pessoa ANDAR: cada kick é um passo, e o pé pousa exatamente no kick.
-             O passo dura o intervalo entre os kicks (o andar segue o andamento).
+   - KICK    faz a pessoa ANDAR: cada kick é um passo dado NA HORA do kick
+             (o corpo vai pra frente de uma vez e o pé pousa logo em seguida).
              Força = tamanho do passo.
    - BASS    faz a ESCADA SUBIR: cada nota levanta um degrau novo à frente da pessoa.
              Força = altura do degrau. Sem baixo, o caminho segue plano.
@@ -20,7 +20,7 @@ export function createEndlessClimb(canvas) {
   const ctx = canvas.getContext("2d");
   const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
   const lerp = (a, b, k) => a + (b - a) * k;
-  const ease = (s) => 0.5 - 0.5 * Math.cos(Math.PI * s); // acelera depois do pé pousar, freia antes do próximo
+  const easeOut = (s) => 1 - Math.pow(1 - s, 3); // quase todo o movimento logo no começo: o passo "bate" com o kick
   const now = () => performance.now() / 1000;
 
   // ---------- tela ----------
@@ -40,7 +40,7 @@ export function createEndlessClimb(canvas) {
   resize();
 
   // ---------- andamento ----------
-  // o passo dura um intervalo entre kicks: vem do clock MIDI, ou é medido nos próprios kicks
+  // andamento: vem do clock MIDI, ou é medido nos próprios kicks (só limita a duração do passo)
   const kickTimes = [], hatTimes = [];
   let bpm = null, bpmT = -9;
   function median(times, lo, hi, def) {
@@ -100,14 +100,14 @@ export function createEndlessClimb(canvas) {
   function walk(v) {
     const t = now();
     tap(kickTimes, t);
-    finishStride(); // o pé do passo anterior pousa EXATAMENTE neste kick
+    finishStride(); // se o passo anterior ainda não terminou, termina agora
     hero.footT = t; hero.footV = v;
     const len = 0.28 + 0.4 * v;              // força = tamanho do passo
     const x1 = hero.x + len;                 // o corpo anda um passo…
     const fx = clearRiser(x1 + len * 0.5);   // …e o pé que estava atrás pousa meio passo à frente
     hero.stride = {
       x0: hero.x, y0: hero.y, x1, y1: groundY(x1), t0: t, len,
-      dur: beatP() * 0.92,                   // o passo dura até o próximo kick
+      dur: clamp(beatP() * 0.3, 0.08, 0.15), // passo curto e rápido, colado no kick
       f0: hero.feet[hero.swing], f1: [fx, groundY(fx)],
       lift: 0.02 + 0.05 * v,
     };
@@ -124,7 +124,7 @@ export function createEndlessClimb(canvas) {
     let x = last.x + last.w;
     if (x < ahead) { last.w = ahead - last.x; x = ahead; } // o plano se estende até ali
     const rise = 0.1 + 0.45 * Math.pow(v, 1.1);           // força = altura do degrau
-    steps.push({ x, y: last.y + rise, w: STEP_W, rise, born: t, v, dur: clamp(beatP() * 0.3, 0.07, 0.22) });
+    steps.push({ x, y: last.y + rise, w: STEP_W, rise, born: t, v, dur: 0.06 }); // sobe na hora da nota
     // esquece o que ficou muito pra trás
     let behind = 0;
     while (behind < steps.length - 1 && steps[behind + 1].x < hero.x - 40) behind++;
@@ -158,7 +158,7 @@ export function createEndlessClimb(canvas) {
     return [f(0), f(8), f(4)];
   }
   function bgNow(t) {
-    const k = clamp((t - bg.t0) / 0.05, 0, 1); // troca na batida (quase instantâneo)
+    const k = clamp((t - bg.t0) / 0.02, 0, 1); // troca na batida (instantâneo)
     return bg.from.map((c, i) => lerp(c, bg.to[i], k));
   }
   function changeBg(v) {
@@ -183,7 +183,7 @@ export function createEndlessClimb(canvas) {
     // posição do corpo e dos pés agora
     const s = hero.stride;
     if (!s) return { x: hero.x, y: hero.y, feet: hero.feet, swingX: null };
-    const k = clamp((t - s.t0) / s.dur, 0, 1), e = ease(k);
+    const k = clamp((t - s.t0) / s.dur, 0, 1), e = easeOut(k);
     const x = lerp(s.x0, s.x1, e);
     const y = lerp(s.y0, s.y1, e) + s.lift * Math.sin(Math.PI * k);
     // o pé que anda levanta (mais alto quando sobe degrau) e pousa à frente
@@ -198,7 +198,7 @@ export function createEndlessClimb(canvas) {
   function update(dt, t) {
     if (hero.stride && t - hero.stride.t0 >= hero.stride.dur) finishStride(); // sem kick novo: para
     const p = pose(t);
-    const k = 1 - Math.exp(-dt * 2.4);
+    const k = 1 - Math.exp(-dt * 10); // câmera acompanha rápido (não fica escorregando atrás)
     cam.x += (p.x + CAM_DX - cam.x) * k;
     cam.y += (p.y + CAM_DY - cam.y) * k;
     if (drops.length && t - drops[0].born > drops[0].life) drops = drops.filter((d) => t - d.born <= d.life);

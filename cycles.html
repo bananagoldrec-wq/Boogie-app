@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-cycles-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-cycles-512.png" />
 
-  <link rel="stylesheet" href="css/cycles.css?v=43" />
+  <link rel="stylesheet" href="css/cycles.css?v=44" />
 </head>
 <body>
   <header class="bar">
@@ -78,6 +78,7 @@
       <div class="p2-lights only-p2" id="p2-lights" aria-label="O que está chegando no Projeto 2">
         <span data-k="kick">Kick</span><span data-k="bass">Baixo</span><span data-k="hat">Hi-hat</span><span data-k="snare">Caixa</span>
         <b id="p2-src">—</b>
+        <b id="p2-midi" class="p2-midi" hidden></b>
       </div>
       <div class="seg only-p1" id="seg-mode" role="radiogroup" aria-label="Modo">
         <button data-v="vivo" type="button">Ao vivo</button>
@@ -169,8 +170,9 @@
 
       <section>
         <h4>Projeto 2 — qual trilha faz o quê</h4>
-        <p class="muted">Com o MIDI do Cycles chegando, o Projeto 2 usa só o MIDI: cada trilha vem separada, sem
-        adivinhar pelo som. O padrão é T1 kick, T5 baixo, T3 hi-hat, T2 caixa; troque aqui se o seu baixo estiver em outra trilha.
+        <p class="muted">Com as notas MIDI do Cycles chegando, o Projeto 2 usa só o MIDI: cada trilha vem separada, na hora,
+        sem adivinhar pelo som. <b>No Cycles, ligue o MOUT em cada trilha:</b> segure <i>FUNC</i> e aperte o botão da trilha
+        (T1…T6) e marque <i>MOUT</i> (vem desligado). Sem isso o Cycles manda só o clock e o app tem que ouvir o áudio. O padrão é T1 kick, T5 baixo, T3 hi-hat, T2 caixa; troque aqui se o seu baixo estiver em outra trilha.
         Sem MIDI, ele usa a análise do áudio.</p>
         <div id="p2-roles" class="p2-roles"></div>
       </section>
@@ -205,8 +207,8 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles-analise.js?v=43"></script>
-  <script src="js/cycles.js?v=43"></script>
-  <script type="module" src="js/projeto2.js?v=43"></script>
+  <script src="js/cycles-analise.js?v=44"></script>
+  <script src="js/cycles.js?v=44"></script>
+  <script type="module" src="js/projeto2.js?v=44"></script>
 </body>
 </html>
