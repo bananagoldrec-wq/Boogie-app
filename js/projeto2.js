@@ -15,10 +15,17 @@ const visual = createEndlessClimb(
 // Reiniciar                                     → visual.reset()
 
 let proj = 1;
+const lights = {};
+document.querySelectorAll('#p2-lights span').forEach((el) => { lights[el.dataset.k] = el; });
+const src = document.getElementById('p2-src');
 window.addEventListener('cycles:hit', (e) => {
   if (proj !== 2) return;
   if (e.detail.bpm) visual.setBpm(e.detail.bpm); // passo no andamento do Cycles
   visual.hit(e.detail.type, e.detail.amount);
+  // luzes: o que chegou e de onde (MIDI = exato; ÁUDIO = análise do som)
+  const L = lights[e.detail.type];
+  if (L) { L.classList.add('on'); clearTimeout(L._t); L._t = setTimeout(() => L.classList.remove('on'), 90); }
+  src.textContent = e.detail.source === 'audio' ? 'pelo áudio' : e.detail.source === 'musica' ? 'pela música' : e.detail.source === 'pad' ? 'teclas' : 'pelo MIDI';
 });
 
 // ---------- abas: Sessão 1 · Projeto 2 ----------

@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 41;
+  const APP_VERSION = 42;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -65,6 +65,9 @@
     load()
   );
   settings.cc = Object.assign({ ...DEFAULT_CC }, settings.cc);
+  // PROJETO 2 pelo MIDI: qual TRILHA faz cada coisa (índice 0–5 = T1–T6; -1 = nenhuma)
+  const P2_DEFAULT = { kick: 0, bass: 4, hat: 2, snare: 1 };
+  settings.p2roles = Object.assign({ ...P2_DEFAULT }, settings.p2roles);
   // versão 12: o estilo 3D chega e vira o padrão (uma vez só; depois vale a escolha)
   settings.style = "3d"; // o app agora é só a experiência 3D
 
@@ -633,7 +636,12 @@
   let lastMidiNote = -99;
 
   // avisa o Projeto 2 (com o andamento do clock MIDI, se estiver chegando)
+  // notas MIDI chegando nos últimos segundos? então o MIDI manda no Projeto 2 (é exato: cada trilha
+  // chega separada no seu canal) e o que vem da análise do áudio é ignorado
+  const midiLive = () => now() - lastMidiNote < 4;
+  const roleOf = (tr) => Object.keys(settings.p2roles).find((k) => settings.p2roles[k] === tr) || null;
   function emitP2(type, amount, source = "audio") {
+    if (source === "audio" && midiLive()) return;
     const bpm = clock.running && clock.bpm ? clock.bpm : null;
     window.dispatchEvent(new CustomEvent("cycles:hit", { detail: { type, amount, bpm, source } }));
   }
@@ -706,7 +714,11 @@
     // PROJETO 2 recebe os mesmos sons já separados (não muda nada na Sessão 1)
     const hitType = sh.m === 0 ? "kick" : (sh.m === 8 || (sh.m === 4 && note < 52)) ? "bass" : sh.m === 2 ? "hat" : (sh.m === 1 || sh.m === 3) ? "snare" : null;
     // do Áudio só vai o que saiu dos detectores próprios (kick/baixo, caixa; o hi-hat é confirmado à parte)
-    if (hitType && (source !== "audio" || extra.p2)) emitP2(hitType, n01(vel), source);
+    if (source === "midi" || source === "pad") {
+      // MIDI, Demo e teclas 1–6: pela TRILHA (T1 kick, T5 baixo…), escolhida em ⚙ → Projeto 2
+      const role = roleOf(trIndex);
+      if (role) emitP2(role, n01(vel), source);
+    } else if (hitType && (source !== "audio" || extra.p2)) emitP2(hitType, n01(vel), source);
     // TELA ZERADA: por enquanto só o kick tem imagem (o círculo). Cada instrumento
     // novo entra aqui, um de cada vez, com um significado definido.
     if (shapes.length > 600) shapes.splice(0, shapes.length - 600);
@@ -1490,7 +1502,8 @@
       lastMidiNote = now();
       if (demo.on) stopDemo();
       spawn(tr, d[1], d[2]);
-      log(`ch${ch} nota ${noteName(d[1])} (${d[1]}) vel ${d[2]} → T${tr + 1}${mapped ? "" : " (canal sem trilha)"}`);
+      const role = roleOf(tr);
+      log(`ch${ch} nota ${noteName(d[1])} (${d[1]}) vel ${d[2]} → T${tr + 1}${mapped ? "" : " (canal sem trilha)"}${role ? " → Projeto 2: " + P2_NAMES[role] : ""}`);
     } else if (type === 0xb0) {
       const num = d[1], val = d[2];
       if (learning) {
@@ -1637,6 +1650,22 @@
 
   // ---------- ajustes (painel) ----------
   const labelOf = (k) => (PARAMS.find((p) => p[0] === k) || [k, k])[1];
+  const P2_NAMES = { kick: "KICK (anda)", bass: "BAIXO (escada sobe)", hat: "HI-HAT (chuva)", snare: "CAIXA (cor do fundo)" };
+  function renderP2Roles() {
+    const el = $("p2-roles");
+    if (!el) return;
+    el.innerHTML = Object.keys(P2_NAMES).map((k) =>
+      `<label class="row">${P2_NAMES[k]}
+        <select class="sel" data-role="${k}">${[-1, 0, 1, 2, 3, 4, 5].map((i) =>
+          `<option value="${i}"${settings.p2roles[k] === i ? " selected" : ""}>${i < 0 ? "nenhuma" : "T" + (i + 1)}</option>`).join("")}</select>
+      </label>`).join("");
+    el.querySelectorAll("select").forEach((sel) => sel.addEventListener("change", () => {
+      const k = sel.dataset.role, v = parseInt(sel.value, 10);
+      for (const o of Object.keys(settings.p2roles)) if (o !== k && settings.p2roles[o] === v && v >= 0) settings.p2roles[o] = -1; // uma trilha, um papel
+      settings.p2roles[k] = v;
+      save(); renderP2Roles();
+    }));
+  }
   function renderChanGrid() {
     $("chan-grid").innerHTML = tracks.slice(0, 6).map((_, i) =>
       `<label>T${i + 1}<input type="number" min="1" max="16" value="${settings.channels[i]}" data-i="${i}" /></label>`).join("");
@@ -1666,7 +1695,7 @@
   }
   function openSheet() {
     renderPorts();
-    renderChanGrid(); renderCcGrid();
+    renderChanGrid(); renderCcGrid(); renderP2Roles();
     $("chk-clear-play").checked = settings.clearOnPlay;
     $("chk-onset").checked = settings.onset;
     $("monitor").textContent = monitorLines.length ? monitorLines.join("\n") : "Nada recebido ainda.";
