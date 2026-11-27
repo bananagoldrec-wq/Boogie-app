@@ -4,13 +4,15 @@
    - Com internet, busca sempre a versão mais nova (rede primeiro) e atualiza
      o que está guardado; sem internet, usa o guardado.
    Registrado com escopo ./cycles.html pra não interferir nos outros apps do site. */
-const CACHE = "cycles-visual-v39";
+const CACHE = "cycles-visual-v40";
 const CORE = [
   "cycles.html",
   "css/cycles.css",
   "js/cycles.js",
   "js/cycles-analise.js",
   "js/cycles-3d.js",
+  "js/projeto2.js",
+  "js/endless-climb.js",
   "js/vendor/three-r128.min.js",
   "manifest-cycles.json",
   "icons/icon-cycles-192.png",

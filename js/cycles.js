@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 39;
+  const APP_VERSION = 40;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -662,6 +662,9 @@
       hatStep = (hatStep + 1) % 32;
       hatTicks.push({ born: t, v: n01(vel), pos: hatStep / 32, dur: source === "audio" ? 0.35 : 0.15 + 1.1 * Math.pow(n01(tr.decay), 1.5) });
     }
+    // PROJETO 2 recebe os mesmos sons já separados (não muda nada na Sessão 1)
+    const hitType = sh.m === 0 ? "kick" : (sh.m === 8 || (sh.m === 4 && note < 52)) ? "bass" : sh.m === 2 ? "hat" : (sh.m === 1 || sh.m === 3) ? "snare" : null;
+    if (hitType) window.dispatchEvent(new CustomEvent("cycles:hit", { detail: { type: hitType, amount: n01(vel) } }));
     // TELA ZERADA: por enquanto só o kick tem imagem (o círculo). Cada instrumento
     // novo entra aqui, um de cada vez, com um significado definido.
     if (shapes.length > 600) shapes.splice(0, shapes.length - 600);

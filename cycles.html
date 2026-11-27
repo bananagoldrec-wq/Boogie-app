@@ -16,11 +16,15 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-cycles-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-cycles-512.png" />
 
-  <link rel="stylesheet" href="css/cycles.css?v=39" />
+  <link rel="stylesheet" href="css/cycles.css?v=40" />
 </head>
 <body>
   <header class="bar">
     <div class="brand">Cycles<span>Visual</span></div>
+    <div class="seg tabs" id="seg-proj" role="tablist" aria-label="Projeto">
+      <button data-p="1" type="button" role="tab" title="O primeiro projeto: círculo, linha, riscos e cores (tecla P troca)">Sessão 1</button>
+      <button data-p="2" type="button" role="tab" title="Escada sem fim: kick constrói, baixo move, hi-hat chove, caixa muda o fundo (tecla P troca)">Projeto 2</button>
+    </div>
     <div class="status">
       <span id="st-midi" class="pill">MIDI desligado</span>
       <span id="st-audio" class="pill">Áudio desligado</span>
@@ -42,6 +46,7 @@
   <main class="stage" id="stage">
     <canvas id="gl"></canvas>
     <canvas id="live"></canvas>
+    <canvas id="canvas" hidden></canvas>
 
     <div class="hud" id="hud">
       <div class="hud-dom">
@@ -69,15 +74,16 @@
   <footer class="dock">
     <div class="pads" id="pads"></div>
     <div class="tools">
-      <div class="seg" id="seg-mode" role="radiogroup" aria-label="Modo">
+      <button id="btn-reset2" class="btn only-p2" type="button" title="Começa a escada de novo (tecla C)">Reiniciar</button>
+      <div class="seg only-p1" id="seg-mode" role="radiogroup" aria-label="Modo">
         <button data-v="vivo" type="button">Ao vivo</button>
         <button data-v="rastro" type="button">Rastro</button>
         <button data-v="pintura" type="button">Pintura</button>
       </div>
-      <select id="sel-ref" class="sel" aria-label="Referência"><option value="nenhuma">Sem referência</option></select>
-      <button id="btn-save" class="btn primary" type="button">Salvar imagem</button>
+      <select id="sel-ref" class="sel only-p1" aria-label="Referência"><option value="nenhuma">Sem referência</option></select>
+      <button id="btn-save" class="btn primary only-p1" type="button">Salvar imagem</button>
     </div>
-    <div class="gallery" id="gallery" hidden></div>
+    <div class="gallery only-p1" id="gallery" hidden></div>
   </footer>
 
   <!-- Ajustes -->
@@ -95,12 +101,13 @@
         programa, em janela própria, e funciona sem internet — bom pra show em lugar com rede ruim.</p>
         <h4>Atalhos de teclado</h4>
         <dl class="keys">
+          <dt>P</dt><dd>troca de aba: Sessão 1 · Projeto 2</dd>
           <dt>F</dt><dd>tela cheia (Esc sai)</dd>
           <dt>Espaço</dt><dd>toca/pausa a música</dd>
           <dt>X</dt><dd>próximo ato da história</dd>
           <dt>R</dt><dd>próxima obra · <b>N</b> arte aleatória nova</dd>
           <dt>M</dt><dd>modo (ao vivo · rastro · pintura)</dd>
-          <dt>C</dt><dd>limpa a tela · <b>S</b> salva a imagem</dd>
+          <dt>C</dt><dd>limpa a tela (no Projeto 2, reinicia a escada) · <b>S</b> salva a imagem</dd>
           <dt>1–6</dt><dd>dispara cada trilha</dd>
           <dt>D</dt><dd>demo · <b>A</b> áudio (microfone/linha)</dd>
         </dl>
@@ -186,7 +193,8 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="js/cycles-analise.js?v=39"></script>
-  <script src="js/cycles.js?v=39"></script>
+  <script src="js/cycles-analise.js?v=40"></script>
+  <script src="js/cycles.js?v=40"></script>
+  <script type="module" src="js/projeto2.js?v=40"></script>
 </body>
 </html>
