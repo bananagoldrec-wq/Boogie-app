@@ -259,7 +259,7 @@ export function createImpossibleCity(canvas) {
     fl: Array.from({ length: MAXF }, () => ({ w: 1, d: 1, h: 1, c: 0, t0: -9, from: 0, gone: false, gt: -9, cw: 0, tw: 1, td: 1, mt: -9, el: 0 })),
     split: 0, st: -9, born: 0,
     // 2.0: deslocamento, giro-alvo, inclinação impossível, vida, afastamento dos andares, inversão
-    ox: 0, oxT: 0, rotT: 0, skew: 0, life: 1e9, dying: false, gap: 0, flipT: -9, flipTo: 0,
+    ox: 0, oxT: 0, rotT: 0, skew: 0, life: 1e9, dying: false, gap: 0, flipT: -9, flipTo: 0, bounceT: -9, bounceA: 0,
   }));
   const PC = Array.from({ length: MAXP }, () => ({ on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, s: 0.1, c: 0, born: 0, life: 1, rot: 0, w: 0, kind: 0, mode: 0, asp: 1, ox: 0, oz: 0, ang: 0, rad: 0, vib: 0 }));
   let pNext = 0, camZ, boost, boostK, envI, envSwap, rowNext, counts, rnd = Math.random, t0 = now();
@@ -274,7 +274,7 @@ export function createImpossibleCity(canvas) {
     const t = now();
     // (a vaga pode ter sido de uma ponte ou torre pendurada: tudo volta ao normal)
     b.on = true; b.kind = 0; b.hang = 0; b.x = x; b.z = z; b.rot = (R() < 0.25 ? (R() - 0.5) * 0.7 : 0); b.split = 0; b.st = -9; b.born = t;
-    b.ox = 0; b.oxT = 0; b.rotT = b.rot; b.skew = 0; b.dying = false; b.gap = 0; b.flipT = -9;
+    b.ox = 0; b.oxT = 0; b.rotT = b.rot; b.skew = 0; b.dying = false; b.gap = 0; b.flipT = -9; b.bounceA = 0;
     const k = PR("kick"), mat = MATS[st5(k.color)];
     b.life = ANC(k.decay, [3, 8, 20, 60, 1e9]) * (0.8 + 0.4 * R());               // DECAY: tempo até se desconstruir
     const w = 1.2 + R() * 1.9, d = 1.2 + R() * 1.9;
@@ -345,6 +345,8 @@ export function createImpossibleCity(canvas) {
       }
     }
     for (const b of all) {
+      // CONTOUR: elasticidade — os prédios à vista quicam com o kick (estica e encolhe, mola)
+      if (c.contour > 0.05) { b.bounceT = t; b.bounceA = c.contour * (0.5 + 0.5 * v); }
       // SWEEP: deslocamento e reorganização (os prédios escorregam e giram, devagar)
       if (c.sweep > 0.05) { b.oxT = (R() - 0.5) * 6 * c.sweep; b.rotT = b.rot + (R() - 0.5) * 1.4 * c.sweep; }
       // DISTORTION: inclinação impossível; rachadura; desabamento
@@ -370,7 +372,7 @@ export function createImpossibleCity(canvas) {
   }
   function bass(v, c) {
     boost = Math.min(2.4, boost + 0.3 + 0.8 * v); counts.boosts++;
-    boostK = ANC(c.contour, [2.4, 1.6, 1, 0.6, 0.3]);              // CONTOUR: rígido → fluido
+    boostK = ANC(c.contour, [2.4, 1.6, 1, 0.6, 0.3]) * ANC(c.decay, [3, 1.8, 1, 0.55, 0.3]); // CONTOUR: rígido → fluido · DECAY: quanto o empurrão dura
     bendT = (c.color > 0.5 ? -1 : 1) * c.shape * 0.7;               // SHAPE: dobra o espaço (COLOR: pra cima ou pra baixo)
     camAmpT = c.sweep;                                              // SWEEP: trajetória da câmera
     camHighT = c.color;                                             // COLOR: identidade do olhar (rua → vista aérea)
@@ -618,6 +620,7 @@ export function createImpossibleCity(canvas) {
     let grow = clamp((FAR - (b.z - camZ)) / 10, 0, 1); // no horizonte nasce baixinho e cresce
     if (b.flipT > 0) { const fk = clamp((t - b.flipT) / 0.7, 0, 1); grow *= fk < 0.5 ? 1 - fk * 2 : (fk - 0.5) * 2; }  // inversão: encolhe e volta pendurado
     if (wave > 0.01) grow *= 1 + wave * 0.35 * Math.sin(b.z * 0.25 + T * 3);
+    if (b.bounceA) { const ba = t - b.bounceT; if (ba < 1.2) grow *= 1 + b.bounceA * 0.3 * Math.exp(-ba * 4) * Math.sin(ba * 20); else b.bounceA = 0; }
     grow *= hscale;
     const skew = b.skew + geo + (sway > 0.01 ? sway * 0.6 * Math.sin(T * 2.2 + b.z * 0.3) : 0);
     if (b.kind === 3) { // torre pendurada no céu (de cabeça pra baixo)

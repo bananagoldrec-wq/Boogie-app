@@ -129,7 +129,7 @@ export function createInfiniteMicrocosmos(canvas) {
   const F = Array.from({ length: MAXF }, () => ({ on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, s: 0.05, born: 0, life: 0.5, c: 3, a: 0, kind: 0, sides: 4, mode: 0, ox: 0, oy: 0, ang: 0, rad: 0, w: 0, vib: 0, len: 1, dist: 0 }));
   let fNext = 0; // anel dos fragmentos: o mais velho dá lugar ao novo
   let cam, bgI, bgI2, bgMode, rotDir, rollBoost, boost, boostK, stretch, family, counts, mono, layout, slot, und, lastBorn, camW, posS, figs;
-  let tonTwist = 0, stretchK = 1.5, layoutT = -9, layoutLife = 1e9, bgT = -9, bgLife = 1e9;
+  let chordRoll = 0, chordRollK = 1.2, tonTwist = 0, stretchK = 1.5, layoutT = -9, layoutLife = 1e9, bgT = -9, bgLife = 1e9;
   const V = new Float32Array(42), P = new Float32Array(28), Z = new Float32Array(14); // um sólido de cada vez
   const triZ = new Float32Array(NT), triT = new Int8Array(NT), order = new Int16Array(NT);
   const draw = []; // lista de desenho (reaproveitada)
@@ -139,7 +139,7 @@ export function createInfiniteMicrocosmos(canvas) {
     for (const f of F) f.on = false;
     cam = { z: 0, roll: 0, t: 0 };
     bgI = 0; bgI2 = 1; bgMode = 0; rotDir = 1; rollBoost = 0; boost = 0; boostK = 2.6; stretch = 0; family = 0; mono = 0; layout = 0; slot = 0; und = 0;
-    camW = [1, 0, 0, 0, 0]; posS = 0; lastBorn = []; tonTwist = 0; stretchK = 1.5; layoutT = -9; layoutLife = 1e9; bgT = -9; bgLife = 1e9;
+    camW = [1, 0, 0, 0, 0]; posS = 0; lastBorn = []; tonTwist = 0; stretchK = 1.5; chordRoll = 0; chordRollK = 1.2; layoutT = -9; layoutLife = 1e9; bgT = -9; bgLife = 1e9;
     counts = { births: 0, morphs: 0, boosts: 0, fragsSent: 0, snares: 0, chords: 0, percs: 0, figures: 0, shattered: 0, echoes: 0, died: 0 };
     if (figs) figs.clear(); else figs = FIG() ? FIG().swarm({ max: 24, size: 0.5 }) : null;
     // começa com algumas formas espalhadas no caminho (a viagem não começa vazia)
@@ -233,7 +233,7 @@ export function createInfiniteMicrocosmos(canvas) {
   }
   function bass(v, c) {
     boost = Math.min(2.2, boost + 0.25 + 0.75 * v); counts.boosts++; // empurrão que vai passando
-    boostK = A(c.contour, [2.6, 1.8, 1.1, 0.6, 0.3]);               // CONTOUR: rígido → fluido
+    boostK = A(c.contour, [2.6, 1.8, 1.1, 0.6, 0.3]) * A(c.decay, [3, 1.8, 1, 0.55, 0.3]); // CONTOUR: rígido → fluido · DECAY: quanto o empurrão dura
     stretch = Math.min(0.9, Math.max(stretch, c.shape * (0.5 + 0.5 * v)));                // SHAPE: estica na direção da viagem
     rollBoost += (c.color - 0.1) * 0.6 * v * rotDir;                 // COLOR: um giro da câmera junto
     tonTwist = Math.max(tonTwist, c.dist);                           // DISTORTION: o espaço torce (todas as formas)
@@ -260,7 +260,7 @@ export function createInfiniteMicrocosmos(canvas) {
       else if (mode === 3) { f.ang = Math.atan2(f.y - camY(cam.t), f.x - camX(cam.t)); f.rad = Math.hypot(f.x - camX(cam.t), f.y - camY(cam.t)); f.w = 1.5 + 3 * v; f.vz = -sp * 0.4; } // vórtice
       else if (mode === 4) { f.vx = (Math.random() - 0.5) * 0.5; f.vy = (Math.random() - 0.5) * 0.5; f.vz = -sp * 2.5; } // voo em perspectiva
       else { const u = Math.random() * 2 - 1, th = Math.random() * 6.28, q = Math.sqrt(1 - u * u); f.vx = q * Math.cos(th) * sp; f.vy = q * Math.sin(th) * sp; f.vz = u * sp; } // explosão (original)
-      f.s = (0.03 + 0.06 * Math.random()) * (0.7 + 0.6 * v) * (1 + c.pitch * 0.4) * [1, 0.8, 1.7, 1.9, 1.8][kind]; // COLOR: família e porte (ponto < quadrado < disco/agulha/cristal)
+      f.s = (0.03 + 0.06 * Math.random()) * (0.7 + 0.6 * v) * (1 + c.pitch * 0.4) * [1, 1.3, 2.8, 3.2, 3] [kind] * (1 + c.shape * 1.6); // COLOR: família e porte · SHAPE: lascas maiores e angulosas
       f.c = o ? o.c : 3; f.a = Math.random() * 6.28;
     }
     counts.fragsSent += n;
@@ -298,7 +298,8 @@ export function createInfiniteMicrocosmos(canvas) {
     const d = clamp(beat() * 0.3, 0.08, 0.2) * (1 + c.contour);
     const t = now();
     // SHAPE: quantas formas racham · SWEEP: direção da explosão · CONTOUR: força da ruptura
-    if (c.shape > 0.1) shatter(Math.round(c.shape * 7), st5(c.sweep), 0.8 + c.contour * 2, t);
+    if (c.shape > 0.1 || c.sweep > 0.1) shatter(Math.max(1, Math.round(c.shape * 7)), st5(c.sweep), 0.8 + c.contour * 2, t);
+    if (c.dist > 0.05) for (const o of O) if (o.on && !o.die) o.twist = Math.max(o.twist, c.dist); // DISTORTION: tudo torce junto
     for (const o of O) if (o.on && !o.die) { if (o.fig >= 0) morphFig(o, (o.fig & ~7) | ((o.fig + 1) % 6), d); morph(o, family, d); o.punch = (0.15 + 0.3 * v) * (1 + c.contour * 1.5); }
     rotDir = -rotDir;
     rollBoost += rotDir * c.contour * 1.2;
@@ -318,7 +319,7 @@ export function createInfiniteMicrocosmos(canvas) {
       morph(o, shapes[i % shapes.length], d);                    // (as figuras continuam figuras: só mudam de lugar)                    // SHAPE: configuração coletiva
     });
     // SWEEP: rotação → ondulação → inversão
-    rollBoost += (0.3 + c.sweep * 1.4) * rotDir * v;
+    chordRoll += (0.3 + c.sweep * 1.4) * rotDir * v; chordRollK = A(c.decay, [4, 2.2, 1.2, 0.6, 0.3]); // DECAY: quanto o giro do acorde dura
     und = Math.max(und, Math.max(0, c.sweep - 0.3) * 2.2);
     if (c.sweep > 0.8) rotDir = -rotDir;
     // CONTOUR: articulação → expansão → desmontagem
@@ -371,12 +372,12 @@ export function createInfiniteMicrocosmos(canvas) {
     if (layout && t - layoutT > layoutLife) { layout = 0; for (const o of O) o.hasT = false; }  // DECAY do acorde: a formação se solta
     if (bgLife < 1e8 && t - bgT > bgLife && (bgI || bgMode)) { bgI = 0; bgMode = 0; }             // DECAY da caixa: o fundo volta
     und *= Math.exp(-dt * 0.35);
-    rollBoost *= Math.exp(-dt * 1.2);
+    rollBoost *= Math.exp(-dt * 1.2); chordRoll *= Math.exp(-dt * chordRollK);
     for (let i = 0; i < 5; i++) camW[i] += (camWT[i] - camW[i]) * (1 - Math.exp(-dt * 0.6)); // trajetória muda devagar
     posS += ((vis ? vis.pos : 0) - posS) * (1 - Math.exp(-dt * 4));
     const vz = BASE * speed * (1 + boost);
     cam.z += vz * dt; cam.t += dt;
-    cam.roll += dt * (0.06 * rotDir * (0.5 + speed * 0.5) + rollBoost + (vis ? vis.rot * 0.5 : 0));
+    cam.roll += dt * (0.06 * rotDir * (0.5 + speed * 0.5) + rollBoost + chordRoll + (vis ? vis.rot * 0.5 : 0));
     const kx = camX(cam.t), ky = camY(cam.t), magnet = vis ? vis.magnet : 0;
     for (const o of O) {
       if (!o.on) continue;
