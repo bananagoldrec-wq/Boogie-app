@@ -4,9 +4,10 @@
    Herbert Bayer; plasticidade de Joost Schmidt; construção de Moholy-Nagy; círculo, triângulo e
    quadrado de Kandinsky; a ordem de Gropius). Cada letra é um conjunto de blocos extrudados em
    profundidade, faces de cor sólida (sem degradê, sem neon, sem brilho). A palavra BENO vira
-   FESTA LÁ EM CIMA (e volta) acompanhando a estrutura da música: a cada frase de compassos
-   (8, por padrão) os blocos se soltam e se reconstroem na outra palavra. Com MIDI Clock, os
-   compassos vêm do clock; sem clock, contam-se os kicks (4 = 1 compasso); sem nada, o tempo.
+   FESTA LÁ EM CIMA só enquanto o ACORDE toca (a máquina CHORD): o acorde entra, os blocos se
+   soltam e se reconstroem na outra palavra; o acorde para (2 compassos de folga, pra não piscar
+   quando ele toca de 2 em 2), volta BENO — com MIDI Clock, na cabeça do compasso. Embaixo, como
+   num cartaz de divulgação, a data: 5 DE DEZEMBRO (fixa, em tinta, com a barra e o fio).
    A legibilidade manda: toda deformação volta, e em FESTA LÁ EM CIMA as deformações são menores.
 
    - KICK   impacto, expansão e reconstrução das letras (mola). COLOR família geométrica da
@@ -32,7 +33,7 @@
    Uso:
      const visual = createBenoRhythmic(canvas);
      visual.hit('kick' | 'bass' | 'hat' | 'snare' | 'perc' | 'chord', força 0–1, ctx?);
-     visual.setText('auto' | 'beno' | 'festa');   visual.setPhraseBars(8);
+     visual.setText('auto' | 'beno' | 'festa');   visual.setHoldBars(2);  // folga depois do último acorde
      visual.setIntensity(0–2);  visual.setPerspective(0.5–2.5);  visual.setBpm(124);
      visual.clock({ kind: 'beat', beat, bar, inBar }) // vindo do MIDI Clock (opcional)
      visual.reset();  visual.destroy();                                                      */
@@ -85,6 +86,10 @@ export function createBenoRhythmic(canvas, opts = {}) {
     M: [5, [["r", 0, 0, 1, 6], ["r", 4, 0, 5, 6], ["d", 0.55, 5.6, 2.5, 1.9, 1.05], ["d", 4.45, 5.6, 2.5, 1.9, 1.05]]],
     C: [5.6, [["a", 3, 3, 3, 42, 318]]],
     I: [1, [["r", 0, 0, 1, 6]]],
+    D: [5, [["r", 0, 0, 1, 6], ["r", 1, 5, 2, 6], ["r", 1, 0, 2, 1], ["a", 2, 3, 3, 90, -90]]],
+    Z: [4, [["r", 0, 5, 4, 6], ["r", 0, 0, 4, 1], ["d", 3.45, 5.4, 0.55, 0.6, 1.15]]],
+    R: [3.9, [["r", 0, 0, 1, 6], ["r", 1, 5, 2, 6], ["r", 1, 3, 2, 4], ["a", 2, 4.5, 1.5, 90, -90], ["d", 1.6, 3.3, 3.5, 0, 1.1]]],
+    5: [3.95, [["r", 0, 5, 3.4, 6], ["r", 0, 2.9, 1, 6], ["r", 1, 2.9, 2, 3.9], ["a", 2, 1.95, 1.95, 90, -150]]],
     " ": [1.8, []],
   };
   const GAP = 0.85, LINE = 9.2;
@@ -126,6 +131,8 @@ export function createBenoRhythmic(canvas, opts = {}) {
     return [words.slice(0, best).join(" "), words.slice(best).join(" ")];
   }
   const TEXTS = opts.texts || ["BENO", "FESTA LÁ EM CIMA"];
+  const DATE = opts.date ?? "5 DE DEZEMBRO";   // a linha do cartaz (vazia = sem data)
+  const DATE_S = 0.4;                           // porte da data em relação à palavra
 
   // ---------- tela ----------
   let W = 1, H = 1, DPR = 1, quality = 1;
@@ -150,13 +157,13 @@ export function createBenoRhythmic(canvas, opts = {}) {
   document.addEventListener("fullscreenchange", resize);
 
   // ---------- estado ----------
-  const MAXB = 220, MAXP = 520, MAXS = 14, MAXG = 6;
-  const B = Array.from({ length: MAXB }, () => ({ on: false, seg: 0, li: 0, hx: 0, hy: 0, hw: 0.5, hh: 0.5, ha: 0, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, w: 0.5, h: 0.5, a: 0, sx: 0, sy: 0, wx: 0, wy: 0, delay: 0, go: 0, die: 0, frag: 0, fragT: -9, used: false }));
+  const MAXB = 280, MAXP = 520, MAXS = 14, MAXG = 6;
+  const B = Array.from({ length: MAXB }, () => ({ on: false, grp: 0, seg: 0, li: 0, hx: 0, hy: 0, hw: 0.5, hh: 0.5, ha: 0, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, w: 0.5, h: 0.5, a: 0, sx: 0, sy: 0, wx: 0, wy: 0, delay: 0, go: 0, die: 0, frag: 0, fragT: -9, used: false }));
   const PT = Array.from({ length: MAXP }, () => ({ on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, s: 0.1, kind: 0, col: 0, born: 0, life: 1, rot: 0, w: 0, mode: 0, ang: 0, rad: 0, vib: 0 }));
   const SC = Array.from({ length: MAXS }, () => ({ on: false, x: 0, y: 0, z: 0, fam: 0, born: 0, life: 2, rot: 0, w: 1, art: 0, mode: 0, vx: 0, vy: 0, vz: 0, bounce: 0, frag: 0, col: 0, s: 1 }));
   const GH = Array.from({ length: MAXG }, () => ({ on: false, dx: 0, dy: 0, dz: 0, s: 1, rz: 0, ry: 0, born: 0, life: 2, delay: 0, cs: 0, wave: 0 }));
   let pNext = 0;
-  let word, mode, phraseBars, lay, wide, counts, intensity = 1, persp = 1, bpm = null;
+  let word, mode, holdBars, lay, wide, counts, intensity = 1, persp = 1, bpm = null;
   let pal, bgK, colorShift, family, deform, deformT, shearK, yaw, yawV, pitch, pitchV, dolly, dollyV, orb, orbPh, orbAxis, orbMode, extr, extrT, wobble;
   let shocks, reorg, reorgMode, bar, beatN, kickBeats, lastClockT, lastKickT, lastBeatT, barSrc, pendingSwitch, lastSwitchBar, transT;
   let springK, springZ, artic, fragDecay, bgPulse, reorgT = -9, reorgArt = 0;
@@ -166,18 +173,33 @@ export function createBenoRhythmic(canvas, opts = {}) {
     for (const p of PT) p.on = false;
     for (const s of SC) s.on = false;
     for (const g of GH) g.on = false;
-    word = opts.start === "festa" ? 1 : 0; mode = mode || "auto"; phraseBars = phraseBars || 8;
+    word = opts.start === "festa" ? 1 : 0; mode = mode || "auto"; holdBars = holdBars || 2;
     pal = 0; bgK = 0; colorShift = 0; family = 0; deform = 0; deformT = 0; shearK = 0;
     yaw = 0; yawV = 0; pitch = 0; pitchV = 0; dolly = 0; dollyV = 0; orb = 0; orbPh = 0; orbAxis = 0; orbMode = 0; extr = 1; extrT = 1; wobble = 0;
-    shocks = []; reorg = 0; reorgMode = 0; bar = 0; beatN = 0; kickBeats = 0; lastClockT = -9; lastKickT = -9; lastBeatT = now(); barSrc = "tempo"; pendingSwitch = false; lastSwitchBar = -1; transT = -9;
+    shocks = []; reorg = 0; reorgMode = 0; bar = 0; beatN = 0; kickBeats = 0; lastClockT = -9; lastKickT = -9; lastBeatT = now(); barSrc = "tempo"; pendingSwitch = false; lastSwitchBar = -1; transT = -9; lastChordT = -99; chordLive = false;
     springK = 60; springZ = 0.7; artic = 0.04; fragDecay = 2.2; bgPulse = 0;
     counts = { kicks: 0, bass: 0, hats: 0, snares: 0, percs: 0, chords: 0, switches: 0, particles: 0, echoes: 0, bars: 0 };
     lay = null; relayout(true);
   }
   // monta (ou remonta) os blocos da palavra atual; com "morph", os blocos viajam da palavra anterior
+  // a palavra em cima; embaixo, a data (menor) com a barra e o fio — o cartaz inteiro centrado
+  function composition() {
+    const L = layout(TEXTS[word], wide);
+    if (!DATE) return L;
+    const Dt = layout(DATE, true), s = DATE_S, gap = 2.4, dh = 6 * s;
+    const total = L.h + gap + dh, top = total / 2, wordC = top - L.h / 2, dateC = top - L.h - gap - dh / 2;
+    for (const b of L.boxes) b.y += wordC;
+    const dw = Dt.w * s;
+    for (const b of Dt.boxes) L.boxes.push({ ...b, x: b.x * s, y: b.y * s + dateC + 0.5 * s, w: b.w * s, h: b.h * s, grp: 1, li: 100 + b.li });
+    // cartaz: barra de cor à esquerda da data e um fio entre a palavra e a data (blocos de verdade)
+    L.boxes.push({ x: -dw / 2 - 1.1, y: dateC, w: 0.32, h: dh * 0.62, a: 0, li: 200, grp: 2 });
+    L.boxes.push({ x: 0, y: dateC + dh / 2 + gap * 0.42, w: Math.max(dw, L.w * 0.5) / 2, h: 0.09, a: 0, li: 201, grp: 2 });
+    L.w = Math.max(L.w, dw + 3); L.h = total + 0.6; L.wordC = wordC;
+    return L;
+  }
   function relayout(hard) {
     wide = W / H > 2.6;
-    const L = layout(TEXTS[word], wide);
+    const L = composition();
     const old = lay; lay = L;
     if (hard || !old) {
       let i = 0;
@@ -185,17 +207,22 @@ export function createBenoRhythmic(canvas, opts = {}) {
       for (; i < MAXB; i++) B[i].on = false;
       return;
     }
-    morphTo(L);
+    // a data e o cartaz não viajam: só vão pro lugar novo (a palavra mudou de altura)
+    const keep = B.filter((b) => b.on && !b.die && b.grp);
+    const tgK = L.boxes.filter((t) => t.grp);
+    if (keep.length === tgK.length) keep.forEach((b, i) => place(b, tgK[i], false));
+    else { for (const b of keep) b.on = false; for (const t of tgK) { const b = B.find((q) => !q.on); if (b) place(b, t, true); } }
+    morphTo({ ...L, boxes: L.boxes.filter((t) => !t.grp) });
   }
   function place(b, t, snap) {
-    b.on = true; b.seg = t.seg || 0; b.li = t.li; b.hx = t.x; b.hy = t.y; b.hw = t.w; b.hh = t.h; b.ha = t.a; b.die = 0; b.delay = 0; b.go = 0;
+    b.on = true; b.grp = t.grp || 0; b.seg = t.seg || 0; b.li = t.li; b.hx = t.x; b.hy = t.y; b.hw = t.w; b.hh = t.h; b.ha = t.a; b.die = 0; b.delay = 0; b.go = 0;
     if (snap) { b.x = t.x; b.y = t.y; b.z = 0; b.vx = b.vy = b.vz = 0; b.w = t.w; b.h = t.h; b.a = t.a; b.sx = b.sy = b.wx = b.wy = 0; b.frag = 0; }
   }
   // BENO ↔ FESTA LÁ EM CIMA: cada bloco novo nasce de um bloco da palavra anterior (mesma ordem
   // da esquerda pra direita); os que sobram se desfazem em partículas; a viagem tem articulação
   function morphTo(L) {
     const t = now();
-    const olds = B.filter((b) => b.on && !b.die).sort((a, b) => a.x - b.x || b.y - a.y);
+    const olds = B.filter((b) => b.on && !b.die && !b.grp).sort((a, b) => a.x - b.x || b.y - a.y);
     for (const b of olds) b.used = false;
     const tg = L.boxes.slice().sort((a, b) => a.x - b.x || b.y - a.y);
     const nO = olds.length;
@@ -221,15 +248,23 @@ export function createBenoRhythmic(canvas, opts = {}) {
   }
 
   // ---------- estrutura musical: compassos (MIDI Clock → kicks → tempo) ----------
+  // FESTA LÁ EM CIMA = o acorde está tocando (a nota segurada, ou o último acorde há menos de holdBars
+  // compassos); quando ele para, volta BENO — com o clock, na cabeça do compasso seguinte
+  let lastChordT = -99, chordLive = false;
+  const beatLen = () => 60 / (bpm || (FM() && FM().bpm()) || 120);
+  function chordHeld(t) {
+    const fm = FM();
+    if (fm) { const tr = fm.trackOfRole("chord"); if (tr >= 0 && fm.tracks[tr] && fm.tracks[tr].gateOpen && t - lastChordT < 30) return true; } // nota do acorde segurada
+    return t - lastChordT < holdBars * 4 * beatLen();
+  }
   function newBar(n) {
     bar = n; counts.bars++;
-    if (pendingSwitch && mode === "auto") { pendingSwitch = false; lastSwitchBar = n; setWord(word ^ 1); return; }
-    if (mode === "auto" && n > 0 && n % phraseBars === 0 && n !== lastSwitchBar) { lastSwitchBar = n; setWord(word ^ 1); }
+    if (pendingSwitch && mode === "auto") { pendingSwitch = false; if (word === 1 && !chordHeld(now())) setWord(0); }
   }
   function clock(m) {
     if (!m) return;
     const t = now();
-    if (m.kind === "transport" && m.state === "start") { bar = 0; beatN = 0; lastSwitchBar = -1; lastClockT = t; barSrc = "clock"; return; }
+    if (m.kind === "transport" && m.state === "start") { bar = 0; beatN = 0; lastClockT = t; barSrc = "clock"; return; }
     if (m.kind !== "beat") return;
     lastClockT = t; barSrc = "clock"; lastBeatT = t; beatN = m.beat;
     if (m.inBar === 0) newBar(m.bar);
@@ -253,17 +288,18 @@ export function createBenoRhythmic(canvas, opts = {}) {
     artic = 0.015 + c.contour * 0.09;                                              // e articulação
     deform = Math.max(deform, c.shape * (0.5 + 0.5 * v)); deformT = t;              // SHAPE: deformação/metamorfose
     const dir = st5(c.sweep), force = (3 + 7 * v) * I * (1 + c.dist * 0.6) * (c.punch ? 1.3 : 1);
-    const cx = 0, cy = 0;
+    const cx = 0, cy = (lay && lay.wordC) || 0;                                    // centro da palavra (a data fica embaixo)
     for (const b of B) {
       if (!b.on || b.die) continue;
-      let dx = b.x - cx, dy = b.y - cy; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
-      if (dir === 1) { b.vx += Math.sign(b.x || 1) * force * 0.9; }
-      else if (dir === 2) { b.vy += Math.sign(b.y || 1) * force * 0.9; }
-      else if (dir === 3) { b.vz -= force * 1.4; }
+      const g = b.grp ? 0.3 : 1;                                                    // a data balança pouco (legível)
+      let dx = b.x - cx, dy = b.y - cy; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d; dx *= g; dy *= g;
+      if (dir === 1) { b.vx += Math.sign(b.x || 1) * force * 0.9 * g; }
+      else if (dir === 2) { b.vy += Math.sign(b.y || 1) * force * 0.9 * g; }
+      else if (dir === 3) { b.vz -= force * 1.4 * g; }
       else if (dir === 4) { b.vx += -dy * force; b.vy += dx * force; }
-      else { b.vx += dx * force * 0.8; b.vy += dy * force * 0.8; b.vz -= force * 0.35; }
+      else { b.vx += dx * force * 0.8; b.vy += dy * force * 0.8; b.vz -= force * 0.35 * g; }
       // DISTORTION: fragmentação — blocos giram soltos e voam mais longe (a mola reconstrói)
-      if (c.dist > 0.05 && Math.random() < c.dist) { b.wx += (Math.random() - 0.5) * 14 * c.dist; b.wy += (Math.random() - 0.5) * 14 * c.dist; b.vz -= Math.random() * 6 * c.dist; }
+      if (!b.grp && c.dist > 0.05 && Math.random() < c.dist) { b.wx += (Math.random() - 0.5) * 14 * c.dist; b.wy += (Math.random() - 0.5) * 14 * c.dist; b.vz -= Math.random() * 6 * c.dist; }
     }
     shocks.push({ t0: t, v, life: A(c.decay, [0.18, 0.32, 0.55, 1.1, 2.2]), kind: family }); // DECAY: duração do choque
     if (shocks.length > 8) shocks.shift();
@@ -300,7 +336,7 @@ export function createBenoRhythmic(canvas, opts = {}) {
   function hat(v, c) {
     counts.hats++;
     const n = Math.round((3 + 10 * v) * Math.min(1.6, intensity));
-    const src = B.filter((b) => b.on && !b.die);
+    const src = B.filter((b) => b.on && !b.die && !b.grp);
     for (let i = 0; i < n && src.length; i++) {
       const b = src[(Math.random() * src.length) | 0];
       const u = (Math.random() - 0.5) * 2 * b.w, ca = Math.cos(b.a), sa = Math.sin(b.a);
@@ -316,9 +352,9 @@ export function createBenoRhythmic(canvas, opts = {}) {
     const force = (2 + 6 * v) * (0.6 + c.contour * 1.6) * I;                       // CONTOUR: força da ruptura
     const amount = 0.25 + c.dist * 0.75;                                           // DISTORTION: quanto fragmenta
     for (const b of B) {
-      if (!b.on || b.die) continue;
+      if (!b.on || b.die || b.grp) continue;                                       // a data não racha
       // SHAPE: quais letras racham (todas, alternadas, a primeira linha, as bordas, aleatório)
-      const pick = cut === 0 ? true : cut === 1 ? b.li % 2 === 0 : cut === 2 ? b.hy > 0 : cut === 3 ? Math.abs(b.hx) > lay.w * 0.3 : Math.random() < 0.4;
+      const pick = cut === 0 ? true : cut === 1 ? b.li % 2 === 0 : cut === 2 ? b.hy > ((lay && lay.wordC) || 0) : cut === 3 ? Math.abs(b.hx) > lay.w * 0.3 : Math.random() < 0.4;
       if (!pick) continue;
       b.frag = Math.max(b.frag, amount * (0.6 + 0.4 * v)); b.fragT = t;
       if (Math.random() < amount * 0.6) {
@@ -344,6 +380,8 @@ export function createBenoRhythmic(canvas, opts = {}) {
   }
   function chord(v, c) {
     counts.chords++;
+    lastChordT = now(); chordLive = true;
+    if (mode === "auto" && word !== 1) setWord(1);                  // o acorde entrou: FESTA LÁ EM CIMA
     const t = now(), lay5 = st5(c.color), n = 1 + Math.round(c.shape * 3), life = A(c.decay, [0.6, 1.2, 2.5, 5, 10]);
     reorgMode = lay5; reorg = Math.min(1, reorg + (0.4 + 0.6 * v) * intensity * legib());   // reorganização das letras
     reorgT = t; reorgArt = c.contour;                                                        // CONTOUR: articulação (letra a letra)
@@ -388,6 +426,11 @@ export function createBenoRhythmic(canvas, opts = {}) {
   function update(dt, t) {
     const vis = VIS();
     tickStructure(t);
+    if (mode === "auto" && word === 1 && !chordHeld(t)) {
+      if (t - lastClockT < 2) pendingSwitch = true;                 // com clock: volta na cabeça do compasso
+      else setWord(0);
+    }
+    chordLive = chordHeld(t);
     deform *= Math.exp(-dt * 2.2); shearK *= Math.exp(-dt * 1.2); wobble *= Math.exp(-dt * 0.9); bgPulse *= Math.exp(-dt * 5);
     reorg *= Math.exp(-dt * 0.9);
     extr += (extrT - extr) * (1 - Math.exp(-dt * 2)); extrT += (1 - extrT) * (1 - Math.exp(-dt * 0.25));
@@ -405,7 +448,7 @@ export function createBenoRhythmic(canvas, opts = {}) {
       if (b.die) { const a = t - b.die; b.w *= Math.exp(-dt * 5); b.h *= Math.exp(-dt * 5); b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt; b.sx += b.wx * dt; b.sy += b.wy * dt; if (a > 0.8 || b.w < 0.02) b.on = false; continue; }
       if (t < b.delay) continue;                                                     // articulação: espera a vez
       let tx = b.hx, ty = b.hy, tz = 0;
-      if (orb > 0.01) { // TONE: órbita / deslocamento de cada letra (o eixo e a trajetória mudam)
+      if (orb > 0.01 && !b.grp) { // TONE: órbita / deslocamento de cada letra (o eixo e a trajetória mudam)
         const ph = orbPh + b.li * 0.75, o = orb * (orbMode === 0 ? 1.2 : 2.2);
         if (orbAxis === 0) { tx += Math.cos(ph) * o * 0.5; tz += Math.sin(ph) * o * 2; }
         else if (orbAxis === 1) { ty += Math.cos(ph) * o * 0.6; tz += Math.sin(ph) * o * 2; }
@@ -413,7 +456,7 @@ export function createBenoRhythmic(canvas, opts = {}) {
         else { tx += Math.cos(ph) * o * 0.5; ty += Math.sin(ph * 2) * o * 0.4; tz += Math.sin(ph) * o * 1.5; }
         if (orbMode >= 3) tz += Math.sin(ph * 0.5 + t) * o;                          // espiral / oito
       }
-      if (reorg > 0.01) { // CHORD: reorganização espacial (em profundidade: a palavra continua legível)
+      if (reorg > 0.01 && !b.grp) { // CHORD: reorganização espacial (em profundidade: a palavra continua legível)
         const i = b.li, r = reorg * (reorgArt > 0.05 ? clamp((t - reorgT - i * reorgArt * 0.09) / 0.12, 0, 1) : 1);
         if (reorgMode === 0) tz += Math.sin(i * 1.3) * r * 3;
         else if (reorgMode === 1) { ty += (i % 2 ? 1 : -1) * r * 0.9; }
@@ -422,7 +465,7 @@ export function createBenoRhythmic(canvas, opts = {}) {
         else tz += -Math.abs(b.hx) * r * 0.35;
       }
       if (vis.artic) ty += Math.sin(t * 3 + b.li * 0.8) * vis.artic * 0.5;
-      if (wobble > 0.02) tz += Math.sin(t * 9 + b.li * 2.1) * wobble * 0.8;
+      if (wobble > 0.02 && !b.grp) tz += Math.sin(t * 9 + b.li * 2.1) * wobble * 0.8;
       b.vx += (K * (tx - b.x) - C * b.vx) * dt; b.vy += (K * (ty - b.y) - C * b.vy) * dt; b.vz += (K * (tz - b.z) - C * b.vz) * dt;
       b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
       const ks = 1 - Math.exp(-dt * 10); b.w += (b.hw - b.w) * ks; b.h += (b.hh - b.h) * ks;
@@ -470,7 +513,7 @@ export function createBenoRhythmic(canvas, opts = {}) {
   const FACES = [[0, 1, 2, 3], [5, 4, 7, 6], [4, 0, 3, 7], [1, 5, 6, 2], [3, 2, 6, 7], [4, 5, 1, 0]];
   const FTONE = [0, 0, 2, 1, 1, 2];
   const order = [];
-  let colsNow = PALS[0].cols, bgNow = "#ede6d6";
+  let colsNow = PALS[0].cols, bgNow = "#ede6d6", inkNow = "#151515", accentNow = "#d3262c";
   // LFO com destino COR: troca discreta (cores sólidas), acompanhando a onda
   let hueShift = 0;
   function colOf(i) { const cs = colsNow, k = i + colorShift + hueShift; let c = cs[k % cs.length]; if (c === bgNow) c = cs[(k + 1) % cs.length]; return c; }
@@ -479,7 +522,7 @@ export function createBenoRhythmic(canvas, opts = {}) {
     const fam = family, thin = fam === 2 ? 0.55 : 1, dep = (fam === 1 ? 1.3 : fam === 2 ? 0.22 : 0.5) * extr;
     let w = b.w, h = b.h;
     if (w > h) h *= thin; else w *= thin;
-    const morph = deform * legib(); // SHAPE: metamorfose — blocos viram cubos/pontos e voltam
+    const morph = deform * legib() * (b.grp ? 0.25 : 1); // SHAPE: metamorfose — blocos viram cubos/pontos e voltam
     if (morph > 0.02) { const m = Math.min(w, h); w = lerp(w, m * 1.4, morph * 0.8); h = lerp(h, m * 1.4, morph * 0.8); }
     const vis = VIS(), sc = 1 + (vis.scale || 0) * 0.15;
     w *= sc; h *= sc;
@@ -496,8 +539,8 @@ export function createBenoRhythmic(canvas, opts = {}) {
       proj(x, y, z); BV[i * 3] = P3[0]; BV[i * 3 + 1] = P3[1]; BV[i * 3 + 2] = P3[2];
     }
     // cópias (CHORD, delay, reverb) em tons do próprio fundo: ecos sólidos que nunca disputam a leitura com a palavra
-    const T = gh ? (gh.cs % 2 ? BGT2 : BGT1) : tones(colOf(b.li));
-    if (fam === 4 && !gh) return drawDots(b, T, w, h); // pontilhada (estêncil de Bayer)
+    const T = gh ? (gh.cs % 2 ? BGT2 : BGT1) : b.grp === 1 ? tones(inkNow) : b.grp === 2 ? tones(accentNow) : tones(colOf(b.li));
+    if (fam === 4 && !gh && !b.grp) return drawDots(b, T, w, h); // pontilhada (estêncil de Bayer)
     for (let f = 0; f < (flat ? 1 : 6); f++) {
       if (b.seg && (f === 2 || f === 3) && !b.frag && !b.sx && !b.sy) continue; // pontas internas do arco: sem costura
       const q = FACES[f];
@@ -575,6 +618,8 @@ export function createBenoRhythmic(canvas, opts = {}) {
   }
   function drawBackground(t, vis) {
     const P = PALS[pal]; colsNow = P.cols; bgNow = P.bg[bgK];
+    inkNow = P.ink === bgNow ? (bgNow === "#151515" ? "#ede6d6" : "#151515") : P.ink;
+    accentNow = ["#d3262c", "#f1b70e", "#1d4f9e"].find((c) => c !== bgNow) || "#151515";   // a barra do cartaz
     ctx.fillStyle = bgNow; ctx.fillRect(0, 0, W, H);
     // construção Bauhaus lá no fundo (parallax): o grande círculo, a diagonal e o quadrado
     const hw = lay ? lay.w : 20;
@@ -610,7 +655,7 @@ export function createBenoRhythmic(canvas, opts = {}) {
       if (k <= 0) continue;
       const wv = g.wave ? Math.sin(t * 2 + g.dz) * g.wave * 0.3 : 0;
       const tr = { s: g.s * (0.6 + 0.4 * k), dx: g.dx, dy: g.dy, dz: g.dz + (1 - k) * 10, crz: Math.cos(g.rz + wv), srz: Math.sin(g.rz + wv), cry: Math.cos(g.ry || 0), sry: Math.sin(g.ry || 0), cs: g.cs };
-      for (const b of B) if (b.on && !b.die) drawBox(b, t, tr, true);
+      for (const b of B) if (b.on && !b.die && !b.grp) drawBox(b, t, tr, true);
     }
     // blocos da palavra (de trás pra frente) e esculturas/partículas no meio
     order.length = 0;
@@ -651,15 +696,15 @@ export function createBenoRhythmic(canvas, opts = {}) {
   const strays = () => B.filter((b) => b.on && !b.die && Math.hypot(b.x - b.hx, b.y - b.hy) > 0.6).map((b) => ({ li: b.li, x: +b.x.toFixed(2), hx: +b.hx.toFixed(2), y: +b.y.toFixed(2), hy: +b.hy.toFixed(2), z: +b.z.toFixed(2), delay: +(b.delay - now()).toFixed(2) }));
   const state = () => {
     const boxes = B.reduce((n, b) => n + (b.on ? 1 : 0), 0), parts = PT.reduce((n, p) => n + (p.on ? 1 : 0), 0), scs = SC.reduce((n, s) => n + (s.on ? 1 : 0), 0), ghs = GH.reduce((n, g) => n + (g.on ? 1 : 0), 0);
-    return { ...counts, word: TEXTS[word], mode, phraseBars, bar, barSrc, boxes, particles: parts, sculptures: scs, ghosts: ghs, objects: boxes + parts + scs + ghs, palette: PALS[pal].name, family, intensity, persp, quality: +quality.toFixed(2), deform: +deform.toFixed(2), orb: +orb.toFixed(2), reorg: +reorg.toFixed(2), yaw: +yaw.toFixed(3) };
+    return { ...counts, word: TEXTS[word], date: DATE, chord: chordLive, mode, holdBars, bar, barSrc, boxes, particles: parts, sculptures: scs, ghosts: ghs, objects: boxes + parts + scs + ghs, palette: PALS[pal].name, family, intensity, persp, quality: +quality.toFixed(2), deform: +deform.toFixed(2), orb: +orb.toFixed(2), reorg: +reorg.toFixed(2), yaw: +yaw.toFixed(3) };
   };
   return {
     hit, reset, destroy, canvas, state, clock, strays, dump,
     setText: (m) => { m = String(m).toLowerCase(); if (m === "beno") { mode = "beno"; setWord(0); } else if (m === "festa") { mode = "festa"; setWord(1); } else { mode = "auto"; } },
     getText: () => mode,
     nextText: () => { const m = mode === "auto" ? "beno" : mode === "beno" ? "festa" : "auto"; if (m === "beno") { mode = "beno"; setWord(0); } else if (m === "festa") { mode = "festa"; setWord(1); } else mode = "auto"; return mode; },
-    setPhraseBars: (n) => { if (Number.isFinite(+n) && +n >= 1) phraseBars = Math.round(+n); },
-    pattern: () => { if (mode === "auto") pendingSwitch = true; },     // troca de pattern (Program Change): troca no próximo compasso
+    setHoldBars: (n) => { if (Number.isFinite(+n) && +n >= 0.25) holdBars = +n; },
+    setPhraseBars: (n) => { if (Number.isFinite(+n) && +n >= 0.25) holdBars = +n; }, // (nome antigo)
     setIntensity: (x) => { if (Number.isFinite(+x)) intensity = clamp(+x, 0, 2); },
     setSpeed: (x) => { if (Number.isFinite(+x)) intensity = clamp(+x, 0, 2); },
     setPerspective: (x) => { if (Number.isFinite(+x)) persp = clamp(+x, 0.5, 2.5); },
