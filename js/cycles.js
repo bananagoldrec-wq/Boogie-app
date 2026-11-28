@@ -2021,7 +2021,7 @@
     $("btn-new-art").addEventListener("click", () => newArtRef(false));
     $("inp-ref").addEventListener("change", (e) => { if (e.target.files.length) addUserImages([...e.target.files]); e.target.value = ""; });
     document.addEventListener("keydown", (e) => {
-      if (e.target.closest("input,select,textarea")) return;
+      if (e.target.closest && e.target.closest("input,select,textarea")) return;
       if (e.key >= "1" && e.key <= "6") spawn(+e.key - 1, tracks[+e.key - 1].lastNote || 60, 100, "pad");
       const k = e.key.toLowerCase();
       // no Projeto 2 as teclas só da Sessão 1 (limpar, modo, arte, ato, referência) não mexem

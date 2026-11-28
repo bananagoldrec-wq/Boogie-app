@@ -865,6 +865,8 @@
     try {
       const r = await fetch("../../refs/refs.json", { cache: "no-cache" });
       refs.manifest = await r.json();
+      // (versão guardada em legacy/v52: os caminhos do banco são relativos à raiz do site)
+      for (const set of refs.manifest.sets) for (const it of set.items) if (it.src && !/^(https?:|data:|blob:|\/)/.test(it.src)) it.src = "../../" + it.src;
     } catch { refs.manifest = { sets: [] }; }
     refs.manifest.sets.push({ id: "minhas", name: "Minhas imagens", items: await userRefs() });
     renderRefOptions();

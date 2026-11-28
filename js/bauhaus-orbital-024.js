@@ -158,7 +158,9 @@ export function createBauhausOrbital(canvas) {
       r.chordT = t; r.spin = c.sweep * (i % 2 ? 1 : -1);
     });
     S.chordK = A(c.contour, [3, 2, 1.2, 0.6, 0.3]);                 // CONTOUR: articulação (rápida → lenta, elástica)
-    RKEYS.forEach((k, i) => { const r = S.rings[k]; r.amp = c.contour * 0.22 * v * (i % 2 ? 1 : -1); r.ampT = t; }); // e os anéis respiram (mola)
+    // os anéis respiram juntos a cada acorde (mola): CONTOUR = quanto, DECAY = quanto tempo
+    const damp = A(c.decay, [6, 3.5, 2.2, 1.2, 0.6]);
+    RKEYS.forEach((k, i) => { const r = S.rings[k]; r.amp = (0.06 + c.contour * 0.22) * (0.5 + 0.5 * v) * (i % 2 ? 1 : -1); r.ampT = t; r.ampK = damp; });
     S.chordBreak = Math.max(S.chordBreak, c.dist);                   // DISTORTION: todos os anéis se rompem juntos
     S.chordDecay = A(c.decay, [3, 1.8, 1.2, 0.6, 0.25]);
     S.chordLife = A(c.decay, [0.6, 1.5, 1e9, 1e9, 1e9]);             // DECAY curto: os anéis voltam ao lugar
@@ -246,7 +248,7 @@ export function createBauhausOrbital(canvas) {
   }
   // ponto num anel (com inclinação, excentricidade e giro)
   function ringPt(k, a) {
-    const r = S.rings[k], ag = now() - (r.ampT || -99), rr = RING[k] * (r.amp ? 1 + r.amp * Math.exp(-ag * 2.2) * Math.sin(ag * 11) : 1), aa = a + r.yaw;
+    const r = S.rings[k], ag = now() - (r.ampT || -99), rr = RING[k] * (r.amp ? 1 + r.amp * Math.exp(-ag * (r.ampK || 2.2)) * Math.sin(ag * 11) : 1), aa = a + r.yaw;
     const x = Math.cos(aa) * rr * (1 + r.ecc), z = Math.sin(aa) * rr * (1 - r.ecc * 0.5);
     const ct = Math.cos(r.tilt), stt = Math.sin(r.tilt);
     return [x, z * stt, z * ct];
