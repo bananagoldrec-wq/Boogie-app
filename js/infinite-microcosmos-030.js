@@ -260,7 +260,7 @@ export function createInfiniteMicrocosmos(canvas) {
       else if (mode === 3) { f.ang = Math.atan2(f.y - camY(cam.t), f.x - camX(cam.t)); f.rad = Math.hypot(f.x - camX(cam.t), f.y - camY(cam.t)); f.w = 1.5 + 3 * v; f.vz = -sp * 0.4; } // vórtice
       else if (mode === 4) { f.vx = (Math.random() - 0.5) * 0.5; f.vy = (Math.random() - 0.5) * 0.5; f.vz = -sp * 2.5; } // voo em perspectiva
       else { const u = Math.random() * 2 - 1, th = Math.random() * 6.28, q = Math.sqrt(1 - u * u); f.vx = q * Math.cos(th) * sp; f.vy = q * Math.sin(th) * sp; f.vz = u * sp; } // explosão (original)
-      f.s = (0.03 + 0.06 * Math.random()) * (0.7 + 0.6 * v) * (1 + c.pitch * 0.4);
+      f.s = (0.03 + 0.06 * Math.random()) * (0.7 + 0.6 * v) * (1 + c.pitch * 0.4) * [1, 0.8, 1.7, 1.9, 1.8][kind]; // COLOR: família e porte (ponto < quadrado < disco/agulha/cristal)
       f.c = o ? o.c : 3; f.a = Math.random() * 6.28;
     }
     counts.fragsSent += n;
