@@ -178,7 +178,7 @@ export function createEndlessClimb(canvas) {
     const life = A(c.decay, [2.5, 6, 20, 60, Infinity]);
     // DISTORTION (tone): degrau torto, rachado e, forte, frágil (desaba quando pisa)
     const dist = c.dist;
-    const k = { y: prev.y + rise, born: t, rise, dur: 0.06 + c.contour * 0.3, v, life, gone: false, goneT: -9,
+    const k = { y: prev.y + rise, born: t, rise, dur: 0.06 + c.contour * 0.5, el: c.contour, v, life, gone: false, goneT: -9,
       crack: dist, tilt: dist > 0.05 ? (Math.random() - 0.5) * dist * 0.8 : 0, style: FM() ? FM().step5(c.color) : 0,
       slab: step === 4, fragile: dist > 0.55 && Math.random() < (dist - 0.5) * 0.9 };
     cols.set(cc, k);
@@ -336,7 +336,8 @@ export function createEndlessClimb(canvas) {
   // ---------- desenho ----------
   const sx = (x) => W / 2 + (x - cam.x) * U;
   const sy = (y) => H / 2 - (y - cam.y) * U;
-  const colY = (k, t) => { const a = clamp((t - k.born) / k.dur, 0, 1), e = 1 + 2.2 * Math.pow(a - 1, 3) + 1.2 * Math.pow(a - 1, 2); return k.y - k.rise + k.rise * e; };
+  // subida do degrau: a original (passa um pouco e volta); CONTOUR do TONE = elasticidade (quica antes de parar)
+  const colY = (k, t) => { const a = clamp((t - k.born) / k.dur, 0, 1), el = k.el || 0, e = el > 0.05 ? (a >= 1 ? 1 : 1 - (1 - a) * (1 - a) * Math.cos(a * Math.PI * (1 + 4 * el))) : 1 + 2.2 * Math.pow(a - 1, 3) + 1.2 * Math.pow(a - 1, 2); return k.y - k.rise + k.rise * e; };
   // identidades da escada (COLOR do TONE): 0 linhas brancas (original) · 1 papel e tinta · 2 blocos
   // coloridos · 3 blocos pretos com bordas de cor · 4 Mondrian
   const BAU = ["#d3262c", "#1d4f9e", "#f1b70e", "#151515", "#ede6d6"];
@@ -458,7 +459,12 @@ export function createEndlessClimb(canvas) {
       if (d.dist > 0.05) x += Math.sin(age * 18 + d.a0 * 3) * d.dist * U * 0.25;                               // DISTORTION: trajetória torta
       ctx.strokeStyle = ink; ctx.fillStyle = ink; ctx.lineWidth = d.w;
       const s = d.len * 0.12 * (0.5 + k);
-      if (d.kind === 0) { ctx.beginPath(); ctx.moveTo(x, y); if (d.dist > 0.05) { const z = d.dist * d.len * 0.35; ctx.lineTo(x + z, y + d.len * 0.33); ctx.lineTo(x - z * 0.6, y + d.len * 0.66); } ctx.lineTo(x + d.len * 0.18, y + d.len); ctx.stroke(); } // agulha (entortada pela DISTORTION)
+      if (d.kind === 0) { // agulha: SHAPE = angulosidade (inclina e ganha farpas) · DISTORTION entorta
+        const sl = 0.18 + d.ang * 0.9; ctx.beginPath(); ctx.moveTo(x, y);
+        if (d.dist > 0.05) { const z = d.dist * d.len * 0.35; ctx.lineTo(x + z, y + d.len * 0.33); ctx.lineTo(x - z * 0.6, y + d.len * 0.66); }
+        ctx.lineTo(x + d.len * sl, y + d.len);
+        if (d.ang > 0.3) { const bx = x + d.len * sl * 0.5, by = y + d.len * 0.5, b = d.len * 0.25 * d.ang; ctx.moveTo(bx, by); ctx.lineTo(bx - b, by - b * 0.6); ctx.moveTo(bx, by); ctx.lineTo(bx + b * 0.6, by - b); }
+        ctx.stroke(); }
       else if (d.kind === 1) ctx.fillRect(x - 1.5, y - 1.5, 3, 3);
       else if (d.kind === 2) { ctx.beginPath(); ctx.arc(x, y, s, 0, 6.283); ctx.fill(); }
       else if (d.kind === 3) { ctx.beginPath(); ctx.ellipse(x, y, s * 1.6, s * 0.5, d.a0, 0, 6.283); ctx.fill(); }

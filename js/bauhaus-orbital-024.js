@@ -292,6 +292,7 @@ export function createBauhausOrbital(canvas) {
       ctx.beginPath();
       if (w.kind === 2) ctx.rect(q[0] - rr, q[1] - rr * 0.6, rr * 2, rr * 1.2);
       else if (w.kind === 3) { for (let i = 0; i < 3; i++) { const a = -Math.PI / 2 + (i / 3) * TAU; ctx[i ? "lineTo" : "moveTo"](q[0] + Math.cos(a) * rr, q[1] + Math.sin(a) * rr * 0.6); } ctx.closePath(); }
+      else if (w.kind === 4) { ctx.moveTo(q[0], q[1] - rr * 0.75); ctx.lineTo(q[0] + rr, q[1]); ctx.lineTo(q[0], q[1] + rr * 0.75); ctx.lineTo(q[0] - rr, q[1]); ctx.closePath(); } // losango
       else ctx.ellipse(q[0], q[1], rr, rr * (w.kind === 1 ? 0.35 : 0.6), 0, 0, TAU);
       ctx.stroke();
     }
@@ -357,7 +358,7 @@ export function createBauhausOrbital(canvas) {
   function drawMoon(t) {
     const K = S.kick, a = -Math.PI / 2 + angNow(K, t), p = ringPt("kick", a), q = proj(p[0], p[1], p[2]), s = 0.03 * q[3];
     ctx.fillStyle = INK; ctx.beginPath();
-    if (K.kind === 2) ctx.rect(q[0] - s, q[1] - s, 2 * s, 2 * s); else if (K.kind === 3) { ctx.moveTo(q[0], q[1] - s * 1.2); ctx.lineTo(q[0] + s, q[1] + s * 0.8); ctx.lineTo(q[0] - s, q[1] + s * 0.8); ctx.closePath(); } else ctx.arc(q[0], q[1], s, 0, TAU);
+    if (K.kind === 2) ctx.rect(q[0] - s, q[1] - s, 2 * s, 2 * s); else if (K.kind === 3) { ctx.moveTo(q[0], q[1] - s * 1.2); ctx.lineTo(q[0] + s, q[1] + s * 0.8); ctx.lineTo(q[0] - s, q[1] + s * 0.8); ctx.closePath(); } else if (K.kind === 4) { ctx.moveTo(q[0], q[1] - s * 1.4); ctx.lineTo(q[0] + s, q[1]); ctx.lineTo(q[0], q[1] + s * 1.4); ctx.lineTo(q[0] - s, q[1]); ctx.closePath(); } else ctx.arc(q[0], q[1], s, 0, TAU);
     ctx.fill();
     return q[2];
   }

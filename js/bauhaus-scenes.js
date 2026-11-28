@@ -264,7 +264,7 @@ export function createImpossibleCity(canvas) {
   const PC = Array.from({ length: MAXP }, () => ({ on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, s: 0.1, c: 0, born: 0, life: 1, rot: 0, w: 0, kind: 0, mode: 0, asp: 1, ox: 0, oz: 0, ang: 0, rad: 0, vib: 0 }));
   let pNext = 0, camZ, boost, boostK, envI, envSwap, rowNext, counts, rnd = Math.random, t0 = now();
   let bend, bendT, camAmp, camAmpT, wave, posS, lastRisen, figs;
-  let camHigh = 0, camHighT = 0, sway = 0, bendK = 0.15, gapK = 1.1, waveK = 0.5;
+  let camHigh = 0, camHighT = 0, sway = 0, bendK = 0.15, gapK = 1.1, waveK = 0.5, envT = -9, envLife = 1e9;
 
   function rowHash(k) { let h = (k * 2654435761) >>> 0; return () => ((h = (h * 1103515245 + 12345) >>> 0) / 4294967296); }
   function freeB() { for (const b of B) if (!b.on) return b; return null; }
@@ -311,7 +311,7 @@ export function createImpossibleCity(canvas) {
     for (const b of B) { b.on = false; b.kind = 0; }
     for (const p of PC) p.on = false;
     camZ = 0; boost = 0; boostK = 2.4; envI = 0; envSwap = false; bend = 0; bendT = 0; camAmp = 0; camAmpT = 0; wave = 0; posS = 0; lastRisen = [];
-    camHigh = 0; camHighT = 0; sway = 0; bendK = 0.15; gapK = 1.1; waveK = 0.5;
+    camHigh = 0; camHighT = 0; sway = 0; bendK = 0.15; gapK = 1.1; waveK = 0.5; envT = -9; envLife = 1e9;
     counts = { builds: 0, splits: 0, morphs: 0, falls: 0, risen: 0, boosts: 0, piecesSent: 0, snares: 0, chords: 0, percs: 0, collapses: 0, cracks: 0, flips: 0, decons: 0, echoes: 0, archetypes: 0 };
     if (figs) figs.clear(); else figs = FIGS() ? FIGS().swarm({ max: 30, size: 0.42 }) : null;
     rowNext = 1;
@@ -426,7 +426,8 @@ export function createImpossibleCity(canvas) {
     // SHAPE: rachaduras · SWEEP: direção dos estilhaços · CONTOUR: ruptura (desaba)
     // DISTORTION: os prédios à vista entortam juntos (geometria impossível na hora)
     if (c.dist > 0.05) for (const b of B) if (b.on && inView(b)) b.skew = Math.max(b.skew, c.dist * (0.6 + Math.random() * 0.6));
-    if (c.shape > 0.08 || c.sweep > 0.1) {
+    envT = now(); envLife = ANC(c.decay, [0.35, 0.9, 1e9, 1e9, 1e9]);   // DECAY curto: o ambiente volta ao primeiro
+    if (c.shape > 0.08 || c.sweep > 0.1 || c.contour > 0.1) {
       const t = now(), list = B.filter((b) => b.on && b.kind === 0 && b.n > 0 && inView(b));
       const n = Math.min(list.length, Math.max(1, Math.round(c.shape * 6)));
       for (let i = 0; i < n; i++) {
@@ -535,6 +536,7 @@ export function createImpossibleCity(canvas) {
     lookAt(C, cxw, cyw, camZ, cxw + Math.sin(yaw) * 10, cyw + pitch * 10, camZ + Math.cos(yaw) * 10);
     C.f = (Math.min(S.W, S.H) * 0.95 / persp) * (1 + vis.persp * 0.4);
     C.bend = Math.abs(bend) > 0.01 ? bend : 0;
+    if (envLife < 1e8 && t - envT > envLife) { envLife = 1e9; envI = 0; envSwap = false; }
     let [sky, ground] = ENV[envI];
     if (envSwap) [sky, ground] = [ground, sky];
     const ctx = S.ctx;
