@@ -245,7 +245,9 @@ body:not(.proj-2) .only-p2,body.proj-2 .only-p1{display:none!important}
 @media (max-width:640px){.seg.tabs{flex-wrap:wrap}.seg.tabs button{flex:1 1 calc(33% - 6px);padding-left:4px;padding-right:4px;letter-spacing:.01em;white-space:nowrap;font-size:14px}}
 /* Projeto 3 (Bauhaus Orbital): papel claro — o aviso inicial em tinta escura */
 /* só o Projeto 2 (escada) usa o chord; as outras cenas têm fundo claro: aviso inicial em tinta escura */
-body[data-scene]:not([data-scene="2"]) #p2-lights span[data-k="chord"]{display:none}
+body[data-scene]:not([data-scene="2"]):not([data-scene="7"]) #p2-lights span[data-k="chord"]{display:none}
+body:not([data-scene="7"]) .only-s7{display:none!important}
+#scn-text button{font-size:12px;padding:5px 9px}
 body[data-scene]:not([data-scene="2"]) .empty{color:#151515}
 body[data-scene]:not([data-scene="2"]) .empty p{color:#3b3a36}
 /* celular nos projetos: a cena nunca fica espremida (a página rola se precisar) */

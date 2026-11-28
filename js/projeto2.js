@@ -1,5 +1,6 @@
 /* CENAS DO CYCLES VISUAL — Projeto 2 (Escada sem fim) · 3 (Bauhaus Orbital) ·
-   4 (Infinite Microcosmos) · 5 (031 Impossible City) · 6 (032 Magnetic Ballet).
+   4 (Infinite Microcosmos) · 5 (031 Impossible City) · 6 (032 Magnetic Ballet) ·
+   7 (BENO — Festa Lá em Cima).
    Todas usam os MESMOS sons (MIDI de cada trilha, Áudio, Música ou Demo): o motor
    (js/cycles.js) reconhece kick, baixo, hi-hat, caixa e chord e avisa aqui pelo evento
    "cycles:hit" com a força já entre 0 e 1.
@@ -9,6 +10,7 @@ import { createEndlessClimb } from './endless-climb.js';
 import { createBauhausOrbital } from './bauhaus-orbital-024.js';
 import { createInfiniteMicrocosmos } from './infinite-microcosmos-030.js';
 import { createImpossibleCity, createMagneticBallet } from './bauhaus-scenes.js';
+import { createBenoRhythmic } from './beno-rhythmic.js';
 
 // cada cena: o canvas dela, como criar, e (se tiver) os controles de velocidade e perspectiva
 const SCENES = {
@@ -20,8 +22,12 @@ const SCENES = {
     speed: [0.2, 3, 0.1, 1], persp: [0.5, 2.5, 0.05, 1], fmt: (v) => (+v).toFixed(2) + '×' },
   6: { canvas: 'canvas6', make: createMagneticBallet, name: '032 · Magnetic Ballet',
     speed: [0.2, 3, 0.1, 1], persp: [0.5, 2.5, 0.05, 1], fmt: (v) => (+v).toFixed(2) + '×' },
+  // a 1ª faixa desta instalação é a INTENSIDADE (0–200%), não a velocidade
+  7: { canvas: 'canvas7', make: createBenoRhythmic, name: 'BENO — Festa Lá em Cima',
+    speed: [0, 2, 0.05, 1], speedLabel: 'Intensidade', speedFn: 'setIntensity', speedFmt: (v) => Math.round(v * 100) + '%',
+    persp: [0.5, 2.5, 0.05, 1], fmt: (v) => (+v).toFixed(2) + '×', text: true },
 };
-const FIRST = 2, LAST = 6;
+const FIRST = 2, LAST = 7;
 let proj = 0, current = null;
 const scene = () => current;
 
@@ -45,7 +51,10 @@ if (FM) FM.onHit((ctx) => {
   if (!ctx.replica) flash(ctx.role, ctx.src);
 });
 // troca de pattern (program change, se o Cycles mandar): a cena reorganiza a composição (sem reiniciar)
-if (FM) FM.onMeta((m) => { if (m.kind === 'program' && current && current.pattern) current.pattern(m.program); });
+if (FM) FM.onMeta((m) => {
+  if (m.kind === 'program' && current && current.pattern) current.pattern(m.program);
+  else if ((m.kind === 'beat' || m.kind === 'transport') && current && current.clock) current.clock(m); // compassos do MIDI Clock
+});
 // ouvido de áudio e música analisada (sem pista): o papel vem do som, os knobs da pista daquela máquina
 window.addEventListener('cycles:hit', (e) => {
   const V = current;
@@ -95,6 +104,9 @@ refreshLights();
 
 // ---------- controles: velocidade e perspectiva (por cena, guardados neste aparelho) ----------
 const ctlName = document.getElementById('scn-name');
+const ctlSpeedLbl = document.getElementById('scn-speed-lbl');
+const speedFn = (n) => SCENES[n].speedFn || 'setSpeed';
+const speedFmt = (n) => SCENES[n].speedFmt || ((v) => (+v).toFixed(1) + '×');
 const ctlSpeed = document.getElementById('scn-speed'), ctlPersp = document.getElementById('scn-persp');
 const outSpeed = document.querySelector('output[for="scn-speed"]'), outPersp = document.querySelector('output[for="scn-persp"]');
 const key = (n, what) => `cv-${what}-${n}`;
@@ -107,19 +119,21 @@ function applyControls(n) {
   document.body.classList.toggle('has-ctl', !!cfg.speed);
   if (!cfg.speed || !current) return;
   if (ctlName) ctlName.textContent = cfg.name;
+  if (ctlSpeedLbl) ctlSpeedLbl.textContent = cfg.speedLabel || 'Velocidade';
+  refreshText();
   const set = (el, out, range, what, fn, fmt) => {
     const [min, max, step, def] = range;
     el.min = min; el.max = max; el.step = step;
     el.value = clamp(readSaved(n, what, def), min, max);
     fn(+el.value); out.textContent = fmt(+el.value);
   };
-  set(ctlSpeed, outSpeed, cfg.speed, 'speed', (v) => current.setSpeed(v), (v) => (+v).toFixed(1) + '×');
+  set(ctlSpeed, outSpeed, cfg.speed, 'speed', (v) => current[speedFn(n)](v), speedFmt(n));
   set(ctlPersp, outPersp, cfg.persp, 'persp', (v) => current.setPerspective(v), cfg.fmt);
 }
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 if (ctlSpeed) ctlSpeed.addEventListener('input', () => {
-  if (!current || !current.setSpeed) return;
-  current.setSpeed(+ctlSpeed.value); outSpeed.textContent = (+ctlSpeed.value).toFixed(1) + '×';
+  if (!current || !current[speedFn(proj)]) return;
+  current[speedFn(proj)](+ctlSpeed.value); outSpeed.textContent = speedFmt(proj)(+ctlSpeed.value);
   try { localStorage.setItem(key(proj, 'speed'), ctlSpeed.value); } catch { /* idem */ }
 });
 if (ctlPersp) ctlPersp.addEventListener('input', () => {
@@ -127,6 +141,19 @@ if (ctlPersp) ctlPersp.addEventListener('input', () => {
   current.setPerspective(+ctlPersp.value); outPersp.textContent = SCENES[proj].fmt(+ctlPersp.value);
   try { localStorage.setItem(key(proj, 'persp'), ctlPersp.value); } catch { /* idem */ }
 });
+
+// ---------- texto da instalação BENO (Auto: troca com a música · BENO · FESTA LÁ EM CIMA) ----------
+const textBtns = document.querySelectorAll('#scn-text button');
+function refreshText() {
+  const m = current && current.getText ? current.getText() : null;
+  textBtns.forEach((b) => { const on = b.dataset.t === m; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+}
+textBtns.forEach((b) => b.addEventListener('click', () => {
+  if (!current || !current.setText) return;
+  current.setText(b.dataset.t);
+  try { localStorage.setItem('cv-beno-text', b.dataset.t); } catch { /* idem */ }
+  refreshText();
+}));
 
 // ---------- abas ----------
 const tabs = document.querySelectorAll('#seg-proj button');
@@ -140,6 +167,7 @@ function setProject(n, save = true) {
     document.body.dataset.scene = String(n);
     current = SCENES[n].make(document.getElementById(SCENES[n].canvas));
     if (FM) FM.setScene(n);
+    if (SCENES[n].text && current.setText) { let tx = 'auto'; try { tx = localStorage.getItem('cv-beno-text') || 'auto'; } catch { /* idem */ } current.setText(tx); }
   }
   applyControls(n);
   tabs.forEach((b) => {
@@ -158,6 +186,9 @@ document.addEventListener('keydown', (e) => {
   const k = e.key.toLowerCase();
   if (k === 'p') setProject(proj >= LAST ? FIRST : proj + 1); // troca de cena (funciona em tela cheia)
   else if (k === 'c' && current) current.reset();             // "limpar" = começar de novo
+  else if (k === 't' && current && current.nextText) {         // BENO: Auto → BENO → FESTA LÁ EM CIMA
+    const m = current.nextText(); try { localStorage.setItem('cv-beno-text', m); } catch { /* idem */ } refreshText();
+  }
 });
 
 let saved = FIRST;

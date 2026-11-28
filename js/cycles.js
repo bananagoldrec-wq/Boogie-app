@@ -39,7 +39,7 @@
     ["reverb", "Reverb send", "brilho"],
   ];
   const STORE_KEY = "cycles-visual-v1";
-  const APP_VERSION = 53;
+  const APP_VERSION = 54;
   // quanto a imagem se mexe (câmera, zoom do kick, empurrões): o padrão é suave
   const MOTION = { suave: 0.4, medio: 0.7, intenso: 1 };
   const motionK = () => MOTION[settings.motion] ?? 0.4;
@@ -745,7 +745,7 @@
     };
   }
   // um dos projetos (escada ou orbital) na tela
-  const p2Canvas = () => ["canvas", "canvas3", "canvas4", "canvas5", "canvas6"].map((id) => $(id)).find((c) => c && !c.hidden) || null;
+  const p2Canvas = () => ["canvas", "canvas3", "canvas4", "canvas5", "canvas6", "canvas7"].map((id) => $(id)).find((c) => c && !c.hidden) || null;
   const p2On = () => !!p2Canvas();
   // planura do espectro numa faixa (1 = ruído puro, perto de 0 = tom): caixa/clap × acorde/nota
   function flatness(lo, hi) {
@@ -1522,7 +1522,7 @@
       const url = URL.createObjectURL(blob);
       const d = new Date();
       const p = (n) => String(n).padStart(2, "0");
-      const name = `${p2 ? ({ canvas3: "orbital", canvas4: "microcosmos", canvas5: "impossible-city", canvas6: "magnetic-ballet" }[pc.id] || "escada") : "cycles"}-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
+      const name = `${p2 ? ({ canvas3: "orbital", canvas4: "microcosmos", canvas5: "impossible-city", canvas6: "magnetic-ballet", canvas7: "beno-festa-la-em-cima" }[pc.id] || "escada") : "cycles"}-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
       const a = document.createElement("a");
       a.href = url; a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
@@ -1724,6 +1724,7 @@
         if (clock.step % 256 === 0 && settings.refAuto !== false) nextRef(); // a cada 16 compassos
         if (clock.step % 256 === 0) nextAct(); else if (clock.step % 64 === 0) storyShape(); // ato a cada 16 compassos, forma a cada 4
       }
+      if (window.CyclesFM && clock.synced && clock.ticks % 6 === 0) window.CyclesFM.transport("tick", clock.ticks);
       clock.times.push(t);
       if (clock.times.length > 49) clock.times.shift();
       if (clock.times.length >= 25 && clock.ticks % 24 === 0) {
@@ -1743,11 +1744,12 @@
       if (p2ears) p2ears.brain.newPlay(); // Projeto 2 reaprende onde o kick cai a cada play
       p2sess.ok = {}; p2sess.auto = {};   // e confere de novo qual trilha é o kick e a caixa
       if (settings.clearOnPlay) clearCanvas();
+      if (window.CyclesFM) window.CyclesFM.transport("start");
       log("▶ play");
     } else if (st === 0xfb) {
-      clock.running = true; clock.stopped = false; log("▶ continue");
+      clock.running = true; clock.stopped = false; if (window.CyclesFM) window.CyclesFM.transport("continue"); log("▶ continue");
     } else if (st === 0xfc) {
-      clock.running = false; clock.stopped = true; log("■ stop");
+      clock.running = false; clock.stopped = true; if (window.CyclesFM) window.CyclesFM.transport("stop"); log("■ stop");
     }
   }
 

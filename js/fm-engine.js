@@ -56,6 +56,7 @@
     3: { name: "Bauhaus Orbital · Attraction & Repulsion", color: "famílias geométricas das partículas", shape: "esfera → cubo → disco → poliedro → símbolo", sweep: "inclinação, excentricidade e trajetória das órbitas", contour: "elasticidade das forças magnéticas", dist: "ruptura das órbitas e deformação", decay: "duração das partículas", pitch: "raio da órbita / escala", pan: "região do espaço", level: "presença da pista", punch: "força do impacto", gate: "sustentação" },
     4: { name: "Infinite Microcosmos", color: "diversidade de objetos e paletas", shape: "geometria → animais → pessoas → objetos → símbolos", sweep: "direção e trajetória dos objetos", contour: "fluidez das transformações", dist: "torção, fragmentação e deformação do espaço", decay: "tempo de vida das microestruturas", pitch: "profundidade / escala", pan: "posição lateral", level: "presença da pista", punch: "força do impacto", gate: "sustentação" },
     5: { name: "Impossible City", color: "famílias arquitetônicas e materiais cromáticos", shape: "edifício → ponte → escada → torre → portal", sweep: "deslocamento, expansão e reorganização", contour: "elasticidade e articulação das construções", dist: "rachaduras, colapsos e geometrias impossíveis", decay: "duração antes da desconstrução", pitch: "altura das construções", pan: "lado da avenida", level: "presença da pista", punch: "força do impacto", gate: "sustentação" },
+    7: { name: "BENO — Festa Lá em Cima", color: "famílias geométricas da tipografia e paletas (Bayer, Moholy-Nagy, Kandinsky, Schmidt, Gropius)", shape: "deformação e metamorfose tipográfica", sweep: "direção e trajetória das partículas e da expansão", contour: "elasticidade e articulação das letras", dist: "intensidade da fragmentação", decay: "duração dos acontecimentos visuais", pitch: "porte", pan: "lado", level: "presença da pista", punch: "força do impacto", gate: "sustentação" },
     6: { name: "Magnetic Ballet", color: "identidade das peças", shape: "esfera → cubo → cilindro → escultura", sweep: "trajetória e direção das forças", contour: "elasticidade, tensão e conexões", dist: "assimetria, fragmentação e ruptura dos grupos", decay: "duração das conexões e partículas", pitch: "altura / escala", pan: "região do espaço", level: "presença da pista", punch: "força do impacto", gate: "sustentação" },
   };
   // o que o MIDI do Model:Cycles transmite e o que não (manual OS 1.13: 9.4.2 MOUT, 12.3)
@@ -194,6 +195,24 @@
   const metaListeners = new Set();
   function emitMeta(m) { for (const fn of metaListeners) { try { fn(m); } catch (e) { console.error(e); } } }
   function program(n) { stats.midiIn++; emitMeta({ kind: "program", program: n }); }
+  // ---------- transporte (MIDI Clock real: 24 pulsos por semínima; play/continue/stop) ----------
+  // o compasso vem do clock (4/4): a cena que segue a estrutura da música lê daqui
+  const TR = { running: false, synced: false, ticks: 0, beat: -1, bar: -1, lastT: -9 };
+  function transport(kind, ticks) {
+    const tm = now();
+    if (kind === "start") { TR.running = true; TR.synced = true; TR.ticks = 0; TR.beat = -1; TR.bar = -1; emitMeta({ kind: "transport", state: "start" }); return; }
+    if (kind === "continue") { TR.running = true; emitMeta({ kind: "transport", state: "continue" }); return; }
+    if (kind === "stop") { TR.running = false; emitMeta({ kind: "transport", state: "stop" }); return; }
+    if (kind !== "tick" || !TR.synced || !Number.isFinite(ticks)) return;
+    TR.ticks = ticks; TR.lastT = tm;
+    const beat = Math.floor(ticks / 24);
+    if (ticks % 24 === 0 && beat !== TR.beat) {
+      TR.beat = beat; const bar = Math.floor(beat / 4), inBar = beat % 4;
+      if (inBar === 0) TR.bar = bar;
+      emitMeta({ kind: "beat", beat, bar, inBar, t: tm });
+    }
+  }
+  const transportState = () => ({ ...TR, live: TR.running && now() - TR.lastT < 1 });
 
   // ---------- quadro: interpolação, LFO, réplicas agendadas ----------
   function tick() {
@@ -339,7 +358,7 @@
     onMeta: (fn) => { metaListeners.add(fn); return () => metaListeners.delete(fn); },
     setScene: (n) => { scene = n; }, scene: () => scene, bpm: () => bpm,
     setVisDest: (tr, i) => { if (T[tr]) T[tr].lfo.visDest = clamp(i | 0, 0, VIS_DEST.length - 1); },
-    snapshot, restore, presets, savePreset, loadPreset, deletePreset, resetAll,
+    snapshot, restore, presets, savePreset, loadPreset, deletePreset, resetAll, transport, transportState,
     pendingCount: () => pending.length,
   };
 })(typeof window !== "undefined" ? window : globalThis);
